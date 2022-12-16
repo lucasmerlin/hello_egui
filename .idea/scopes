@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DependencyValidationManager">
+    <scope name="werf config" pattern="file:werf.yaml" />
+    <scope name="frontmatter md" pattern="file:*.md" />
+  </component>
+</project>
