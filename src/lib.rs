@@ -4,75 +4,8 @@ use eframe::{egui::{
     Ui,
 }, epaint::{Rect, Shape, Vec2}};
 
-pub fn drag_source(
-    ui: &mut Ui,
-    id: Id,
-    drag_handle: impl FnOnce(&mut Ui),
-    drag_body: impl FnOnce(&mut Ui),
-) -> Option<Rect> {
-    let is_being_dragged = ui.memory().is_being_dragged(id);
-    let row_resp = ui.horizontal(|gg| {
-        let u = gg.scope(drag_handle);
+pub mod state;
 
-        // Check for drags:
-        // let response = ui.interact(response.rect, id, Sense::click());
-        let response = gg.interact(u.response.rect, id, Sense::drag());
-
-        if response.hovered() {
-            gg.output().cursor_icon = CursorIcon::Grab;
-        }
-
-        drag_body(gg)
-    });
-
-    if !is_being_dragged {
-        return Some(row_resp.response.rect);
-
-        // sponse.clicked() {
-        // println!("source clicked")
-        // }
-    } else {
-        ui.output().cursor_icon = CursorIcon::Grabbing;
-
-        // let response = ui.scope(body).response;
-
-        // Paint the body to a new layer:
-        let layer_id = LayerId::new(Order::Tooltip, id);
-        // let response = ui.with_layer_id(layer_id, body).response;
-
-        // Now we move the visuals of the body to where the mouse is.
-        // Normally you need to decide a location for a widget first,
-        // because otherwise that widget cannot interact with the mouse.
-        // However, a dragged component cannot be interacted with anyway
-        // (anything with `Order::Tooltip` always gets an empty [`Response`])
-        // So this is fine!
-
-        // if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
-        //     let r = response.rect.center();
-
-        //     let delta = pointer_pos - r;
-        //     ui.ctx().translate_layer(layer_id, delta);
-        // }
-
-        if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
-            let u = egui::Area::new("draggable_item")
-                .interactable(false)
-                .fixed_pos(pointer_pos)
-                .show(ui.ctx(), |x| {
-                    x.horizontal(|gg| {
-                        gg.label("dragging meeeee yayyyy")
-
-                        // drag_handle(gg);
-                        // drag_body(gg)
-                    })
-                });
-
-            // u.response.rect.area()
-        }
-    }
-
-    Some(row_resp.response.rect)
-}
 
 pub fn drop_target<R>(
     ui: &mut Ui,
