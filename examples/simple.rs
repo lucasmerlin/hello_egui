@@ -1,7 +1,8 @@
 use eframe::egui::{Context, Id};
 use eframe::{egui, App, Frame, NativeOptions};
 
-use egui_dnd::state::{shift_vec, DragDropItem, DragDropUi};
+use egui_dnd::{DragDropItem, DragDropUi};
+use egui_dnd::utils::shift_vec;
 
 struct DnDApp {
     dnd: DragDropUi,

@@ -1,10 +1,17 @@
 use eframe::egui;
-use eframe::egui::{CursorIcon, Id, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use eframe::egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
-use crate::drop_target;
+use crate::utils;
+use crate::utils::shift_vec;
 
 pub trait DragDropItem {
     fn id(&self) -> Id;
+}
+
+impl DragDropItem for String {
+    fn id(&self) -> Id {
+        Id::new(&self)
+    }
 }
 
 pub struct Response {
@@ -12,6 +19,11 @@ pub struct Response {
     pub to: usize,
 }
 
+/// Response containing the potential list updates during and after a drag & drop event
+/// `current_drag` will contain a [Response] when something is being dragged right now and can be
+/// used update some state while the drag is in progress.
+/// `completed` contains a [Response] after a successful drag & drop event. It should be used to
+/// update positions of the affected items. If the source is a vec, [shift_vec] can be used.
 pub struct DragDropResponse {
     pub current_drag: Option<Response>,
     pub completed: Option<Response>,
@@ -25,6 +37,7 @@ pub struct DragDropUi {
     drag_delta: Option<Vec2>,
 }
 
+/// [Handle::ui] is used to draw the drag handle
 pub struct Handle<'a> {
     state: &'a mut DragDropUi,
 }
@@ -33,8 +46,6 @@ impl<'a> Handle<'a> {
     pub fn ui<T: DragDropItem>(self, ui: &mut Ui, item: &T, contents: impl FnOnce(&mut Ui)) {
         let u = ui.scope(contents);
 
-        // Check for drags:
-        // let response = ui.interact(response.rect, id, Sense::click());
         let response = ui.interact(u.response.rect, item.id(), Sense::drag());
 
         if response.hovered() {
@@ -45,19 +56,64 @@ impl<'a> Handle<'a> {
             self.state.drag_delta = Some(
                 u.response.rect.min.to_vec2()
                     - response
-                        .interact_pointer_pos()
-                        .unwrap_or(Pos2::default())
-                        .to_vec2(),
+                    .interact_pointer_pos()
+                    .unwrap_or(Pos2::default())
+                    .to_vec2(),
             );
         }
     }
 }
 
+/// [DragDropUi] stores the state of the Drag & Drop list.
+/// # Example
+/// ```rust
+/// use egui_dnd::DragDropUi;
+/// use eframe::App;
+/// use eframe::egui::Context;
+/// use eframe::Frame;
+/// use eframe::egui::CentralPanel;
+/// use egui_dnd::utils::shift_vec;
+///
+/// struct DnDApp {
+///     items: Vec<String>,
+///     dnd: DragDropUi,
+/// }
+///
+///
+/// impl App for DnDApp {
+///     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
+///         CentralPanel::default().show(ctx, |ui| {
+///             let response = self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle| {
+///                 ui.horizontal(|ui| {
+///                     handle.ui(ui, item, |ui| {
+///                         ui.label("grab");
+///                     });
+///                     ui.label(item.clone());
+///                 });
+///             });
+///             if let Some(response) = response.completed {
+///                 shift_vec(response.from, response.to, &mut self.items);
+///             }
+///         });
+///     }
+/// }
+///
+/// pub fn main() {
+///     use eframe::NativeOptions;
+///     let dnd = DragDropUi::default();
+///     eframe::run_native("DnD Example", NativeOptions::default(), Box::new(|_| {
+///         Box::new(DnDApp {
+///             dnd: DragDropUi::default(),
+///             items: vec!["a", "b", "c"].into_iter().map(|s| s.to_string()).collect(),
+///         })
+///     }));
+/// }
+/// ```
 impl DragDropUi {
     pub fn ui<'a, T: DragDropItem + 'a>(
         &mut self,
         ui: &mut Ui,
-        values: impl Iterator<Item = &'a mut T>,
+        values: impl Iterator<Item=&'a mut T>,
         mut item_ui: impl FnMut(&mut T, &mut Ui, Handle) -> (),
     ) -> DragDropResponse {
         let mut vec = values.enumerate().collect::<Vec<_>>();
@@ -68,7 +124,7 @@ impl DragDropUi {
 
         let mut rects = Vec::with_capacity(vec.len());
 
-        let _response = drop_target(ui, true, |ui| {
+        DragDropUi::drop_target(ui, true, |ui| {
             vec.iter_mut().for_each(|(idx, item)| {
                 let rect = self.drag_source(ui, item.id(), |ui, handle| {
                     item_ui(item, ui, handle);
@@ -79,8 +135,7 @@ impl DragDropUi {
                     self.source_idx = Some(*idx);
                 }
             });
-        })
-        .response;
+        });
 
         if ui.memory().is_anything_being_dragged() {
             let pos = ui.input().pointer.hover_pos();
@@ -129,8 +184,6 @@ impl DragDropUi {
         }
 
         if let (Some(target_idx), Some(source_idx)) = (self.hovering_idx, self.source_idx) {
-            ui.label(format!("hovering: {}", target_idx));
-
             if ui.input().pointer.any_released() {
                 self.source_idx = None;
                 self.hovering_idx = None;
@@ -159,7 +212,7 @@ impl DragDropUi {
         }
     }
 
-    pub fn drag_source(
+    fn drag_source(
         &mut self,
         ui: &mut Ui,
         id: Id,
@@ -222,15 +275,23 @@ impl DragDropUi {
             return ui.allocate_space(u.inner.size()).1;
         }
     }
-}
 
-pub fn shift_vec<T>(source_idx: usize, target_idx: usize, vec: &mut Vec<T>) {
-    let target_idx = if source_idx >= target_idx {
-        target_idx
-    } else {
-        target_idx - 1
-    };
+    fn drop_target<R>(
+        ui: &mut Ui,
+        _can_accept_what_is_being_dragged: bool,
+        body: impl FnOnce(&mut Ui) -> R,
+    ) -> InnerResponse<R> {
+        let margin = Vec2::splat(4.0);
 
-    let item = vec.remove(source_idx);
-    vec.insert(target_idx, item);
+        let outer_rect_bounds = ui.available_rect_before_wrap();
+        let inner_rect = outer_rect_bounds.shrink2(margin);
+
+        let mut content_ui = ui.child_ui(inner_rect, *ui.layout());
+
+        let ret = body(&mut content_ui);
+        let outer_rect = Rect::from_min_max(outer_rect_bounds.min, content_ui.min_rect().max + margin);
+        let (_rect, response) = ui.allocate_at_least(outer_rect.size(), Sense::hover());
+
+        InnerResponse::new(ret, response)
+    }
 }
