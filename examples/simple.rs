@@ -33,8 +33,14 @@ impl DragDropItem for ItemType {
 impl App for DnDApp {
     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            let response = self.dnd.ui::<ItemType>(ui, self.items.iter_mut(), |item, ui| {
-                ui.label(&item.name);
+            let response = self.dnd.ui::<ItemType>(ui, self.items.iter_mut(), |item, ui, handle| {
+                ui.horizontal(|ui| {
+                    handle.ui(ui, item, |ui| {
+                        ui.label("grab");
+                    });
+
+                    ui.label(&item.name);
+                });
             });
 
             if let Some(response) = response.completed {
