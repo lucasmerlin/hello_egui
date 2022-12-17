@@ -1,20 +1,15 @@
 use eframe::egui;
 use eframe::egui::{CollapsingHeader, Id, Ui};
 
-use egui_dnd::state::{DragDropItem, DragDropUi, Handle, shift_vec};
+use egui_dnd::state::{shift_vec, DragDropItem, DragDropUi, Handle};
 
 pub fn main() -> () {
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::vec2(320.0, 240.0)),
         ..Default::default()
     };
-    eframe::run_native(
-        "DnD",
-        options,
-        Box::new(|_cc| Box::new(MyApp::default())),
-    );
+    eframe::run_native("DnD", options, Box::new(|_cc| Box::new(MyApp::default())));
 }
-
 
 #[derive(Default)]
 struct SortableItem {
@@ -30,7 +25,6 @@ impl DragDropItem for SortableItem {
         Id::new(&self.name)
     }
 }
-
 
 struct MyApp {
     items: Vec<SortableItem>,
@@ -65,13 +59,16 @@ impl Default for MyApp {
                         SortableItem {
                             name: "e_a".to_string(),
                             ..SortableItem::default()
-                        }, SortableItem {
+                        },
+                        SortableItem {
                             name: "e_b".to_string(),
                             ..SortableItem::default()
-                        },SortableItem {
+                        },
+                        SortableItem {
                             name: "e_c".to_string(),
                             ..SortableItem::default()
-                        },SortableItem {
+                        },
+                        SortableItem {
                             name: "e_d".to_string(),
                             ..SortableItem::default()
                         },
@@ -90,27 +87,33 @@ impl MyApp {
         });
 
         if let Some(children) = &mut item.children {
-            CollapsingHeader::new("children").default_open(true).show(ui, |ui| {
-                ui.label("Content");
+            CollapsingHeader::new("children")
+                .default_open(true)
+                .show(ui, |ui| {
+                    ui.label("Content");
 
-                let response = item.drag_drop_ui.ui(ui, children.iter_mut(), |item, ui, handle| {
-                    Self::draw_item(ui, item, handle);
+                    let response =
+                        item.drag_drop_ui
+                            .ui(ui, children.iter_mut(), |item, ui, handle| {
+                                Self::draw_item(ui, item, handle);
+                            });
+
+                    if let Some(response) = response.completed {
+                        shift_vec(response.from, response.to, children);
+                    }
                 });
-
-                if let Some(response) = response.completed {
-                    shift_vec(response.from, response.to, children);
-                }
-            });
         };
     }
 }
 
 impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            let response = self.drag_drop_ui.ui(ui, self.items.iter_mut(), |item, ui, handle| {
-                MyApp::draw_item(ui, item, handle);
-            });
+            let response = self
+                .drag_drop_ui
+                .ui(ui, self.items.iter_mut(), |item, ui, handle| {
+                    MyApp::draw_item(ui, item, handle);
+                });
             if let Some(response) = response.completed {
                 shift_vec(response.from, response.to, &mut self.items);
             }

@@ -7,7 +7,6 @@ pub trait DragDropItem {
     fn id(&self) -> Id;
 }
 
-
 pub struct Response {
     pub from: usize,
     pub to: usize,
@@ -43,13 +42,24 @@ impl<'a> Handle<'a> {
         }
 
         if response.drag_started() {
-            self.state.drag_delta = Some(u.response.rect.min.to_vec2() - response.interact_pointer_pos().unwrap_or(Pos2::default()).to_vec2());
+            self.state.drag_delta = Some(
+                u.response.rect.min.to_vec2()
+                    - response
+                        .interact_pointer_pos()
+                        .unwrap_or(Pos2::default())
+                        .to_vec2(),
+            );
         }
     }
 }
 
 impl DragDropUi {
-    pub fn ui<'a, T: DragDropItem + 'a>(&mut self, ui: &mut Ui, values: impl Iterator<Item=&'a mut T>, mut item_ui: impl FnMut(&mut T, &mut Ui, Handle) -> ()) -> DragDropResponse {
+    pub fn ui<'a, T: DragDropItem + 'a>(
+        &mut self,
+        ui: &mut Ui,
+        values: impl Iterator<Item = &'a mut T>,
+        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle) -> (),
+    ) -> DragDropResponse {
         let mut vec = values.enumerate().collect::<Vec<_>>();
 
         if let (Some(hovering_idx), Some(source_idx)) = (self.hovering_idx, self.source_idx) {
@@ -58,7 +68,7 @@ impl DragDropUi {
 
         let mut rects = Vec::with_capacity(vec.len());
 
-        let response = drop_target(ui, true, |ui| {
+        let _response = drop_target(ui, true, |ui| {
             vec.iter_mut().for_each(|(idx, item)| {
                 let rect = self.drag_source(ui, item.id(), |ui, handle| {
                     item_ui(item, ui, handle);
@@ -69,12 +79,11 @@ impl DragDropUi {
                     self.source_idx = Some(*idx);
                 }
             });
-        }).response;
-
+        })
+        .response;
 
         if ui.memory().is_anything_being_dragged() {
             let pos = ui.input().pointer.hover_pos();
-
 
             if let Some(pos) = pos {
                 let pos = if let Some(delta) = self.drag_delta {
@@ -85,21 +94,23 @@ impl DragDropUi {
 
                 let mut closest: Option<(f32, usize, usize, Rect)> = None;
 
-                let hovering = rects.into_iter().enumerate().for_each(|(new_idx, (idx, rect))| {
-                    let dist = (rect.top() - pos.y).abs();
-                    let val = (dist, new_idx, idx, rect);
+                let _hovering = rects
+                    .into_iter()
+                    .enumerate()
+                    .for_each(|(new_idx, (idx, rect))| {
+                        let dist = (rect.top() - pos.y).abs();
+                        let val = (dist, new_idx, idx, rect);
 
-                    if let Some((closest_dist, ..)) = closest {
-                        if closest_dist > dist {
+                        if let Some((closest_dist, ..)) = closest {
+                            if closest_dist > dist {
+                                closest = Some(val)
+                            }
+                        } else {
                             closest = Some(val)
                         }
-                    } else {
-                        closest = Some(val)
-                    }
-                });
+                    });
 
-
-                if let Some((_dist, new_idx, original_idx, rect)) = closest {
+                if let Some((_dist, new_idx, _original_idx, rect)) = closest {
                     let mut i = if pos.y > rect.center().y {
                         new_idx + 1
                     } else {
@@ -116,7 +127,6 @@ impl DragDropUi {
                 }
             }
         }
-
 
         if let (Some(target_idx), Some(source_idx)) = (self.hovering_idx, self.source_idx) {
             ui.label(format!("hovering: {}", target_idx));
@@ -157,11 +167,8 @@ impl DragDropUi {
     ) -> Rect {
         let is_being_dragged = ui.memory().is_being_dragged(id);
 
-
         if !is_being_dragged {
-            let scope = ui.scope(|ui | drag_body(ui, Handle {
-                state: self
-            }));
+            let scope = ui.scope(|ui| drag_body(ui, Handle { state: self }));
             return scope.response.rect;
 
             // sponse.clicked() {
@@ -173,7 +180,7 @@ impl DragDropUi {
             // let response = ui.scope(body).response;
 
             // Paint the body to a new layer:
-            let layer_id = LayerId::new(Order::Tooltip, id);
+            let _layer_id = LayerId::new(Order::Tooltip, id);
             // let response = ui.with_layer_id(layer_id, body).response;
 
             // Now we move the visuals of the body to where the mouse is.
@@ -190,24 +197,27 @@ impl DragDropUi {
             //     ui.ctx().translate_layer(layer_id, delta);
             // }
 
-            let pointer_pos = ui.ctx().pointer_interact_pos().unwrap_or(ui.next_widget_position());
+            let pointer_pos = ui
+                .ctx()
+                .pointer_interact_pos()
+                .unwrap_or(ui.next_widget_position());
 
             let u = egui::Area::new("draggable_item")
                 .interactable(false)
                 .fixed_pos(pointer_pos + self.drag_delta.unwrap_or(Vec2::default()))
                 .show(ui.ctx(), |x| {
-                    let rect = x.scope(|gg| {
-                        //gg.label("dragging meeeee yayyyy")
+                    let rect = x
+                        .scope(|gg| {
+                            //gg.label("dragging meeeee yayyyy")
 
-                        drag_body(gg, Handle {
-                            state: self
+                            drag_body(gg, Handle { state: self })
                         })
-                    }).response.rect;
+                        .response
+                        .rect;
 
                     // allocate space where the item would be
                     return rect;
                 });
-
 
             return ui.allocate_space(u.inner.size()).1;
         }
