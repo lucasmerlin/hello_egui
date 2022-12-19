@@ -1,6 +1,6 @@
-use std::hash::Hash;
 use eframe::egui;
 use eframe::egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use std::hash::Hash;
 
 use crate::utils::shift_vec;
 
@@ -56,9 +56,9 @@ impl<'a> Handle<'a> {
             self.state.drag_delta = Some(
                 u.response.rect.min.to_vec2()
                     - response
-                    .interact_pointer_pos()
-                    .unwrap_or(Pos2::default())
-                    .to_vec2(),
+                        .interact_pointer_pos()
+                        .unwrap_or(Pos2::default())
+                        .to_vec2(),
             );
         }
     }
@@ -113,7 +113,7 @@ impl DragDropUi {
     pub fn ui<'a, T: DragDropItem + 'a>(
         &mut self,
         ui: &mut Ui,
-        values: impl Iterator<Item=&'a mut T>,
+        values: impl Iterator<Item = &'a mut T>,
         mut item_ui: impl FnMut(&mut T, &mut Ui, Handle) -> (),
     ) -> DragDropResponse {
         let mut vec = values.enumerate().collect::<Vec<_>>();
@@ -289,7 +289,8 @@ impl DragDropUi {
         let mut content_ui = ui.child_ui(inner_rect, *ui.layout());
 
         let ret = body(&mut content_ui);
-        let outer_rect = Rect::from_min_max(outer_rect_bounds.min, content_ui.min_rect().max + margin);
+        let outer_rect =
+            Rect::from_min_max(outer_rect_bounds.min, content_ui.min_rect().max + margin);
         let (_rect, response) = ui.allocate_at_least(outer_rect.size(), Sense::hover());
 
         InnerResponse::new(ret, response)

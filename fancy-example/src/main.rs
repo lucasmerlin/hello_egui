@@ -107,7 +107,7 @@ impl App for DnDApp {
                     strip.strip(|builder| {
                         builder
                             .size(Size::remainder())
-                            .size(Size::exact(200.0))
+                            .size(Size::exact(300.0))
                             .size(Size::remainder())
                             .vertical(|mut strip| {
                                 strip.empty();
@@ -125,6 +125,15 @@ impl App for DnDApp {
 
                                         ui.add_space(5.0);
                                         ui.small("* it's actually yellow");
+
+                                        ui.add_space(15.0);
+                                        ui.separator();
+                                        ui.add_space(15.0);
+
+                                        ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
+
+                                        ui.hyperlink_to("View on GitHub", "https://github.com/lucasmerlin/egui_dnd");
+                                        ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd")
                                     });
                                 });
                                 strip.empty();
@@ -163,15 +172,10 @@ fn main() {
     });
 }
 
-#[derive(Clone, Copy)]
-enum Interpolation {
-    Linear,
-    Gamma,
-}
-
 #[derive(Clone, Hash, PartialEq, Eq)]
 struct Gradient(pub Vec<Color32>);
 
+// taken from the egui demo
 fn vertex_gradient(ui: &mut Ui, bg_fill: Color32, gradient: &Gradient) {
     use egui::epaint::*;
 

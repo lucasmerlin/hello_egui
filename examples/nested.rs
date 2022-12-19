@@ -1,8 +1,8 @@
 use eframe::egui;
 use eframe::egui::{CollapsingHeader, Id, Ui};
 
-use egui_dnd::{DragDropItem, DragDropUi, Handle};
 use egui_dnd::utils::shift_vec;
+use egui_dnd::{DragDropItem, DragDropUi, Handle};
 
 pub fn main() -> () {
     let options = eframe::NativeOptions {
