@@ -9,5 +9,4 @@ To get started, take a look at the [simple example.](https://github.com/lucasmer
 
 
 
-https://user-images.githubusercontent.com/8009393/208330770-d9756a13-e3a7-4f99-a5f6-53990b892026.mov
-
+![ezgif-2-41c0c5360f](https://user-images.githubusercontent.com/8009393/208403722-b28715cd-b708-4eb4-8d00-36873dee2034.gif)
