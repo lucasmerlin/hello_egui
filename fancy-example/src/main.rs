@@ -116,7 +116,7 @@ impl App for DnDApp {
                                     ui.painter().rect_filled(
                                         ui.available_rect_before_wrap(),
                                         Rounding::same(4.0),
-                                        egui::hex_color!("353535"),
+                                        ui.style().visuals.panel_fill,
                                     );
 
                                     egui::Frame::none().outer_margin(20.0).show(ui, |ui| {
