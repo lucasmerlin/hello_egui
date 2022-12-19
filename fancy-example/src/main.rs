@@ -83,7 +83,7 @@ impl DnDApp {
 
 impl App for DnDApp {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().frame(egui::Frame::none()).show(ctx, |ui| {
             vertex_gradient(
                 ui,
                 Default::default(),
