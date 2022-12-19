@@ -5,6 +5,8 @@ edition = "2021"
 authors = ["Lucas Meurer"]
 repository = "https://github.com/lucasmerlin/egui_dnd"
 keywords = ["egui", "drag", "drop", "ui"]
+description = "A drag and drop library for egui"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
