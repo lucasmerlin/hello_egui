@@ -10,3 +10,12 @@ keywords = ["egui", "drag", "drop", "ui"]
 
 [dependencies]
 eframe = "0.20.1"
+
+[dev-dependencies]
+egui_extras = "0.20.0"
+color-hex = "0.2.0"
+egui = { version = "0.20.1", features = ["color-hex"] }
+
+
+[workspace]
+members = ["fancy-example"]
