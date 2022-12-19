@@ -1,0 +1,26 @@
+name: Deploy pages
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+      - uses: jetli/trunk-action@v0.1.0
+        with:
+          version: 'latest'
+      - name: Trunk build
+        working-directory: fancy-example
+        run: trunk build --release --public-url egui_dnd
+      - name: Deploy pages
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          build_dir: fancy-example/dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

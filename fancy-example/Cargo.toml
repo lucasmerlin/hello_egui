@@ -1,0 +1,14 @@
+[package]
+name = "egui_dnd_example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eframe = "0.20.1"
+egui_extras = "0.20.0"
+color-hex = "0.2.0"
+egui = { version = "0.20.1", features = ["color-hex"] }
+egui_dnd = { path = ".." }
+
+wasm-bindgen = "0.2.83"
+wasm-bindgen-futures = "0.4.33"

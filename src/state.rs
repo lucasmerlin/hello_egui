@@ -1,16 +1,16 @@
+use std::hash::Hash;
 use eframe::egui;
 use eframe::egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
-use crate::utils;
 use crate::utils::shift_vec;
 
 pub trait DragDropItem {
     fn id(&self) -> Id;
 }
 
-impl DragDropItem for String {
+impl<T: Hash> DragDropItem for T {
     fn id(&self) -> Id {
-        Id::new(&self)
+        Id::new(self)
     }
 }
 
@@ -29,7 +29,7 @@ pub struct DragDropResponse {
     pub completed: Option<Response>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct DragDropUi {
     source_idx: Option<usize>,
     hovering_idx: Option<usize>,

@@ -305,6 +305,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "color-hex"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecdffb913a326b6c642290a0d0ec8e8d6597291acdc07cc4c9cb4b3635d44cf9"
+
+[[package]]
 name = "combine"
 version = "4.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -516,6 +522,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b601108bca3af7650440ace4ca55b2daf52c36f2635be3587d77b16efd8d0691"
 dependencies = [
  "bytemuck",
+ "color-hex",
 ]
 
 [[package]]
@@ -554,13 +561,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-dnd"
-version = "0.1.0"
-dependencies = [
- "eframe",
-]
-
-[[package]]
 name = "egui-winit"
 version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -574,6 +574,39 @@ dependencies = [
  "tracing",
  "webbrowser",
  "winit",
+]
+
+[[package]]
+name = "egui_dnd"
+version = "0.1.0"
+dependencies = [
+ "color-hex",
+ "eframe",
+ "egui",
+ "egui_extras",
+]
+
+[[package]]
+name = "egui_dnd_example"
+version = "0.1.0"
+dependencies = [
+ "color-hex",
+ "eframe",
+ "egui",
+ "egui_dnd",
+ "egui_extras",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "egui_extras"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1975cd88ff7430f93b29e6b9868b648a8ff6a43b08b9ff8474ee0a648bd8f9a6"
+dependencies = [
+ "egui",
+ "serde",
 ]
 
 [[package]]
@@ -1356,6 +1389,9 @@ name = "serde"
 version = "1.0.150"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e326c9ec8042f1b5da33252c8a37e9ffbd2c9bef0155215b6e6c80c790e05f91"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_derive"
