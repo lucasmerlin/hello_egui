@@ -1,5 +1,5 @@
-use eframe::egui;
-use eframe::egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use egui;
+use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 use std::hash::Hash;
 
 use crate::utils::shift_vec;
