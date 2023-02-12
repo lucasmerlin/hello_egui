@@ -1,4 +1,4 @@
-use egui;
+
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 use std::hash::Hash;
 
@@ -119,7 +119,7 @@ impl DragDropUi {
         &mut self,
         ui: &mut Ui,
         values: impl Iterator<Item = &'a mut T>,
-        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle) -> (),
+        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle),
     ) -> DragDropResponse {
         let mut vec = values.enumerate().collect::<Vec<_>>();
 
@@ -154,7 +154,7 @@ impl DragDropUi {
 
                 let mut closest: Option<(f32, usize, usize, Rect)> = None;
 
-                let _hovering = rects
+                rects
                     .into_iter()
                     .enumerate()
                     .for_each(|(new_idx, (idx, rect))| {
@@ -227,7 +227,7 @@ impl DragDropUi {
 
         if !is_being_dragged {
             let scope = ui.scope(|ui| drag_body(ui, Handle { state: self }));
-            return scope.response.rect;
+            scope.response.rect
 
             // sponse.clicked() {
             // println!("source clicked")
@@ -264,20 +264,20 @@ impl DragDropUi {
                 .interactable(false)
                 .fixed_pos(pointer_pos + self.drag_delta.unwrap_or(Vec2::default()))
                 .show(ui.ctx(), |x| {
-                    let rect = x
+                    
+
+                    // allocate space where the item would be
+                    x
                         .scope(|gg| {
                             //gg.label("dragging meeeee yayyyy")
 
                             drag_body(gg, Handle { state: self })
                         })
                         .response
-                        .rect;
-
-                    // allocate space where the item would be
-                    return rect;
+                        .rect
                 });
 
-            return ui.allocate_space(u.inner.size()).1;
+            ui.allocate_space(u.inner.size()).1
         }
     }
 
