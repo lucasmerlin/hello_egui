@@ -8,7 +8,7 @@
 
 ... is a drag & drop library for [egui](https://github.com/emilk/egui). 
 
-Give it a try here: https://lucasmerlin.github.io/egui_dnd/
+Give it a try here: <https://lucasmerlin.github.io/egui_dnd/>
 
 
 
