@@ -4,7 +4,9 @@ use std::hash::Hash;
 
 use crate::utils::shift_vec;
 
+/// Item that can be reodered using drag and drop
 pub trait DragDropItem {
+    /// Unique id for the item, to allow egui to keep track of its dragged state between frames
     fn id(&self) -> Id;
 }
 
@@ -29,6 +31,7 @@ pub struct DragDropResponse {
     pub completed: Option<Response>,
 }
 
+/// Holds the data needed to draw the floating item while it is being dragged
 #[derive(Default, Clone)]
 pub struct DragDropUi {
     source_idx: Option<usize>,
@@ -43,6 +46,7 @@ pub struct Handle<'a> {
 }
 
 impl<'a> Handle<'a> {
+    /// Draw the drag handle
     pub fn ui<T: DragDropItem>(self, ui: &mut Ui, item: &T, contents: impl FnOnce(&mut Ui)) {
         let u = ui.scope(contents);
 
@@ -66,7 +70,7 @@ impl<'a> Handle<'a> {
 
 /// [DragDropUi] stores the state of the Drag & Drop list.
 /// # Example
-/// ```rust
+/// ```rust,no_run
 /// use egui_dnd::DragDropUi;
 /// use eframe::App;
 /// use eframe::egui::Context;
@@ -110,6 +114,7 @@ impl<'a> Handle<'a> {
 /// }
 /// ```
 impl DragDropUi {
+    /// Draw the dragged item and check if it has been dropped
     pub fn ui<'a, T: DragDropItem + 'a>(
         &mut self,
         ui: &mut Ui,
