@@ -1,5 +1,5 @@
 
-use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Ui, Vec2};
 use std::hash::Hash;
 
 use crate::utils::shift_vec;
@@ -61,7 +61,7 @@ impl<'a> Handle<'a> {
                 u.response.rect.min.to_vec2()
                     - response
                         .interact_pointer_pos()
-                        .unwrap_or(Pos2::default())
+                        .unwrap_or_default()
                         .to_vec2(),
             );
         }
@@ -102,16 +102,14 @@ impl<'a> Handle<'a> {
 ///     }
 /// }
 ///
-/// pub fn main() {
-///     use eframe::NativeOptions;
-///     let dnd = DragDropUi::default();
-///     eframe::run_native("DnD Example", NativeOptions::default(), Box::new(|_| {
-///         Box::new(DnDApp {
-///             dnd: DragDropUi::default(),
-///             items: vec!["a", "b", "c"].into_iter().map(|s| s.to_string()).collect(),
-///         })
-///     }));
-/// }
+/// use eframe::NativeOptions;
+/// let dnd = DragDropUi::default();
+/// eframe::run_native("DnD Example", NativeOptions::default(), Box::new(|_| {
+///     Box::new(DnDApp {
+///         dnd: DragDropUi::default(),
+///         items: vec!["a", "b", "c"].into_iter().map(|s| s.to_string()).collect(),
+///     })
+/// }));
 /// ```
 impl DragDropUi {
     /// Draw the dragged item and check if it has been dropped
@@ -258,11 +256,11 @@ impl DragDropUi {
             let pointer_pos = ui
                 .ctx()
                 .pointer_interact_pos()
-                .unwrap_or(ui.next_widget_position());
+                .unwrap_or_else(|| ui.next_widget_position());
 
             let u = egui::Area::new("draggable_item")
                 .interactable(false)
-                .fixed_pos(pointer_pos + self.drag_delta.unwrap_or(Vec2::default()))
+                .fixed_pos(pointer_pos + self.drag_delta.unwrap_or_default())
                 .show(ui.ctx(), |x| {
                     
 
