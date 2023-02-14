@@ -1,4 +1,3 @@
-
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Ui, Vec2};
 use std::hash::Hash;
 
@@ -262,17 +261,14 @@ impl DragDropUi {
                 .interactable(false)
                 .fixed_pos(pointer_pos + self.drag_delta.unwrap_or_default())
                 .show(ui.ctx(), |x| {
-                    
-
                     // allocate space where the item would be
-                    x
-                        .scope(|gg| {
-                            //gg.label("dragging meeeee yayyyy")
+                    x.scope(|gg| {
+                        //gg.label("dragging meeeee yayyyy")
 
-                            drag_body(gg, Handle { state: self })
-                        })
-                        .response
-                        .rect
+                        drag_body(gg, Handle { state: self })
+                    })
+                    .response
+                    .rect
                 });
 
             ui.allocate_space(u.inner.size()).1
