@@ -1,10 +1,12 @@
-use egui;
+
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 use std::hash::Hash;
 
 use crate::utils::shift_vec;
 
+/// Item that can be reodered using drag and drop
 pub trait DragDropItem {
+    /// Unique id for the item, to allow egui to keep track of its dragged state between frames
     fn id(&self) -> Id;
 }
 
@@ -29,6 +31,7 @@ pub struct DragDropResponse {
     pub completed: Option<Response>,
 }
 
+/// Holds the data needed to draw the floating item while it is being dragged
 #[derive(Default, Clone)]
 pub struct DragDropUi {
     source_idx: Option<usize>,
@@ -43,6 +46,7 @@ pub struct Handle<'a> {
 }
 
 impl<'a> Handle<'a> {
+    /// Draw the drag handle
     pub fn ui<T: DragDropItem>(self, ui: &mut Ui, item: &T, contents: impl FnOnce(&mut Ui)) {
         let u = ui.scope(contents);
 
@@ -66,7 +70,7 @@ impl<'a> Handle<'a> {
 
 /// [DragDropUi] stores the state of the Drag & Drop list.
 /// # Example
-/// ```rust
+/// ```rust,no_run
 /// use egui_dnd::DragDropUi;
 /// use eframe::App;
 /// use eframe::egui::Context;
@@ -110,11 +114,12 @@ impl<'a> Handle<'a> {
 /// }
 /// ```
 impl DragDropUi {
+    /// Draw the dragged item and check if it has been dropped
     pub fn ui<'a, T: DragDropItem + 'a>(
         &mut self,
         ui: &mut Ui,
         values: impl Iterator<Item = &'a mut T>,
-        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle) -> (),
+        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle),
     ) -> DragDropResponse {
         let mut vec = values.enumerate().collect::<Vec<_>>();
 
@@ -149,7 +154,7 @@ impl DragDropUi {
 
                 let mut closest: Option<(f32, usize, usize, Rect)> = None;
 
-                let _hovering = rects
+                rects
                     .into_iter()
                     .enumerate()
                     .for_each(|(new_idx, (idx, rect))| {
@@ -222,7 +227,7 @@ impl DragDropUi {
 
         if !is_being_dragged {
             let scope = ui.scope(|ui| drag_body(ui, Handle { state: self }));
-            return scope.response.rect;
+            scope.response.rect
 
             // sponse.clicked() {
             // println!("source clicked")
@@ -259,20 +264,20 @@ impl DragDropUi {
                 .interactable(false)
                 .fixed_pos(pointer_pos + self.drag_delta.unwrap_or(Vec2::default()))
                 .show(ui.ctx(), |x| {
-                    let rect = x
+                    
+
+                    // allocate space where the item would be
+                    x
                         .scope(|gg| {
                             //gg.label("dragging meeeee yayyyy")
 
                             drag_body(gg, Handle { state: self })
                         })
                         .response
-                        .rect;
-
-                    // allocate space where the item would be
-                    return rect;
+                        .rect
                 });
 
-            return ui.allocate_space(u.inner.size()).1;
+            ui.allocate_space(u.inner.size()).1
         }
     }
 

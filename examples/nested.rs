@@ -4,12 +4,12 @@ use eframe::egui::{CollapsingHeader, Id, Ui};
 use egui_dnd::utils::shift_vec;
 use egui_dnd::{DragDropItem, DragDropUi, Handle};
 
-pub fn main() -> () {
+pub fn main() {
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::vec2(320.0, 240.0)),
         ..Default::default()
     };
-    eframe::run_native("DnD", options, Box::new(|_cc| Box::new(MyApp::default())));
+    eframe::run_native("DnD", options, Box::new(|_cc| Box::<MyApp>::default()));
 }
 
 #[derive(Default)]

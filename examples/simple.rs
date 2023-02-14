@@ -66,6 +66,6 @@ pub fn main() {
     eframe::run_native(
         "DnD Example",
         NativeOptions::default(),
-        Box::new(|_a| Box::new(DnDApp::default())),
+        Box::new(|_a| Box::<DnDApp>::default()),
     )
 }
