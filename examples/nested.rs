@@ -9,7 +9,7 @@ pub fn main() {
         initial_window_size: Some(egui::vec2(320.0, 240.0)),
         ..Default::default()
     };
-    eframe::run_native("DnD", options, Box::new(|_cc| Box::<MyApp>::default()));
+    eframe::run_native("DnD", options, Box::new(|_cc| Box::<MyApp>::default())).unwrap();
 }
 
 #[derive(Default)]
