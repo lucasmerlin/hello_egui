@@ -153,7 +153,8 @@ fn main() {
         "DnD Example App",
         options,
         Box::new(|_a| Box::new(DnDApp::default())),
-    ).unwrap();
+    )
+    .unwrap();
 }
 
 // when compiling to web using trunk.
