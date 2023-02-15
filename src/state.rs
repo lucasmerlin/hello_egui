@@ -52,7 +52,7 @@ impl<'a> Handle<'a> {
         let response = ui.interact(u.response.rect, item.id(), Sense::drag());
 
         if response.hovered() {
-            ui.output().cursor_icon = CursorIcon::Grab;
+            ui.output_mut(|o| o.cursor_icon = CursorIcon::Grab);
         }
 
         if response.drag_started() {
@@ -133,14 +133,14 @@ impl DragDropUi {
                 });
                 rects.push((*idx, rect));
 
-                if ui.memory().is_being_dragged(item.id()) {
+                if ui.memory(|m| m.is_being_dragged(item.id())) {
                     self.source_idx = Some(*idx);
                 }
             });
         });
 
-        if ui.memory().is_anything_being_dragged() {
-            let pos = ui.input().pointer.hover_pos();
+        if ui.memory(|m| m.is_anything_being_dragged()) {
+            let pos = ui.input(|i| i.pointer.hover_pos());
 
             if let Some(pos) = pos {
                 let pos = if let Some(delta) = self.drag_delta {
@@ -186,7 +186,7 @@ impl DragDropUi {
         }
 
         if let (Some(target_idx), Some(source_idx)) = (self.hovering_idx, self.source_idx) {
-            if ui.input().pointer.any_released() {
+            if ui.input(|i| i.pointer.any_released()) {
                 self.source_idx = None;
                 self.hovering_idx = None;
 
@@ -220,7 +220,7 @@ impl DragDropUi {
         id: Id,
         drag_body: impl FnOnce(&mut Ui, Handle),
     ) -> Rect {
-        let is_being_dragged = ui.memory().is_being_dragged(id);
+        let is_being_dragged = ui.memory(|m| m.is_being_dragged(id));
 
         if !is_being_dragged {
             let scope = ui.scope(|ui| drag_body(ui, Handle { state: self }));
@@ -230,7 +230,7 @@ impl DragDropUi {
             // println!("source clicked")
             // }
         } else {
-            ui.output().cursor_icon = CursorIcon::Grabbing;
+            ui.output_mut(|o| o.cursor_icon = CursorIcon::Grabbing);
 
             // let response = ui.scope(body).response;
 

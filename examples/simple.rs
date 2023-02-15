@@ -67,5 +67,5 @@ pub fn main() {
         "DnD Example",
         NativeOptions::default(),
         Box::new(|_a| Box::<DnDApp>::default()),
-    )
+    ).unwrap();
 }

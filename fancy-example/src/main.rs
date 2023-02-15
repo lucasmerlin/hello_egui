@@ -90,7 +90,7 @@ impl App for DnDApp {
                 &Gradient(
                     self.preview
                         .as_ref()
-                        .unwrap_or(self.items.as_ref())
+                        .unwrap_or_else(|| self.items.as_ref())
                         .iter()
                         .map(|c| c.color)
                         .collect(),
@@ -153,7 +153,7 @@ fn main() {
         "DnD Example App",
         options,
         Box::new(|_a| Box::new(DnDApp::default())),
-    );
+    ).unwrap();
 }
 
 // when compiling to web using trunk.
