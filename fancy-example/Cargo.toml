@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-eframe = "0.21"
-egui_extras = "0.21"
+eframe = "0.22"
+egui_extras = "0.22"
 color-hex = "0.2.0"
-egui = { version = "0.21", features = ["color-hex"] }
+egui = { version = "0.22", features = ["color-hex"] }
 egui_dnd = { path = ".." }
 
 wasm-bindgen = "0.2.83"
