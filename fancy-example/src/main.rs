@@ -162,16 +162,16 @@ fn main() {
 fn main() {
     let web_options = eframe::WebOptions::default();
 
-
     wasm_bindgen_futures::spawn_local(async {
         let runner = eframe::WebRunner::new();
-        runner.start(
-            "canvas",
-            web_options,
-            Box::new(|_a| Box::new(DnDApp::default())),
-        )
-        .await
-        .expect("failed to start eframe");
+        runner
+            .start(
+                "canvas",
+                web_options,
+                Box::new(|_a| Box::new(DnDApp::default())),
+            )
+            .await
+            .expect("failed to start eframe");
     });
 }
 
