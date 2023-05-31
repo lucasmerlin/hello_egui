@@ -1,5 +1,5 @@
 [package]
-name = "egui_dnd_example"
+name = "fancy-example"
 version = "0.1.0"
 edition = "2021"
 
