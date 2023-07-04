@@ -83,7 +83,7 @@ impl Default for MyApp {
 
 impl MyApp {
     fn draw_item(ui: &mut Ui, item: &mut SortableItem, handle: Handle) {
-        handle.ui(ui, item, |ui| {
+        handle.ui(ui, |ui| {
             ui.label(&item.name);
         });
 

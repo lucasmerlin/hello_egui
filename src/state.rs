@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Ui, Vec2};
 use std::hash::Hash;
 
@@ -41,15 +42,16 @@ pub struct DragDropUi {
 
 /// [Handle::ui] is used to draw the drag handle
 pub struct Handle<'a> {
+    id: Id,
     state: &'a mut DragDropUi,
 }
 
 impl<'a> Handle<'a> {
     /// Draw the drag handle
-    pub fn ui<T: DragDropItem>(self, ui: &mut Ui, item: &T, contents: impl FnOnce(&mut Ui)) {
+    pub fn ui(self, ui: &mut Ui, contents: impl FnOnce(&mut Ui)) {
         let u = ui.scope(contents);
 
-        let response = ui.interact(u.response.rect, item.id(), Sense::drag());
+        let response = ui.interact(u.response.rect, self.id, Sense::drag());
 
         if response.hovered() {
             ui.output_mut(|o| o.cursor_icon = CursorIcon::Grab);
@@ -88,7 +90,7 @@ impl<'a> Handle<'a> {
 ///         CentralPanel::default().show(ctx, |ui| {
 ///             let response = self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle| {
 ///                 ui.horizontal(|ui| {
-///                     handle.ui(ui, item, |ui| {
+///                     handle.ui(ui, |ui| {
 ///                         ui.label("grab");
 ///                     });
 ///                     ui.label(item.clone());
@@ -112,13 +114,15 @@ impl<'a> Handle<'a> {
 /// ```
 impl DragDropUi {
     /// Draw the dragged item and check if it has been dropped
-    pub fn ui<'a, T: DragDropItem + 'a>(
+    pub fn ui<'a, T: DragDropItem + 'a, B>(
         &mut self,
         ui: &mut Ui,
-        values: impl Iterator<Item = &'a mut T>,
+        values: impl Iterator<Item = B>,
         mut item_ui: impl FnMut(&mut T, &mut Ui, Handle),
-    ) -> DragDropResponse {
+    ) -> DragDropResponse
+    where B: BorrowMut<T> {
         let mut vec = values.enumerate().collect::<Vec<_>>();
+        let len = vec.len();
 
         if let (Some(hovering_idx), Some(source_idx)) = (self.hovering_idx, self.source_idx) {
             shift_vec(source_idx, hovering_idx, &mut vec);
@@ -127,14 +131,14 @@ impl DragDropUi {
         let mut rects = Vec::with_capacity(vec.len());
 
         DragDropUi::drop_target(ui, true, |ui| {
-            vec.iter_mut().for_each(|(idx, item)| {
-                let rect = self.drag_source(ui, item.id(), |ui, handle| {
-                    item_ui(item, ui, handle);
+            vec.into_iter().for_each(|(idx, mut item)| {
+                let rect = self.drag_source(ui, item.borrow_mut().id(), |ui, handle| {
+                    item_ui(item.borrow_mut(), ui, handle);
                 });
-                rects.push((*idx, rect));
+                rects.push((idx, rect));
 
-                if ui.memory(|m| m.is_being_dragged(item.id())) {
-                    self.source_idx = Some(*idx);
+                if ui.memory(|m| m.is_being_dragged(item.borrow_mut().id())) {
+                    self.source_idx = Some(idx);
                 }
             });
         });
@@ -175,7 +179,7 @@ impl DragDropUi {
                     };
 
                     if let Some(idx) = self.source_idx {
-                        if i > idx && i < vec.len() {
+                        if i > idx && i < len {
                             i += 1;
                         }
                     }
@@ -223,7 +227,7 @@ impl DragDropUi {
         let is_being_dragged = ui.memory(|m| m.is_being_dragged(id));
 
         if !is_being_dragged {
-            let scope = ui.scope(|ui| drag_body(ui, Handle { state: self }));
+            let scope = ui.scope(|ui| drag_body(ui, Handle { state: self, id }));
             scope.response.rect
 
             // sponse.clicked() {
@@ -265,7 +269,7 @@ impl DragDropUi {
                     x.scope(|gg| {
                         //gg.label("dragging meeeee yayyyy")
 
-                        drag_body(gg, Handle { state: self })
+                        drag_body(gg, Handle { state: self, id })
                     })
                     .response
                     .rect

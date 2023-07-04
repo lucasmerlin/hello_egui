@@ -60,9 +60,9 @@ impl DnDApp {
     fn dnd_ui(&mut self, ui: &mut Ui) {
         let response = self
             .dnd
-            .ui::<Color>(ui, self.items.iter_mut(), |item, ui, handle| {
+            .ui(ui, self.items.iter_mut(), |item: &mut Color, ui, handle| {
                 ui.horizontal(|ui| {
-                    handle.ui(ui, item, |ui| {
+                    handle.ui(ui, |ui| {
                         let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
                         ui.painter()
                             .rect_filled(rect, Rounding::same(1.0), item.color);

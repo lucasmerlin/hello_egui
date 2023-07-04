@@ -1,4 +1,3 @@
-use std::hash::Hash;
 use eframe::egui::{Context, Id};
 use eframe::{egui, App, Frame, NativeOptions};
 
@@ -42,10 +41,13 @@ impl App for DnDApp {
             let response =
                 // make sure this is called in a vertical layout.
                 // Horizontal sorting is not supported yet.
-                self.dnd.ui::<ItemType, _>(ui, self.items.iter_mut(), |item, ui, handle| {
+                self.dnd.ui(ui, self.items.iter_mut(), |item: &mut ItemType, ui, handle| {
                     ui.horizontal(|ui| {
                         // Anything in the handle can be used to drag the item
                         handle.ui(ui, |ui| {
+                            if ui.button("grab").clicked() {
+                                println!("clicked {}", item.name);
+                            }
                             ui.label("grab");
                         });
 
@@ -69,5 +71,5 @@ pub fn main() {
         NativeOptions::default(),
         Box::new(|_a| Box::<DnDApp>::default()),
     )
-    .unwrap();
+        .unwrap();
 }
