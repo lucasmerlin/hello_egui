@@ -1,6 +1,7 @@
+use std::arch::aarch64::vget_high_p8;
 use std::borrow::BorrowMut;
 use std::hash::Hash;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
@@ -18,21 +19,48 @@ impl<T: Hash> DragDropItem for T {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Response {
+/// An instruction in what order to update the source list.
+/// The item at from should be removed from the list and inserted at to.
+/// You can use [shift_vec] to do this for a Vec.
+#[derive(Debug, Clone)]
+pub struct DragUpdate {
     pub from: usize,
     pub to: usize,
 }
 
-/// Response containing the potential list updates during and after a drag & drop event
-/// `current_drag` will contain a [Response] when something is being dragged right now and can be
-/// used update some state while the drag is in progress.
-/// `completed` contains a [Response] after a successful drag & drop event. It should be used to
-/// update positions of the affected items. If the source is a vec, [shift_vec] can be used.
-#[derive(Debug, Default, Clone)]
+/// Response containing state of the drag & drop list and a potential update to the source list.
+/// The update can be applied immediately or at latest when [DragDropResponse::is_drag_finished] returns true.
+#[derive(Debug, Clone)]
 pub struct DragDropResponse {
-    pub current_drag: Option<Response>,
-    pub completed: Option<Response>,
+    state: DragDetectionState,
+    pub update: Option<DragUpdate>,
+    finished: bool,
+}
+
+impl DragDropResponse {
+    pub fn is_evaluating_drag(&self) -> bool {
+        self.state.is_evaluating_drag()
+    }
+
+    pub fn is_dragging(&self) -> bool {
+        self.state.is_dragging()
+    }
+
+    pub fn dragged_item_id(&self) -> Option<Id> {
+        self.state.dragged_item()
+    }
+
+    /// Returns true if the drag & drop event has finished and the item has been dropped.
+    /// The update should be applied to the source list.
+    pub fn is_drag_finished(&self) -> bool {
+        self.finished
+    }
+
+    pub fn update_vec<T>(&self, vec: &mut Vec<T>) {
+        if let Some(update) = &self.update {
+            shift_vec(update.from, update.to, vec);
+        }
+    }
 }
 
 /// Holds the data needed to draw the floating item while it is being dragged
@@ -40,12 +68,17 @@ pub struct DragDropResponse {
 pub struct DragDropUi {
     detection_state: DragDetectionState,
     drag_count: usize,
+    /// If the mobile config is set, we will use it if we detect a touch event
+    touch_config: Option<DragDropConfig>,
+    mouse_config: DragDropConfig,
 }
 
 /// [Handle::ui] is used to draw the drag handle
 pub struct Handle<'a> {
     id: Id,
     state: &'a mut DragDropUi,
+    hovering_over_any_handle: &'a mut bool,
+    sense: Option<Sense>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -69,9 +102,14 @@ enum DragDetectionState {
 enum DragPhase {
     FirstFrame,
     Rest {
+        dragged_item_size: Vec2,
+
+        hovering_item: Id,
+        source_item: Id,
+
+        // These should only be used during for output, as to not cause issues when item indexes change
         hovering_idx: usize,
         source_idx: usize,
-        dragged_item_size: Vec2,
     },
 }
 
@@ -82,6 +120,12 @@ impl DragPhase {
 }
 
 impl DragDetectionState {
+    fn is_evaluating_drag(&self) -> bool {
+        matches!(self, DragDetectionState::WaitingForClickThreshold)
+            || matches!(self, DragDetectionState::PressedWaitingForDelay { .. })
+            || matches!(self, DragDetectionState::CouldBeValidDrag)
+    }
+
     fn is_dragging(&self) -> bool {
         matches!(self, DragDetectionState::Dragging { .. })
     }
@@ -111,9 +155,9 @@ impl DragDetectionState {
         }
     }
 
-    fn hovering_index(&self) -> Option<usize> {
+    fn hovering_item(&self) -> Option<Id> {
         match self {
-            DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_idx, .. }, .. } => Some(*hovering_idx),
+            DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_item, .. }, .. } => Some(*hovering_item),
             _ => None,
         }
     }
@@ -124,13 +168,26 @@ impl DragDetectionState {
 }
 
 impl<'a> Handle<'a> {
-    pub fn ui_impl(self, ui: &mut Ui, sense: Option<Sense>, contents: impl FnOnce(&mut Ui)) -> egui::Response {
+
+    /// You can add [Sense::click] if you want to listen for clicks on the handle
+    /// Please not that this will make anything in the handle noninteractive
+    pub fn sense(mut self, sense: Sense) -> Self {
+        self.sense = Some(sense);
+        self
+    }
+
+    pub fn ui(self, ui: &mut Ui, contents: impl FnOnce(&mut Ui)) -> egui::Response {
         let u = ui.scope(contents);
 
-        let response = ui.interact(u.response.rect, self.id, sense.unwrap_or(Sense::hover()));
+        let response = if let Some(sense) = self.sense {
+            u.response.interact(sense)
+        } else {
+            u.response
+        };
 
         if response.hovered() {
             ui.output_mut(|o| o.cursor_icon = CursorIcon::Grab);
+            *self.hovering_over_any_handle = true;
         }
 
         let offset = response.rect.min.to_vec2()
@@ -149,7 +206,7 @@ impl<'a> Handle<'a> {
         if response.hovered()
             && matches!(self.state.detection_state, DragDetectionState::WaitingForClickThreshold)
             && response.rect.contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
-            {
+        {
             // It should be save to stop anything else being dragged here
             // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
             ui.memory_mut(|mem| mem.stop_dragging());
@@ -170,15 +227,37 @@ impl<'a> Handle<'a> {
 
         return response;
     }
+}
 
-    /// Draw the drag handle
-    pub fn ui_sense(self, ui: &mut Ui, sense: Sense, contents: impl FnOnce(&mut Ui)) -> egui::Response {
-        self.ui_impl(ui, Some(sense), contents)
+// TODO: Implement these
+#[derive(Debug, Clone)]
+struct DragDropConfig {
+    scroll_tolerance: f32,
+    click_tolerance: f32,
+    drag_delay: Duration,
+}
+
+impl Default for DragDropConfig {
+    fn default() -> Self {
+        Self::mouse()
+    }
+}
+
+impl DragDropConfig {
+    fn mouse() -> Self {
+        Self {
+            click_tolerance: 1.0,
+            drag_delay: Duration::from_millis(0),
+            scroll_tolerance: 0.0,
+        }
     }
 
-    /// Draw the drag handle
-    pub fn ui(self, ui: &mut Ui, contents: impl FnOnce(&mut Ui)) -> egui::Response {
-        self.ui_impl(ui, None, contents)
+    fn touch() -> Self {
+        Self {
+            scroll_tolerance: 6.0,
+            click_tolerance: 3.0,
+            drag_delay: Duration::from_millis(300),
+        }
     }
 }
 
@@ -234,6 +313,10 @@ impl DragDropUi {
         mut item_ui: impl FnMut(&mut T, &mut Ui, Handle, bool),
     ) -> DragDropResponse
         where B: BorrowMut<T> {
+
+        // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
+        let mut first_frame = false;
+
         ui.input(|i| {
             if i.pointer.any_down() {
                 let mobile_scroll = i.any_touches();
@@ -242,6 +325,7 @@ impl DragDropUi {
 
 
                 if matches!(self.detection_state, DragDetectionState::None) || matches!(self.detection_state, DragDetectionState::TransitioningBackAfterDragFinished {..}) {
+                    first_frame = true;
                     self.detection_state = DragDetectionState::PressedWaitingForDelay {
                         pressed_at: SystemTime::now(),
                     };
@@ -265,7 +349,6 @@ impl DragDropUi {
         });
 
         let mut vec = values.enumerate().collect::<Vec<_>>();
-        let len = vec.len();
 
         // if let DragDetectionState::Dragging { hovering_idx, source_idx, .. } = &mut self.detection_state {
         //     if let (Some(hovering_idx), Some(source_idx)) = (hovering_idx, source_idx) {
@@ -281,8 +364,12 @@ impl DragDropUi {
 
         let mut should_add_space_at_end = true;
 
-        let mut source_idx = None;
+        let mut source_item = None;
         let mut dragged_item_size = None;
+
+        let mut add_space_for_previous_item = false;
+
+        let mut hovering_over_any_handle = false;
 
         ui.scope(|ui| {
             let item_spacing = ui.spacing().item_spacing.y;
@@ -290,32 +377,45 @@ impl DragDropUi {
 
             // In egui, if the value changes during animation, we start at 0 or 1 again instead of returning from the current value.
             // This causes flickering, we use the animation budget to mitigate this (Stops the total value of animations to be > 1).
-            // TODO: Try animate_value instead
             let mut animation_budget = 1.0;
 
             DragDropUi::drop_target(ui, true, |ui| {
                 vec.into_iter().for_each(|(idx, mut item)| {
                     let item_id = item.borrow().id();
-                    let dragging = self.detection_state.is_dragging_item(item_id);
+                    let is_dragged_item = self.detection_state.is_dragging_item(item_id);
 
-                    let hovering_this_item = self.detection_state.hovering_index() == Some(idx);
+                    let hovering_this_item = self.detection_state.hovering_item() == Some(item_id);
                     let mut add_space = hovering_this_item;
+                    if add_space_for_previous_item {
+                        add_space = true;
+                        add_space_for_previous_item = false;
+                    }
+                    if add_space && is_dragged_item {
+                        add_space_for_previous_item = true;
+                        add_space = false;
+                    }
                     if add_space {
                         should_add_space_at_end = false;
                     }
-                    let animation_id = ui.auto_id_with(item_id);
 
+                    let animation_id = Id::new(item_id).with("dnd_space_animation");
 
-                    let mut x = ui.ctx().animate_bool(animation_id, add_space);
+                    // let mut x = ui.ctx().animate_bool(animation_id, add_space);
+                    let mut x = ui.ctx().animate_value_with_time(animation_id, if add_space {
+                        // overshoot a little, so our animation budget is always used up
+                        1.2
+                    } else {
+                        0.0
+                    }, ui.style().animation_time);
 
                     let space = (dragged_item_rect.height() + item_spacing);
                     if x > 0.0 {
                         x = x.min(animation_budget);
-                        ui.add_space(space * x);
+                        ui.allocate_space(Vec2::new(0.0, space * x));
                     }
                     animation_budget -= x;
 
-
+                    // Add normal item spacing
                     if !self.detection_state.is_dragging_item(item_id) {
                         ui.add_space(item_spacing);
                     }
@@ -323,26 +423,26 @@ impl DragDropUi {
                     let rect = ui.scope(|ui| {
                         // Restore spacing so it doesn't affect inner ui
                         ui.style_mut().spacing.item_spacing.y = item_spacing;
-                        self.drag_source(ui, item.borrow_mut().id(), |ui, handle| {
-                            item_ui(item.borrow_mut(), ui, handle, dragging);
+                        self.drag_source(ui, item.borrow_mut().id(), &mut hovering_over_any_handle, |ui, handle| {
+                            item_ui(item.borrow_mut(), ui, handle, is_dragged_item);
                         })
                     }).inner;
 
                     if dragged_item_center.y < rect.center().y && above_item.is_none() {
-                        above_item = Some(idx);
+                        above_item = Some((idx, item_id));
                     }
                     if dragged_item_center.y > rect.center().y {
                         below_item = Some((idx, item_id));
                     }
 
                     if self.detection_state.is_dragging_item(item_id) {
-                        source_idx = Some(idx);
+                        source_item = Some((idx, item_id));
                         dragged_item_size = Some(rect.size());
                     }
                 });
             });
 
-            let mut x = ui.ctx().animate_bool(ui.auto_id_with(self.drag_count).with("end_space").with(self.detection_state.hovering_index().is_some()), should_add_space_at_end && self.detection_state.hovering_index().is_some());
+            let mut x = ui.ctx().animate_bool(Id::new("dnd_end_space"), should_add_space_at_end && self.detection_state.hovering_item().is_some());
             x = x.min(animation_budget);
             if x > 0.0 {
                 let space = (dragged_item_rect.height() + item_spacing);
@@ -350,21 +450,27 @@ impl DragDropUi {
             }
         });
 
+        // The cursor is not hovering over any item, so cancel
+        if first_frame && !hovering_over_any_handle {
+            self.detection_state = DragDetectionState::Cancelled;
+        }
 
+        let hovering_item = above_item
+            .or(below_item);
         if let DragDetectionState::Dragging { phase, id: dragging_id, .. } = &mut self.detection_state {
-            let hovering_idx = above_item
-                .or(below_item.map(|(i, id)| if id == *dragging_id { i } else { i + 1 }));
-            if let Some(hovering_idx) = hovering_idx {
-                if let Some(source_idx) = source_idx {
+            if let Some(hovering_item) = hovering_item {
+                if let Some(source_idx) = source_item {
                     if let Some(dragged_item_size) = dragged_item_size {
                         if let DragPhase::FirstFrame = phase {
                             // Prevent flickering
                             ui.ctx().clear_animations();
                         }
                         *phase = DragPhase::Rest {
-                            hovering_idx,
-                            source_idx,
                             dragged_item_size,
+                            hovering_item: hovering_item.1,
+                            source_item: source_idx.1,
+                            hovering_idx: hovering_item.0,
+                            source_idx: source_idx.0,
                         }
                     }
                 }
@@ -374,40 +480,36 @@ impl DragDropUi {
         let response = if let DragDetectionState::Dragging {
             id,
             phase: DragPhase::Rest {
-                source_idx,
                 hovering_idx,
+                source_idx,
                 ..
             }, ..
         } = self.detection_state {
-            if ui.input(|i| i.pointer.any_released()) {
-                ui.ctx().clear_animations();
+            let mut response = DragDropResponse {
+                finished: false,
+                update: Some(DragUpdate {
+                    from: source_idx,
+                    to: hovering_idx,
+                }),
+                state: self.detection_state.clone(),
+            };
 
+            if ui.input(|i| i.pointer.any_released()) {
+                response.finished = true;
+                ui.ctx().clear_animations();
 
                 self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
                     from: Some(dragged_item_pos),
                     id,
                 };
-
-                DragDropResponse {
-                    completed: Some(Response {
-                        from: source_idx,
-                        to: hovering_idx,
-                    }),
-                    current_drag: None,
-                }
-            } else {
-                DragDropResponse {
-                    current_drag: Some(Response {
-                        from: source_idx,
-                        to: hovering_idx,
-                    }),
-                    completed: None,
-                }
             }
+
+            response
         } else {
             DragDropResponse {
-                current_drag: None,
-                completed: None,
+                finished: false,
+                update: None,
+                state: self.detection_state.clone(),
             }
         };
 
@@ -429,6 +531,7 @@ impl DragDropUi {
         &mut self,
         ui: &mut Ui,
         id: Id,
+        hovering_over_any_handle: &mut bool,
         drag_body: impl FnOnce(&mut Ui, Handle),
     ) -> Rect {
         if let DragDetectionState::Dragging { id: dragging_id, offset, phase, .. } = &mut self.detection_state {
@@ -451,6 +554,7 @@ impl DragDropUi {
                     ui,
                     id,
                     position,
+                    hovering_over_any_handle,
                     drag_body,
                 );
 
@@ -479,13 +583,14 @@ impl DragDropUi {
                     ui,
                     id,
                     position,
+                    hovering_over_any_handle,
                     drag_body,
                 );
                 return ui.allocate_exact_size(rect.size(), Sense::hover()).0;
             }
         }
 
-        let scope = ui.scope(|ui| drag_body(ui, Handle { state: self, id }));
+        let scope = ui.scope(|ui| drag_body(ui, Handle { state: self, id, hovering_over_any_handle, sense: None }));
         scope.response.rect
     }
 
@@ -494,6 +599,7 @@ impl DragDropUi {
         ui: &mut Ui,
         id: Id,
         pos: Pos2,
+        hovering_over_any_handle: &mut bool,
         body: impl FnOnce(&mut Ui, Handle),
     ) -> InnerResponse<Rect> {
         let _layer_id = LayerId::new(Order::Tooltip, id);
@@ -503,7 +609,7 @@ impl DragDropUi {
             .fixed_pos(pos)
             .show(ui.ctx(), |ui| {
                 ui.scope(|ui| {
-                    body(ui, Handle { state: self, id })
+                    body(ui, Handle { state: self, id, hovering_over_any_handle, sense: None })
                 })
                     .response
                     .rect

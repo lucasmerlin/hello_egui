@@ -2,7 +2,6 @@ use eframe::NativeOptions;
 use egui::{CentralPanel, Id, ScrollArea, Sense};
 
 use egui_dnd::{DragDropItem, DragDropUi};
-use egui_dnd::utils::shift_vec;
 
 struct ItemType {
     number: u32,
@@ -31,20 +30,21 @@ fn main() -> eframe::Result<()> {
                     .show(ui, |ui| {
                         let response = dnd.ui::<ItemType, _>(ui, items.iter_mut(), |item, ui, handle, dragging| {
                             ui.horizontal(|ui| {
-                                if handle.ui_impl(ui, Some(Sense::click()), |ui| {
-                                    ui.label("grab");
-                                }).clicked() {
+                                if handle
+                                    .sense(Sense::click())
+                                    .ui(ui, |ui| {
+                                        ui.label("grab");
+                                        // if ui.button("click me").clicked() {
+                                        //     println!("clicked");
+                                        // }
+                                    }).clicked() {
                                     println!("clicked {}", item.number);
                                 }
                                 ui.label(&item.number.to_string());
                             });
                         });
 
-                        if let Some(response) = response.completed {
-                            let from = response.from;
-                            let to = response.to;
-                            shift_vec(from, to, &mut items)
-                        }
+                        response.update_vec(&mut items);
                     })
             });
 
