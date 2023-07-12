@@ -146,7 +146,10 @@ impl<'a> Handle<'a> {
         let click_threshold = 1.0;
         let is_above_click_threshold = drag_distance > click_threshold;
 
-        if response.hovered() && matches!(self.state.detection_state, DragDetectionState::WaitingForClickThreshold) {
+        if response.hovered()
+            && matches!(self.state.detection_state, DragDetectionState::WaitingForClickThreshold)
+            && response.rect.contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
+            {
             // It should be save to stop anything else being dragged here
             // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
             ui.memory_mut(|mem| mem.stop_dragging());
@@ -317,9 +320,13 @@ impl DragDropUi {
                         ui.add_space(item_spacing);
                     }
 
-                    let rect = self.drag_source(ui, item.borrow_mut().id(), |ui, handle| {
-                        item_ui(item.borrow_mut(), ui, handle, dragging);
-                    });
+                    let rect = ui.scope(|ui| {
+                        // Restore spacing so it doesn't affect inner ui
+                        ui.style_mut().spacing.item_spacing.y = item_spacing;
+                        self.drag_source(ui, item.borrow_mut().id(), |ui, handle| {
+                            item_ui(item.borrow_mut(), ui, handle, dragging);
+                        })
+                    }).inner;
 
                     if dragged_item_center.y < rect.center().y && above_item.is_none() {
                         above_item = Some(idx);
