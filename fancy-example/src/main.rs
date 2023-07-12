@@ -1,14 +1,14 @@
 use std::hash::{Hash, Hasher};
 
-use eframe::{App, egui, Frame};
-use eframe::egui::{Color32, Context};
+use eframe::egui;
+use eframe::egui::Color32;
 use eframe::emath::lerp;
 use egui::{Id, Rounding, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use egui_dnd::{DragDropItem, DragDropUi};
+use egui_dnd::{dnd, DragDropItem};
 
 #[derive(Clone)]
 struct Color {
@@ -23,82 +23,61 @@ impl Hash for Color {
     }
 }
 
-struct DnDApp {
-    dnd: DragDropUi,
-    items: Vec<Color>,
+fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui) {
+    let response = dnd(ui, "fancy_dnd").show_vec(items, |ui, item, handle, _pressed| {
+        ui.horizontal(|ui| {
+            if handle
+                .sense(Sense::click())
+                .ui(ui, |ui| {
+                    let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
+
+                    let x = ui.ctx().animate_bool(item.id(), item.rounded);
+                    let rounding = x * 16.0 + 1.0;
+
+                    ui.painter().rect_filled(
+                        rect.shrink(x * 4.0),
+                        Rounding::same(rounding),
+                        item.color,
+                    );
+
+                    ui.heading(&item.name);
+                })
+                .clicked()
+            {
+                item.rounded = !item.rounded;
+            }
+        });
+    });
 }
 
-// ff36ab abff36 36abff
+#[cfg(not(target_arch = "wasm32"))]
+fn main() -> eframe::Result<()> {
+    let mut items = vec![
+        Color {
+            name: "Panic Purple".to_string(),
+            color: egui::hex_color!("642CA9"),
+            rounded: false,
+        },
+        Color {
+            name: "Generic Green".to_string(),
+            color: egui::hex_color!("2A9D8F"),
+            rounded: false,
+        },
+        Color {
+            name: "Ownership Orange*".to_string(),
+            color: egui::hex_color!("E9C46A"),
+            rounded: false,
+        },
+    ];
 
-// 9742ff 42ff97 ff9742
+    let options = eframe::NativeOptions::default();
 
-impl Default for DnDApp {
-    fn default() -> Self {
-        DnDApp {
-            dnd: DragDropUi::default(),
-            items: vec![
-                Color {
-                    name: "Panic Purple".to_string(),
-                    color: egui::hex_color!("642CA9"),
-                    rounded: false,
-                },
-                Color {
-                    name: "Generic Green".to_string(),
-                    color: egui::hex_color!("2A9D8F"),
-                    rounded: false,
-                },
-                Color {
-                    name: "Ownership Orange*".to_string(),
-                    color: egui::hex_color!("E9C46A"),
-                    rounded: false,
-                },
-            ],
-        }
-    }
-}
-
-impl DnDApp {
-    fn dnd_ui(&mut self, ui: &mut Ui) {
-        let response = self.dnd.ui(
-            ui,
-            self.items.iter_mut(),
-            |item: &mut Color, ui, handle, pressed| {
-                ui.horizontal(|ui| {
-                    if handle
-                        .sense(Sense::click())
-                        .ui(ui, |ui| {
-                            let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
-
-                            let x = ui.ctx().animate_bool(item.id(), item.rounded);
-                            let rounding = x * 16.0 + 1.0;
-
-                            ui.painter().rect_filled(
-                                rect.shrink(x * 4.0),
-                                Rounding::same(rounding),
-                                item.color,
-                            );
-
-                            ui.heading(&item.name);
-                        })
-                        .clicked()
-                    {
-                        item.rounded = !item.rounded;
-                    }
-                });
-            },
-        );
-
-        response.update_vec(&mut self.items);
-    }
-}
-
-impl App for DnDApp {
-    fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+    eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
         egui::CentralPanel::default().frame(egui::Frame::none()).show(ctx, |ui| {
             vertex_gradient(
                 ui,
                 &Gradient(
-                    self.items
+                    items
                         .iter()
                         .map(|c| c.color)
                         .collect(),
@@ -129,7 +108,7 @@ impl App for DnDApp {
 
                                     egui::Frame::none().outer_margin(20.0).show(ui, |ui| {
                                         ui.heading("Color Sort");
-                                        self.dnd_ui(ui);
+                                        dnd_ui(&mut items, ui);
 
                                         ui.add_space(5.0);
                                         ui.small("* it's actually yellow");
@@ -151,18 +130,7 @@ impl App for DnDApp {
                     strip.empty();
                 });
         });
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn main() {
-    let options = eframe::NativeOptions::default();
-    eframe::run_native(
-        "DnD Example App",
-        options,
-        Box::new(|_a| Box::new(DnDApp::default())),
-    )
-        .unwrap();
+    })
 }
 
 // when compiling to web using trunk.

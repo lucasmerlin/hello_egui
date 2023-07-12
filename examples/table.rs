@@ -29,7 +29,7 @@ struct ItemType {
 }
 
 // We need this to uniquely identify items. You can also implement the Hash trait.
-impl DragDropItem for ItemType {
+impl DragDropItem for &mut ItemType {
     fn id(&self) -> Id {
         Id::new(&self.name)
     }
@@ -41,7 +41,7 @@ impl App for DnDApp {
             let response =
                 // make sure this is called in a vertical layout.
                 // Horizontal sorting is not supported yet.
-                self.dnd.ui(ui, self.items.iter_mut(), |item: &mut ItemType, ui, handle| {
+                self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle, pressure| {
                     ui.horizontal(|ui| {
                         // Anything in the handle can be used to drag the item
                         handle.ui(ui, |ui| {
@@ -55,12 +55,7 @@ impl App for DnDApp {
                     });
                 });
 
-            // After the drag is complete, we get a response containing the old index of the
-            // dragged item, as well as the index it was moved to. You can use the
-            // shift_vec function as a helper if you store your items in a Vec.
-            if let Some(response) = response.completed {
-                shift_vec(response.from, response.to, &mut self.items);
-            }
+            response.update_vec(&mut self.items);
         });
     }
 }
@@ -71,5 +66,5 @@ pub fn main() {
         NativeOptions::default(),
         Box::new(|_a| Box::<DnDApp>::default()),
     )
-        .unwrap();
+    .unwrap();
 }

@@ -1,7 +1,14 @@
 #![doc = include_str!("../README.md")]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+
+use crate::state::DragDropResponse;
+use egui::Id;
 pub use state::{DragDropItem, DragDropUi, Handle};
+use std::borrow::BorrowMut;
+use std::hash::Hash;
+use std::ops::{Deref, DerefMut};
+use std::os::unix::raw::time_t;
 
 mod state;
 
@@ -50,4 +57,110 @@ pub mod utils {
             );
         }
     }
+}
+
+pub struct Dnd<'a> {
+    id: Id,
+    ui: &'a mut egui::Ui,
+    drag_drop_ui: DragDropUi,
+}
+
+impl<'a> Deref for Dnd<'a> {
+    type Target = DragDropUi;
+
+    fn deref(&self) -> &Self::Target {
+        &self.drag_drop_ui
+    }
+}
+
+impl<'a> DerefMut for Dnd<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.drag_drop_ui
+    }
+}
+/// Main entry point for the drag and drop functionality.
+/// Loads and saves it's state from egui memory.
+/// Use either [Dnd::show] or [Dnd::show_vec] to display the drag and drop UI.
+/// You can use [DragDropUi::with_mouse_config] or [DragDropUi::with_touch_config] to configure the drag detection.
+/// Example usage:
+/// ```rust
+/// use std::hash::Hash;
+/// use eframe::egui;
+/// use egui::CentralPanel;
+/// use egui_dnd::dnd;
+///
+/// pub fn main() -> eframe::Result<()> {
+///     let mut items = vec!["alfred", "bernhard", "christian"];
+///
+///     eframe::run_simple_native("DnD Simple Example", Default::default(), move |ctx, _frame| {
+///         CentralPanel::default().show(ctx, |ui| {
+///
+///             dnd(ui, "dnd_example")
+///                 .show_vec(&mut items, |ui, item, handle, state| {
+///                     handle.ui(ui, |ui| {
+///                         ui.label("drag");
+///                     });
+///                     ui.label(*item);
+///                 });
+///
+///         });
+///     })
+/// }
+///
+/// ```
+pub fn dnd(ui: &mut egui::Ui, id_source: impl Hash) -> Dnd {
+    let id = Id::new(id_source).with("dnd");
+    let dnd_ui: DragDropUi =
+        ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());
+
+    Dnd {
+        id,
+        ui,
+        drag_drop_ui: dnd_ui,
+    }
+}
+
+impl<'a> Dnd<'a> {
+    pub fn new(ui: &'a mut egui::Ui, id_source: impl Hash) -> Self {
+        dnd(ui, id_source)
+    }
+
+    pub fn show<T: DragDropItem>(
+        self,
+        items: impl Iterator<Item = T>,
+        mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
+    ) -> DragDropResponse {
+        let Dnd {
+            id,
+            ui,
+            mut drag_drop_ui,
+        } = self;
+
+        let response = drag_drop_ui.ui(ui, items, |item, ui, handle, dragged| {
+            item_ui(ui, item, handle, ItemState { dragged });
+        });
+
+        ui.ctx().data_mut(|data| data.insert_temp(id, drag_drop_ui));
+
+        response
+    }
+
+    //
+    pub fn show_vec<T: Hash>(
+        self,
+        items: &mut Vec<T>,
+        mut item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
+    ) -> DragDropResponse {
+        let i = &mut items[0];
+
+        i.id();
+
+        let response = self.show(items.iter_mut(), item_ui);
+        response.update_vec(items);
+        response
+    }
+}
+
+pub struct ItemState {
+    pub dragged: bool,
 }
