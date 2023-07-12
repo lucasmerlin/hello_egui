@@ -47,5 +47,11 @@ fn main() -> eframe::Result<()> {
                         }
                     })
             });
+
+
+        egui::Window::new("Devzg")
+            .show(ctx, |ui| {
+                ctx.style_ui(ui);
+            });
     })
 }

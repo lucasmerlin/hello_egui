@@ -60,7 +60,8 @@ enum DragDetectionState {
     Cancelled,
     Dragging { id: Id, offset: Vec2, phase: DragPhase },
     TransitioningBackAfterDragFinished {
-        from: Pos2,
+        id: Id,
+        from: Option<Pos2>,
     },
 }
 
@@ -115,6 +116,10 @@ impl DragDetectionState {
             DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_idx, .. }, .. } => Some(*hovering_idx),
             _ => None,
         }
+    }
+
+    fn is_dragging_and_past_first_frame(&self) -> bool {
+        matches!(self, DragDetectionState::Dragging { phase: DragPhase::Rest { .. }, .. })
     }
 }
 
@@ -233,7 +238,7 @@ impl DragDropUi {
                 let drag_delay = std::time::Duration::from_millis(if mobile_scroll { 300 } else { 0 });
 
 
-                if let DragDetectionState::None = self.detection_state {
+                if matches!(self.detection_state, DragDetectionState::None) || matches!(self.detection_state, DragDetectionState::TransitioningBackAfterDragFinished {..}) {
                     self.detection_state = DragDetectionState::PressedWaitingForDelay {
                         pressed_at: SystemTime::now(),
                     };
@@ -275,11 +280,15 @@ impl DragDropUi {
 
         let mut source_idx = None;
         let mut dragged_item_size = None;
-        let mut add_space_for_previous_item = false;
 
         ui.scope(|ui| {
             let item_spacing = ui.spacing().item_spacing.y;
             ui.spacing_mut().item_spacing.y = 0.0;
+
+            // In egui, if the value changes during animation, we start at 0 or 1 again instead of returning from the current value.
+            // This causes flickering, we use the animation budget to mitigate this (Stops the total value of animations to be > 1).
+            // TODO: Try animate_value instead
+            let mut animation_budget = 1.0;
 
             DragDropUi::drop_target(ui, true, |ui| {
                 vec.into_iter().for_each(|(idx, mut item)| {
@@ -288,23 +297,21 @@ impl DragDropUi {
 
                     let hovering_this_item = self.detection_state.hovering_index() == Some(idx);
                     let mut add_space = hovering_this_item;
-                    if add_space_for_previous_item {
-                        add_space = true;
-                        add_space_for_previous_item = false;
-                    }
-                    if hovering_this_item && self.detection_state.is_dragging_item(item_id) {
-                        add_space = false;
-                        add_space_for_previous_item = true;
-                        println!("add space for previous item, idx: {}", idx);
-                    }
                     if add_space {
                         should_add_space_at_end = false;
                     }
-                    let x = ui.ctx().animate_bool(ui.auto_id_with(item_id.with(self.drag_count).with(self.detection_state.hovering_index().is_some())), add_space);
+                    let animation_id = ui.auto_id_with(item_id);
+
+
+                    let mut x = ui.ctx().animate_bool(animation_id, add_space);
+
+                    let space = (dragged_item_rect.height() + item_spacing);
                     if x > 0.0 {
-                        let space = (dragged_item_rect.height() + item_spacing);
+                        x = x.min(animation_budget);
                         ui.add_space(space * x);
                     }
+                    animation_budget -= x;
+
 
                     if !self.detection_state.is_dragging_item(item_id) {
                         ui.add_space(item_spacing);
@@ -328,14 +335,10 @@ impl DragDropUi {
                 });
             });
 
-            let x = ui.ctx().animate_bool(ui.auto_id_with(self.drag_count).with("end_space").with(self.detection_state.hovering_index().is_some()), should_add_space_at_end && self.detection_state.hovering_index().is_some());
+            let mut x = ui.ctx().animate_bool(ui.auto_id_with(self.drag_count).with("end_space").with(self.detection_state.hovering_index().is_some()), should_add_space_at_end && self.detection_state.hovering_index().is_some());
+            x = x.min(animation_budget);
             if x > 0.0 {
-                let mut spacing = item_spacing;
-                if add_space_for_previous_item {
-                    spacing = item_spacing;
-                }
                 let space = (dragged_item_rect.height() + item_spacing);
-                ui.spacing_mut().item_spacing.y = 0.0;
                 ui.allocate_exact_size(Vec2::new(0.0, space * x), Sense::hover());
             }
         });
@@ -347,6 +350,10 @@ impl DragDropUi {
             if let Some(hovering_idx) = hovering_idx {
                 if let Some(source_idx) = source_idx {
                     if let Some(dragged_item_size) = dragged_item_size {
+                        if let DragPhase::FirstFrame = phase {
+                            // Prevent flickering
+                            ui.ctx().clear_animations();
+                        }
                         *phase = DragPhase::Rest {
                             hovering_idx,
                             source_idx,
@@ -358,25 +365,34 @@ impl DragDropUi {
         }
 
         let response = if let DragDetectionState::Dragging {
+            id,
             phase: DragPhase::Rest {
                 source_idx,
                 hovering_idx,
                 ..
             }, ..
-        } = &self.detection_state {
+        } = self.detection_state {
             if ui.input(|i| i.pointer.any_released()) {
+                ui.ctx().clear_animations();
+
+
+                self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
+                    from: Some(dragged_item_pos),
+                    id,
+                };
+
                 DragDropResponse {
                     completed: Some(Response {
-                        from: *source_idx,
-                        to: *hovering_idx,
+                        from: source_idx,
+                        to: hovering_idx,
                     }),
                     current_drag: None,
                 }
             } else {
                 DragDropResponse {
                     current_drag: Some(Response {
-                        from: *source_idx,
-                        to: *hovering_idx,
+                        from: source_idx,
+                        to: hovering_idx,
                     }),
                     completed: None,
                 }
@@ -389,7 +405,7 @@ impl DragDropUi {
         };
 
         ui.input(|input| {
-            if !input.pointer.any_down() {
+            if !input.pointer.any_down() && !matches!(self.detection_state, DragDetectionState::TransitioningBackAfterDragFinished {..}) {
                 self.detection_state = DragDetectionState::None;
             }
         });
@@ -398,9 +414,6 @@ impl DragDropUi {
         if let DragDetectionState::CouldBeValidDrag = self.detection_state {
             self.detection_state = DragDetectionState::Cancelled;
         }
-
-        ui.label(format!("Above: {:?}", above_item));
-        ui.label(format!("Below: {:?}", below_item));
 
         response
     }
@@ -422,27 +435,72 @@ impl DragDropUi {
                     .ctx()
                     .pointer_hover_pos()
                     .unwrap_or_else(|| ui.next_widget_position());
+                let position = pointer_pos + *offset;
 
                 // If we are in a ScrollArea, allow for scrolling while dragging
                 ui.scroll_to_rect(Rect::from_center_size(pointer_pos, Vec2::splat(100.0)), None);
 
-                let InnerResponse { inner: rect, .. } = egui::Area::new("draggable_item")
-                    .interactable(false)
-                    .fixed_pos(pointer_pos + *offset)
-                    .show(ui.ctx(), |ui| {
-                        ui.scope(|ui| {
-                            drag_body(ui, Handle { state: self, id })
-                        })
-                            .response
-                            .rect
-                    });
+                let InnerResponse { inner: rect, .. } = self.draw_floating_at_position(
+                    ui,
+                    id,
+                    position,
+                    drag_body,
+                );
 
                 return Rect::from_min_size(ui.next_widget_position(), rect.size());
+            }
+        } else if let DragDetectionState::TransitioningBackAfterDragFinished { from, id: transitioning_id } = &mut self.detection_state {
+            if id == *transitioning_id {
+                let value = std::mem::take(from).unwrap_or(ui.next_widget_position());
+                let time = ui.style().animation_time;
+                let x = ui.ctx().animate_value_with_time(
+                    id.with("transitioning_back_x"),
+                    value.x,
+                    time,
+                );
+                let y = ui.ctx().animate_value_with_time(
+                    id.with("transitioning_back_y"),
+                    value.y,
+                    time,
+                );
+                let position = Pos2::new(x, y);
+                if position == ui.next_widget_position() {
+                    self.detection_state = DragDetectionState::None;
+                }
+
+                let InnerResponse { inner: rect, .. } = self.draw_floating_at_position(
+                    ui,
+                    id,
+                    position,
+                    drag_body,
+                );
+                return ui.allocate_exact_size(rect.size(), Sense::hover()).0;
             }
         }
 
         let scope = ui.scope(|ui| drag_body(ui, Handle { state: self, id }));
         scope.response.rect
+    }
+
+    fn draw_floating_at_position(
+        &mut self,
+        ui: &mut Ui,
+        id: Id,
+        pos: Pos2,
+        body: impl FnOnce(&mut Ui, Handle),
+    ) -> InnerResponse<Rect> {
+        let _layer_id = LayerId::new(Order::Tooltip, id);
+
+        egui::Area::new("draggable_item")
+            .interactable(false)
+            .fixed_pos(pos)
+            .show(ui.ctx(), |ui| {
+                ui.scope(|ui| {
+                    body(ui, Handle { state: self, id })
+                })
+                    .response
+                    .rect
+            })
     }
 
     fn drop_target<R>(

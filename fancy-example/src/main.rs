@@ -1,15 +1,15 @@
 use std::hash::{Hash, Hasher};
 
+use eframe::{App, egui, Frame};
 use eframe::egui::{Color32, Context};
 use eframe::emath::lerp;
-use eframe::{egui, App, Frame};
-use egui::{Rounding, Sense, Ui, Vec2};
+use egui::{Id, Rounding, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
-
-use egui_dnd::utils::shift_vec;
-use egui_dnd::{DragDropItem, DragDropUi};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+
+use egui_dnd::{DragDropItem, DragDropUi};
+use egui_dnd::utils::shift_vec;
 
 #[derive(Clone)]
 struct Color {
@@ -64,7 +64,7 @@ impl DnDApp {
     fn dnd_ui(&mut self, ui: &mut Ui) {
         let response = self
             .dnd
-            .ui(ui, self.items.iter_mut(), |item: &mut Color, ui, handle| {
+            .ui(ui, self.items.iter_mut(), |item: &mut Color, ui, handle, pressed| {
                 ui.horizontal(|ui| {
                     if handle
                         .ui_sense(ui, Sense::click(), |ui| {
@@ -102,7 +102,6 @@ impl App for DnDApp {
         egui::CentralPanel::default().frame(egui::Frame::none()).show(ctx, |ui| {
             vertex_gradient(
                 ui,
-                Default::default(),
                 &Gradient(
                     self.preview
                         .as_ref()
@@ -170,7 +169,7 @@ fn main() {
         options,
         Box::new(|_a| Box::new(DnDApp::default())),
     )
-    .unwrap();
+        .unwrap();
 }
 
 // when compiling to web using trunk.
@@ -195,31 +194,34 @@ fn main() {
 struct Gradient(pub Vec<Color32>);
 
 // taken from the egui demo
-fn vertex_gradient(ui: &mut Ui, bg_fill: Color32, gradient: &Gradient) {
+fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
     use egui::epaint::*;
 
     let rect = ui.max_rect();
 
-    if bg_fill != Default::default() {
-        let mut mesh = Mesh::default();
-        mesh.add_colored_rect(rect, bg_fill);
-        ui.painter().add(Shape::mesh(mesh));
-    }
-    {
-        let n = gradient.0.len();
-        assert!(n >= 2);
-        let mut mesh = Mesh::default();
-        for (i, &color) in gradient.0.iter().enumerate() {
-            let t = i as f32 / (n as f32 - 1.0);
-            let y = lerp(rect.y_range(), t);
-            mesh.colored_vertex(pos2(rect.left(), y), color);
-            mesh.colored_vertex(pos2(rect.right(), y), color);
-            if i < n - 1 {
-                let i = i as u32;
-                mesh.add_triangle(2 * i, 2 * i + 1, 2 * i + 2);
-                mesh.add_triangle(2 * i + 1, 2 * i + 2, 2 * i + 3);
-            }
+    let n = gradient.0.len();
+    let animation_time = 0.4;
+    assert!(n >= 2);
+    let mut mesh = Mesh::default();
+    for (i, &color) in gradient.0.iter().enumerate() {
+        let t = i as f32 / (n as f32 - 1.0);
+        let y = lerp(rect.y_range(), t);
+        mesh.colored_vertex(pos2(rect.left(), y), animate_color(ui, color, Id::new("a").with(i), animation_time));
+        mesh.colored_vertex(pos2(rect.right(), y), animate_color(ui, color, Id::new("b").with(i), animation_time));
+        if i < n - 1 {
+            let i = i as u32;
+            mesh.add_triangle(2 * i, 2 * i + 1, 2 * i + 2);
+            mesh.add_triangle(2 * i + 1, 2 * i + 2, 2 * i + 3);
         }
-        ui.painter().add(Shape::mesh(mesh));
-    };
+    }
+    ui.painter().add(Shape::mesh(mesh));
+}
+
+fn animate_color(ui: &mut Ui, color: Color32, id: Id, duration: f32) -> Color32 {
+    Color32::from_rgba_premultiplied(
+        ui.ctx().animate_value_with_time(id.with(0), color[0] as f32, duration) as u8,
+        ui.ctx().animate_value_with_time(id.with(1), color[1] as f32, duration) as u8,
+        ui.ctx().animate_value_with_time(id.with(2), color[2] as f32, duration) as u8,
+        color[3],
+    )
 }
