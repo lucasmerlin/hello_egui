@@ -73,13 +73,24 @@ impl DragDropResponse {
 }
 
 /// Holds the data needed to draw the floating item while it is being dragged
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct DragDropUi {
     detection_state: DragDetectionState,
     drag_count: usize,
     /// If the mobile config is set, we will use it if we detect a touch event
     touch_config: Option<DragDropConfig>,
     mouse_config: DragDropConfig,
+}
+
+impl Default for DragDropUi {
+    fn default() -> Self {
+        DragDropUi {
+            detection_state: DragDetectionState::None,
+            drag_count: 0,
+            touch_config: Some(DragDropConfig::touch()),
+            mouse_config: DragDropConfig::mouse(),
+        }
+    }
 }
 
 /// [Handle::ui] is used to draw the drag handle
@@ -247,12 +258,18 @@ impl<'a> Handle<'a> {
     }
 }
 
-// TODO: Implement these
 #[derive(Debug, Clone)]
-struct DragDropConfig {
-    scroll_tolerance: f32,
-    click_tolerance: f32,
-    drag_delay: Duration,
+pub struct DragDropConfig {
+    /// How long does the user have to keep pressing until a drag may begin?
+    /// This is useful when dragging and dropping on a touch screen in a scrollable area.
+    pub drag_delay: Duration,
+    /// How far can the pointer move during the [DragDropConfig::drag_delay] before the drag is cancelled?
+    pub scroll_tolerance: Option<f32>,
+    /// How far does the pointer have to move before a drag starts?
+    /// This is useful when the handle is also a button.
+    /// If the pointer is released before this threshold, the drag never starts and the button / handle can be clicked.
+    /// If you want to detect clicks on the handle itself, [Handle::sense] to add a click sense to the handle.
+    pub click_tolerance: f32,
 }
 
 impl Default for DragDropConfig {
@@ -262,17 +279,29 @@ impl Default for DragDropConfig {
 }
 
 impl DragDropConfig {
+    /// Optimized for mouse usage
     fn mouse() -> Self {
         Self {
             click_tolerance: 1.0,
             drag_delay: Duration::from_millis(0),
-            scroll_tolerance: 0.0,
+            scroll_tolerance: None,
         }
     }
 
+    /// Optimized for touch usage in a fixed size area (no scrolling)
+    /// Has a higher click tolerance than [DragDropConfig::mouse]
     fn touch() -> Self {
         Self {
-            scroll_tolerance: 6.0,
+            scroll_tolerance: None,
+            click_tolerance: 3.0,
+            drag_delay: Duration::from_millis(0),
+        }
+    }
+
+    /// Optimized for touch usage in a scrollable area
+    fn touch_scroll() -> Self {
+        Self {
+            scroll_tolerance: Some(6.0),
             click_tolerance: 3.0,
             drag_delay: Duration::from_millis(300),
         }
@@ -323,6 +352,25 @@ impl DragDropConfig {
 /// }));
 /// ```
 impl DragDropUi {
+
+    pub fn with_mouse_config(mut self, config: DragDropConfig) -> Self {
+        self.mouse_config = config;
+        self
+    }
+
+    pub fn with_touch_config(mut self, config: Option<DragDropConfig>) -> Self {
+        self.touch_config = config;
+        self
+    }
+
+    fn config(&self, ui: &Ui) -> &DragDropConfig {
+        if ui.input(|i| i.any_touches()) {
+            self.touch_config.as_ref().unwrap_or(&self.mouse_config)
+        } else {
+            &self.mouse_config
+        }
+    }
+
     /// Draw the dragged item and check if it has been dropped
     pub fn ui<'a, T: DragDropItem + 'a, B>(
         &mut self,
@@ -334,14 +382,10 @@ impl DragDropUi {
 
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
         let mut first_frame = false;
+        let config = self.config(ui).clone();
 
         ui.input(|i| {
             if i.pointer.any_down() {
-                let mobile_scroll = i.any_touches();
-                let scroll_tolerance = 6.0;
-                let drag_delay = std::time::Duration::from_millis(if mobile_scroll { 300 } else { 0 });
-
-
                 if matches!(self.detection_state, DragDetectionState::None) || matches!(self.detection_state, DragDetectionState::TransitioningBackAfterDragFinished {..}) {
                     first_frame = true;
                     self.detection_state = DragDetectionState::PressedWaitingForDelay {
@@ -350,11 +394,11 @@ impl DragDropUi {
                 }
 
                 let drag_distance = (i.pointer.hover_pos().unwrap_or_default() - i.pointer.press_origin().unwrap_or_default()).length();
-                let is_below_scroll_threshold = drag_distance < scroll_tolerance;
+                let is_below_scroll_threshold = drag_distance < config.scroll_tolerance.unwrap_or(f32::INFINITY);
 
                 if let DragDetectionState::PressedWaitingForDelay { pressed_at } = self.detection_state {
-                    if pressed_at.elapsed().unwrap_or(drag_delay) >= drag_delay {
-                        if is_below_scroll_threshold || !mobile_scroll {
+                    if pressed_at.elapsed().unwrap_or_default() >= config.drag_delay {
+                        if is_below_scroll_threshold {
                             self.detection_state = DragDetectionState::WaitingForClickThreshold;
                         } else {
                             self.detection_state = DragDetectionState::Cancelled;
@@ -440,6 +484,7 @@ impl DragDropUi {
                         })
                     }).inner;
 
+                    // TODO: Use .top and .bottom here for more optimistic switching
                     if dragged_item_center.y < rect.center().y && above_item.is_none() {
                         above_item = Some((idx, item_id));
                     }
@@ -468,7 +513,7 @@ impl DragDropUi {
         }
 
         let hovering_item = above_item;
-        if let DragDetectionState::Dragging { phase, id: dragging_id, .. } = &mut self.detection_state {
+        if let DragDetectionState::Dragging { phase, .. } = &mut self.detection_state {
             if let Some(source_idx) = source_item {
                 if let Some(dragged_item_size) = dragged_item_size {
                     if let DragPhase::FirstFrame = phase {
