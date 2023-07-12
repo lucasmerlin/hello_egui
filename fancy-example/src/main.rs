@@ -27,7 +27,6 @@ impl Hash for Color {
 struct DnDApp {
     dnd: DragDropUi,
     items: Vec<Color>,
-    preview: Option<Vec<Color>>,
 }
 
 // ff36ab abff36 36abff
@@ -55,7 +54,6 @@ impl Default for DnDApp {
                     rounded: false,
                 },
             ],
-            preview: None,
         }
     }
 }
@@ -67,7 +65,8 @@ impl DnDApp {
             .ui(ui, self.items.iter_mut(), |item: &mut Color, ui, handle, pressed| {
                 ui.horizontal(|ui| {
                     if handle
-                        .ui_sense(ui, Sense::click(), |ui| {
+                        .sense(Sense::click())
+                        .ui(ui, |ui| {
                             let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
 
                             let x = ui.ctx().animate_bool(item.id(), item.rounded);
@@ -87,13 +86,8 @@ impl DnDApp {
                     }
                 });
             });
-        if let Some(response) = response.completed {
-            shift_vec(response.from, response.to, &mut self.items);
-        }
-        if let Some(response) = response.current_drag {
-            self.preview = Some(self.items.clone());
-            shift_vec(response.from, response.to, self.preview.as_mut().unwrap());
-        }
+
+        response.update_vec(&mut self.items);
     }
 }
 
@@ -103,9 +97,7 @@ impl App for DnDApp {
             vertex_gradient(
                 ui,
                 &Gradient(
-                    self.preview
-                        .as_ref()
-                        .unwrap_or_else(|| self.items.as_ref())
+                        self.items
                         .iter()
                         .map(|c| c.color)
                         .collect(),

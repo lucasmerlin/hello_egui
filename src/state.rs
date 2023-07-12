@@ -1,4 +1,3 @@
-use std::arch::aarch64::vget_high_p8;
 use std::borrow::BorrowMut;
 use std::hash::Hash;
 use std::time::{Duration, SystemTime};
@@ -61,6 +60,16 @@ impl DragDropResponse {
             shift_vec(update.from, update.to, vec);
         }
     }
+
+    /// Returns the update if the drag & drop event has finished and the item has been dropped.
+    /// Useful for the if let syntax.
+    pub fn final_update(&self) -> Option<DragUpdate> {
+        if self.finished {
+            self.update.clone()
+        } else {
+            None
+        }
+    }
 }
 
 /// Holds the data needed to draw the floating item while it is being dragged
@@ -104,7 +113,10 @@ enum DragPhase {
     Rest {
         dragged_item_size: Vec2,
 
-        hovering_item: Id,
+        /// This will always be set unless we are at the bottom of the list
+        hovering_above_item: Option<Id>,
+        /// This will be set if we are at the bottom of the list
+        hovering_below_item: Option<Id>,
         source_item: Id,
 
         // These should only be used during for output, as to not cause issues when item indexes change
@@ -157,7 +169,14 @@ impl DragDetectionState {
 
     fn hovering_item(&self) -> Option<Id> {
         match self {
-            DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_item, .. }, .. } => Some(*hovering_item),
+            DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_above_item: hovering_item, hovering_below_item, .. }, .. } => hovering_item.or(*hovering_below_item),
+            _ => None,
+        }
+    }
+
+    fn hovering_below_item(&self) -> Option<Id> {
+        match self {
+            DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_below_item, .. }, .. } => *hovering_below_item,
             _ => None,
         }
     }
@@ -168,7 +187,6 @@ impl DragDetectionState {
 }
 
 impl<'a> Handle<'a> {
-
     /// You can add [Sense::click] if you want to listen for clicks on the handle
     /// Please not that this will make anything in the handle noninteractive
     pub fn sense(mut self, sense: Sense) -> Self {
@@ -390,7 +408,7 @@ impl DragDropUi {
                         add_space = true;
                         add_space_for_previous_item = false;
                     }
-                    if add_space && is_dragged_item {
+                    if add_space && (is_dragged_item || self.detection_state.hovering_below_item() == Some(item_id)) {
                         add_space_for_previous_item = true;
                         add_space = false;
                     }
@@ -400,13 +418,7 @@ impl DragDropUi {
 
                     let animation_id = Id::new(item_id).with("dnd_space_animation");
 
-                    // let mut x = ui.ctx().animate_bool(animation_id, add_space);
-                    let mut x = ui.ctx().animate_value_with_time(animation_id, if add_space {
-                        // overshoot a little, so our animation budget is always used up
-                        1.2
-                    } else {
-                        0.0
-                    }, ui.style().animation_time);
+                    let mut x = ui.ctx().animate_bool(animation_id, add_space);
 
                     let space = (dragged_item_rect.height() + item_spacing);
                     if x > 0.0 {
@@ -455,24 +467,25 @@ impl DragDropUi {
             self.detection_state = DragDetectionState::Cancelled;
         }
 
-        let hovering_item = above_item
-            .or(below_item);
+        let hovering_item = above_item;
         if let DragDetectionState::Dragging { phase, id: dragging_id, .. } = &mut self.detection_state {
-            if let Some(hovering_item) = hovering_item {
-                if let Some(source_idx) = source_item {
-                    if let Some(dragged_item_size) = dragged_item_size {
-                        if let DragPhase::FirstFrame = phase {
-                            // Prevent flickering
-                            ui.ctx().clear_animations();
-                        }
-                        *phase = DragPhase::Rest {
-                            dragged_item_size,
-                            hovering_item: hovering_item.1,
-                            source_item: source_idx.1,
-                            hovering_idx: hovering_item.0,
-                            source_idx: source_idx.0,
-                        }
+            if let Some(source_idx) = source_item {
+                if let Some(dragged_item_size) = dragged_item_size {
+                    if let DragPhase::FirstFrame = phase {
+                        // Prevent flickering
+                        ui.ctx().clear_animations();
                     }
+                    let hovering_item_id = hovering_item.map(|i| i.1);
+
+                    *phase = DragPhase::Rest {
+                        dragged_item_size,
+                        hovering_above_item: hovering_item_id,
+                        hovering_below_item: below_item.map(|i| i.1),
+                        source_item: source_idx.1,
+                        hovering_idx: hovering_item.map(|i| i.0)
+                            .or(below_item.map(|i| i.0 + 1)).unwrap_or_default(), // One of these must be Some
+                        source_idx: source_idx.0,
+                    };
                 }
             }
         }

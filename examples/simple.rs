@@ -57,14 +57,14 @@ impl App for DnDApp {
                     });
                 });
 
-            if let Some(response) = response.current_drag {
+            if let Some(response) = &response.update {
                 ui.label(format!("Dragging: {:?}", response));
             }
 
             // After the drag is complete, we get a response containing the old index of the
             // dragged item, as well as the index it was moved to. You can use the
             // shift_vec function as a helper if you store your items in a Vec.
-            if let Some(response) = response.completed {
+            if let Some(response) = response.final_update() {
                 shift_vec(response.from, response.to, &mut self.items);
             }
         });
