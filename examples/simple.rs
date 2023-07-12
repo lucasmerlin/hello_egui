@@ -42,16 +42,24 @@ impl App for DnDApp {
             let response =
                 // make sure this is called in a vertical layout.
                 // Horizontal sorting is not supported yet.
-                self.dnd.ui::<ItemType, _>(ui, self.items.iter_mut(), |item, ui, handle| {
+                self.dnd.ui::<ItemType, _>(ui, self.items.iter_mut(), |item, ui, handle, dragging| {
                     ui.horizontal(|ui| {
                         // Anything in the handle can be used to drag the item
                         handle.ui(ui, |ui| {
-                            ui.label("grab");
+                            if dragging {
+                                ui.label("wheeeeee");
+                            } else {
+                                ui.label("drag");
+                            }
                         });
 
                         ui.label(&item.name);
                     });
                 });
+
+            if let Some(response) = response.current_drag {
+                ui.label(format!("Dragging: {:?}", response));
+            }
 
             // After the drag is complete, we get a response containing the old index of the
             // dragged item, as well as the index it was moved to. You can use the
@@ -60,6 +68,11 @@ impl App for DnDApp {
                 shift_vec(response.from, response.to, &mut self.items);
             }
         });
+
+        egui::Window::new("Devzg")
+            .show(ctx, |ui| {
+                ctx.style_ui(ui);
+            });
     }
 }
 

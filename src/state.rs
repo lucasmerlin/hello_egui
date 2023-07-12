@@ -2,7 +2,7 @@ use std::borrow::BorrowMut;
 use std::hash::Hash;
 use std::time::SystemTime;
 
-use egui::{Align, CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Ui, Vec2};
+use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
 use crate::utils::shift_vec;
 
@@ -18,6 +18,7 @@ impl<T: Hash> DragDropItem for T {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Response {
     pub from: usize,
     pub to: usize,
@@ -28,6 +29,7 @@ pub struct Response {
 /// used update some state while the drag is in progress.
 /// `completed` contains a [Response] after a successful drag & drop event. It should be used to
 /// update positions of the affected items. If the source is a vec, [shift_vec] can be used.
+#[derive(Debug, Default, Clone)]
 pub struct DragDropResponse {
     pub current_drag: Option<Response>,
     pub completed: Option<Response>,
@@ -37,6 +39,7 @@ pub struct DragDropResponse {
 #[derive(Default, Clone, Debug)]
 pub struct DragDropUi {
     detection_state: DragDetectionState,
+    drag_count: usize,
 }
 
 /// [Handle::ui] is used to draw the drag handle
@@ -55,7 +58,64 @@ enum DragDetectionState {
     WaitingForClickThreshold,
     CouldBeValidDrag,
     Cancelled,
-    Dragging { id: Id, offset: Vec2, hovering_idx: Option<usize>, source_idx: Option<usize>, dragged_item_size: Option<Vec2> },
+    Dragging { id: Id, offset: Vec2, phase: DragPhase },
+    TransitioningBackAfterDragFinished {
+        from: Pos2,
+    },
+}
+
+#[derive(Debug, Clone)]
+enum DragPhase {
+    FirstFrame,
+    Rest {
+        hovering_idx: usize,
+        source_idx: usize,
+        dragged_item_size: Vec2,
+    },
+}
+
+impl DragPhase {
+    fn is_first_frame(&self) -> bool {
+        matches!(self, DragPhase::FirstFrame)
+    }
+}
+
+impl DragDetectionState {
+    fn is_dragging(&self) -> bool {
+        matches!(self, DragDetectionState::Dragging { .. })
+    }
+
+    fn dragged_item(&self) -> Option<Id> {
+        match self {
+            DragDetectionState::Dragging { id, .. } => Some(*id),
+            _ => None,
+        }
+    }
+
+    fn is_dragging_item(&self, id: Id) -> bool {
+        self.dragged_item() == Some(id)
+    }
+
+    fn offset(&self) -> Option<Vec2> {
+        match self {
+            DragDetectionState::Dragging { offset, .. } => Some(*offset),
+            _ => None,
+        }
+    }
+
+    fn dragged_item_size(&self) -> Option<Vec2> {
+        match self {
+            DragDetectionState::Dragging { phase: DragPhase::Rest { dragged_item_size, .. }, .. } => Some(*dragged_item_size),
+            _ => None,
+        }
+    }
+
+    fn hovering_index(&self) -> Option<usize> {
+        match self {
+            DragDetectionState::Dragging { phase: DragPhase::Rest { hovering_idx, .. }, .. } => Some(*hovering_idx),
+            _ => None,
+        }
+    }
 }
 
 impl<'a> Handle<'a> {
@@ -94,10 +154,9 @@ impl<'a> Handle<'a> {
             self.state.detection_state = DragDetectionState::Dragging {
                 id: self.id,
                 offset,
-                hovering_idx: None,
-                source_idx: None,
-                dragged_item_size: None,
+                phase: DragPhase::FirstFrame,
             };
+            self.state.drag_count += 1;
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
         }
 
@@ -164,7 +223,7 @@ impl DragDropUi {
         &mut self,
         ui: &mut Ui,
         values: impl Iterator<Item=B>,
-        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle),
+        mut item_ui: impl FnMut(&mut T, &mut Ui, Handle, bool),
     ) -> DragDropResponse
         where B: BorrowMut<T> {
         ui.input(|i| {
@@ -200,75 +259,110 @@ impl DragDropUi {
         let mut vec = values.enumerate().collect::<Vec<_>>();
         let len = vec.len();
 
-        if let DragDetectionState::Dragging { hovering_idx, source_idx, .. } = &mut self.detection_state {
-            if let (Some(hovering_idx), Some(source_idx)) = (hovering_idx, source_idx) {
-                shift_vec(*source_idx, *hovering_idx, &mut vec);
-            }
-        }
+        // if let DragDetectionState::Dragging { hovering_idx, source_idx, .. } = &mut self.detection_state {
+        //     if let (Some(hovering_idx), Some(source_idx)) = (hovering_idx, source_idx) {
+        //         shift_vec(*source_idx, *hovering_idx, &mut vec);
+        //     }
+        // }
 
-        let mut rects = Vec::with_capacity(vec.len());
+        let dragged_item_pos = ui.input(|i| i.pointer.hover_pos()).unwrap_or_default() + self.detection_state.offset().unwrap_or_default();
+        let dragged_item_rect = Rect::from_min_size(dragged_item_pos, self.detection_state.dragged_item_size().unwrap_or_default());
+        let dragged_item_center = dragged_item_rect.center();
+        let mut above_item = None;
+        let mut below_item = None;
 
-        DragDropUi::drop_target(ui, true, |ui| {
-            vec.into_iter().for_each(|(idx, mut item)| {
+        let mut should_add_space_at_end = true;
 
+        let mut source_idx = None;
+        let mut dragged_item_size = None;
+        let mut add_space_for_previous_item = false;
 
-                let rect = self.drag_source(ui, item.borrow_mut().id(), |ui, handle| {
-                    item_ui(item.borrow_mut(), ui, handle);
-                });
-                rects.push((idx, rect));
+        ui.scope(|ui| {
+            let item_spacing = ui.spacing().item_spacing.y;
+            ui.spacing_mut().item_spacing.y = 0.0;
 
-                if let DragDetectionState::Dragging { id, source_idx, .. } = &mut self.detection_state {
-                    if item.borrow().id() == *id {
-                        *source_idx = Some(idx);
+            DragDropUi::drop_target(ui, true, |ui| {
+                vec.into_iter().for_each(|(idx, mut item)| {
+                    let item_id = item.borrow().id();
+                    let dragging = self.detection_state.is_dragging_item(item_id);
+
+                    let hovering_this_item = self.detection_state.hovering_index() == Some(idx);
+                    let mut add_space = hovering_this_item;
+                    if add_space_for_previous_item {
+                        add_space = true;
+                        add_space_for_previous_item = false;
                     }
-                }
-            });
-        });
+                    if hovering_this_item && self.detection_state.is_dragging_item(item_id) {
+                        add_space = false;
+                        add_space_for_previous_item = true;
+                        println!("add space for previous item, idx: {}", idx);
+                    }
+                    if add_space {
+                        should_add_space_at_end = false;
+                    }
+                    let x = ui.ctx().animate_bool(ui.auto_id_with(item_id.with(self.drag_count).with(self.detection_state.hovering_index().is_some())), add_space);
+                    if x > 0.0 {
+                        let space = (dragged_item_rect.height() + item_spacing);
+                        ui.add_space(space * x);
+                    }
 
-        if let DragDetectionState::Dragging { id, offset, hovering_idx, source_idx, .. } = &mut self.detection_state {
-            let pos = ui.input(|i| i.pointer.hover_pos());
+                    if !self.detection_state.is_dragging_item(item_id) {
+                        ui.add_space(item_spacing);
+                    }
 
-            if let Some(pos) = pos {
-                let pos = pos + *offset;
-
-                let mut closest: Option<(f32, usize, usize, Rect)> = None;
-
-                rects
-                    .into_iter()
-                    .enumerate()
-                    .for_each(|(new_idx, (idx, rect))| {
-                        let dist = (rect.top() - pos.y).abs();
-                        let val = (dist, new_idx, idx, rect);
-
-                        if let Some((closest_dist, ..)) = closest {
-                            if closest_dist > dist {
-                                closest = Some(val)
-                            }
-                        } else {
-                            closest = Some(val)
-                        }
+                    let rect = self.drag_source(ui, item.borrow_mut().id(), |ui, handle| {
+                        item_ui(item.borrow_mut(), ui, handle, dragging);
                     });
 
-                if let Some((_dist, new_idx, _original_idx, rect)) = closest {
-                    let mut i = if pos.y > rect.center().y {
-                        new_idx + 1
-                    } else {
-                        new_idx
-                    };
-
-                    if let Some(idx) = *source_idx {
-                        if i > idx && i < len {
-                            i += 1;
-                        }
+                    if dragged_item_center.y < rect.center().y && above_item.is_none() {
+                        above_item = Some(idx);
+                    }
+                    if dragged_item_center.y > rect.center().y {
+                        below_item = Some((idx, item_id));
                     }
 
-                    *hovering_idx = Some(i);
+                    if self.detection_state.is_dragging_item(item_id) {
+                        source_idx = Some(idx);
+                        dragged_item_size = Some(rect.size());
+                    }
+                });
+            });
+
+            let x = ui.ctx().animate_bool(ui.auto_id_with(self.drag_count).with("end_space").with(self.detection_state.hovering_index().is_some()), should_add_space_at_end && self.detection_state.hovering_index().is_some());
+            if x > 0.0 {
+                let mut spacing = item_spacing;
+                if add_space_for_previous_item {
+                    spacing = item_spacing;
+                }
+                let space = (dragged_item_rect.height() + item_spacing);
+                ui.spacing_mut().item_spacing.y = 0.0;
+                ui.allocate_exact_size(Vec2::new(0.0, space * x), Sense::hover());
+            }
+        });
+
+
+        if let DragDetectionState::Dragging { phase, id: dragging_id, .. } = &mut self.detection_state {
+            let hovering_idx = above_item
+                .or(below_item.map(|(i, id)| if id == *dragging_id { i } else { i + 1 }));
+            if let Some(hovering_idx) = hovering_idx {
+                if let Some(source_idx) = source_idx {
+                    if let Some(dragged_item_size) = dragged_item_size {
+                        *phase = DragPhase::Rest {
+                            hovering_idx,
+                            source_idx,
+                            dragged_item_size,
+                        }
+                    }
                 }
             }
         }
 
         let response = if let DragDetectionState::Dragging {
-            source_idx: Some(source_idx), hovering_idx: Some(hovering_idx), ..
+            phase: DragPhase::Rest {
+                source_idx,
+                hovering_idx,
+                ..
+            }, ..
         } = &self.detection_state {
             if ui.input(|i| i.pointer.any_released()) {
                 DragDropResponse {
@@ -305,6 +399,9 @@ impl DragDropUi {
             self.detection_state = DragDetectionState::Cancelled;
         }
 
+        ui.label(format!("Above: {:?}", above_item));
+        ui.label(format!("Below: {:?}", below_item));
+
         response
     }
 
@@ -314,56 +411,33 @@ impl DragDropUi {
         id: Id,
         drag_body: impl FnOnce(&mut Ui, Handle),
     ) -> Rect {
-        if let DragDetectionState::Dragging { id: dragging_id, offset, dragged_item_size, .. } = &mut self.detection_state {
-            if id == *dragging_id {
+        if let DragDetectionState::Dragging { id: dragging_id, offset, phase, .. } = &mut self.detection_state {
+            // Draw the item item in it's original position in the first frame to avoid flickering
+            if id == *dragging_id && !phase.is_first_frame() {
                 ui.output_mut(|o| o.cursor_icon = CursorIcon::Grabbing);
 
-                // let response = ui.scope(body).response;
-
-                // Paint the body to a new layer:
                 let _layer_id = LayerId::new(Order::Tooltip, id);
-                // let response = ui.with_layer_id(layer_id, body).response;
-
-                // Now we move the visuals of the body to where the mouse is.
-                // Normally you need to decide a location for a widget first,
-                // because otherwise that widget cannot interact with the mouse.
-                // However, a dragged component cannot be interacted with anyway
-                // (anything with `Order::Tooltip` always gets an empty [`Response`])
-                // So this is fine!
-
-                // if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
-                //     let r = response.rect.center();
-                //
-                //     let delta = pointer_pos - r;
-                //     ui.ctx().translate_layer(layer_id, delta);
-                // }
 
                 let pointer_pos = ui
                     .ctx()
-                    .pointer_interact_pos()
+                    .pointer_hover_pos()
                     .unwrap_or_else(|| ui.next_widget_position());
 
+                // If we are in a ScrollArea, allow for scrolling while dragging
                 ui.scroll_to_rect(Rect::from_center_size(pointer_pos, Vec2::splat(100.0)), None);
 
-                let u = egui::Area::new("draggable_item")
+                let InnerResponse { inner: rect, .. } = egui::Area::new("draggable_item")
                     .interactable(false)
                     .fixed_pos(pointer_pos + *offset)
-                    .show(ui.ctx(), |x| {
-                        // allocate space where the item would be
-                        x.scope(|gg| {
-                            //gg.label("dragging meeeee yayyyy")
-
-                            drag_body(gg, Handle { state: self, id })
+                    .show(ui.ctx(), |ui| {
+                        ui.scope(|ui| {
+                            drag_body(ui, Handle { state: self, id })
                         })
                             .response
                             .rect
                     });
 
-                if let DragDetectionState::Dragging { dragged_item_size, .. } = &mut self.detection_state {
-                    *dragged_item_size = Some(u.inner.size());
-                }
-
-                return ui.allocate_space(u.inner.size()).1;
+                return Rect::from_min_size(ui.next_widget_position(), rect.size());
             }
         }
 

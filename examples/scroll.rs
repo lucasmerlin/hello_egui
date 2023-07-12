@@ -29,7 +29,7 @@ fn main() -> eframe::Result<()> {
                 ScrollArea
                 ::vertical()
                     .show(ui, |ui| {
-                        let response = dnd.ui::<ItemType, _>(ui, items.iter_mut(), |item, ui, handle| {
+                        let response = dnd.ui::<ItemType, _>(ui, items.iter_mut(), |item, ui, handle, dragging| {
                             ui.horizontal(|ui| {
                                 if handle.ui_impl(ui, Some(Sense::click()), |ui| {
                                     ui.label("grab");
