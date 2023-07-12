@@ -9,7 +9,6 @@ use egui_extras::{Size, StripBuilder};
 use wasm_bindgen::prelude::*;
 
 use egui_dnd::{DragDropItem, DragDropUi};
-use egui_dnd::utils::shift_vec;
 
 #[derive(Clone)]
 struct Color {
@@ -60,9 +59,10 @@ impl Default for DnDApp {
 
 impl DnDApp {
     fn dnd_ui(&mut self, ui: &mut Ui) {
-        let response = self
-            .dnd
-            .ui(ui, self.items.iter_mut(), |item: &mut Color, ui, handle, pressed| {
+        let response = self.dnd.ui(
+            ui,
+            self.items.iter_mut(),
+            |item: &mut Color, ui, handle, pressed| {
                 ui.horizontal(|ui| {
                     if handle
                         .sense(Sense::click())
@@ -85,7 +85,8 @@ impl DnDApp {
                         item.rounded = !item.rounded;
                     }
                 });
-            });
+            },
+        );
 
         response.update_vec(&mut self.items);
     }
@@ -97,7 +98,7 @@ impl App for DnDApp {
             vertex_gradient(
                 ui,
                 &Gradient(
-                        self.items
+                    self.items
                         .iter()
                         .map(|c| c.color)
                         .collect(),
@@ -198,8 +199,14 @@ fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
     for (i, &color) in gradient.0.iter().enumerate() {
         let t = i as f32 / (n as f32 - 1.0);
         let y = lerp(rect.y_range(), t);
-        mesh.colored_vertex(pos2(rect.left(), y), animate_color(ui, color, Id::new("a").with(i), animation_time));
-        mesh.colored_vertex(pos2(rect.right(), y), animate_color(ui, color, Id::new("b").with(i), animation_time));
+        mesh.colored_vertex(
+            pos2(rect.left(), y),
+            animate_color(ui, color, Id::new("a").with(i), animation_time),
+        );
+        mesh.colored_vertex(
+            pos2(rect.right(), y),
+            animate_color(ui, color, Id::new("b").with(i), animation_time),
+        );
         if i < n - 1 {
             let i = i as u32;
             mesh.add_triangle(2 * i, 2 * i + 1, 2 * i + 2);
@@ -211,9 +218,12 @@ fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
 
 fn animate_color(ui: &mut Ui, color: Color32, id: Id, duration: f32) -> Color32 {
     Color32::from_rgba_premultiplied(
-        ui.ctx().animate_value_with_time(id.with(0), color[0] as f32, duration) as u8,
-        ui.ctx().animate_value_with_time(id.with(1), color[1] as f32, duration) as u8,
-        ui.ctx().animate_value_with_time(id.with(2), color[2] as f32, duration) as u8,
+        ui.ctx()
+            .animate_value_with_time(id.with(0), color[0] as f32, duration) as u8,
+        ui.ctx()
+            .animate_value_with_time(id.with(1), color[1] as f32, duration) as u8,
+        ui.ctx()
+            .animate_value_with_time(id.with(2), color[2] as f32, duration) as u8,
         color[3],
     )
 }
