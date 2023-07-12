@@ -3,11 +3,11 @@ use std::hash::{Hash, Hasher};
 use eframe::egui::{Color32, Context};
 use eframe::emath::lerp;
 use eframe::{egui, App, Frame};
-use egui::{Rounding, Ui, Vec2};
+use egui::{Rounding, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
 
 use egui_dnd::utils::shift_vec;
-use egui_dnd::DragDropUi;
+use egui_dnd::{DragDropItem, DragDropUi};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -15,6 +15,7 @@ use wasm_bindgen::prelude::*;
 struct Color {
     color: Color32,
     name: String,
+    rounded: bool,
 }
 
 impl Hash for Color {
@@ -41,14 +42,17 @@ impl Default for DnDApp {
                 Color {
                     name: "Panic Purple".to_string(),
                     color: egui::hex_color!("642CA9"),
+                    rounded: false,
                 },
                 Color {
                     name: "Generic Green".to_string(),
                     color: egui::hex_color!("2A9D8F"),
+                    rounded: false,
                 },
                 Color {
                     name: "Ownership Orange*".to_string(),
                     color: egui::hex_color!("E9C46A"),
+                    rounded: false,
                 },
             ],
             preview: None,
@@ -62,13 +66,25 @@ impl DnDApp {
             .dnd
             .ui(ui, self.items.iter_mut(), |item: &mut Color, ui, handle| {
                 ui.horizontal(|ui| {
-                    handle.ui(ui, |ui| {
-                        let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
-                        ui.painter()
-                            .rect_filled(rect, Rounding::same(1.0), item.color);
+                    if handle
+                        .ui_sense(ui, Sense::click(), |ui| {
+                            let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
 
-                        ui.heading(&item.name);
-                    });
+                            let x = ui.ctx().animate_bool(item.id(), item.rounded);
+                            let rounding = x * 16.0 + 1.0;
+
+                            ui.painter().rect_filled(
+                                rect.shrink(x * 4.0),
+                                Rounding::same(rounding),
+                                item.color,
+                            );
+
+                            ui.heading(&item.name);
+                        })
+                        .clicked()
+                    {
+                        item.rounded = !item.rounded;
+                    }
                 });
             });
         if let Some(response) = response.completed {
