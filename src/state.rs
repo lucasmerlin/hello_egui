@@ -52,7 +52,9 @@ impl<T: Hash> DragDropItem for T {
 /// You can use [shift_vec] to do this for a Vec.
 #[derive(Debug, Clone)]
 pub struct DragUpdate {
+    /// Index of the item to move
     pub from: usize,
+    /// Where to move the item to
     pub to: usize,
 }
 
@@ -61,19 +63,26 @@ pub struct DragUpdate {
 #[derive(Debug, Clone)]
 pub struct DragDropResponse {
     state: DragDetectionState,
+    /// Contains ongoing information about which index is currently being dragged where.
+    /// You can use this to consistently update the source list while the drag & drop event is ongoing.
+    /// If you only want to update the source list when the drag & drop event has finished, use [DragDropResponse::final_update] instead.
     pub update: Option<DragUpdate>,
     finished: bool,
+    cancellation_reason: Option<&'static str>,
 }
 
 impl DragDropResponse {
+    /// Returns true if we are currently evaluating whether a drag should be started.
     pub fn is_evaluating_drag(&self) -> bool {
         self.state.is_evaluating_drag()
     }
 
+    /// Returns true if we are currently dragging an item.
     pub fn is_dragging(&self) -> bool {
         self.state.is_dragging()
     }
 
+    /// Returns the id of the item that is currently being dragged.
     pub fn dragged_item_id(&self) -> Option<Id> {
         self.state.dragged_item()
     }
@@ -84,6 +93,8 @@ impl DragDropResponse {
         self.finished
     }
 
+    /// Utility function to update a Vec with the current drag & drop state.
+    /// You can use this to consistently update the source list while the drag & drop event is ongoing.
     pub fn update_vec<T>(&self, vec: &mut [T]) {
         if let Some(update) = &self.update {
             shift_vec(update.from, update.to, vec);
@@ -98,6 +109,11 @@ impl DragDropResponse {
         } else {
             None
         }
+    }
+
+    /// Returns a [Option<&str>] with the reason if a drag & drop event was cancelled.
+    pub fn cancellation_reason(&self) -> Option<&'static str> {
+        self.cancellation_reason
     }
 }
 
@@ -141,7 +157,7 @@ enum DragDetectionState {
     },
     WaitingForClickThreshold,
     CouldBeValidDrag,
-    Cancelled,
+    Cancelled(&'static str),
     Dragging {
         id: Id,
         offset: Vec2,
@@ -249,7 +265,9 @@ impl DragDetectionState {
 
 impl<'a> Handle<'a> {
     /// You can add [Sense::click] if you want to listen for clicks on the handle
-    /// Please not that this will make anything in the handle noninteractive
+    /// **Warning**: This will make anything sensing clicks in the handle not draggable
+    /// Make sure to not set this if your handle consists of a single button, and directly
+    /// query the button for clicks.
     pub fn sense(mut self, sense: Sense) -> Self {
         self.sense = Some(sense);
         self
@@ -318,6 +336,7 @@ impl<'a> Handle<'a> {
     }
 }
 
+/// Configuration for drag detection.
 #[derive(Debug, Clone)]
 pub struct DragDropConfig {
     /// How long does the user have to keep pressing until a drag may begin?
@@ -474,10 +493,14 @@ impl DragDropUi {
                         if is_below_scroll_threshold {
                             self.detection_state = DragDetectionState::WaitingForClickThreshold;
                         } else {
-                            self.detection_state = DragDetectionState::Cancelled;
+                            self.detection_state = DragDetectionState::Cancelled(
+                                "Drag distance exceeded scroll threshold",
+                            );
                         }
                     } else if !is_below_scroll_threshold {
-                        self.detection_state = DragDetectionState::Cancelled;
+                        self.detection_state = DragDetectionState::Cancelled(
+                            "Drag distance exceeded scroll threshold",
+                        );
                     }
                 }
             }
@@ -597,7 +620,8 @@ impl DragDropUi {
 
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {
-            self.detection_state = DragDetectionState::Cancelled;
+            self.detection_state =
+                DragDetectionState::Cancelled("Cursor not hovering over any item handle");
         }
 
         let hovering_item = above_item;
@@ -624,7 +648,7 @@ impl DragDropUi {
             }
         }
 
-        let response = if let DragDetectionState::Dragging {
+        let mut response = if let DragDetectionState::Dragging {
             id,
             phase:
                 DragPhase::Rest {
@@ -642,6 +666,7 @@ impl DragDropUi {
                     to: hovering_idx,
                 }),
                 state: self.detection_state.clone(),
+                cancellation_reason: None,
             };
 
             if ui.input(|i| i.pointer.any_released()) {
@@ -660,6 +685,7 @@ impl DragDropUi {
                 finished: false,
                 update: None,
                 state: self.detection_state.clone(),
+                cancellation_reason: None,
             }
         };
 
@@ -670,13 +696,16 @@ impl DragDropUi {
                     DragDetectionState::TransitioningBackAfterDragFinished { .. }
                 )
             {
+                if let DragDetectionState::Cancelled(msg) = self.detection_state {
+                    response.cancellation_reason = Some(msg);
+                }
                 self.detection_state = DragDetectionState::None;
             }
         });
 
         // We are not over any target, cancel the drag
         if let DragDetectionState::CouldBeValidDrag = self.detection_state {
-            self.detection_state = DragDetectionState::Cancelled;
+            self.detection_state = DragDetectionState::Cancelled("Not hovering over any target");
         }
 
         response
@@ -744,6 +773,7 @@ impl DragDropUi {
                 );
                 let position = Pos2::new(x, y);
                 if position == ui.next_widget_position() {
+                    // Animation finished
                     self.detection_state = DragDetectionState::None;
                 }
 

@@ -48,6 +48,10 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui) {
             }
         });
     });
+
+    if let Some(reason) = response.cancellation_reason() {
+        println!("Drag has been cancelled because of {:?}", reason);
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -69,8 +73,6 @@ fn main() -> eframe::Result<()> {
             rounded: false,
         },
     ];
-
-    let options = eframe::NativeOptions::default();
 
     eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
         egui::CentralPanel::default().frame(egui::Frame::none()).show(ctx, |ui| {

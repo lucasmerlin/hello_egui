@@ -43,12 +43,17 @@ impl App for DnDApp {
                 self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle, _pressure| {
                     ui.horizontal(|ui| {
                         // Anything in the handle can be used to drag the item
-                        handle.ui(ui, |ui| {
+                        let handle_clicked = handle
+                            .ui(ui, |ui| {
                             if ui.button("grab").clicked() {
                                 println!("clicked {}", item.name);
                             }
                             ui.label("grab");
-                        });
+                        }).clicked();
+                        if handle_clicked {
+                            println!("handle clicked {}", item.name);
+                            println!("I should never be printed");
+                        }
 
                         ui.label(&item.name);
                     });

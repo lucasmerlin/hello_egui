@@ -2,12 +2,10 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use crate::state::DragDropResponse;
 use egui::Id;
-pub use state::{DragDropItem, DragDropUi, Handle};
+pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragDropUi, DragUpdate, Handle};
 
 use std::hash::Hash;
-use std::ops::{Deref, DerefMut};
 
 mod state;
 
@@ -65,19 +63,6 @@ pub struct Dnd<'a> {
     drag_drop_ui: DragDropUi,
 }
 
-impl<'a> Deref for Dnd<'a> {
-    type Target = DragDropUi;
-
-    fn deref(&self) -> &Self::Target {
-        &self.drag_drop_ui
-    }
-}
-
-impl<'a> DerefMut for Dnd<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.drag_drop_ui
-    }
-}
 /// Main entry point for the drag and drop functionality.
 /// Loads and saves it's state from egui memory.
 /// Use either [Dnd::show] or [Dnd::show_vec] to display the drag and drop UI.
@@ -125,14 +110,30 @@ impl<'a> Dnd<'a> {
         dnd(ui, id_source)
     }
 
+    /// Sets the config used when dragging with the mouse or when no touch config is set
+    pub fn with_mouse_config(mut self, config: DragDropConfig) -> Self {
+        self.drag_drop_ui = self.drag_drop_ui.with_mouse_config(config);
+        self
+    }
+
+    /// Sets the config used when dragging with touch
+    /// If None, the mouse config is used instead
+    /// Use [DragDropConfig::touch] or [DragDropConfig::touch_scroll] to get a config optimized for touch
+    /// The default is [DragDropConfig::touch]
+    /// For dragging in a ScrollArea, use [DragDropConfig::touch_scroll]
+    pub fn with_touch_config(mut self, config: Option<DragDropConfig>) -> Self {
+        self.drag_drop_ui = self.drag_drop_ui.with_touch_config(config);
+        self
+    }
+
     /// Display the drag and drop UI.
-    /// [items] should be an iterator over items that should be sorted.
+    /// `items` should be an iterator over items that should be sorted.
     ///
     /// The items won't be sorted automatically, but you can use [Dnd::show_vec] or [DragDropResponse::update_vec] to do so.
     /// If your items aren't in a vec, you have to sort them yourself.
     ///
-    /// [item_ui] is called for each item. Display your item there.
-    /// [item_ui] gets a [Handle] that can be used to display the drag handle.
+    /// `item_ui` is called for each item. Display your item there.
+    /// `item_ui` gets a [Handle] that can be used to display the drag handle.
     /// Only the handle can be used to drag the item. If you want the whole item to be draggable, put everything in the handle.
     pub fn show<T: DragDropItem>(
         self,
