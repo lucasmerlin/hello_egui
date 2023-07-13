@@ -1,10 +1,11 @@
 use std::hash::Hash;
-#[cfg(target_arch = "wasm32")]
-use web_time::{Duration, SystemTime};
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+
+#[cfg(target_arch = "wasm32")]
+use web_time::{Duration, SystemTime};
 
 use crate::utils::shift_vec;
 
@@ -176,6 +177,10 @@ enum DragDetectionState {
 enum DragPhase {
     FirstFrame,
     Rest {
+        // For touch devices, we need to remember the last pointer position
+        // so we don't loose it during the last frame
+        last_pointer_pos: Pos2,
+
         dragged_item_size: Vec2,
 
         /// This will always be set unless we are at the bottom of the list
@@ -240,11 +245,11 @@ impl DragDetectionState {
         match self {
             DragDetectionState::Dragging {
                 phase:
-                    DragPhase::Rest {
-                        hovering_above_item: hovering_item,
-                        hovering_below_item,
-                        ..
-                    },
+                DragPhase::Rest {
+                    hovering_above_item: hovering_item,
+                    hovering_below_item,
+                    ..
+                },
                 ..
             } => hovering_item.or(*hovering_below_item),
             _ => None,
@@ -255,12 +260,26 @@ impl DragDetectionState {
         match self {
             DragDetectionState::Dragging {
                 phase:
-                    DragPhase::Rest {
-                        hovering_below_item,
-                        ..
-                    },
+                DragPhase::Rest {
+                    hovering_below_item,
+                    ..
+                },
                 ..
             } => *hovering_below_item,
+            _ => None,
+        }
+    }
+
+    fn last_pointer_pos(&self) -> Option<Pos2> {
+        match self {
+            DragDetectionState::Dragging {
+                phase:
+                DragPhase::Rest {
+                    last_pointer_pos,
+                    ..
+                },
+                ..
+            } => Some(*last_pointer_pos),
             _ => None,
         }
     }
@@ -297,7 +316,7 @@ impl<'a> Handle<'a> {
         let drag_distance = ui.input(|i| {
             (i.pointer.hover_pos().unwrap_or_default()
                 - i.pointer.press_origin().unwrap_or_default())
-            .length()
+                .length()
         });
 
         let click_threshold = 1.0;
@@ -309,8 +328,8 @@ impl<'a> Handle<'a> {
                 DragDetectionState::WaitingForClickThreshold
             )
             && response
-                .rect
-                .contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
+            .rect
+            .contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
         {
             // It should be save to stop anything else being dragged here
             // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
@@ -462,7 +481,7 @@ impl DragDropUi {
     pub fn ui<T: DragDropItem>(
         &mut self,
         ui: &mut Ui,
-        values: impl Iterator<Item = T>,
+        values: impl Iterator<Item=T>,
         mut item_ui: impl FnMut(T, &mut Ui, Handle, bool),
     ) -> DragDropResponse {
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
@@ -485,7 +504,7 @@ impl DragDropUi {
 
                 let drag_distance = (i.pointer.hover_pos().unwrap_or_default()
                     - i.pointer.press_origin().unwrap_or_default())
-                .length();
+                    .length();
                 let is_below_scroll_threshold =
                     drag_distance < config.scroll_tolerance.unwrap_or(f32::INFINITY);
 
@@ -509,13 +528,9 @@ impl DragDropUi {
             }
         });
 
-        // if let DragDetectionState::Dragging { hovering_idx, source_idx, .. } = &mut self.detection_state {
-        //     if let (Some(hovering_idx), Some(source_idx)) = (hovering_idx, source_idx) {
-        //         shift_vec(*source_idx, *hovering_idx, &mut vec);
-        //     }
-        // }
+        let pointer_pos = ui.input(|i| i.pointer.hover_pos()).or_else(|| self.detection_state.last_pointer_pos());
 
-        let dragged_item_pos = ui.input(|i| i.pointer.hover_pos()).unwrap_or_default()
+        let dragged_item_pos = pointer_pos.unwrap_or_default()
             + self.detection_state.offset().unwrap_or_default();
         let dragged_item_rect = Rect::from_min_size(
             dragged_item_pos,
@@ -555,7 +570,7 @@ impl DragDropUi {
                     }
                     if add_space
                         && (is_dragged_item
-                            || self.detection_state.hovering_below_item() == Some(item_id))
+                        || self.detection_state.hovering_below_item() == Some(item_id))
                     {
                         add_space_for_previous_item = true;
                         add_space = false;
@@ -638,6 +653,7 @@ impl DragDropUi {
                     let hovering_item_id = hovering_item.map(|i| i.1);
 
                     *phase = DragPhase::Rest {
+                        last_pointer_pos: pointer_pos.unwrap_or_default(),
                         dragged_item_size,
                         hovering_above_item: hovering_item_id,
                         hovering_below_item: below_item.map(|i| i.1),
@@ -654,11 +670,11 @@ impl DragDropUi {
         let mut response = if let DragDetectionState::Dragging {
             id,
             phase:
-                DragPhase::Rest {
-                    hovering_idx,
-                    source_idx,
-                    ..
-                },
+            DragPhase::Rest {
+                hovering_idx,
+                source_idx,
+                ..
+            },
             ..
         } = self.detection_state
         {
@@ -721,6 +737,7 @@ impl DragDropUi {
         hovering_over_any_handle: &mut bool,
         drag_body: impl FnOnce(&mut Ui, Handle),
     ) -> Rect {
+        let last_pointer_pos = self.detection_state.last_pointer_pos();
         if let DragDetectionState::Dragging {
             id: dragging_id,
             offset,
@@ -737,6 +754,7 @@ impl DragDropUi {
                 let pointer_pos = ui
                     .ctx()
                     .pointer_hover_pos()
+                    .or(last_pointer_pos)
                     .unwrap_or_else(|| ui.next_widget_position());
                 let position = pointer_pos + *offset;
 
@@ -834,8 +852,8 @@ impl DragDropUi {
                         },
                     )
                 })
-                .response
-                .rect
+                    .response
+                    .rect
             })
     }
 
