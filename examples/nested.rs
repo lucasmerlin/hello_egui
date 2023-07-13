@@ -1,7 +1,6 @@
 use eframe::egui;
 use eframe::egui::{CollapsingHeader, Id, Ui};
 
-use egui_dnd::utils::shift_vec;
 use egui_dnd::{DragDropItem, DragDropUi, Handle};
 
 pub fn main() {
@@ -21,7 +20,7 @@ struct SortableItem {
     drag_drop_ui: DragDropUi,
 }
 
-impl DragDropItem for SortableItem {
+impl DragDropItem for &mut SortableItem {
     fn id(&self) -> Id {
         Id::new(&self.name)
     }
@@ -83,7 +82,7 @@ impl Default for MyApp {
 
 impl MyApp {
     fn draw_item(ui: &mut Ui, item: &mut SortableItem, handle: Handle) {
-        handle.ui(ui, item, |ui| {
+        handle.ui(ui, |ui| {
             ui.label(&item.name);
         });
 
@@ -93,15 +92,15 @@ impl MyApp {
                 .show(ui, |ui| {
                     ui.label("Content");
 
-                    let response =
-                        item.drag_drop_ui
-                            .ui(ui, children.iter_mut(), |item, ui, handle| {
-                                Self::draw_item(ui, item, handle);
-                            });
+                    let response = item.drag_drop_ui.ui(
+                        ui,
+                        children.iter_mut(),
+                        |item, ui, handle, _pressed| {
+                            Self::draw_item(ui, item, handle);
+                        },
+                    );
 
-                    if let Some(response) = response.completed {
-                        shift_vec(response.from, response.to, children);
-                    }
+                    response.update_vec(children);
                 });
         };
     }
@@ -110,14 +109,12 @@ impl MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            let response = self
-                .drag_drop_ui
-                .ui(ui, self.items.iter_mut(), |item, ui, handle| {
-                    MyApp::draw_item(ui, item, handle);
-                });
-            if let Some(response) = response.completed {
-                shift_vec(response.from, response.to, &mut self.items);
-            }
+            let response =
+                self.drag_drop_ui
+                    .ui(ui, self.items.iter_mut(), |item, ui, handle, _pressed| {
+                        MyApp::draw_item(ui, item, handle);
+                    });
+            response.update_vec(&mut self.items);
         });
     }
 }
