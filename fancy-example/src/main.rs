@@ -1,12 +1,10 @@
 use std::hash::{Hash, Hasher};
 
-use eframe::{egui};
+use eframe::egui;
 use eframe::egui::Color32;
 use eframe::emath::lerp;
 use egui::{Context, Id, Rounding, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 
 use egui_dnd::{dnd, DragDropItem};
 
@@ -54,7 +52,6 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui) {
     }
 }
 
-
 fn colors() -> Vec<Color> {
     vec![
         Color {
@@ -76,7 +73,6 @@ fn colors() -> Vec<Color> {
 }
 
 fn app(ctx: &Context, items: &mut Vec<Color>) {
-
     egui::CentralPanel::default().frame(egui::Frame::none()).show(ctx, |ui| {
         vertex_gradient(
             ui,
@@ -149,28 +145,23 @@ fn main() -> eframe::Result<()> {
 #[cfg(target_arch = "wasm32")]
 fn main() {
     let web_options = eframe::WebOptions::default();
-    let mut items = colors();
-
+    let items = colors();
 
     wasm_bindgen_futures::spawn_local(async {
-        eframe::WebRunner::new().start(
-                "canvas",
-                web_options,
-                Box::new(|_a| Box::new(App(items))),
-            )
+        eframe::WebRunner::new()
+            .start("canvas", web_options, Box::new(|_a| Box::new(App(items))))
             .await
             .expect("failed to start eframe");
     });
 
-    struct App (Vec<Color>);
+    struct App(Vec<Color>);
 
     impl eframe::App for App {
-        fn update(&mut self, ctx: &Context, frame: &mut Frame) {
+        fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
             app(ctx, &mut self.0);
         }
     }
 }
-
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 struct Gradient(pub Vec<Color32>);
