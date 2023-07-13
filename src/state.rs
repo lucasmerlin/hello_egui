@@ -104,7 +104,6 @@ impl DragDropResponse {
 /// Holds the data needed to draw the floating item while it is being dragged
 /// Deprecated: Use [crate::dnd] or [crate::Dnd::new] instead
 #[derive(Clone, Debug)]
-#[deprecated]
 pub struct DragDropUi {
     detection_state: DragDetectionState,
     drag_count: usize,
@@ -164,7 +163,6 @@ enum DragPhase {
         hovering_above_item: Option<Id>,
         /// This will be set if we are at the bottom of the list
         hovering_below_item: Option<Id>,
-        source_item: Id,
 
         // These should only be used during for output, as to not cause issues when item indexes change
         hovering_idx: usize,
@@ -247,16 +245,6 @@ impl DragDetectionState {
             _ => None,
         }
     }
-
-    fn is_dragging_and_past_first_frame(&self) -> bool {
-        matches!(
-            self,
-            DragDetectionState::Dragging {
-                phase: DragPhase::Rest { .. },
-                ..
-            }
-        )
-    }
 }
 
 impl<'a> Handle<'a> {
@@ -267,6 +255,8 @@ impl<'a> Handle<'a> {
         self
     }
 
+    /// Draw the drag handle. Use [Handle::sense] to add a click sense.
+    /// You can also add buttons in the handle, but they won't be interactive if you pass Sense::click
     pub fn ui(self, ui: &mut Ui, contents: impl FnOnce(&mut Ui)) -> egui::Response {
         let u = ui.scope(contents);
 
@@ -350,7 +340,7 @@ impl Default for DragDropConfig {
 
 impl DragDropConfig {
     /// Optimized for mouse usage
-    fn mouse() -> Self {
+    pub fn mouse() -> Self {
         Self {
             click_tolerance: 1.0,
             drag_delay: Duration::from_millis(0),
@@ -360,7 +350,7 @@ impl DragDropConfig {
 
     /// Optimized for touch usage in a fixed size area (no scrolling)
     /// Has a higher click tolerance than [DragDropConfig::mouse]
-    fn touch() -> Self {
+    pub fn touch() -> Self {
         Self {
             scroll_tolerance: None,
             click_tolerance: 3.0,
@@ -369,7 +359,7 @@ impl DragDropConfig {
     }
 
     /// Optimized for touch usage in a scrollable area
-    fn touch_scroll() -> Self {
+    pub fn touch_scroll() -> Self {
         Self {
             scroll_tolerance: Some(6.0),
             click_tolerance: 3.0,
@@ -527,7 +517,7 @@ impl DragDropUi {
             let mut animation_budget = 1.0;
 
             DragDropUi::drop_target(ui, true, |ui| {
-                values.enumerate().for_each(|(idx, mut item)| {
+                values.enumerate().for_each(|(idx, item)| {
                     let item_id = item.id();
                     let is_dragged_item = self.detection_state.is_dragging_item(item_id);
 
@@ -552,7 +542,7 @@ impl DragDropUi {
 
                     let mut x = ui.ctx().animate_bool(animation_id, add_space);
 
-                    let space = (dragged_item_rect.height() + item_spacing);
+                    let space = dragged_item_rect.height() + item_spacing;
                     if x > 0.0 {
                         x = x.min(animation_budget);
                         ui.allocate_space(Vec2::new(0.0, space * x));
@@ -600,7 +590,7 @@ impl DragDropUi {
             );
             x = x.min(animation_budget);
             if x > 0.0 {
-                let space = (dragged_item_rect.height() + item_spacing);
+                let space = dragged_item_rect.height() + item_spacing;
                 ui.allocate_exact_size(Vec2::new(0.0, space * x), Sense::hover());
             }
         });
@@ -624,7 +614,6 @@ impl DragDropUi {
                         dragged_item_size,
                         hovering_above_item: hovering_item_id,
                         hovering_below_item: below_item.map(|i| i.1),
-                        source_item: source_idx.1,
                         hovering_idx: hovering_item
                             .map(|i| i.0)
                             .or(below_item.map(|i| i.0 + 1))

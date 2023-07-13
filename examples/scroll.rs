@@ -1,8 +1,8 @@
 use eframe::NativeOptions;
-use egui::{CentralPanel, Id, ScrollArea, Sense};
+use egui::{CentralPanel, ScrollArea, Sense};
 use std::hash::{Hash, Hasher};
 
-use egui_dnd::{DragDropItem, DragDropUi};
+use egui_dnd::DragDropUi;
 
 struct ItemType {
     number: u32,
@@ -28,7 +28,7 @@ fn main() -> eframe::Result<()> {
                     let response = dnd.ui::<&mut ItemType>(
                         ui,
                         items.iter_mut(),
-                        |item, ui, handle, dragging| {
+                        |item, ui, handle, _dragging| {
                             ui.horizontal(|ui| {
                                 if handle
                                     .sense(Sense::click())

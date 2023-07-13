@@ -1,7 +1,6 @@
 use eframe::egui;
 use eframe::egui::{CollapsingHeader, Id, Ui};
 
-use egui_dnd::utils::shift_vec;
 use egui_dnd::{DragDropItem, DragDropUi, Handle};
 
 pub fn main() {
@@ -96,7 +95,7 @@ impl MyApp {
                     let response = item.drag_drop_ui.ui(
                         ui,
                         children.iter_mut(),
-                        |item, ui, handle, pressed| {
+                        |item, ui, handle, _pressed| {
                             Self::draw_item(ui, item, handle);
                         },
                     );
@@ -112,7 +111,7 @@ impl eframe::App for MyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             let response =
                 self.drag_drop_ui
-                    .ui(ui, self.items.iter_mut(), |item, ui, handle, pressed| {
+                    .ui(ui, self.items.iter_mut(), |item, ui, handle, _pressed| {
                         MyApp::draw_item(ui, item, handle);
                     });
             response.update_vec(&mut self.items);

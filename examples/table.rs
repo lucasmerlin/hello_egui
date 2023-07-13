@@ -1,7 +1,6 @@
 use eframe::egui::{Context, Id};
 use eframe::{egui, App, Frame, NativeOptions};
 
-use egui_dnd::utils::shift_vec;
 use egui_dnd::{DragDropItem, DragDropUi};
 
 struct DnDApp {
@@ -41,7 +40,7 @@ impl App for DnDApp {
             let response =
                 // make sure this is called in a vertical layout.
                 // Horizontal sorting is not supported yet.
-                self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle, pressure| {
+                self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle, _pressure| {
                     ui.horizontal(|ui| {
                         // Anything in the handle can be used to drag the item
                         handle.ui(ui, |ui| {

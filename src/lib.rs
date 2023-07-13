@@ -5,10 +5,9 @@
 use crate::state::DragDropResponse;
 use egui::Id;
 pub use state::{DragDropItem, DragDropUi, Handle};
-use std::borrow::BorrowMut;
+
 use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
-use std::os::unix::raw::time_t;
 
 mod state;
 
@@ -59,6 +58,7 @@ pub mod utils {
     }
 }
 
+/// Helper struct for ease of use.
 pub struct Dnd<'a> {
     id: Id,
     ui: &'a mut egui::Ui,
@@ -121,10 +121,20 @@ pub fn dnd(ui: &mut egui::Ui, id_source: impl Hash) -> Dnd {
 }
 
 impl<'a> Dnd<'a> {
+    /// Initialize the drag and drop UI. Same as [dnd].
     pub fn new(ui: &'a mut egui::Ui, id_source: impl Hash) -> Self {
         dnd(ui, id_source)
     }
 
+    /// Display the drag and drop UI.
+    /// [items] should be an iterator over items that should be sorted.
+    ///
+    /// The items won't be sorted automatically, but you can use [Dnd::show_vec] or [DragDropResponse::update_vec] to do so.
+    /// If your items aren't in a vec, you have to sort them yourself.
+    ///
+    /// [item_ui] is called for each item. Display your item there.
+    /// [item_ui] gets a [Handle] that can be used to display the drag handle.
+    /// Only the handle can be used to drag the item. If you want the whole item to be draggable, put everything in the handle.
     pub fn show<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
@@ -145,11 +155,11 @@ impl<'a> Dnd<'a> {
         response
     }
 
-    //
+    /// Same as [Dnd::show], but automatically sorts the items.
     pub fn show_vec<T: Hash>(
         self,
         items: &mut Vec<T>,
-        mut item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
+        item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
         let i = &mut items[0];
 
@@ -161,6 +171,8 @@ impl<'a> Dnd<'a> {
     }
 }
 
+/// State of the current item.
 pub struct ItemState {
+    /// True if the item is currently being dragged.
     pub dragged: bool,
 }
