@@ -30,16 +30,13 @@ fn main() -> eframe::Result<()> {
                         items.iter_mut(),
                         |item, ui, handle, _dragging| {
                             ui.horizontal(|ui| {
-                                if handle
+                                let clicked = handle
                                     .sense(Sense::click())
                                     .ui(ui, |ui| {
                                         ui.label("grab");
-                                        // if ui.button("click me").clicked() {
-                                        //     println!("clicked");
-                                        // }
                                     })
-                                    .clicked()
-                                {
+                                    .clicked();
+                                if clicked {
                                     println!("clicked {}", item.number);
                                 }
                                 ui.label(&item.number.to_string());
