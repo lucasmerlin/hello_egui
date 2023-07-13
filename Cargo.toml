@@ -16,6 +16,9 @@ members = ["fancy-example"]
 [dependencies]
 egui = ">=0.22"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-time = "0.2.0"
+
 [dev-dependencies]
 egui_extras = ">=0.22"
 color-hex = "0.2.0"
