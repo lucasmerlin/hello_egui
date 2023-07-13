@@ -84,7 +84,7 @@ impl DragDropResponse {
         self.finished
     }
 
-    pub fn update_vec<T>(&self, vec: &mut Vec<T>) {
+    pub fn update_vec<T>(&self, vec: &mut [T]) {
         if let Some(update) = &self.update {
             shift_vec(update.from, update.to, vec);
         }
@@ -314,7 +314,7 @@ impl<'a> Handle<'a> {
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
         }
 
-        return response;
+        response
     }
 }
 

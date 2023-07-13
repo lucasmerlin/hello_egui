@@ -158,7 +158,7 @@ impl<'a> Dnd<'a> {
     /// Same as [Dnd::show], but automatically sorts the items.
     pub fn show_vec<T: Hash>(
         self,
-        items: &mut Vec<T>,
+        items: &mut [T],
         item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
         let i = &mut items[0];
