@@ -83,7 +83,7 @@ impl<'a> DerefMut for Dnd<'a> {
 /// Use either [Dnd::show] or [Dnd::show_vec] to display the drag and drop UI.
 /// You can use [DragDropUi::with_mouse_config] or [DragDropUi::with_touch_config] to configure the drag detection.
 /// Example usage:
-/// ```rust
+/// ```rust;no_run
 /// use std::hash::Hash;
 /// use eframe::egui;
 /// use egui::CentralPanel;
@@ -106,7 +106,6 @@ impl<'a> DerefMut for Dnd<'a> {
 ///         });
 ///     })
 /// }
-///
 /// ```
 pub fn dnd(ui: &mut egui::Ui, id_source: impl Hash) -> Dnd {
     let id = Id::new(id_source).with("dnd");

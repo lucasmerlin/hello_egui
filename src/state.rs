@@ -370,7 +370,7 @@ impl DragDropConfig {
 
 /// [DragDropUi] stores the state of the Drag & Drop list.
 /// # Example
-/// ```rust
+/// ```rust;no_run
 /// use egui_dnd::DragDropUi;
 /// use eframe::App;
 /// use eframe::egui::Context;
