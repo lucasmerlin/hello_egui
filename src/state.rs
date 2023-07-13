@@ -126,7 +126,7 @@ impl DragDropResponse {
 #[derive(Clone, Debug)]
 pub struct DragDropUi {
     detection_state: DragDetectionState,
-    drag_count: usize,
+    drag_animation_id_count: usize,
     /// If the mobile config is set, we will use it if we detect a touch event
     touch_config: Option<DragDropConfig>,
     mouse_config: DragDropConfig,
@@ -136,7 +136,7 @@ impl Default for DragDropUi {
     fn default() -> Self {
         DragDropUi {
             detection_state: DragDetectionState::None,
-            drag_count: 0,
+            drag_animation_id_count: 0,
             touch_config: Some(DragDropConfig::touch()),
             mouse_config: DragDropConfig::mouse(),
         }
@@ -159,7 +159,9 @@ enum DragDetectionState {
     PressedWaitingForDelay {
         pressed_at: SystemTime,
     },
-    WaitingForClickThreshold,
+    WaitingForClickThreshold {
+        pressed_at: SystemTime,
+    },
     CouldBeValidDrag,
     Cancelled(&'static str),
     Dragging {
@@ -202,7 +204,7 @@ impl DragPhase {
 
 impl DragDetectionState {
     fn is_evaluating_drag(&self) -> bool {
-        matches!(self, DragDetectionState::WaitingForClickThreshold)
+        matches!(self, DragDetectionState::WaitingForClickThreshold {..})
             || matches!(self, DragDetectionState::PressedWaitingForDelay { .. })
             || matches!(self, DragDetectionState::CouldBeValidDrag)
     }
@@ -323,21 +325,19 @@ impl<'a> Handle<'a> {
         let is_above_click_threshold = drag_distance > click_threshold;
 
         if response.hovered()
-            && matches!(
-                self.state.detection_state,
-                DragDetectionState::WaitingForClickThreshold
-            )
             && response
             .rect
             .contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
         {
-            // It should be save to stop anything else being dragged here
-            // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
-            ui.memory_mut(|mem| mem.stop_dragging());
-            if is_above_click_threshold {
-                self.state.detection_state = DragDetectionState::CouldBeValidDrag;
+            if let DragDetectionState::WaitingForClickThreshold { pressed_at } = self.state.detection_state {
+                // It should be save to stop anything else being dragged here
+                // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
+                ui.memory_mut(|mem| mem.stop_dragging());
+                if is_above_click_threshold || pressed_at.elapsed().unwrap_or_default() > self.state.config(ui).click_tolerance_timeout {
+                    self.state.detection_state = DragDetectionState::CouldBeValidDrag;
+                }
             }
-        }
+        };
 
         if response.hovered()
             && matches!(
@@ -350,7 +350,7 @@ impl<'a> Handle<'a> {
                 offset,
                 phase: DragPhase::FirstFrame,
             };
-            self.state.drag_count += 1;
+            self.state.drag_animation_id_count += 1;
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
         }
 
@@ -371,6 +371,8 @@ pub struct DragDropConfig {
     /// If the pointer is released before this threshold, the drag never starts and the button / handle can be clicked.
     /// If you want to detect clicks on the handle itself, [Handle::sense] to add a click sense to the handle.
     pub click_tolerance: f32,
+    /// If we have been holding longer than this duration, a drag will be started even if the pointer has not moved above [DragDropConfig::click_tolerance].
+    pub click_tolerance_timeout: Duration,
 }
 
 impl Default for DragDropConfig {
@@ -386,6 +388,7 @@ impl DragDropConfig {
             click_tolerance: 1.0,
             drag_delay: Duration::from_millis(0),
             scroll_tolerance: None,
+            click_tolerance_timeout: Duration::from_millis(250),
         }
     }
 
@@ -396,6 +399,7 @@ impl DragDropConfig {
             scroll_tolerance: None,
             click_tolerance: 3.0,
             drag_delay: Duration::from_millis(0),
+            click_tolerance_timeout: Duration::from_millis(250),
         }
     }
 
@@ -405,6 +409,7 @@ impl DragDropConfig {
             scroll_tolerance: Some(6.0),
             click_tolerance: 3.0,
             drag_delay: Duration::from_millis(300),
+            click_tolerance_timeout: Duration::from_millis(250),
         }
     }
 }
@@ -488,6 +493,8 @@ impl DragDropUi {
         let mut first_frame = false;
         let config = self.config(ui).clone();
 
+        let dnd_animation_id = Id::new(self.drag_animation_id_count);
+
         ui.input(|i| {
             if i.pointer.any_down() {
                 if matches!(self.detection_state, DragDetectionState::None)
@@ -513,7 +520,9 @@ impl DragDropUi {
                 {
                     if pressed_at.elapsed().unwrap_or_default() >= config.drag_delay {
                         if is_below_scroll_threshold {
-                            self.detection_state = DragDetectionState::WaitingForClickThreshold;
+                            self.detection_state = DragDetectionState::WaitingForClickThreshold {
+                                pressed_at,
+                            };
                         } else {
                             self.detection_state = DragDetectionState::Cancelled(
                                 "Drag distance exceeded scroll threshold",
@@ -523,6 +532,11 @@ impl DragDropUi {
                         self.detection_state = DragDetectionState::Cancelled(
                             "Drag distance exceeded scroll threshold",
                         );
+                    }
+                }
+                if let DragDetectionState::WaitingForClickThreshold { pressed_at } = self.detection_state {
+                    if pressed_at.elapsed().unwrap_or_default() >= config.click_tolerance_timeout {
+                        self.detection_state = DragDetectionState::CouldBeValidDrag;
                     }
                 }
             }
@@ -579,7 +593,7 @@ impl DragDropUi {
                         should_add_space_at_end = false;
                     }
 
-                    let animation_id = Id::new(item_id).with("dnd_space_animation");
+                    let animation_id = Id::new(item_id).with("dnd_space_animation").with(dnd_animation_id);
 
                     let mut x = ui.ctx().animate_bool(animation_id, add_space);
 
@@ -626,7 +640,7 @@ impl DragDropUi {
             });
 
             let mut x = ui.ctx().animate_bool(
-                Id::new("dnd_end_space"),
+                Id::new("dnd_end_space").with(dnd_animation_id),
                 should_add_space_at_end && self.detection_state.hovering_item().is_some(),
             );
             x = x.min(animation_budget);
@@ -648,7 +662,7 @@ impl DragDropUi {
                 if let Some(dragged_item_size) = dragged_item_size {
                     if let DragPhase::FirstFrame = phase {
                         // Prevent flickering
-                        ui.ctx().clear_animations();
+                        self.drag_animation_id_count+=1;
                     }
                     let hovering_item_id = hovering_item.map(|i| i.1);
 
@@ -690,7 +704,7 @@ impl DragDropUi {
 
             if ui.input(|i| i.pointer.any_released()) {
                 response.finished = true;
-                ui.ctx().clear_animations();
+                self.drag_animation_id_count+=1;
 
                 self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
                     from: Some(dragged_item_pos),
@@ -725,6 +739,11 @@ impl DragDropUi {
         // We are not over any target, cancel the drag
         if let DragDetectionState::CouldBeValidDrag = self.detection_state {
             self.detection_state = DragDetectionState::Cancelled("Not hovering over any target");
+        }
+
+        // Repaint continuously while we are evaluating the drag
+        if self.detection_state.is_evaluating_drag() {
+            ui.ctx().request_repaint();
         }
 
         response
@@ -783,12 +802,12 @@ impl DragDropUi {
                 let value = std::mem::take(from).unwrap_or(ui.next_widget_position());
                 let time = ui.style().animation_time;
                 let x = ui.ctx().animate_value_with_time(
-                    id.with("transitioning_back_x"),
+                    id.with("transitioning_back_x").with(self.drag_animation_id_count),
                     value.x,
                     time,
                 );
                 let y = ui.ctx().animate_value_with_time(
-                    id.with("transitioning_back_y"),
+                    id.with("transitioning_back_y").with(self.drag_animation_id_count),
                     value.y,
                     time,
                 );

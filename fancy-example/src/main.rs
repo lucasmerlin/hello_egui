@@ -22,18 +22,26 @@ impl Hash for Color {
 }
 
 fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui) {
-    let response = dnd(ui, "fancy_dnd").show_vec(items, |ui, item, handle, _pressed| {
+    let response = dnd(ui, "fancy_dnd").show_vec(items, |ui, item, handle, state| {
         ui.horizontal(|ui| {
             if handle
                 .sense(Sense::click())
                 .ui(ui, |ui| {
-                    let (_id, rect) = ui.allocate_space(Vec2::new(32.0, 32.0));
+                    let size_factor = ui.ctx().animate_value_with_time(
+                        item.id().with("handle_anim"),
+                        if state.dragged { 1.1 } else { 1.0 },
+                        0.2,
+                    );
+                    let size = 32.0;
+
+                    let (_id, rect) = ui.allocate_space(Vec2::splat(size));
 
                     let x = ui.ctx().animate_bool(item.id(), item.rounded);
                     let rounding = x * 16.0 + 1.0;
 
                     ui.painter().rect_filled(
-                        rect.shrink(x * 4.0),
+                        rect.shrink(x * 4.0 * size_factor)
+                            .shrink(rect.width() * (1.0 - size_factor)),
                         Rounding::same(rounding),
                         item.color,
                     );
