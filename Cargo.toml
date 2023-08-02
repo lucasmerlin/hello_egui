@@ -14,7 +14,7 @@ license = "MIT"
 members = ["fancy-example"]
 
 [dependencies]
-egui = ">=0.22"
+egui = { version = ">=0.22", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-time = "0.2.0"
