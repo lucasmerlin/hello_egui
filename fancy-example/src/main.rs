@@ -102,7 +102,7 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
                 strip.strip(|builder| {
                     builder
                         .size(Size::remainder())
-                        .size(Size::exact(300.0))
+                        .size(Size::exact(320.0))
                         .size(Size::remainder())
                         .vertical(|mut strip| {
                             strip.empty();
@@ -128,7 +128,8 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
                                     ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
 
                                     ui.hyperlink_to("View on GitHub", "https://github.com/lucasmerlin/egui_dnd");
-                                    ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd")
+                                    ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
+                                    ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
                                 });
                             });
                             strip.empty();
