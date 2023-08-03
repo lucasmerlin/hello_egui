@@ -4,6 +4,7 @@ use std::time::{Duration, SystemTime};
 
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
+use crate::ItemState;
 #[cfg(target_arch = "wasm32")]
 use web_time::{Duration, SystemTime};
 
@@ -490,7 +491,7 @@ impl DragDropUi {
         &mut self,
         ui: &mut Ui,
         values: impl Iterator<Item = T>,
-        mut item_ui: impl FnMut(T, &mut Ui, Handle, bool),
+        mut item_ui: impl FnMut(T, &mut Ui, Handle, ItemState),
     ) -> DragDropResponse {
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
         let mut first_frame = false;
@@ -626,7 +627,15 @@ impl DragDropUi {
                                 item_id,
                                 &mut hovering_over_any_handle,
                                 |ui, handle| {
-                                    item_ui(item, ui, handle, is_dragged_item);
+                                    item_ui(
+                                        item,
+                                        ui,
+                                        handle,
+                                        ItemState {
+                                            dragged: is_dragged_item,
+                                            index: idx,
+                                        },
+                                    );
                                 },
                             )
                         })

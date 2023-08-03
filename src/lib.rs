@@ -146,8 +146,8 @@ impl<'a> Dnd<'a> {
             mut drag_drop_ui,
         } = self;
 
-        let response = drag_drop_ui.ui(ui, items, |item, ui, handle, dragged| {
-            item_ui(ui, item, handle, ItemState { dragged });
+        let response = drag_drop_ui.ui(ui, items, |item, ui, handle, item_state| {
+            item_ui(ui, item, handle, item_state);
         });
 
         ui.ctx().data_mut(|data| data.insert_temp(id, drag_drop_ui));
@@ -175,4 +175,9 @@ impl<'a> Dnd<'a> {
 pub struct ItemState {
     /// True if the item is currently being dragged.
     pub dragged: bool,
+    /// Index of the item in the list.
+    /// Note that when you sort the source list while the drag is still ongoing (default behaviour
+    /// of [Dnd::show_vec]), this index will updated while the item is being dragged.
+    /// If you sort once after the item is dropped, the index will be stable during the drag.
+    pub index: usize,
 }
