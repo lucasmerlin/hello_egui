@@ -161,10 +161,6 @@ impl<'a> Dnd<'a> {
         items: &mut [T],
         item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
-        let i = &mut items[0];
-
-        i.id();
-
         let response = self.show(items.iter_mut(), item_ui);
         response.update_vec(items);
         response
