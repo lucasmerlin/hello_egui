@@ -1,4 +1,5 @@
 use crate::state::DragDetectionState;
+use crate::utils::animate_position;
 use crate::{DragDropUi, Handle, ItemState};
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
@@ -73,6 +74,9 @@ impl<'a, T> Item<'a, T> {
                     .unwrap_or_else(|| ui.next_widget_position());
                 let position = pointer_pos + *offset;
 
+                // We animate so the animated position is updated, even though we don't use it here.
+                animate_position(ui, id, position);
+
                 // If we are in a ScrollArea, allow for scrolling while dragging
                 ui.scroll_to_rect(
                     Rect::from_center_size(pointer_pos, Vec2::splat(100.0)),
@@ -89,6 +93,8 @@ impl<'a, T> Item<'a, T> {
                     hovering_over_any_handle,
                     drag_body,
                 );
+
+                ui.allocate_space(rect.size());
 
                 let response = Rect::from_min_size(ui.next_widget_position(), rect.size());
                 return response;
@@ -108,20 +114,9 @@ impl<'a, T> Item<'a, T> {
 
                 // This ensures that the first frame of the animation gets the correct position
                 let value = std::mem::take(from).unwrap_or(end_pos);
-                let time = ui.style().animation_time;
-                let x = ui.ctx().animate_value_with_time(
-                    id.with("transitioning_back_x")
-                        .with(self.dnd_state.drag_animation_id_count),
-                    value.x,
-                    time,
-                );
-                let y = ui.ctx().animate_value_with_time(
-                    id.with("transitioning_back_y")
-                        .with(self.dnd_state.drag_animation_id_count),
-                    value.y,
-                    time,
-                );
-                let position = Pos2::new(x, y);
+
+                let position = animate_position(ui, id, value);
+
                 if position == end_pos {
                     // Animation finished
                     self.dnd_state.detection_state = DragDetectionState::None;
@@ -152,19 +147,27 @@ impl<'a, T> Item<'a, T> {
             // of the top left corner
             let (_, rect) = ui.allocate_space(size);
 
-            ui.allocate_ui_at_rect(rect, |ui| {
+            let animated_position = crate::utils::animate_position(ui, id, rect.min);
+
+            let mut child = ui.child_ui(rect, *ui.layout());
+
+            child.allocate_ui_at_rect(Rect::from_min_size(animated_position, rect.size()), |ui| {
                 drag_body(
                     ui,
                     self.item,
                     Handle::new(id, self.dnd_state, hovering_over_any_handle, rect.min),
                     self.state,
                 )
-            })
-            .response
-            .rect
+            });
+
+            rect
         } else {
             let pos = ui.next_widget_position();
-            let scope = ui.scope(|ui| {
+            let pos = animate_position(ui, id, pos);
+            let size = ui.available_size();
+
+            let mut child = ui.child_ui(ui.max_rect(), *ui.layout());
+            let response = child.allocate_ui_at_rect(Rect::from_min_size(pos, size), |ui| {
                 drag_body(
                     ui,
                     self.item,
@@ -172,7 +175,8 @@ impl<'a, T> Item<'a, T> {
                     self.state,
                 )
             });
-            scope.response.rect
+
+            ui.allocate_space(response.response.rect.size()).1
         }
     }
 

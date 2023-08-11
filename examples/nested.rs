@@ -1,7 +1,7 @@
 use eframe::egui;
 use eframe::egui::{CollapsingHeader, Id, Ui};
 
-use egui_dnd::{DragDropItem, DragDropUi, Handle};
+use egui_dnd::{dnd, DragDropItem, DragDropUi, Handle};
 
 pub fn main() {
     let options = eframe::NativeOptions {
@@ -16,8 +16,6 @@ struct SortableItem {
     name: String,
 
     children: Option<Vec<SortableItem>>,
-
-    drag_drop_ui: DragDropUi,
 }
 
 impl DragDropItem for &mut SortableItem {
@@ -92,10 +90,9 @@ impl MyApp {
                 .show(ui, |ui| {
                     ui.label("Content");
 
-                    let response = item.drag_drop_ui.ui(
-                        ui,
+                    let response = dnd(ui, &item.name).show(
                         children.iter_mut(),
-                        |item, ui, handle, _pressed| {
+                        |ui, item, handle, _pressed| {
                             Self::draw_item(ui, item, handle);
                         },
                     );
@@ -110,10 +107,9 @@ impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             let response =
-                self.drag_drop_ui
-                    .ui(ui, self.items.iter_mut(), |item, ui, handle, _pressed| {
-                        MyApp::draw_item(ui, item, handle);
-                    });
+                dnd(ui, "dnd_example").show(self.items.iter_mut(), |ui, item, handle, _pressed| {
+                    MyApp::draw_item(ui, item, handle);
+                });
             response.update_vec(&mut self.items);
         });
     }

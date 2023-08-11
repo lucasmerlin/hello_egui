@@ -515,8 +515,6 @@ impl DragDropUi {
         let mut first_frame = false;
         let config = self.config(ui).clone();
 
-        let dnd_animation_id = Id::new(self.drag_animation_id_count);
-
         ui.input(|i| {
             if i.pointer.any_down() {
                 if matches!(self.detection_state, DragDetectionState::None)
@@ -579,63 +577,15 @@ impl DragDropUi {
         let mut before_item = None;
         let mut after_item = None;
 
-        let mut should_add_space_at_end = true;
-
         let mut source_item = None;
         let mut dragged_item_size = None;
 
-        let mut add_space_for_previous_item = false;
-
         let mut hovering_over_any_handle = false;
-
-        let item_spacing = mem::take(&mut ui.spacing_mut().item_spacing);
-
-        let direction_vec = if ui.layout().main_dir.is_horizontal() {
-            Vec2::X
-        } else {
-            Vec2::Y
-        };
-
-        let item_spacing_direction = direction_vec * item_spacing;
-
-        // In egui, if the value changes during animation, we start at 0 or 1 again instead of returning from the current value.
-        // This causes flickering, we use the animation budget to mitigate this (Stops the total value of animations to be > 1).
-        let mut animation_budget = 1.0;
 
         values.enumerate().for_each(|(idx, item)| {
             let item_id = item.id();
             let is_dragged_item = self.detection_state.is_dragging_item(item_id);
 
-            let hovering_this_item = self.detection_state.hovering_item() == Some(item_id);
-            let mut add_space = hovering_this_item;
-            if add_space_for_previous_item {
-                add_space = true;
-                add_space_for_previous_item = false;
-            }
-            if add_space
-                && (is_dragged_item || self.detection_state.hovering_below_item() == Some(item_id))
-            {
-                add_space_for_previous_item = true;
-                add_space = false;
-            }
-            if add_space {
-                should_add_space_at_end = false;
-            }
-
-            let animation_id = Id::new(item_id)
-                .with("dnd_space_animation")
-                .with(dnd_animation_id);
-
-            let mut anim_space = ui.ctx().animate_bool(animation_id, add_space);
-
-            let space = dragged_item_rect.height();
-            if anim_space > 0.0 {
-                anim_space = anim_space.min(animation_budget);
-                ui.allocate_space((dragged_item_rect.size() * direction_vec) * anim_space);
-            }
-            animation_budget -= anim_space;
-
-            ui.style_mut().spacing.item_spacing = item_spacing;
             let rect = item_ui(
                 ui,
                 Item::new(
@@ -649,18 +599,11 @@ impl DragDropUi {
                     &mut hovering_over_any_handle,
                 ),
             );
-            ui.style_mut().spacing.item_spacing = Vec2::ZERO;
-
-            // Add space for the dragged item
-            if is_dragged_item {
-                // Add normal item spacing
-                ui.add_space(item_spacing_direction.length());
-            }
 
             if ui.layout().is_horizontal() {
                 if !ui.layout().main_wrap
                     || (dragged_item_center.y - rect.center().y).abs()
-                        < dragged_item_rect.height() / 2.0
+                        < dragged_item_rect.height() / 2.0 + ui.spacing().item_spacing.y
                 {
                     if dragged_item_center.x < rect.center().x && before_item.is_none() {
                         before_item = Some((idx, item_id));
@@ -684,18 +627,6 @@ impl DragDropUi {
                 dragged_item_size = Some(rect.size());
             }
         });
-
-        let mut anim_space = ui.ctx().animate_bool(
-            Id::new("dnd_end_space").with(dnd_animation_id),
-            should_add_space_at_end && self.detection_state.hovering_item().is_some(),
-        );
-        anim_space = anim_space.min(animation_budget);
-        if anim_space > 0.0 {
-            ui.allocate_exact_size(
-                (dragged_item_rect.size() * direction_vec) * anim_space,
-                Sense::hover(),
-            );
-        }
 
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {
