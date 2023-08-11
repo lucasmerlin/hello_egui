@@ -1,14 +1,15 @@
 use std::hash::Hash;
+use std::mem;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
-use crate::ItemState;
 #[cfg(target_arch = "wasm32")]
 use web_time::{Duration, SystemTime};
 
 use crate::utils::shift_vec;
+use crate::ItemState;
 
 /// Item that can be reordered using drag and drop
 pub trait DragDropItem {
@@ -569,90 +570,85 @@ impl DragDropUi {
 
         let mut hovering_over_any_handle = false;
 
-        ui.scope(|ui| {
-            let item_spacing = ui.spacing().item_spacing.y;
-            ui.spacing_mut().item_spacing.y = 0.0;
+        let item_spacing = mem::take(&mut ui.spacing_mut().item_spacing);
 
+        ui.scope(|ui| {
             // In egui, if the value changes during animation, we start at 0 or 1 again instead of returning from the current value.
             // This causes flickering, we use the animation budget to mitigate this (Stops the total value of animations to be > 1).
             let mut animation_budget = 1.0;
 
-            DragDropUi::drop_target(ui, true, |ui| {
-                values.enumerate().for_each(|(idx, item)| {
-                    let item_id = item.id();
-                    let is_dragged_item = self.detection_state.is_dragging_item(item_id);
+            values.enumerate().for_each(|(idx, item)| {
+                let item_id = item.id();
+                let is_dragged_item = self.detection_state.is_dragging_item(item_id);
 
-                    let hovering_this_item = self.detection_state.hovering_item() == Some(item_id);
-                    let mut add_space = hovering_this_item;
-                    if add_space_for_previous_item {
-                        add_space = true;
-                        add_space_for_previous_item = false;
-                    }
-                    if add_space
-                        && (is_dragged_item
-                            || self.detection_state.hovering_below_item() == Some(item_id))
-                    {
-                        add_space_for_previous_item = true;
-                        add_space = false;
-                    }
-                    if add_space {
-                        should_add_space_at_end = false;
-                    }
+                let hovering_this_item = self.detection_state.hovering_item() == Some(item_id);
+                let mut add_space = hovering_this_item;
+                if add_space_for_previous_item {
+                    add_space = true;
+                    add_space_for_previous_item = false;
+                }
+                if add_space
+                    && (is_dragged_item
+                        || self.detection_state.hovering_below_item() == Some(item_id))
+                {
+                    add_space_for_previous_item = true;
+                    add_space = false;
+                }
+                if add_space {
+                    should_add_space_at_end = false;
+                }
 
-                    let animation_id = Id::new(item_id)
-                        .with("dnd_space_animation")
-                        .with(dnd_animation_id);
+                let animation_id = Id::new(item_id)
+                    .with("dnd_space_animation")
+                    .with(dnd_animation_id);
 
-                    let mut x = ui.ctx().animate_bool(animation_id, add_space);
+                let mut x = ui.ctx().animate_bool(animation_id, add_space);
 
-                    let space = dragged_item_rect.height() + item_spacing;
-                    if x > 0.0 {
-                        x = x.min(animation_budget);
-                        ui.allocate_space(Vec2::new(0.0, space * x));
-                    }
-                    animation_budget -= x;
+                let space = dragged_item_rect.height();
+                if x > 0.0 {
+                    x = x.min(animation_budget);
+                    ui.allocate_space(Vec2::new(0.0, space * x));
+                }
+                animation_budget -= x;
 
-                    // Add normal item spacing
-                    if !self.detection_state.is_dragging_item(item_id) {
-                        ui.add_space(item_spacing);
-                    }
+                let rect = ui
+                    .scope(|ui| {
+                        // Restore spacing so it doesn't affect inner ui
+                        self.drag_source(
+                            ui,
+                            item_id,
+                            &mut hovering_over_any_handle,
+                            |ui, handle| {
+                                ui.style_mut().spacing.item_spacing = item_spacing;
+                                item_ui(
+                                    item,
+                                    ui,
+                                    handle,
+                                    ItemState {
+                                        dragged: is_dragged_item,
+                                        index: idx,
+                                    },
+                                );
+                            },
+                        )
+                    })
+                    .inner;
 
-                    let rect = ui
-                        .scope(|ui| {
-                            // Restore spacing so it doesn't affect inner ui
-                            ui.style_mut().spacing.item_spacing.y = item_spacing;
-                            self.drag_source(
-                                ui,
-                                item_id,
-                                &mut hovering_over_any_handle,
-                                |ui, handle| {
-                                    item_ui(
-                                        item,
-                                        ui,
-                                        handle,
-                                        ItemState {
-                                            dragged: is_dragged_item,
-                                            index: idx,
-                                        },
-                                    );
-                                },
-                            )
-                        })
-                        .inner;
+                // Add normal item spacing
+                ui.add_space(item_spacing.y);
 
-                    // TODO: Use .top and .bottom here for more optimistic switching
-                    if dragged_item_center.y < rect.center().y && above_item.is_none() {
-                        above_item = Some((idx, item_id));
-                    }
-                    if dragged_item_center.y > rect.center().y {
-                        below_item = Some((idx, item_id));
-                    }
+                // TODO: Use .top and .bottom here for more optimistic switching
+                if dragged_item_center.y < rect.center().y && above_item.is_none() {
+                    above_item = Some((idx, item_id));
+                }
+                if dragged_item_center.y > rect.center().y {
+                    below_item = Some((idx, item_id));
+                }
 
-                    if self.detection_state.is_dragging_item(item_id) {
-                        source_item = Some((idx, item_id));
-                        dragged_item_size = Some(rect.size());
-                    }
-                });
+                if self.detection_state.is_dragging_item(item_id) {
+                    source_item = Some((idx, item_id));
+                    dragged_item_size = Some(rect.size());
+                }
             });
 
             let mut x = ui.ctx().animate_bool(
@@ -661,7 +657,7 @@ impl DragDropUi {
             );
             x = x.min(animation_budget);
             if x > 0.0 {
-                let space = dragged_item_rect.height() + item_spacing;
+                let space = dragged_item_rect.height();
                 ui.allocate_exact_size(Vec2::new(0.0, space * x), Sense::hover());
             }
         });
@@ -871,25 +867,5 @@ impl DragDropUi {
                     .response
                     .rect
             })
-    }
-
-    fn drop_target<R>(
-        ui: &mut Ui,
-        _can_accept_what_is_being_dragged: bool,
-        body: impl FnOnce(&mut Ui) -> R,
-    ) -> InnerResponse<R> {
-        let margin = Vec2::splat(4.0);
-
-        let outer_rect_bounds = ui.available_rect_before_wrap();
-        let inner_rect = outer_rect_bounds.shrink2(margin);
-
-        let mut content_ui = ui.child_ui(inner_rect, *ui.layout());
-
-        let ret = body(&mut content_ui);
-        let outer_rect =
-            Rect::from_min_max(outer_rect_bounds.min, content_ui.min_rect().max + margin);
-        let (_rect, response) = ui.allocate_at_least(outer_rect.size(), Sense::hover());
-
-        InnerResponse::new(ret, response)
     }
 }

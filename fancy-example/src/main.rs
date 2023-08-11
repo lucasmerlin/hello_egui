@@ -102,7 +102,7 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
                 strip.strip(|builder| {
                     builder
                         .size(Size::remainder())
-                        .size(Size::exact(320.0))
+                        .size(Size::exact(300.0))
                         .size(Size::remainder())
                         .vertical(|mut strip| {
                             strip.empty();

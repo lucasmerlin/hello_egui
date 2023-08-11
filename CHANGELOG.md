@@ -25,3 +25,4 @@ pub fn main() -> eframe::Result<()> {
 }
 ```
  - Made the drag cursor when hovering over a handle configurable
+ - Fixed ui having unexpected margins
