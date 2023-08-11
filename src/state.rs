@@ -119,8 +119,11 @@ pub struct Handle<'a> {
     id: Id,
     state: &'a mut DragDropUi,
     hovering_over_any_handle: &'a mut bool,
-    sense: Option<Sense>,
     item_pos: Pos2,
+
+    // Configurable options
+    sense: Option<Sense>,
+    show_drag_cursor_on_hover: bool,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -257,12 +260,36 @@ impl DragDetectionState {
 }
 
 impl<'a> Handle<'a> {
+    fn new(
+        id: Id,
+        state: &'a mut DragDropUi,
+        hovering_over_any_handle: &'a mut bool,
+        item_pos: Pos2,
+    ) -> Self {
+        Handle {
+            id,
+            state,
+            hovering_over_any_handle,
+            item_pos,
+
+            sense: None,
+            show_drag_cursor_on_hover: true,
+        }
+    }
+
     /// You can add [Sense::click] if you want to listen for clicks on the handle
     /// **Warning**: This will make anything sensing clicks in the handle not draggable
     /// Make sure to not set this if your handle consists of a single button, and directly
     /// query the button for clicks.
     pub fn sense(mut self, sense: Sense) -> Self {
         self.sense = Some(sense);
+        self
+    }
+
+    /// If `true`, the cursor will change to a grab cursor when hovering over the handle
+    /// This is `true` by default
+    pub fn show_drag_cursor_on_hover(mut self, show: bool) -> Self {
+        self.show_drag_cursor_on_hover = show;
         self
     }
 
@@ -278,7 +305,9 @@ impl<'a> Handle<'a> {
         };
 
         if response.hovered() {
-            ui.output_mut(|o| o.cursor_icon = CursorIcon::Grab);
+            if self.show_drag_cursor_on_hover {
+                ui.output_mut(|o| o.cursor_icon = CursorIcon::Grab);
+            }
             *self.hovering_over_any_handle = true;
         }
 
@@ -819,18 +848,8 @@ impl DragDropUi {
 
         let pos = ui.next_widget_position();
 
-        let scope = ui.scope(|ui| {
-            drag_body(
-                ui,
-                Handle {
-                    item_pos: pos,
-                    state: self,
-                    id,
-                    hovering_over_any_handle,
-                    sense: None,
-                },
-            )
-        });
+        let scope =
+            ui.scope(|ui| drag_body(ui, Handle::new(id, self, hovering_over_any_handle, pos)));
         scope.response.rect
     }
 
@@ -848,20 +867,9 @@ impl DragDropUi {
             .interactable(false)
             .fixed_pos(pos)
             .show(ui.ctx(), |ui| {
-                ui.scope(|ui| {
-                    body(
-                        ui,
-                        Handle {
-                            item_pos: pos,
-                            state: self,
-                            id,
-                            hovering_over_any_handle,
-                            sense: None,
-                        },
-                    )
-                })
-                .response
-                .rect
+                ui.scope(|ui| body(ui, Handle::new(id, self, hovering_over_any_handle, pos)))
+                    .response
+                    .rect
             })
     }
 

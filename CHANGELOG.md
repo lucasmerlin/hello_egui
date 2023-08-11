@@ -24,3 +24,4 @@ pub fn main() -> eframe::Result<()> {
     })
 }
 ```
+ - Made the drag cursor when hovering over a handle configurable
