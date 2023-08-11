@@ -5,8 +5,10 @@
 use egui::Id;
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragDropUi, DragUpdate, Handle};
 
+use crate::item::{Item, ItemResponse};
 use std::hash::Hash;
 
+mod item;
 mod state;
 
 /// Helper functions to support the drag and drop functionality
@@ -140,19 +142,28 @@ impl<'a> Dnd<'a> {
         items: impl Iterator<Item = T>,
         mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        let Dnd {
-            id,
-            ui,
-            mut drag_drop_ui,
-        } = self;
+        self._show_with_inner::<T>(|id, ui, drag_drop_ui| {
+            drag_drop_ui.ui(ui, items, |ui, item| {
+                item.ui(ui, |ui, item, handle, state| {
+                    item_ui(ui, item, handle, state)
+                })
+            })
+        })
+    }
 
-        let response = drag_drop_ui.ui(ui, items, |item, ui, handle, item_state| {
-            item_ui(ui, item, handle, item_state);
-        });
-
-        ui.ctx().data_mut(|data| data.insert_temp(id, drag_drop_ui));
-
-        response
+    pub fn show_sized<T: DragDropItem>(
+        self,
+        items: impl Iterator<Item = T>,
+        mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
+        size: egui::Vec2,
+    ) -> DragDropResponse {
+        self._show_with_inner::<T>(|id, ui, drag_drop_ui| {
+            drag_drop_ui.ui(ui, items, |ui, item| {
+                item.ui_sized(ui, size, |ui, item, handle, state| {
+                    item_ui(ui, item, handle, state)
+                })
+            })
+        })
     }
 
     /// Same as [Dnd::show], but automatically sorts the items.
@@ -163,6 +174,34 @@ impl<'a> Dnd<'a> {
     ) -> DragDropResponse {
         let response = self.show(items.iter_mut(), item_ui);
         response.update_vec(items);
+        response
+    }
+
+    pub fn show_vec_sized<T: Hash>(
+        self,
+        items: &mut [T],
+        size: egui::Vec2,
+        item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
+    ) -> DragDropResponse {
+        let response = self.show_sized(items.iter_mut(), item_ui, size);
+        response.update_vec(items);
+        response
+    }
+
+    fn _show_with_inner<T: DragDropItem>(
+        self,
+        inner_fn: impl FnOnce(Id, &mut egui::Ui, &mut DragDropUi) -> DragDropResponse,
+    ) -> DragDropResponse {
+        let Dnd {
+            id,
+            ui,
+            mut drag_drop_ui,
+        } = self;
+
+        let response = inner_fn(id, ui, &mut drag_drop_ui);
+
+        ui.ctx().data_mut(|data| data.insert_temp(id, drag_drop_ui));
+
         response
     }
 }
