@@ -16,36 +16,6 @@ pub trait DragDropItem {
     fn id(&self) -> Id;
 }
 
-// impl<T: DragDropItem> DragDropItem for &T {
-//     fn id(&self) -> Id {
-//         T::id(self)
-//     }
-// }
-//
-// impl<T: DragDropItem> DragDropItem for &mut T {
-//     fn id(&self) -> Id {
-//         T::id(self)
-//     }
-// }
-//
-// impl DragDropItem for String {
-//     fn id(&self) -> Id {
-//         Id::new(self)
-//     }
-// }
-//
-// impl DragDropItem for &str {
-//     fn id(&self) -> Id {
-//         Id::new(self)
-//     }
-// }
-//
-// impl DragDropItem for usize {
-//     fn id(&self) -> Id {
-//         Id::new(self)
-//     }
-// }
-
 impl<T: Hash> DragDropItem for T {
     fn id(&self) -> Id {
         Id::new(self)
