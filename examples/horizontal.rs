@@ -13,20 +13,26 @@ pub fn main() -> eframe::Result<()> {
         Default::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
+                ui.spacing_mut().item_spacing.y = ui.spacing().item_spacing.x;
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut example, "wrapping", "wrapping");
                     ui.selectable_value(&mut example, "scrolling", "scrolling");
                 });
 
+                let av_width = ui.available_width() - ui.spacing().item_spacing.x;
+                let columns = (av_width / 100.0).ceil() as usize;
+                let width = av_width / columns as f32;
+                let size = Vec2::new(width, width) - ui.spacing().item_spacing;
+
                 let mut content = |ui: &mut Ui, items: &mut [i32]| {
                     dnd(ui, "dnd_example").show_vec_sized(
                         items,
-                        Vec2::splat(100.0),
+                        size,
                         |ui, item, handle, state| {
                             Frame::none()
                                 .fill(ui.visuals().faint_bg_color)
                                 .show(ui, |ui| {
-                                    handle.ui_sized(ui, Vec2::splat(100.0), |ui| {
+                                    handle.ui_sized(ui, size, |ui| {
                                         // ui.label("drag");
                                         ui.set_width(ui.available_width());
                                         ui.set_height(ui.available_height());

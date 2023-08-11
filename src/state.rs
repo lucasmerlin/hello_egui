@@ -651,28 +651,9 @@ impl DragDropUi {
             );
             ui.style_mut().spacing.item_spacing = Vec2::ZERO;
 
-            // let rect = ui
-            //     .scope(|ui| {
-            //         // Restore spacing so it doesn't affect inner ui
-            //         self.drag_source(ui, item_id, &mut hovering_over_any_handle, |ui, handle| {
-            //             item_ui(
-            //                 item,
-            //                 ui,
-            //                 handle,
-            //                 ItemState {
-            //                     dragged: is_dragged_item,
-            //                     index: idx,
-            //                 },
-            //             );
-            //         })
-            //     })
-            //     .inner;
-
-            // Add normal item spacing
-            ui.add_space(item_spacing_direction.length());
-
             // Add space for the dragged item
             if is_dragged_item {
+                // Add normal item spacing
                 ui.add_space(item_spacing_direction.length());
             }
 
