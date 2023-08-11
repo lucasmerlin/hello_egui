@@ -558,8 +558,8 @@ impl DragDropUi {
             self.detection_state.dragged_item_size().unwrap_or_default(),
         );
         let dragged_item_center = dragged_item_rect.center();
-        let mut above_item = None;
-        let mut below_item = None;
+        let mut before_item = None;
+        let mut after_item = None;
 
         let mut should_add_space_at_end = true;
 
@@ -571,6 +571,14 @@ impl DragDropUi {
         let mut hovering_over_any_handle = false;
 
         let item_spacing = mem::take(&mut ui.spacing_mut().item_spacing);
+
+        let direction_vec = if ui.layout().main_dir.is_horizontal() {
+            Vec2::X
+        } else {
+            Vec2::Y
+        };
+
+        let item_spacing_direction = direction_vec * item_spacing;
 
         ui.scope(|ui| {
             // In egui, if the value changes during animation, we start at 0 or 1 again instead of returning from the current value.
@@ -602,14 +610,14 @@ impl DragDropUi {
                     .with("dnd_space_animation")
                     .with(dnd_animation_id);
 
-                let mut x = ui.ctx().animate_bool(animation_id, add_space);
+                let mut anim_space = ui.ctx().animate_bool(animation_id, add_space);
 
                 let space = dragged_item_rect.height();
-                if x > 0.0 {
-                    x = x.min(animation_budget);
-                    ui.allocate_space(Vec2::new(0.0, space * x));
+                if anim_space > 0.0 {
+                    anim_space = anim_space.min(animation_budget);
+                    ui.allocate_space((dragged_item_rect.size() * direction_vec) * anim_space);
                 }
-                animation_budget -= x;
+                animation_budget -= anim_space;
 
                 let rect = ui
                     .scope(|ui| {
@@ -635,14 +643,28 @@ impl DragDropUi {
                     .inner;
 
                 // Add normal item spacing
-                ui.add_space(item_spacing.y);
+                ui.add_space(item_spacing_direction.length());
 
-                // TODO: Use .top and .bottom here for more optimistic switching
-                if dragged_item_center.y < rect.center().y && above_item.is_none() {
-                    above_item = Some((idx, item_id));
-                }
-                if dragged_item_center.y > rect.center().y {
-                    below_item = Some((idx, item_id));
+                if ui.layout().is_horizontal() {
+                    if !ui.layout().main_wrap
+                        || (dragged_item_center.y - rect.center().y).abs()
+                            < dragged_item_rect.height() / 2.0
+                    {
+                        if dragged_item_center.x < rect.center().x && before_item.is_none() {
+                            before_item = Some((idx, item_id));
+                        }
+                        if dragged_item_center.x > rect.center().x {
+                            after_item = Some((idx, item_id));
+                        }
+                    }
+                } else {
+                    // TODO: Use .top and .bottom here for more optimistic switching
+                    if dragged_item_center.y < rect.center().y && before_item.is_none() {
+                        before_item = Some((idx, item_id));
+                    }
+                    if dragged_item_center.y > rect.center().y {
+                        after_item = Some((idx, item_id));
+                    }
                 }
 
                 if self.detection_state.is_dragging_item(item_id) {
@@ -651,14 +673,16 @@ impl DragDropUi {
                 }
             });
 
-            let mut x = ui.ctx().animate_bool(
+            let mut anim_space = ui.ctx().animate_bool(
                 Id::new("dnd_end_space").with(dnd_animation_id),
                 should_add_space_at_end && self.detection_state.hovering_item().is_some(),
             );
-            x = x.min(animation_budget);
-            if x > 0.0 {
-                let space = dragged_item_rect.height();
-                ui.allocate_exact_size(Vec2::new(0.0, space * x), Sense::hover());
+            anim_space = anim_space.min(animation_budget);
+            if anim_space > 0.0 {
+                ui.allocate_exact_size(
+                    (dragged_item_rect.size() * direction_vec) * anim_space,
+                    Sense::hover(),
+                );
             }
         });
 
@@ -668,7 +692,7 @@ impl DragDropUi {
                 DragDetectionState::Cancelled("Cursor not hovering over any item handle");
         }
 
-        let hovering_item = above_item;
+        let hovering_item = before_item;
         if let DragDetectionState::Dragging { phase, .. } = &mut self.detection_state {
             if let Some(source_idx) = source_item {
                 if let Some(dragged_item_size) = dragged_item_size {
@@ -682,10 +706,10 @@ impl DragDropUi {
                         last_pointer_pos: pointer_pos.unwrap_or_default(),
                         dragged_item_size,
                         hovering_above_item: hovering_item_id,
-                        hovering_below_item: below_item.map(|i| i.1),
+                        hovering_below_item: after_item.map(|i| i.1),
                         hovering_idx: hovering_item
                             .map(|i| i.0)
-                            .or(below_item.map(|i| i.0 + 1))
+                            .or(after_item.map(|i| i.0 + 1))
                             .unwrap_or_default(), // One of these must be Some
                         source_idx: source_idx.0,
                     };
