@@ -36,7 +36,7 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
 
     let response = dnd(ui, "fancy_dnd").show_custom(|ui, iter| {
         items.iter_mut().enumerate().for_each(|(index, item)| {
-            iter.next(Id::new(item.index), item, index, |item| {
+            iter.next(ui, Id::new(item.index), item, index, |ui, item| {
                 item.ui_sized(ui, item_size, |ui, item, handle, state| {
                     ui.horizontal(|ui| {
                         handle.ui_sized(ui, item_size, |ui| {

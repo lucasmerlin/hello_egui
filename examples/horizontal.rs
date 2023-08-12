@@ -43,6 +43,7 @@ pub fn main() -> eframe::Result<()> {
                                 });
                         },
                     );
+                    // If you are using a wrapped layout, you should only update the items if the drag is finished
                     if response.is_drag_finished() {
                         response.update_vec(items)
                     }

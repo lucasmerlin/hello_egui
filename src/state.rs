@@ -118,6 +118,7 @@ impl Default for DragDropUi {
 /// [Handle::ui] is used to draw the drag handle
 pub struct Handle<'a> {
     id: Id,
+    idx: usize,
     state: &'a mut DragDropUi,
     hovering_over_any_handle: &'a mut bool,
     item_pos: Pos2,
@@ -141,39 +142,22 @@ pub(crate) enum DragDetectionState {
     Cancelled(&'static str),
     Dragging {
         id: Id,
+        source_idx: usize,
         offset: Vec2,
-        phase: DragPhase,
         dragged_item_size: Vec2,
-        /// This will always be set unless we are at the bottom of the list
-        hovering_above_item: Option<Id>,
-        /// This will be set if we are at the bottom of the list
-        hovering_below_item: Option<Id>,
+        closest_item: Id,
+        closest_item_distance: f32,
+        last_pointer_pos: Pos2,
+        hovering_last_item: bool,
+
+        // These should only be used for output, as to not cause issues when item indexes change
+        hovering_idx: usize,
     },
     TransitioningBackAfterDragFinished {
         id: Id,
         from: Option<Pos2>,
         dragged_item_size: Option<Vec2>,
     },
-}
-
-#[derive(Debug, Clone)]
-pub(crate) enum DragPhase {
-    FirstFrame,
-    Rest {
-        // For touch devices, we need to remember the last pointer position
-        // so we don't loose it during the last frame
-        last_pointer_pos: Pos2,
-
-        // These should only be used during for output, as to not cause issues when item indexes change
-        hovering_idx: usize,
-        source_idx: usize,
-    },
-}
-
-impl DragPhase {
-    pub(crate) fn is_first_frame(&self) -> bool {
-        matches!(self, DragPhase::FirstFrame)
-    }
 }
 
 impl DragDetectionState {
@@ -220,32 +204,25 @@ impl DragDetectionState {
 
     fn hovering_item(&self) -> Option<Id> {
         match self {
-            DragDetectionState::Dragging {
-                hovering_above_item: hovering_item,
-                hovering_below_item,
-                ..
-            } => hovering_item.or(*hovering_below_item),
+            DragDetectionState::Dragging { closest_item, .. } => Some(*closest_item),
             _ => None,
         }
     }
-
-    fn hovering_below_item(&self) -> Option<Id> {
-        match self {
-            DragDetectionState::Dragging {
-                hovering_below_item,
-                ..
-            } => *hovering_below_item,
-            _ => None,
-        }
-    }
+    //
+    // fn hovering_below_item(&self) -> Option<Id> {
+    //     match self {
+    //         DragDetectionState::Dragging {
+    //             hovering_below_item,
+    //             ..
+    //         } => *hovering_below_item,
+    //         _ => None,
+    //     }
+    // }
 
     pub(crate) fn last_pointer_pos(&self) -> Option<Pos2> {
         match self {
             DragDetectionState::Dragging {
-                phase: DragPhase::Rest {
-                    last_pointer_pos, ..
-                },
-                ..
+                last_pointer_pos, ..
             } => Some(*last_pointer_pos),
             _ => None,
         }
@@ -255,12 +232,14 @@ impl DragDetectionState {
 impl<'a> Handle<'a> {
     pub(crate) fn new(
         id: Id,
+        idx: usize,
         state: &'a mut DragDropUi,
         hovering_over_any_handle: &'a mut bool,
         item_pos: Pos2,
     ) -> Self {
         Handle {
             id,
+            idx,
             state,
             hovering_over_any_handle,
             item_pos,
@@ -362,11 +341,14 @@ impl<'a> Handle<'a> {
             self.state.detection_state = DragDetectionState::Dragging {
                 id: self.id,
                 offset,
-                phase: DragPhase::FirstFrame,
                 // We set this in the Item
                 dragged_item_size: Default::default(),
-                hovering_above_item: Some(self.id),
-                hovering_below_item: Some(self.id),
+                closest_item: self.id,
+                closest_item_distance: 0.0,
+                source_idx: self.idx,
+                hovering_idx: self.idx,
+                last_pointer_pos: response.hover_pos().unwrap_or_default(),
+                hovering_last_item: false,
             };
             self.state.drag_animation_id_count += 1;
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
@@ -580,12 +562,24 @@ impl DragDropUi {
         callback(ui, &mut item_iter);
 
         let ItemIterator {
-            before_item,
-            after_item,
             source_item,
             hovering_over_any_handle,
+            mut closest_item,
+            mark_next_as_closest_item,
+            last_item,
+            hovering_last_item,
             ..
         } = item_iter;
+
+        // This is only some if we're hoving over the last item
+        let hovering_last_item = if mark_next_as_closest_item.is_some() {
+            closest_item = Some((0.0, last_item));
+            // We're only doing this once or we wouldn't be able to move back to the
+            // second to last item
+            !hovering_last_item
+        } else {
+            false
+        };
 
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {
@@ -595,45 +589,26 @@ impl DragDropUi {
 
         let mut drag_phase_changed_this_frame = false;
 
-        let hovering_item = before_item;
+        let hovering_item = closest_item.map(|i| i.1).flatten();
+
         if let DragDetectionState::Dragging {
-            phase,
-            hovering_above_item: above_out,
-            hovering_below_item: below_out,
+            closest_item: closest_out,
+            source_idx: source_idx_out,
+            hovering_idx: hovering_idx_out,
+            last_pointer_pos: last_pointer_pos_out,
+            hovering_last_item: hovering_last_item_out,
             ..
         } = &mut self.detection_state
         {
             if let Some(source_idx) = source_item {
-                if let Some(hovering_idx) =
-                    hovering_item.map(|i| i.0).or(after_item.map(|i| i.0 + 1))
-                {
-                    if let DragPhase::FirstFrame = phase {
-                        // Prevent flickering
-                        self.drag_animation_id_count += 1;
+                if let Some((hovering_idx, hovering_id)) = hovering_item {
+                    *closest_out = hovering_id;
+                    *source_idx_out = source_idx.0;
+                    *hovering_idx_out = hovering_idx;
+                    if let Some(pointer_pos) = pointer_pos {
+                        *last_pointer_pos_out = pointer_pos;
                     }
-                    let hovering_item_id = hovering_item.map(|i| i.1);
-
-                    if phase.is_first_frame() {
-                        drag_phase_changed_this_frame = true;
-                    }
-
-                    // These are not accurate yet on the first frame
-                    let (hovering_above_item, hovering_below_item) =
-                        if !drag_phase_changed_this_frame {
-                            (hovering_item_id, after_item.map(|i| i.1))
-                        } else {
-                            (None, None)
-                        };
-
-                    *phase = DragPhase::Rest {
-                        last_pointer_pos: pointer_pos.unwrap_or_default(),
-                        hovering_idx,
-                        source_idx: source_idx.0,
-                    };
-                    if hovering_above_item.is_some() || hovering_below_item.is_some() {
-                        *above_out = hovering_above_item;
-                        *below_out = hovering_below_item;
-                    }
+                    *hovering_last_item_out = hovering_last_item;
                 }
             }
         }
@@ -641,12 +616,9 @@ impl DragDropUi {
         let mut response = if !drag_phase_changed_this_frame {
             if let DragDetectionState::Dragging {
                 id,
-                phase:
-                    DragPhase::Rest {
-                        hovering_idx,
-                        source_idx,
-                        ..
-                    },
+                source_idx,
+                hovering_idx,
+                hovering_last_item,
                 ..
             } = self.detection_state
             {
@@ -654,7 +626,11 @@ impl DragDropUi {
                     finished: false,
                     update: Some(DragUpdate {
                         from: source_idx,
-                        to: hovering_idx,
+                        to: if hovering_last_item {
+                            hovering_idx + 1
+                        } else {
+                            hovering_idx
+                        },
                     }),
                     state: self.detection_state.clone(),
                     cancellation_reason: None,

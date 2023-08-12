@@ -58,7 +58,6 @@ impl<'a, T> Item<'a, T> {
         if let DragDetectionState::Dragging {
             id: dragging_id,
             offset,
-            phase,
             ..
         } = &mut self.dnd_state.detection_state
         {
@@ -87,6 +86,7 @@ impl<'a, T> Item<'a, T> {
                     self.dnd_state,
                     ui,
                     id,
+                    index,
                     position,
                     hovering_over_any_handle,
                     size,
@@ -127,6 +127,7 @@ impl<'a, T> Item<'a, T> {
                     self.dnd_state,
                     ui,
                     id,
+                    index,
                     position,
                     hovering_over_any_handle,
                     size,
@@ -174,7 +175,13 @@ impl<'a, T> Item<'a, T> {
                 drag_body(
                     ui,
                     self.item,
-                    Handle::new(id, self.dnd_state, hovering_over_any_handle, rect.min),
+                    Handle::new(
+                        id,
+                        index,
+                        self.dnd_state,
+                        hovering_over_any_handle,
+                        rect.min,
+                    ),
                     self.state,
                 )
             });
@@ -199,6 +206,7 @@ impl<'a, T> Item<'a, T> {
                     self.item,
                     Handle::new(
                         id,
+                        index,
                         self.dnd_state,
                         hovering_over_any_handle,
                         animated_position,
@@ -233,6 +241,7 @@ impl<'a, T> Item<'a, T> {
         dnd_state: &mut DragDropUi,
         ui: &mut Ui,
         id: Id,
+        index: usize,
         pos: Pos2,
         hovering_over_any_handle: &mut bool,
         size: Option<Vec2>,
@@ -251,7 +260,7 @@ impl<'a, T> Item<'a, T> {
                     body(
                         ui,
                         item,
-                        Handle::new(id, dnd_state, hovering_over_any_handle, pos),
+                        Handle::new(id, index, dnd_state, hovering_over_any_handle, pos),
                         state,
                     )
                 })
