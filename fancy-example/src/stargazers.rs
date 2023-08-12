@@ -7,7 +7,7 @@ use egui_extras::RetainedImage;
 use ehttp::Request;
 use serde::Deserialize;
 
-use egui_dnd::dnd;
+use egui_dnd::{dnd, DragDropConfig};
 
 #[derive(Default)]
 pub enum ImageState {
@@ -138,45 +138,47 @@ pub fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
 }
 
 pub fn stargazers_dnd_ui(ui: &mut Ui, data: &mut Vec<Stargazer>) {
-    dnd(ui, "stargazers_dnd").show_vec(data, |ui, item, handle, _state| {
-        ui.horizontal(|ui| {
-            handle.ui(ui, |ui| {
-                Frame::none()
-                    .fill(ui.visuals().faint_bg_color)
-                    .inner_margin(8.0)
-                    .outer_margin(2.0)
-                    .rounding(4.0)
-                    .show(ui, |ui| {
-                        ui.set_width(ui.available_width());
+    dnd(ui, "stargazers_dnd")
+        .with_touch_config(Some(DragDropConfig::touch_scroll()))
+        .show_vec(data, |ui, item, handle, _state| {
+            ui.horizontal(|ui| {
+                handle.ui(ui, |ui| {
+                    Frame::none()
+                        .fill(ui.visuals().faint_bg_color)
+                        .inner_margin(8.0)
+                        .outer_margin(2.0)
+                        .rounding(4.0)
+                        .show(ui, |ui| {
+                            ui.set_width(ui.available_width());
 
-                        let size = Vec2::new(32.0, 32.0);
-                        if ui.is_rect_visible(ui.min_rect().expand2(size)) {
-                            item.load_image();
-                        }
+                            let size = Vec2::new(32.0, 32.0);
+                            if ui.is_rect_visible(ui.min_rect().expand2(size)) {
+                                item.load_image();
+                            }
 
-                        let image = item.image.lock().unwrap();
-                        match &*image {
-                            ImageState::Data(image) => {
-                                image.show_size(ui, size);
+                            let image = item.image.lock().unwrap();
+                            match &*image {
+                                ImageState::Data(image) => {
+                                    image.show_size(ui, size);
+                                }
+                                ImageState::Loading => {
+                                    ui.allocate_ui(size, |ui| {
+                                        ui.spinner();
+                                    });
+                                }
+                                ImageState::Error(e) => {
+                                    ui.allocate_ui(size, |ui| {
+                                        ui.label(&*e);
+                                    });
+                                }
+                                _ => {
+                                    ui.allocate_space(size);
+                                }
                             }
-                            ImageState::Loading => {
-                                ui.allocate_ui(size, |ui| {
-                                    ui.spinner();
-                                });
-                            }
-                            ImageState::Error(e) => {
-                                ui.allocate_ui(size, |ui| {
-                                    ui.label(&*e);
-                                });
-                            }
-                            _ => {
-                                ui.allocate_space(size);
-                            }
-                        }
 
-                        ui.hyperlink_to(item.login.as_str(), item.html_url.as_str());
-                    });
+                            ui.hyperlink_to(item.login.as_str(), item.html_url.as_str());
+                        });
+                });
             });
         });
-    });
 }
