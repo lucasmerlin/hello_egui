@@ -147,6 +147,7 @@ pub(crate) enum DragDetectionState {
     TransitioningBackAfterDragFinished {
         id: Id,
         from: Option<Pos2>,
+        dragged_item_size: Option<Vec2>,
     },
 }
 
@@ -204,10 +205,14 @@ impl DragDetectionState {
         }
     }
 
-    fn dragged_item_size(&self) -> Option<Vec2> {
+    pub(crate) fn dragged_item_size(&self) -> Option<Vec2> {
         match self {
             DragDetectionState::Dragging {
                 dragged_item_size, ..
+            } => Some(*dragged_item_size),
+            DragDetectionState::TransitioningBackAfterDragFinished {
+                dragged_item_size: Some(dragged_item_size),
+                ..
             } => Some(*dragged_item_size),
             _ => None,
         }
@@ -659,6 +664,7 @@ impl DragDropUi {
 
                     self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
                         from: Some(dragged_item_rect.map(|r| r.min).unwrap_or_default()),
+                        dragged_item_size: self.detection_state.dragged_item_size(),
                         id,
                     };
                 }

@@ -79,10 +79,7 @@ impl<'a, T> Item<'a, T> {
                 animate_position(ui, id, position);
 
                 // If we are in a ScrollArea, allow for scrolling while dragging
-                ui.scroll_to_rect(
-                    Rect::from_center_size(pointer_pos, Vec2::splat(100.0)),
-                    None,
-                );
+                ui.scroll_to_rect(Rect::from_center_size(pointer_pos, Vec2::splat(50.0)), None);
 
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
                     self.item,
@@ -92,6 +89,7 @@ impl<'a, T> Item<'a, T> {
                     id,
                     position,
                     hovering_over_any_handle,
+                    size,
                     drag_body,
                 );
 
@@ -107,6 +105,7 @@ impl<'a, T> Item<'a, T> {
         } else if let DragDetectionState::TransitioningBackAfterDragFinished {
             from,
             id: transitioning_id,
+            dragged_item_size,
         } = &mut self.dnd_state.detection_state
         {
             if id == *transitioning_id {
@@ -122,11 +121,6 @@ impl<'a, T> Item<'a, T> {
 
                 let position = animate_position(ui, id, value);
 
-                if position == end_pos {
-                    // Animation finished
-                    self.dnd_state.detection_state = DragDetectionState::None;
-                }
-
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
                     self.item,
                     self.state,
@@ -135,6 +129,7 @@ impl<'a, T> Item<'a, T> {
                     id,
                     position,
                     hovering_over_any_handle,
+                    size,
                     drag_body,
                 );
 
@@ -143,6 +138,11 @@ impl<'a, T> Item<'a, T> {
                 } else {
                     ui.allocate_exact_size(rect.size(), Sense::hover()).0
                 };
+
+                if position == end_pos {
+                    // Animation finished
+                    self.dnd_state.detection_state = DragDetectionState::None;
+                }
 
                 return ItemResponse {
                     rect,
@@ -160,11 +160,17 @@ impl<'a, T> Item<'a, T> {
             // of the top left corner
             let (_, rect) = ui.allocate_space(size);
 
-            let animated_position = crate::utils::animate_position(ui, id, rect.min);
+            let animated_position = animate_position(ui, id, rect.min);
+
+            let position = if self.dnd_state.detection_state.is_dragging() {
+                animated_position
+            } else {
+                rect.min
+            };
 
             let mut child = ui.child_ui(rect, *ui.layout());
 
-            child.allocate_ui_at_rect(Rect::from_min_size(animated_position, rect.size()), |ui| {
+            child.allocate_ui_at_rect(Rect::from_min_size(position, rect.size()), |ui| {
                 drag_body(
                     ui,
                     self.item,
@@ -175,16 +181,28 @@ impl<'a, T> Item<'a, T> {
 
             rect
         } else {
-            let pos = ui.next_widget_position();
-            let pos = animate_position(ui, id, pos);
+            let position = ui.next_widget_position();
+            let animated_position = animate_position(ui, id, position);
+
+            let position = if self.dnd_state.detection_state.is_dragging() {
+                animated_position
+            } else {
+                position
+            };
+
             let size = ui.available_size();
 
             let mut child = ui.child_ui(ui.max_rect(), *ui.layout());
-            let response = child.allocate_ui_at_rect(Rect::from_min_size(pos, size), |ui| {
+            let response = child.allocate_ui_at_rect(Rect::from_min_size(position, size), |ui| {
                 drag_body(
                     ui,
                     self.item,
-                    Handle::new(id, self.dnd_state, hovering_over_any_handle, pos),
+                    Handle::new(
+                        id,
+                        self.dnd_state,
+                        hovering_over_any_handle,
+                        animated_position,
+                    ),
                     self.state,
                 )
             });
@@ -217,6 +235,7 @@ impl<'a, T> Item<'a, T> {
         id: Id,
         pos: Pos2,
         hovering_over_any_handle: &mut bool,
+        size: Option<Vec2>,
         body: impl FnOnce(&mut Ui, T, Handle, ItemState),
     ) -> InnerResponse<Rect> {
         let _layer_id = LayerId::new(Order::Tooltip, id);
@@ -226,6 +245,9 @@ impl<'a, T> Item<'a, T> {
             .fixed_pos(pos)
             .show(ui.ctx(), |ui| {
                 ui.scope(|ui| {
+                    if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {
+                        ui.set_max_size(size);
+                    }
                     body(
                         ui,
                         item,

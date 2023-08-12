@@ -1,12 +1,17 @@
+mod load_stargazers;
+
+use async_std::task::spawn;
 use std::hash::{Hash, Hasher};
+use std::sync::{Arc, Mutex};
 
 use eframe::egui;
 use eframe::egui::Color32;
 use eframe::emath::lerp;
 use egui::ecolor::Hsva;
-use egui::{Context, Id, Rounding, Sense, Ui, Vec2};
+use egui::{Context, Frame, Id, Rounding, ScrollArea, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
 
+use crate::load_stargazers::{load_stargazers, Stargazer};
 use egui_dnd::{dnd, DragDropItem};
 
 #[derive(Clone)]
@@ -32,9 +37,6 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
 
     let response = dnd(ui, "fancy_dnd").show_custom(|ui, iter| {
         items.iter_mut().enumerate().for_each(|(index, item)| {
-            dbg!(item.index);
-
-            // ui.push_id(item.index, |ui| {
             iter.next(Id::new(item.index), item, index, |item| {
                 item.ui_sized(ui, item_size, |ui, item, handle, state| {
                     ui.horizontal(|ui| {
@@ -71,7 +73,6 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
                     });
                 })
             })
-            // });
         });
     });
 
@@ -80,6 +81,53 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
     if let Some(reason) = response.cancellation_reason() {
         println!("Drag has been cancelled because of {:?}", reason);
     }
+}
+
+fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
+    let clone = stargazers.clone();
+    let mut guard = stargazers.lock().unwrap();
+
+    ScrollArea::vertical()
+        .max_height(120.0)
+        .auto_shrink([false, false])
+        .show(ui, |ui| match &mut *guard {
+            StargazersState::None => {
+                spawn(async move {
+                    let result = load_stargazers().await;
+                    match result {
+                        Ok(data) => {
+                            *clone.lock().unwrap() = StargazersState::Data(data);
+                        }
+                        Err(err) => {
+                            *clone.lock().unwrap() = StargazersState::Error(err.to_string());
+                        }
+                    }
+                });
+            }
+            StargazersState::Loading => {
+                ui.spinner();
+            }
+            StargazersState::Data(data) => {
+                dnd(ui, "stargazers_dnd").show_vec(data, |ui, item, handle, state| {
+                    ui.horizontal(|ui| {
+                        handle.ui(ui, |ui| {
+                            Frame::none()
+                                .fill(ui.visuals().faint_bg_color)
+                                .inner_margin(8.0)
+                                .outer_margin(2.0)
+                                .rounding(4.0)
+                                .show(ui, |ui| {
+                                    ui.set_width(ui.available_width());
+                                    ui.hyperlink_to(item.login.as_str(), item.html_url.as_str());
+                                });
+                        });
+                    });
+                });
+            }
+            StargazersState::Error(e) => {
+                ui.label(&*e);
+            }
+        });
 }
 
 fn colors() -> Vec<Color> {
@@ -122,9 +170,9 @@ fn many_colors() -> Vec<Color> {
         .collect()
 }
 
-fn app(ctx: &Context, items: &mut Vec<Color>) {
+fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: StargazersType) {
     egui::CentralPanel::default().frame(egui::Frame::none()
-        .fill(ctx.style().visuals.panel_fill.gamma_multiply(0.5))
+        .fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7))
     ).show(ctx, |ui| {
         if items.len() == 3 {
             vertex_gradient(
@@ -164,14 +212,23 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
                                     ui.heading("Color Sort");
 
                                     ui.horizontal(|ui| {
-                                        let many = items.len() > 3;
-                                        if ui.selectable_label(!many, "Vertical").clicked() {
-                                            *items = colors();
-                                        };
-                                        if ui.selectable_label(many, "Horizontal").clicked() {
-                                            *items = many_colors();
-                                        };
+                                        ui.selectable_value(demo, Demo::Vertical, "Vertical");
+                                        ui.selectable_value(demo, Demo::Horizontal, "Horizontal");
+                                        ui.selectable_value(demo, Demo::Stargazers, "Stargazers");
                                     });
+
+                                    if demo == &Demo::Vertical && items.len() > 3 {
+                                        *items = colors();
+                                    }
+                                    if demo == &Demo::Horizontal && items.len() == 3 {
+                                        *items = many_colors();
+                                    }
+
+                                    if demo == &Demo::Stargazers {
+                                        stargazers_ui(ui, stargazers.clone());
+                                    } else {
+
+
                                     // Done here again in case items changed
                                     let many = items.len() > 3;
 
@@ -189,6 +246,7 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
                                         ui.small("* it's actually yellow");
                                     } else {
                                         ui.small(" ");
+                                    }
                                     }
 
                                     ui.separator();
@@ -209,13 +267,25 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
     });
 }
 
+#[derive(Debug)]
+enum StargazersState {
+    None,
+    Loading,
+    Data(Vec<Stargazer>),
+    Error(String),
+}
+
+type StargazersType = Arc<Mutex<StargazersState>>;
+
 #[cfg(not(target_arch = "wasm32"))]
-fn main() -> eframe::Result<()> {
+#[async_std::main]
+async fn main() -> eframe::Result<()> {
     let mut items = colors();
-    let mut many = false;
+    let stargazers: StargazersType = Arc::new(Mutex::new(StargazersState::None));
+    let mut demo = Demo::Vertical;
 
     eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
-        app(ctx, &mut items);
+        app(ctx, &mut demo, &mut items, stargazers.clone());
     })
 }
 
@@ -243,6 +313,13 @@ fn main() {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 struct Gradient(pub Vec<Color32>);
+
+#[derive(Clone, Hash, PartialEq, Eq)]
+enum Demo {
+    Horizontal,
+    Vertical,
+    Stargazers,
+}
 
 // taken from the egui demo
 fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
