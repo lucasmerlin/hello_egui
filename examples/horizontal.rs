@@ -25,7 +25,7 @@ pub fn main() -> eframe::Result<()> {
             });
 
             CentralPanel::default().show(ctx, |ui| {
-                ui.style_mut().animation_time = 0.6;
+                ui.style_mut().animation_time = 0.15;
 
                 ui.spacing_mut().item_spacing.y = ui.spacing().item_spacing.x;
                 ui.horizontal(|ui| {

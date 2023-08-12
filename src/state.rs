@@ -44,6 +44,7 @@ pub struct DragDropResponse {
     pub update: Option<DragUpdate>,
     finished: bool,
     cancellation_reason: Option<&'static str>,
+    has_changed: bool,
 }
 
 impl DragDropResponse {
@@ -71,8 +72,10 @@ impl DragDropResponse {
     /// Utility function to update a Vec with the current drag & drop state.
     /// You can use this to consistently update the source list while the drag & drop event is ongoing.
     pub fn update_vec<T>(&self, vec: &mut [T]) {
-        if let Some(update) = &self.update {
-            shift_vec(update.from, update.to, vec);
+        if self.has_changed || self.finished {
+            if let Some(update) = &self.update {
+                shift_vec(update.from, update.to, vec);
+            }
         }
     }
 
@@ -154,7 +157,6 @@ pub(crate) enum DragDetectionState {
     },
     TransitioningBackAfterDragFinished {
         id: Id,
-        from: Option<Pos2>,
         dragged_item_size: Option<Vec2>,
     },
 }
@@ -580,9 +582,21 @@ impl DragDropUi {
             false
         };
 
+        let pointer_released = ui.input(|i| i.pointer.any_released());
         let should_update = closest_item.map(|i| i.1.is_some()).unwrap_or(false);
 
-        dbg!(closest_item, source_item);
+        // let should_update =
+        //     if let DragDetectionState::Dragging { hovering_idx, .. } = self.detection_state {
+        //         if let Some((source_idx, source_item)) = source_item {
+        //             hovering_idx != source_idx
+        //         } else {
+        //             false
+        //         }
+        //     } else {
+        //         false
+        //     };
+
+        dbg!(should_update);
 
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {
@@ -606,67 +620,48 @@ impl DragDropUi {
             if let Some(source_item) = source_item {
                 if let Some((hovering_idx, hovering_id)) = hovering_item {
                     *closest_out = hovering_id;
-                    *source_idx_out = source_item.0;
                     *hovering_idx_out = hovering_idx;
                     if let Some(pointer_pos) = pointer_pos {
                         *last_pointer_pos_out = pointer_pos;
                     }
                     *hovering_last_item_out = hovering_last_item;
                 }
+                *source_idx_out = source_item.0;
             }
         }
 
         let mut response = if !drag_phase_changed_this_frame {
-            if should_update {
-                if let DragDetectionState::Dragging {
-                    id,
-                    source_idx,
-                    hovering_idx,
-                    hovering_last_item,
-                    ..
-                } = self.detection_state
-                {
-                    let mut response = DragDropResponse {
-                        finished: false,
-                        update: Some(DragUpdate {
-                            from: source_idx,
-                            to: if hovering_last_item {
-                                hovering_idx + 1
-                            } else {
-                                hovering_idx
-                            },
-                        }),
-                        state: self.detection_state.clone(),
-                        cancellation_reason: None,
-                    };
+            if let DragDetectionState::Dragging {
+                id,
+                source_idx,
+                hovering_idx,
+                hovering_last_item,
+                ..
+            } = self.detection_state
+            {
+                let mut response = DragDropResponse {
+                    finished: false,
+                    update: Some(DragUpdate {
+                        from: source_idx,
+                        to: if hovering_last_item {
+                            hovering_idx + 1
+                        } else {
+                            hovering_idx
+                        },
+                    }),
+                    state: self.detection_state.clone(),
+                    cancellation_reason: None,
+                    has_changed: should_update,
+                };
 
-                    if ui.input(|i| i.pointer.any_released()) {
-                        response.finished = true;
-                        self.drag_animation_id_count += 1;
-
-                        self.detection_state =
-                            DragDetectionState::TransitioningBackAfterDragFinished {
-                                from: Some(dragged_item_rect.map(|r| r.min).unwrap_or_default()),
-                                dragged_item_size: self.detection_state.dragged_item_size(),
-                                id,
-                            };
-                    }
-
-                    response
-                } else {
-                    DragDropResponse {
-                        finished: false,
-                        update: None,
-                        state: self.detection_state.clone(),
-                        cancellation_reason: None,
-                    }
-                }
+                response
             } else {
                 DragDropResponse {
                     finished: false,
                     update: None,
                     state: self.detection_state.clone(),
                     cancellation_reason: None,
+                    has_changed: false,
                 }
             }
         } else {
@@ -675,8 +670,20 @@ impl DragDropUi {
                 update: None,
                 state: self.detection_state.clone(),
                 cancellation_reason: None,
+                has_changed: false,
             }
         };
+
+        if pointer_released {
+            if let Some(dragged_item) = self.detection_state.dragged_item() {
+                response.finished = true;
+
+                self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
+                    dragged_item_size: self.detection_state.dragged_item_size(),
+                    id: dragged_item,
+                };
+            }
+        }
 
         ui.input(|input| {
             if !input.pointer.any_down()

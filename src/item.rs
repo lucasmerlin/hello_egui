@@ -103,7 +103,6 @@ impl<'a, T> Item<'a, T> {
                 };
             }
         } else if let DragDetectionState::TransitioningBackAfterDragFinished {
-            from,
             id: transitioning_id,
             dragged_item_size: _,
         } = &mut self.dnd_state.detection_state
@@ -116,10 +115,7 @@ impl<'a, T> Item<'a, T> {
                     (ui.next_widget_position(), None)
                 };
 
-                // This ensures that the first frame of the animation gets the correct position
-                let value = std::mem::take(from).unwrap_or(end_pos);
-
-                let position = animate_position(ui, id, value);
+                let position = animate_position(ui, id, end_pos);
 
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
                     self.item,
@@ -247,8 +243,6 @@ impl<'a, T> Item<'a, T> {
         size: Option<Vec2>,
         body: impl FnOnce(&mut Ui, T, Handle, ItemState),
     ) -> InnerResponse<Rect> {
-        let _layer_id = LayerId::new(Order::Tooltip, id);
-
         egui::Area::new("draggable_item")
             .interactable(false)
             .fixed_pos(pos)
