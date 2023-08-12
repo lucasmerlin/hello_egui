@@ -14,4 +14,6 @@ Give it a try here: <https://lucasmerlin.github.io/egui_dnd/>
 
 To get started, take a look at the [simple example.](https://github.com/lucasmerlin/egui_dnd/blob/main/examples/simple.rs)
 
-![Demo Gif](https://github.com/lucasmerlin/egui_dnd/assets/8009393/16351767-d1c5-4f4e-9e47-68e78349f931)
+
+<https://github.com/lucasmerlin/egui_dnd/assets/8009393/a05fa961-ef12-479c-a3fd-f765160e048e>
+
