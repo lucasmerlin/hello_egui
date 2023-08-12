@@ -24,5 +24,9 @@ pub fn main() -> eframe::Result<()> {
     })
 }
 ```
+ - **Breaking**: Removed DragDropUi in favor of dnd function
  - Made the drag cursor when hovering over a handle configurable
  - Fixed ui having unexpected margins
+ - Added support for sorting in horizontal and horizontal wrapping layouts
+ - Improved fancy example
+ - Improved sorting snappiness
