@@ -1,6 +1,6 @@
 use egui::{Pos2, Ui};
 
-pub(crate) fn animate_position(ui: &mut Ui, id: egui::Id, pos: egui::Pos2) -> Pos2 {
+pub(crate) fn animate_position(ui: &mut Ui, id: egui::Id, pos: Pos2) -> Pos2 {
     let Pos2 { x, y } = pos;
 
     let x = ui

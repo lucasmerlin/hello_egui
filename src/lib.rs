@@ -18,7 +18,7 @@ pub mod utils;
 /// Helper struct for ease of use.
 pub struct Dnd<'a> {
     id: Id,
-    ui: &'a mut egui::Ui,
+    ui: &'a mut Ui,
     drag_drop_ui: DragDropUi,
 }
 
@@ -51,7 +51,7 @@ pub struct Dnd<'a> {
 ///     })
 /// }
 /// ```
-pub fn dnd(ui: &mut egui::Ui, id_source: impl Hash) -> Dnd {
+pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd {
     let id = Id::new(id_source).with("dnd");
     let dnd_ui: DragDropUi =
         ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());
@@ -65,7 +65,7 @@ pub fn dnd(ui: &mut egui::Ui, id_source: impl Hash) -> Dnd {
 
 impl<'a> Dnd<'a> {
     /// Initialize the drag and drop UI. Same as [dnd].
-    pub fn new(ui: &'a mut egui::Ui, id_source: impl Hash) -> Self {
+    pub fn new(ui: &'a mut Ui, id_source: impl Hash) -> Self {
         dnd(ui, id_source)
     }
 
@@ -97,7 +97,7 @@ impl<'a> Dnd<'a> {
     pub fn show<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
-        mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
+        mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
@@ -119,7 +119,7 @@ impl<'a> Dnd<'a> {
         self,
         items: impl Iterator<Item = T>,
         size: egui::Vec2,
-        mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
+        mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
@@ -138,7 +138,7 @@ impl<'a> Dnd<'a> {
     pub fn show_vec<T: Hash>(
         self,
         items: &mut [T],
-        item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
+        item_ui: impl FnMut(&mut Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
         let response = self.show(items.iter_mut(), item_ui);
         response.update_vec(items);
@@ -150,7 +150,7 @@ impl<'a> Dnd<'a> {
         self,
         items: &mut [T],
         size: egui::Vec2,
-        item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
+        item_ui: impl FnMut(&mut Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
         let response = self.show_sized(items.iter_mut(), size, item_ui);
         response.update_vec(items);
@@ -176,7 +176,7 @@ impl<'a> Dnd<'a> {
 
     fn _show_with_inner(
         self,
-        inner_fn: impl FnOnce(Id, &mut egui::Ui, &mut DragDropUi) -> DragDropResponse,
+        inner_fn: impl FnOnce(Id, &mut Ui, &mut DragDropUi) -> DragDropResponse,
     ) -> DragDropResponse {
         let Dnd {
             id,
