@@ -1,6 +1,6 @@
 use eframe::egui;
 
-use egui::{CentralPanel, Frame, Label, ScrollArea, Ui, Vec2, Widget};
+use egui::{CentralPanel, Frame, Label, ScrollArea, TopBottomPanel, Ui, Vec2, Widget};
 use egui_dnd::dnd;
 
 pub fn main() -> eframe::Result<()> {
@@ -12,7 +12,21 @@ pub fn main() -> eframe::Result<()> {
         "DnD Simple Example",
         Default::default(),
         move |ctx, _frame| {
+            TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(format!(
+                        "Sorted: {:?}",
+                        items
+                            .iter()
+                            .enumerate()
+                            .all(|(i, item)| i == *item as usize - 1)
+                    ));
+                });
+            });
+
             CentralPanel::default().show(ctx, |ui| {
+                ui.style_mut().animation_time = 0.6;
+
                 ui.spacing_mut().item_spacing.y = ui.spacing().item_spacing.x;
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut example, "wrapping", "wrapping");
@@ -25,8 +39,8 @@ pub fn main() -> eframe::Result<()> {
                 let size = Vec2::new(width, width) - ui.spacing().item_spacing;
 
                 let content = |ui: &mut Ui, items: &mut [i32]| {
-                    let response = dnd(ui, "dnd_example").show_sized(
-                        items.iter_mut(),
+                    let response = dnd(ui, "dnd_example").show_vec_sized(
+                        items,
                         size,
                         |ui, item, handle, _state| {
                             Frame::none()
@@ -43,10 +57,6 @@ pub fn main() -> eframe::Result<()> {
                                 });
                         },
                     );
-                    // If you are using a wrapped layout, you should only update the items if the drag is finished
-                    if response.is_drag_finished() {
-                        response.update_vec(items)
-                    }
                 };
 
                 if example == "wrapping" {
@@ -64,8 +74,6 @@ pub fn main() -> eframe::Result<()> {
                         });
                     });
                 }
-
-                ctx.style_ui(ui);
             });
         },
     )

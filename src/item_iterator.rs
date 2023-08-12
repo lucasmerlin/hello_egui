@@ -6,7 +6,7 @@ use egui::{Id, Layout, Rect, Ui, Vec2};
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
     dragged_item_rect: Option<Rect>,
-    hovering_item: Option<(Id, usize)>,
+    hovering_item: Option<Id>,
     layout: Layout,
     set_next_item_as_hovering_above: bool,
     direction_vec: Vec2,
@@ -27,10 +27,8 @@ impl<'a> ItemIterator<'a> {
     pub fn new(state: &'a mut DragDropUi, dragged_item_rect: Option<Rect>, layout: Layout) -> Self {
         let (hovering_item) = match state.detection_state {
             DragDetectionState::Dragging {
-                closest_item: item,
-                hovering_idx,
-                ..
-            } => Some((item, hovering_idx)),
+                closest_item: item, ..
+            } => Some(item),
             _ => None,
         };
 
@@ -83,7 +81,7 @@ impl<'a> ItemIterator<'a> {
             self.is_after_dragged_item = true;
         }
 
-        if let Some((hovering_item, _)) = self.hovering_item {
+        if let Some(hovering_item) = self.hovering_item {
             if hovering_item == id {
                 self.is_after_hovered_item = true;
             }
@@ -140,7 +138,7 @@ impl<'a> ItemIterator<'a> {
     }
 
     fn add_space_and_check_closest(&mut self, ui: &mut Ui, id: Id, idx: usize) {
-        if let Some((hovering_item, _)) = self.hovering_item {
+        if let Some(hovering_item) = self.hovering_item {
             if hovering_item == id {
                 // TODO unwrap
                 let (id, rect) = ui.allocate_space(self.dragged_item_rect.unwrap().size());
