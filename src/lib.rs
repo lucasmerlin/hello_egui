@@ -2,13 +2,15 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use egui::Id;
+use egui::{Id, Ui};
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragDropUi, DragUpdate, Handle};
 
 use crate::item::{Item, ItemResponse};
+use crate::item_iterator::ItemIterator;
 use std::hash::Hash;
 
 mod item;
+mod item_iterator;
 mod state;
 /// Helper functions to support the drag and drop functionality
 pub mod utils;
@@ -97,11 +99,15 @@ impl<'a> Dnd<'a> {
         items: impl Iterator<Item = T>,
         mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner::<T>(|id, ui, drag_drop_ui| {
-            drag_drop_ui.ui(ui, items, |ui, item| {
-                item.ui(ui, |ui, item, handle, state| {
-                    item_ui(ui, item, handle, state)
-                })
+        self._show_with_inner(|id, ui, drag_drop_ui| {
+            drag_drop_ui.ui(ui, |ui, iter| {
+                items.enumerate().for_each(|(i, item)| {
+                    iter.next(item, i, |item| {
+                        item.ui(ui, |ui, item, handle, state| {
+                            item_ui(ui, item, handle, state)
+                        })
+                    });
+                });
             })
         })
     }
@@ -112,11 +118,15 @@ impl<'a> Dnd<'a> {
         size: egui::Vec2,
         mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner::<T>(|id, ui, drag_drop_ui| {
-            drag_drop_ui.ui(ui, items, |ui, item| {
-                item.ui_sized(ui, size, |ui, item, handle, state| {
-                    item_ui(ui, item, handle, state)
-                })
+        self._show_with_inner(|id, ui, drag_drop_ui| {
+            drag_drop_ui.ui(ui, |ui, iter| {
+                items.enumerate().for_each(|(i, item)| {
+                    iter.next(item, i, |item| {
+                        item.ui_sized(ui, size, |ui, item, handle, state| {
+                            item_ui(ui, item, handle, state)
+                        })
+                    });
+                });
             })
         })
     }
@@ -143,7 +153,21 @@ impl<'a> Dnd<'a> {
         response
     }
 
-    fn _show_with_inner<T: DragDropItem>(
+    pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
+        self._show_with_inner(|id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
+    }
+
+    pub fn show_custom_vec<T: Hash>(
+        self,
+        items: &mut [T],
+        f: impl FnOnce(&mut Ui, &mut [T], &mut ItemIterator),
+    ) -> DragDropResponse {
+        let response = self.show_custom(|ui, iter| f(ui, items, iter));
+        response.update_vec(items);
+        response
+    }
+
+    pub fn _show_with_inner(
         self,
         inner_fn: impl FnOnce(Id, &mut egui::Ui, &mut DragDropUi) -> DragDropResponse,
     ) -> DragDropResponse {

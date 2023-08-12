@@ -1,16 +1,14 @@
 use std::hash::Hash;
-use std::mem;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
-use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{CursorIcon, Id, Pos2, Rect, Sense, Ui, Vec2};
 
-use crate::item::{Item, ItemResponse};
 #[cfg(target_arch = "wasm32")]
 use web_time::{Duration, SystemTime};
 
+use crate::item_iterator::ItemIterator;
 use crate::utils::shift_vec;
-use crate::ItemState;
 
 /// Item that can be reordered using drag and drop
 pub trait DragDropItem {
@@ -195,7 +193,7 @@ impl DragDetectionState {
         }
     }
 
-    fn is_dragging_item(&self, id: Id) -> bool {
+    pub(crate) fn is_dragging_item(&self, id: Id) -> bool {
         self.dragged_item() == Some(id)
     }
 
@@ -501,11 +499,10 @@ impl DragDropUi {
     }
 
     /// Draw the items and handle drag & drop stuff
-    pub fn ui<T: DragDropItem>(
-        &mut self,
+    pub fn ui<'a>(
+        &'a mut self,
         ui: &mut Ui,
-        values: impl Iterator<Item = T>,
-        mut item_ui: impl FnMut(&mut Ui, Item<T>) -> ItemResponse,
+        mut callback: impl FnOnce(&mut Ui, &mut ItemIterator),
     ) -> DragDropResponse {
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
         let mut first_frame = false;
@@ -577,76 +574,16 @@ impl DragDropUi {
             None
         };
 
-        let mut before_item = None;
-        let mut after_item = None;
+        let mut item_iter = ItemIterator::new(self, dragged_item_rect, *ui.layout());
+        callback(ui, &mut item_iter);
 
-        let mut source_item = None;
-        let mut dragged_item_size = None;
-
-        let mut hovering_over_any_handle = false;
-
-        let mut is_after_dragged_item = false;
-
-        values.enumerate().for_each(|(idx, item)| {
-            let item_id = item.id();
-            let is_dragged_item = self.detection_state.is_dragging_item(item_id);
-            if is_dragged_item {
-                is_after_dragged_item = true;
-            }
-
-            let rect = item_ui(
-                ui,
-                Item::new(
-                    item_id,
-                    item,
-                    ItemState {
-                        dragged: is_dragged_item,
-                        index: idx,
-                    },
-                    self,
-                    &mut hovering_over_any_handle,
-                ),
-            );
-
-            let additional_margin = if is_after_dragged_item {
-                rect.size()
-            } else {
-                Vec2::ZERO
-            };
-
-            if let Some(dragged_item_rect) = dragged_item_rect {
-                if ui.layout().is_horizontal() {
-                    if !ui.layout().main_wrap
-                        || (dragged_item_rect.center().y < rect.max.y
-                            && dragged_item_rect.center().y > rect.min.y)
-                    {
-                        if dragged_item_rect.center().x < rect.max.x - additional_margin.x
-                            && before_item.is_none()
-                        {
-                            before_item = Some((idx, item_id));
-                        }
-                        if dragged_item_rect.center().x > rect.min.x {
-                            after_item = Some((idx, item_id));
-                        }
-                    }
-                } else {
-                    // TODO: Use .top and .bottom here for more optimistic switching
-                    if dragged_item_rect.center().y < rect.max.y - additional_margin.y
-                        && before_item.is_none()
-                    {
-                        before_item = Some((idx, item_id));
-                    }
-                    if dragged_item_rect.center().y > rect.min.y {
-                        after_item = Some((idx, item_id));
-                    }
-                }
-            }
-
-            if self.detection_state.is_dragging_item(item_id) {
-                source_item = Some((idx, item_id));
-                dragged_item_size = Some(rect.size());
-            }
-        });
+        let ItemIterator {
+            before_item,
+            after_item,
+            source_item,
+            hovering_over_any_handle,
+            ..
+        } = item_iter;
 
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {

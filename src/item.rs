@@ -5,8 +5,8 @@ use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui,
 
 pub struct Item<'a, T> {
     id: Id,
-    item: T,
-    state: ItemState,
+    pub item: T,
+    pub state: ItemState,
     dnd_state: &'a mut DragDropUi,
     hovering_over_any_handle: &'a mut bool,
 }
@@ -50,9 +50,10 @@ impl<'a, T> Item<'a, T> {
         size: Option<Vec2>,
         ui: &mut Ui,
         drag_body: impl FnOnce(&mut Ui, T, Handle, ItemState),
-    ) -> Rect {
+    ) -> ItemResponse {
         let hovering_over_any_handle = self.hovering_over_any_handle;
         let id = self.id;
+        let index = self.state.index;
         let last_pointer_pos = self.dnd_state.detection_state.last_pointer_pos();
         if let DragDetectionState::Dragging {
             id: dragging_id,
@@ -97,7 +98,11 @@ impl<'a, T> Item<'a, T> {
                 ui.allocate_space(rect.size());
 
                 let response = Rect::from_min_size(ui.next_widget_position(), rect.size());
-                return response;
+                return ItemResponse {
+                    rect: response,
+                    idx: index,
+                    id,
+                };
             }
         } else if let DragDetectionState::TransitioningBackAfterDragFinished {
             from,
@@ -133,10 +138,16 @@ impl<'a, T> Item<'a, T> {
                     drag_body,
                 );
 
-                return if let Some(rect) = did_allocate_size {
+                let rect = if let Some(rect) = did_allocate_size {
                     rect
                 } else {
                     ui.allocate_exact_size(rect.size(), Sense::hover()).0
+                };
+
+                return ItemResponse {
+                    rect,
+                    idx: index,
+                    id,
                 };
             }
         }
@@ -191,7 +202,11 @@ impl<'a, T> Item<'a, T> {
             }
         }
 
-        rect
+        ItemResponse {
+            rect,
+            idx: index,
+            id,
+        }
     }
 
     fn draw_floating_at_position(
@@ -224,4 +239,8 @@ impl<'a, T> Item<'a, T> {
     }
 }
 
-pub type ItemResponse = egui::Rect;
+pub struct ItemResponse {
+    pub(crate) rect: Rect,
+    id: Id,
+    idx: usize,
+}
