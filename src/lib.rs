@@ -109,8 +109,8 @@ impl<'a> Dnd<'a> {
     pub fn show_sized<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
-        mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
         size: egui::Vec2,
+        mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
         self._show_with_inner::<T>(|id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, items, |ui, item| {
@@ -138,7 +138,7 @@ impl<'a> Dnd<'a> {
         size: egui::Vec2,
         item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
-        let response = self.show_sized(items.iter_mut(), item_ui, size);
+        let response = self.show_sized(items.iter_mut(), size, item_ui);
         response.update_vec(items);
         response
     }

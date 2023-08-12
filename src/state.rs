@@ -144,6 +144,7 @@ pub(crate) enum DragDetectionState {
         id: Id,
         offset: Vec2,
         phase: DragPhase,
+        dragged_item_size: Vec2,
     },
     TransitioningBackAfterDragFinished {
         id: Id,
@@ -158,8 +159,6 @@ pub(crate) enum DragPhase {
         // For touch devices, we need to remember the last pointer position
         // so we don't loose it during the last frame
         last_pointer_pos: Pos2,
-
-        dragged_item_size: Vec2,
 
         /// This will always be set unless we are at the bottom of the list
         hovering_above_item: Option<Id>,
@@ -185,7 +184,7 @@ impl DragDetectionState {
             || matches!(self, DragDetectionState::CouldBeValidDrag)
     }
 
-    fn is_dragging(&self) -> bool {
+    pub(crate) fn is_dragging(&self) -> bool {
         matches!(self, DragDetectionState::Dragging { .. })
     }
 
@@ -210,10 +209,7 @@ impl DragDetectionState {
     fn dragged_item_size(&self) -> Option<Vec2> {
         match self {
             DragDetectionState::Dragging {
-                phase: DragPhase::Rest {
-                    dragged_item_size, ..
-                },
-                ..
+                dragged_item_size, ..
             } => Some(*dragged_item_size),
             _ => None,
         }
@@ -365,12 +361,12 @@ impl<'a> Handle<'a> {
                 DragDetectionState::CouldBeValidDrag
             )
         {
-            dbg!(offset, self.item_pos);
-
             self.state.detection_state = DragDetectionState::Dragging {
                 id: self.id,
                 offset,
                 phase: DragPhase::FirstFrame,
+                // We set this in the Item
+                dragged_item_size: Default::default(),
             };
             self.state.drag_animation_id_count += 1;
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
@@ -567,13 +563,20 @@ impl DragDropUi {
             .input(|i| i.pointer.hover_pos())
             .or_else(|| self.detection_state.last_pointer_pos());
 
-        let dragged_item_pos =
-            pointer_pos.unwrap_or_default() + self.detection_state.offset().unwrap_or_default();
-        let dragged_item_rect = Rect::from_min_size(
-            dragged_item_pos,
-            self.detection_state.dragged_item_size().unwrap_or_default(),
-        );
-        let dragged_item_center = dragged_item_rect.center();
+        let dragged_item_rect = if let DragDetectionState::Dragging {
+            offset,
+            dragged_item_size,
+            ..
+        } = &self.detection_state
+        {
+            Some(Rect::from_min_size(
+                pointer_pos.unwrap_or_default() + *offset,
+                *dragged_item_size,
+            ))
+        } else {
+            None
+        };
+
         let mut before_item = None;
         let mut after_item = None;
 
@@ -582,9 +585,14 @@ impl DragDropUi {
 
         let mut hovering_over_any_handle = false;
 
+        let mut is_after_dragged_item = false;
+
         values.enumerate().for_each(|(idx, item)| {
             let item_id = item.id();
             let is_dragged_item = self.detection_state.is_dragging_item(item_id);
+            if is_dragged_item {
+                is_after_dragged_item = true;
+            }
 
             let rect = item_ui(
                 ui,
@@ -600,25 +608,37 @@ impl DragDropUi {
                 ),
             );
 
-            if ui.layout().is_horizontal() {
-                if !ui.layout().main_wrap
-                    || (dragged_item_center.y - rect.center().y).abs()
-                        < dragged_item_rect.height() / 2.0 + ui.spacing().item_spacing.y
-                {
-                    if dragged_item_center.x < rect.center().x && before_item.is_none() {
+            let additional_margin = if is_after_dragged_item {
+                rect.size()
+            } else {
+                Vec2::ZERO
+            };
+
+            if let Some(dragged_item_rect) = dragged_item_rect {
+                if ui.layout().is_horizontal() {
+                    if !ui.layout().main_wrap
+                        || (dragged_item_rect.center().y < rect.max.y
+                            && dragged_item_rect.center().y > rect.min.y)
+                    {
+                        if dragged_item_rect.center().x < rect.max.x - additional_margin.x
+                            && before_item.is_none()
+                        {
+                            before_item = Some((idx, item_id));
+                        }
+                        if dragged_item_rect.center().x > rect.min.x {
+                            after_item = Some((idx, item_id));
+                        }
+                    }
+                } else {
+                    // TODO: Use .top and .bottom here for more optimistic switching
+                    if dragged_item_rect.center().y < rect.max.y - additional_margin.y
+                        && before_item.is_none()
+                    {
                         before_item = Some((idx, item_id));
                     }
-                    if dragged_item_center.x > rect.center().x {
+                    if dragged_item_rect.center().y > rect.min.y {
                         after_item = Some((idx, item_id));
                     }
-                }
-            } else {
-                // TODO: Use .top and .bottom here for more optimistic switching
-                if dragged_item_center.y < rect.center().y && before_item.is_none() {
-                    before_item = Some((idx, item_id));
-                }
-                if dragged_item_center.y > rect.center().y {
-                    after_item = Some((idx, item_id));
                 }
             }
 
@@ -634,63 +654,84 @@ impl DragDropUi {
                 DragDetectionState::Cancelled("Cursor not hovering over any item handle");
         }
 
+        let mut drag_phase_changed_this_frame = false;
+
         let hovering_item = before_item;
         if let DragDetectionState::Dragging { phase, .. } = &mut self.detection_state {
             if let Some(source_idx) = source_item {
-                if let Some(dragged_item_size) = dragged_item_size {
+                if let Some(hovering_idx) =
+                    hovering_item.map(|i| i.0).or(after_item.map(|i| i.0 + 1))
+                {
                     if let DragPhase::FirstFrame = phase {
                         // Prevent flickering
                         self.drag_animation_id_count += 1;
                     }
                     let hovering_item_id = hovering_item.map(|i| i.1);
 
+                    if phase.is_first_frame() {
+                        drag_phase_changed_this_frame = true;
+                    }
+
+                    // These are not accurate yet on the first frame
+                    let (hovering_above_item, hovering_below_item) =
+                        if !drag_phase_changed_this_frame {
+                            (hovering_item_id, after_item.map(|i| i.1))
+                        } else {
+                            (None, None)
+                        };
+
                     *phase = DragPhase::Rest {
                         last_pointer_pos: pointer_pos.unwrap_or_default(),
-                        dragged_item_size,
-                        hovering_above_item: hovering_item_id,
-                        hovering_below_item: after_item.map(|i| i.1),
-                        hovering_idx: hovering_item
-                            .map(|i| i.0)
-                            .or(after_item.map(|i| i.0 + 1))
-                            .unwrap_or_default(), // One of these must be Some
+                        hovering_above_item,
+                        hovering_below_item,
+                        hovering_idx,
                         source_idx: source_idx.0,
                     };
                 }
             }
         }
 
-        let mut response = if let DragDetectionState::Dragging {
-            id,
-            phase:
-                DragPhase::Rest {
-                    hovering_idx,
-                    source_idx,
-                    ..
-                },
-            ..
-        } = self.detection_state
-        {
-            let mut response = DragDropResponse {
-                finished: false,
-                update: Some(DragUpdate {
-                    from: source_idx,
-                    to: hovering_idx,
-                }),
-                state: self.detection_state.clone(),
-                cancellation_reason: None,
-            };
-
-            if ui.input(|i| i.pointer.any_released()) {
-                response.finished = true;
-                self.drag_animation_id_count += 1;
-
-                self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
-                    from: Some(dragged_item_pos),
-                    id,
+        let mut response = if !drag_phase_changed_this_frame {
+            if let DragDetectionState::Dragging {
+                id,
+                phase:
+                    DragPhase::Rest {
+                        hovering_idx,
+                        source_idx,
+                        ..
+                    },
+                ..
+            } = self.detection_state
+            {
+                let mut response = DragDropResponse {
+                    finished: false,
+                    update: Some(DragUpdate {
+                        from: source_idx,
+                        to: hovering_idx,
+                    }),
+                    state: self.detection_state.clone(),
+                    cancellation_reason: None,
                 };
-            }
 
-            response
+                if ui.input(|i| i.pointer.any_released()) {
+                    response.finished = true;
+                    self.drag_animation_id_count += 1;
+
+                    self.detection_state = DragDetectionState::TransitioningBackAfterDragFinished {
+                        from: Some(dragged_item_rect.map(|r| r.min).unwrap_or_default()),
+                        id,
+                    };
+                }
+
+                response
+            } else {
+                DragDropResponse {
+                    finished: false,
+                    update: None,
+                    state: self.detection_state.clone(),
+                    cancellation_reason: None,
+                }
+            }
         } else {
             DragDropResponse {
                 finished: false,

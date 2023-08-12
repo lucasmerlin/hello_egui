@@ -141,7 +141,9 @@ impl<'a, T> Item<'a, T> {
             }
         }
 
-        if let Some(size) = size {
+        let was_dragging = self.dnd_state.detection_state.is_dragging();
+
+        let rect = if let Some(size) = size {
             // We need to do it like this because in some layouts
             // ui.next_widget_position() will return the vertical center instead
             // of the top left corner
@@ -177,7 +179,19 @@ impl<'a, T> Item<'a, T> {
             });
 
             ui.allocate_space(response.response.rect.size()).1
+        };
+
+        if !was_dragging && self.dnd_state.detection_state.is_dragging() {
+            if let DragDetectionState::Dragging {
+                dragged_item_size, ..
+            } = &mut self.dnd_state.detection_state
+            {
+                // We set this here because we don't know the size in the handle
+                *dragged_item_size = rect.size();
+            }
         }
+
+        rect
     }
 
     fn draw_floating_at_position(
