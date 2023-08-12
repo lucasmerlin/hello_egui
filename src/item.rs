@@ -95,12 +95,8 @@ impl<'a, T> Item<'a, T> {
 
                 // ui.allocate_space(rect.size());
 
-                let response = Rect::from_min_size(ui.next_widget_position(), rect.size());
-                return ItemResponse {
-                    rect: response,
-                    idx: index,
-                    id,
-                };
+                let rect = Rect::from_min_size(ui.next_widget_position(), rect.size());
+                return ItemResponse(rect);
             }
         } else if let DragDetectionState::TransitioningBackAfterDragFinished {
             id: transitioning_id,
@@ -141,11 +137,7 @@ impl<'a, T> Item<'a, T> {
                     self.dnd_state.detection_state = DragDetectionState::None;
                 }
 
-                return ItemResponse {
-                    rect,
-                    idx: index,
-                    id,
-                };
+                return ItemResponse(rect);
             }
         }
 
@@ -224,11 +216,7 @@ impl<'a, T> Item<'a, T> {
             }
         }
 
-        ItemResponse {
-            rect,
-            idx: index,
-            id,
-        }
+        ItemResponse(rect)
     }
 
     fn draw_floating_at_position(
@@ -264,8 +252,4 @@ impl<'a, T> Item<'a, T> {
     }
 }
 
-pub struct ItemResponse {
-    pub(crate) rect: Rect,
-    id: Id,
-    idx: usize,
-}
+pub struct ItemResponse(pub(crate) Rect);

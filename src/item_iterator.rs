@@ -93,7 +93,7 @@ impl<'a> ItemIterator<'a> {
 
         let dragging = self.state.detection_state.is_dragging();
 
-        let ItemResponse { rect, .. } = content(
+        let ItemResponse(rect) = content(
             ui,
             Item::new(
                 id,
