@@ -16,4 +16,5 @@ To get started, take a look at the [simple example.](https://github.com/lucasmer
 
 
 
-![ezgif-2-41c0c5360f](https://user-images.githubusercontent.com/8009393/208403722-b28715cd-b708-4eb4-8d00-36873dee2034.gif)
+
+https://github.com/lucasmerlin/egui_dnd/assets/8009393/06bf39e0-e0ca-4831-b2f1-5c710eabee7a
