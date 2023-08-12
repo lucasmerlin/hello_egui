@@ -153,10 +153,8 @@ impl<'a> ItemIterator<'a> {
     fn add_space_and_check_closest(&mut self, ui: &mut Ui, id: Id) {
         if let Some(hovering_item) = self.hovering_item {
             if hovering_item == id {
-                // TODO unwrap
-                let (_id, rect) = ui.allocate_space(self.dragged_item_rect.unwrap().size());
-
                 if let Some(dragged_item_rect) = self.dragged_item_rect {
+                    let (_id, rect) = ui.allocate_space(dragged_item_rect.size());
                     let (distance, _mark_next) = self.get_distance(dragged_item_rect, rect);
                     self.check_closest_item(distance, None, false);
                 }
