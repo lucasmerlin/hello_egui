@@ -79,7 +79,7 @@ impl Stargazer {
 pub fn load_stargazers(state: Arc<Mutex<StargazersState>>) {
     ehttp::fetch(
         Request::get("https://api.github.com/repos/lucasmerlin/egui_dnd/stargazers"),
-        move |mut result| {
+        move |result| {
             if let Ok(data) = result {
                 if let Ok(stargazers) = serde_json::from_slice::<Vec<Stargazer>>(&data.bytes) {
                     *state.lock().unwrap() = StargazersState::Data(stargazers);
@@ -121,6 +121,7 @@ pub fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
 
             match &mut *guard {
                 StargazersState::None => {
+                    *guard = StargazersState::Loading;
                     load_stargazers(clone);
                 }
                 StargazersState::Loading => {
@@ -137,7 +138,7 @@ pub fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
 }
 
 pub fn stargazers_dnd_ui(ui: &mut Ui, data: &mut Vec<Stargazer>) {
-    dnd(ui, "stargazers_dnd").show_vec(data, |ui, item, handle, state| {
+    dnd(ui, "stargazers_dnd").show_vec(data, |ui, item, handle, _state| {
         ui.horizontal(|ui| {
             handle.ui(ui, |ui| {
                 Frame::none()

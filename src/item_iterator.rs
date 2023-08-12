@@ -1,7 +1,7 @@
 use crate::item::{Item, ItemResponse};
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, ItemState};
-use egui::{Id, Layout, Rect, Ui, Vec2};
+use egui::{Id, Layout, Rect, Ui};
 
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
@@ -9,7 +9,6 @@ pub struct ItemIterator<'a> {
     hovering_item: Option<Id>,
     layout: Layout,
     set_next_item_as_hovering_above: bool,
-    direction_vec: Vec2,
     pub(crate) hovering_last_item: bool,
     pub(crate) last_item: Option<(usize, Id)>,
 
@@ -42,11 +41,6 @@ impl<'a> ItemIterator<'a> {
         Self {
             state,
             dragged_item_rect,
-            direction_vec: if layout.is_horizontal() {
-                Vec2::X
-            } else {
-                Vec2::Y
-            },
             layout,
             set_next_item_as_hovering_above: false,
             closest_item: None,

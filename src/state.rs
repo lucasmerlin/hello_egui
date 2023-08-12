@@ -148,7 +148,6 @@ pub(crate) enum DragDetectionState {
         offset: Vec2,
         dragged_item_size: Vec2,
         closest_item: Id,
-        closest_item_distance: f32,
         last_pointer_pos: Pos2,
         hovering_last_item: bool,
 
@@ -183,13 +182,6 @@ impl DragDetectionState {
         self.dragged_item() == Some(id)
     }
 
-    fn offset(&self) -> Option<Vec2> {
-        match self {
-            DragDetectionState::Dragging { offset, .. } => Some(*offset),
-            _ => None,
-        }
-    }
-
     pub(crate) fn dragged_item_size(&self) -> Option<Vec2> {
         match self {
             DragDetectionState::Dragging {
@@ -202,23 +194,6 @@ impl DragDetectionState {
             _ => None,
         }
     }
-
-    fn hovering_item(&self) -> Option<Id> {
-        match self {
-            DragDetectionState::Dragging { closest_item, .. } => Some(*closest_item),
-            _ => None,
-        }
-    }
-    //
-    // fn hovering_below_item(&self) -> Option<Id> {
-    //     match self {
-    //         DragDetectionState::Dragging {
-    //             hovering_below_item,
-    //             ..
-    //         } => *hovering_below_item,
-    //         _ => None,
-    //     }
-    // }
 
     pub(crate) fn last_pointer_pos(&self) -> Option<Pos2> {
         match self {
@@ -345,7 +320,6 @@ impl<'a> Handle<'a> {
                 // We set this in the Item
                 dragged_item_size: Default::default(),
                 closest_item: self.id,
-                closest_item_distance: 0.0,
                 source_idx: self.idx,
                 hovering_idx: self.idx,
                 last_pointer_pos: response.hover_pos().unwrap_or_default(),
@@ -619,7 +593,6 @@ impl DragDropUi {
 
         let mut response = if !drag_phase_changed_this_frame {
             if let DragDetectionState::Dragging {
-                
                 source_idx,
                 hovering_idx,
                 hovering_last_item,

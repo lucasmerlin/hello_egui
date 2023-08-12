@@ -2,7 +2,7 @@ use eframe::NativeOptions;
 use egui::{CentralPanel, ScrollArea, Sense};
 use std::hash::{Hash, Hasher};
 
-use egui_dnd::{dnd};
+use egui_dnd::dnd;
 
 struct ItemType {
     number: u32,

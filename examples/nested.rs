@@ -1,7 +1,7 @@
 use eframe::egui;
 use eframe::egui::{CollapsingHeader, Id, Ui};
 
-use egui_dnd::{dnd, DragDropItem, DragDropUi, Handle};
+use egui_dnd::{dnd, DragDropItem, Handle};
 
 pub fn main() {
     let options = eframe::NativeOptions {
@@ -26,14 +26,11 @@ impl DragDropItem for &mut SortableItem {
 
 struct MyApp {
     items: Vec<SortableItem>,
-
-    drag_drop_ui: DragDropUi,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         MyApp {
-            drag_drop_ui: DragDropUi::default(),
             items: vec![
                 SortableItem {
                     name: "a".to_string(),
