@@ -39,7 +39,7 @@ pub fn main() -> eframe::Result<()> {
                 let size = Vec2::new(width, width) - ui.spacing().item_spacing;
 
                 let content = |ui: &mut Ui, items: &mut [i32]| {
-                    let response = dnd(ui, "dnd_example").show_vec_sized(
+                    dnd(ui, "dnd_example").show_vec_sized(
                         items,
                         size,
                         |ui, item, handle, _state| {

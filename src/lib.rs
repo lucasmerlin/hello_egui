@@ -136,10 +136,6 @@ impl<'a> Dnd<'a> {
         items: &mut [T],
         item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
-        if self.ui.layout().main_wrap && cfg!(debug_assertions) {
-            println!("Warning: You should only use show_vec in non-wrapping layouts, otherwise there might be glitches.");
-        }
-
         let response = self.show(items.iter_mut(), item_ui);
         response.update_vec(items);
         response
@@ -151,10 +147,6 @@ impl<'a> Dnd<'a> {
         size: egui::Vec2,
         item_ui: impl FnMut(&mut egui::Ui, &mut T, Handle, ItemState),
     ) -> DragDropResponse {
-        if self.ui.layout().main_wrap && cfg!(debug_assertions) {
-            println!("Warning: You should only use show_vec in non-wrapping layouts, otherwise there might be glitches.");
-        }
-
         let response = self.show_sized(items.iter_mut(), size, item_ui);
         response.update_vec(items);
         response

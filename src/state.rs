@@ -591,7 +591,7 @@ impl DragDropUi {
                 DragDetectionState::Cancelled("Cursor not hovering over any item handle");
         }
 
-        let mut drag_phase_changed_this_frame = false;
+        let drag_phase_changed_this_frame = false;
 
         let hovering_item = closest_item.map(|i| i.1).flatten();
 
@@ -619,14 +619,14 @@ impl DragDropUi {
 
         let mut response = if !drag_phase_changed_this_frame {
             if let DragDetectionState::Dragging {
-                id,
+                
                 source_idx,
                 hovering_idx,
                 hovering_last_item,
                 ..
             } = self.detection_state
             {
-                let mut response = DragDropResponse {
+                let response = DragDropResponse {
                     finished: false,
                     update: Some(DragUpdate {
                         from: source_idx,
