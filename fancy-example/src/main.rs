@@ -1,6 +1,5 @@
 mod load_stargazers;
 
-use async_std::task::spawn;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Mutex};
 
@@ -11,7 +10,9 @@ use egui::ecolor::Hsva;
 use egui::{Context, Frame, Id, Rounding, ScrollArea, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
 
-use crate::load_stargazers::{load_stargazers, Stargazer};
+use crate::load_stargazers::{
+    load_stargazers, ImageState, Stargazer, StargazersState, StargazersType,
+};
 use egui_dnd::{dnd, DragDropItem};
 
 #[derive(Clone)]
@@ -92,17 +93,7 @@ fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
         .auto_shrink([false, false])
         .show(ui, |ui| match &mut *guard {
             StargazersState::None => {
-                spawn(async move {
-                    let result = load_stargazers().await;
-                    match result {
-                        Ok(data) => {
-                            *clone.lock().unwrap() = StargazersState::Data(data);
-                        }
-                        Err(err) => {
-                            *clone.lock().unwrap() = StargazersState::Error(err.to_string());
-                        }
-                    }
-                });
+                load_stargazers(clone);
             }
             StargazersState::Loading => {
                 ui.spinner();
@@ -118,6 +109,32 @@ fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
                                 .rounding(4.0)
                                 .show(ui, |ui| {
                                     ui.set_width(ui.available_width());
+
+                                    let size = Vec2::new(32.0, 32.0);
+                                    if ui.is_rect_visible(ui.min_rect().expand2(size)) {
+                                        item.load_image();
+                                    }
+
+                                    let image = item.image.lock().unwrap();
+                                    match &*image {
+                                        ImageState::Data(image) => {
+                                            image.show_size(ui, size);
+                                        }
+                                        ImageState::Loading => {
+                                            ui.allocate_ui(size, |ui| {
+                                                ui.spinner();
+                                            });
+                                        }
+                                        ImageState::Error(e) => {
+                                            ui.allocate_ui(size, |ui| {
+                                                ui.label(&*e);
+                                            });
+                                        }
+                                        _ => {
+                                            ui.allocate_space(size);
+                                        }
+                                    }
+
                                     ui.hyperlink_to(item.login.as_str(), item.html_url.as_str());
                                 });
                         });
@@ -267,16 +284,6 @@ fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: Starg
     });
 }
 
-#[derive(Debug)]
-enum StargazersState {
-    None,
-    Loading,
-    Data(Vec<Stargazer>),
-    Error(String),
-}
-
-type StargazersType = Arc<Mutex<StargazersState>>;
-
 #[cfg(not(target_arch = "wasm32"))]
 #[async_std::main]
 async fn main() -> eframe::Result<()> {
@@ -294,19 +301,25 @@ async fn main() -> eframe::Result<()> {
 fn main() {
     let web_options = eframe::WebOptions::default();
     let items = colors();
+    let stargazers: StargazersType = Arc::new(Mutex::new(StargazersState::None));
+    let mut demo = Demo::Vertical;
 
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
-            .start("canvas", web_options, Box::new(|_a| Box::new(App(items))))
+            .start(
+                "canvas",
+                web_options,
+                Box::new(|_a| Box::new(App(items, stargazers, demo))),
+            )
             .await
             .expect("failed to start eframe");
     });
 
-    struct App(Vec<Color>);
+    struct App(Vec<Color>, StargazersType, Demo);
 
     impl eframe::App for App {
         fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-            app(ctx, &mut self.0);
+            app(ctx, &mut self.2, &mut self.0, self.1.clone());
         }
     }
 }

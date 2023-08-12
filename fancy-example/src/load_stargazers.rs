@@ -1,9 +1,19 @@
 use egui::ColorImage;
 use egui_extras::RetainedImage;
+use ehttp::Request;
 use serde::Deserialize;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::sync::{Arc, Mutex};
+
+#[derive(Default)]
+pub enum ImageState {
+    #[default]
+    None,
+    Loading,
+    Data(RetainedImage),
+    Error(String),
+}
 
 #[derive(Deserialize)]
 pub struct Stargazer {
@@ -11,7 +21,7 @@ pub struct Stargazer {
     pub html_url: String,
     pub avatar_url: String,
     #[serde(skip)]
-    pub image: Arc<Mutex<Option<RetainedImage>>>,
+    pub image: Arc<Mutex<ImageState>>,
 }
 
 impl Hash for Stargazer {
@@ -30,27 +40,61 @@ impl Debug for Stargazer {
     }
 }
 
-pub async fn load_stargazers() -> anyhow::Result<Vec<Stargazer>> {
-    let response = surf::get("https://api.github.com/repos/lucasmerlin/egui_dnd/stargazers")
-        .recv_json::<Vec<Stargazer>>()
-        .await;
-
-    let mut result = response.map_err(|e| anyhow::anyhow!("Failed to load stargazers: {}", e));
-
-    if let Ok(stargazers) = &mut result {
-        for stargazer in stargazers.iter_mut() {
-            let image = surf::get(&stargazer.avatar_url)
-                .recv_bytes()
-                .await
-                .map_err(|e| anyhow::anyhow!("Failed to load stargazer image: {}", e))?;
-
-            let image = RetainedImage::from_image_bytes(stargazer.login.clone(), &image);
-
-            if let Ok(image) = image {
-                stargazer.image = Arc::new(Mutex::new(Some(image)));
+impl Stargazer {
+    pub fn load_image(&self) {
+        {
+            let mut guard = self.image.lock().unwrap();
+            if let ImageState::None = *guard {
+                *guard = ImageState::Loading;
+            } else {
+                return;
             }
         }
-    };
 
-    result
+        let image_state = self.image.clone();
+        let login = self.login.clone();
+        let avatar_url = self.avatar_url.clone();
+        ehttp::fetch(Request::get(&avatar_url), move |result| {
+            if let Ok(data) = result {
+                let image = RetainedImage::from_image_bytes(login, &data.bytes);
+
+                let mut guard = image_state.lock().unwrap();
+                match image {
+                    Ok(image) => {
+                        *guard = ImageState::Data(image);
+                    }
+                    Err(err) => {
+                        dbg!(err);
+                        *guard = ImageState::Error("Failed to load image".to_string());
+                    }
+                }
+            }
+        });
+    }
 }
+
+pub fn load_stargazers(state: Arc<Mutex<StargazersState>>) {
+    ehttp::fetch(
+        Request::get("https://api.github.com/repos/lucasmerlin/egui_dnd/stargazers"),
+        move |mut result| {
+            if let Ok(data) = result {
+                if let Ok(stargazers) = serde_json::from_slice::<Vec<Stargazer>>(&data.bytes) {
+                    *state.lock().unwrap() = StargazersState::Data(stargazers);
+                } else {
+                    *state.lock().unwrap() =
+                        StargazersState::Error("Failed to parse stargazers".to_string());
+                }
+            };
+        },
+    );
+}
+
+#[derive(Debug)]
+pub enum StargazersState {
+    None,
+    Loading,
+    Data(Vec<Stargazer>),
+    Error(String),
+}
+
+pub type StargazersType = Arc<Mutex<StargazersState>>;

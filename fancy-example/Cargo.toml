@@ -7,6 +7,7 @@ publish = false
 [dependencies]
 eframe = "0.22"
 egui_extras = { version = "0.22", features = ["image"] }
+image = { version = "0.24", features = ["jpeg", "png"] }
 color-hex = "0.2.0"
 egui = { version = "0.22", features = ["color-hex"] }
 egui_dnd = { path = ".." }
@@ -14,12 +15,10 @@ egui_dnd = { path = ".." }
 wasm-bindgen = "0.2.83"
 wasm-bindgen-futures = "0.4.33"
 
-surf = { version = "2", features = ["wasm-client"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-anyhow = "1"
 
-async-std = { version = "1", features = ["attributes"] }
+ehttp = { version = "0.3.0" }
 
 [package.metadata.release]
 release = false
