@@ -416,8 +416,8 @@ impl DragDropUi {
     }
 
     /// Draw the items and handle drag & drop stuff
-    pub fn ui<'a>(
-        &'a mut self,
+    pub fn ui(
+        &mut self,
         ui: &mut Ui,
         callback: impl FnOnce(&mut Ui, &mut ItemIterator),
     ) -> DragDropResponse {
@@ -525,7 +525,7 @@ impl DragDropUi {
 
         let drag_phase_changed_this_frame = false;
 
-        let hovering_item = closest_item.map(|i| i.1).flatten();
+        let hovering_item = closest_item.and_then(|i| i.1);
 
         if let DragDetectionState::Dragging {
             closest_item: closest_out,
@@ -557,7 +557,9 @@ impl DragDropUi {
                 ..
             } = self.detection_state
             {
-                let response = DragDropResponse {
+                
+
+                DragDropResponse {
                     finished: false,
                     update: Some(DragUpdate {
                         from: source_idx,
@@ -570,9 +572,7 @@ impl DragDropUi {
                     state: self.detection_state.clone(),
                     cancellation_reason: None,
                     has_changed: should_update,
-                };
-
-                response
+                }
             } else {
                 DragDropResponse {
                     finished: false,

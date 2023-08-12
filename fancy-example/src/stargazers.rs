@@ -57,7 +57,7 @@ impl Stargazer {
         let image_state = self.image.clone();
         let login = self.login.clone();
         let avatar_url = self.avatar_url.clone();
-        ehttp::fetch(Request::get(&avatar_url), move |result| {
+        ehttp::fetch(Request::get(avatar_url), move |result| {
             if let Ok(data) = result {
                 let image = RetainedImage::from_image_bytes(login, &data.bytes);
 
@@ -168,7 +168,7 @@ pub fn stargazers_dnd_ui(ui: &mut Ui, data: &mut Vec<Stargazer>) {
                                 }
                                 ImageState::Error(e) => {
                                     ui.allocate_ui(size, |ui| {
-                                        ui.label(&*e);
+                                        ui.label(e);
                                     });
                                 }
                                 _ => {

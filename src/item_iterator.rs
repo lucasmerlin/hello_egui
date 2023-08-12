@@ -110,10 +110,7 @@ impl<'a> ItemIterator<'a> {
         }
 
         if let Some(dragged_item_rect) = self.dragged_item_rect {
-            if !self.layout.main_wrap {
-                let (distance, mark_next) = self.get_distance(dragged_item_rect, rect);
-                self.check_closest_item(distance, Some((idx, id)), mark_next);
-            } else {
+            if self.layout.main_wrap {
                 if rect.contains(dragged_item_rect.center()) {
                     if self.is_after_hovered_item {
                         self.mark_next_as_closest_item = Some(0.0);
@@ -121,6 +118,9 @@ impl<'a> ItemIterator<'a> {
                         self.closest_item = Some((0.0, Some((idx, id))));
                     }
                 }
+            } else {
+                let (distance, mark_next) = self.get_distance(dragged_item_rect, rect);
+                self.check_closest_item(distance, Some((idx, id)), mark_next);
             }
         }
 

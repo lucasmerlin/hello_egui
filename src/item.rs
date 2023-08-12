@@ -86,7 +86,6 @@ impl<'a, T> Item<'a, T> {
                     self.dnd_state,
                     ui,
                     id,
-                    index,
                     position,
                     hovering_over_any_handle,
                     size,
@@ -119,7 +118,6 @@ impl<'a, T> Item<'a, T> {
                     self.dnd_state,
                     ui,
                     id,
-                    index,
                     position,
                     hovering_over_any_handle,
                     size,
@@ -225,7 +223,6 @@ impl<'a, T> Item<'a, T> {
         dnd_state: &mut DragDropUi,
         ui: &mut Ui,
         id: Id,
-        index: usize,
         pos: Pos2,
         hovering_over_any_handle: &mut bool,
         size: Option<Vec2>,
@@ -242,7 +239,7 @@ impl<'a, T> Item<'a, T> {
                     body(
                         ui,
                         item,
-                        Handle::new(id, index, dnd_state, hovering_over_any_handle, pos),
+                        Handle::new(id, state.index, dnd_state, hovering_over_any_handle, pos),
                         state,
                     )
                 })
