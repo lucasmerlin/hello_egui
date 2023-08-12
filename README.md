@@ -15,6 +15,4 @@ Give it a try here: <https://lucasmerlin.github.io/egui_dnd/>
 To get started, take a look at the [simple example.](https://github.com/lucasmerlin/egui_dnd/blob/main/examples/simple.rs)
 
 
-
-
-https://github.com/lucasmerlin/egui_dnd/assets/8009393/06bf39e0-e0ca-4831-b2f1-5c710eabee7a
+![Demo Video](https://github.com/lucasmerlin/egui_dnd/assets/8009393/06bf39e0-e0ca-4831-b2f1-5c710eabee7a)

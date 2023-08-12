@@ -25,7 +25,7 @@ pub struct Dnd<'a> {
 /// Main entry point for the drag and drop functionality.
 /// Loads and saves it's state from egui memory.
 /// Use either [Dnd::show] or [Dnd::show_vec] to display the drag and drop UI.
-/// You can use [DragDropUi::with_mouse_config] or [DragDropUi::with_touch_config] to configure the drag detection.
+/// You can use [Dnd::with_mouse_config] or [Dnd::with_touch_config] to configure the drag detection.
 /// Example usage:
 /// ```rust;no_run
 /// use std::hash::Hash;
