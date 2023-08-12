@@ -56,13 +56,12 @@ impl<'a> ItemIterator<'a> {
         }
     }
 
-    pub fn next<T>(
+    pub fn next(
         &mut self,
         ui: &mut Ui,
         id: Id,
-        item: T,
         idx: usize,
-        content: impl FnOnce(&mut Ui, Item<T>) -> ItemResponse,
+        content: impl FnOnce(&mut Ui, Item) -> ItemResponse,
     ) {
         let is_dragged_item = self.state.detection_state.is_dragging_item(id);
 
@@ -91,7 +90,6 @@ impl<'a> ItemIterator<'a> {
             ui,
             Item::new(
                 id,
-                item,
                 ItemState {
                     dragged: is_dragged_item,
                     index: idx,

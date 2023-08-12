@@ -15,17 +15,17 @@ pub fn main() -> eframe::Result<()> {
 
                 dnd(ui, "custom").show_custom_vec(&mut items, |ui, items, iter| {
                     items.iter().enumerate().for_each(|(i, item)| {
-                        iter.next(ui, item.id(), item, i, |ui, item| {
+                        iter.next(ui, item.id(), i, |ui, item_handle| {
                             let mut frame = Frame::none();
 
-                            if item.state.dragged {
+                            if item_handle.state.dragged {
                                 frame =
                                     frame.stroke(Stroke::new(1.0, egui::Color32::from_rgb(0, 0, 0)))
                             }
 
                             frame
                                 .show(ui, |ui| {
-                                    item.ui(ui, |ui, item, handle, state| {
+                                    item_handle.ui(ui, |ui, handle, state| {
                                         handle.ui(ui, |ui| {
                                             if state.dragged {
                                                 ui.label("dragging");

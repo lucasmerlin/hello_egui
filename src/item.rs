@@ -3,25 +3,22 @@ use crate::utils::animate_position;
 use crate::{DragDropUi, Handle, ItemState};
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
-pub struct Item<'a, T> {
+pub struct Item<'a> {
     id: Id,
-    pub item: T,
     pub state: ItemState,
     dnd_state: &'a mut DragDropUi,
     hovering_over_any_handle: &'a mut bool,
 }
 
-impl<'a, T> Item<'a, T> {
+impl<'a> Item<'a> {
     pub fn new(
         id: Id,
-        item: T,
         state: ItemState,
         dnd_state: &'a mut DragDropUi,
         hovering_over_any_handle: &'a mut bool,
     ) -> Self {
         Self {
             id,
-            item,
             state,
             dnd_state,
             hovering_over_any_handle,
@@ -31,7 +28,7 @@ impl<'a, T> Item<'a, T> {
     pub fn ui(
         self,
         ui: &mut Ui,
-        add_content: impl FnMut(&mut Ui, T, Handle, ItemState),
+        add_content: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> ItemResponse {
         self.drag_source(None, ui, add_content)
     }
@@ -40,7 +37,7 @@ impl<'a, T> Item<'a, T> {
         self,
         ui: &mut Ui,
         size: Vec2,
-        add_content: impl FnMut(&mut Ui, T, Handle, ItemState),
+        add_content: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> ItemResponse {
         self.drag_source(Some(size), ui, add_content)
     }
@@ -49,7 +46,7 @@ impl<'a, T> Item<'a, T> {
         self,
         size: Option<Vec2>,
         ui: &mut Ui,
-        drag_body: impl FnOnce(&mut Ui, T, Handle, ItemState),
+        drag_body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> ItemResponse {
         let hovering_over_any_handle = self.hovering_over_any_handle;
         let id = self.id;
@@ -81,7 +78,6 @@ impl<'a, T> Item<'a, T> {
                 ui.scroll_to_rect(Rect::from_center_size(pointer_pos, Vec2::splat(50.0)), None);
 
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
-                    self.item,
                     self.state,
                     self.dnd_state,
                     ui,
@@ -113,7 +109,6 @@ impl<'a, T> Item<'a, T> {
                 let position = animate_position(ui, id, end_pos);
 
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
-                    self.item,
                     self.state,
                     self.dnd_state,
                     ui,
@@ -160,7 +155,6 @@ impl<'a, T> Item<'a, T> {
             child.allocate_ui_at_rect(Rect::from_min_size(position, rect.size()), |ui| {
                 drag_body(
                     ui,
-                    self.item,
                     Handle::new(
                         id,
                         index,
@@ -189,7 +183,6 @@ impl<'a, T> Item<'a, T> {
             let response = child.allocate_ui_at_rect(Rect::from_min_size(position, size), |ui| {
                 drag_body(
                     ui,
-                    self.item,
                     Handle::new(
                         id,
                         index,
@@ -218,7 +211,6 @@ impl<'a, T> Item<'a, T> {
     }
 
     fn draw_floating_at_position(
-        item: T,
         state: ItemState,
         dnd_state: &mut DragDropUi,
         ui: &mut Ui,
@@ -226,7 +218,7 @@ impl<'a, T> Item<'a, T> {
         pos: Pos2,
         hovering_over_any_handle: &mut bool,
         size: Option<Vec2>,
-        body: impl FnOnce(&mut Ui, T, Handle, ItemState),
+        body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> InnerResponse<Rect> {
         egui::Area::new("draggable_item")
             .interactable(false)
@@ -238,7 +230,6 @@ impl<'a, T> Item<'a, T> {
                     }
                     body(
                         ui,
-                        item,
                         Handle::new(id, state.index, dnd_state, hovering_over_any_handle, pos),
                         state,
                     )
