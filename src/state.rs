@@ -510,7 +510,7 @@ impl DragDropUi {
     pub fn ui<'a>(
         &'a mut self,
         ui: &mut Ui,
-        mut callback: impl FnOnce(&mut Ui, &mut ItemIterator),
+        callback: impl FnOnce(&mut Ui, &mut ItemIterator),
     ) -> DragDropResponse {
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
         let mut first_frame = false;

@@ -1,7 +1,7 @@
 use eframe::egui;
 use egui::{CentralPanel, Frame, Stroke};
 
-use egui_dnd::dnd;
+use egui_dnd::{dnd, DragDropItem};
 
 pub fn main() -> eframe::Result<()> {
     let mut items = vec!["alfred", "bernhard", "christian"];
@@ -15,7 +15,7 @@ pub fn main() -> eframe::Result<()> {
 
                 dnd(ui, "custom").show_custom_vec(&mut items, |ui, items, iter| {
                     items.iter().enumerate().for_each(|(i, item)| {
-                        iter.next(item, i, |item| {
+                        iter.next(item.id(), item, i, |item| {
                             let mut frame = Frame::none();
 
                             if item.state.dragged {

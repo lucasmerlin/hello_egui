@@ -1,6 +1,6 @@
 use eframe::egui;
-use eframe::emath::Align;
-use egui::{CentralPanel, Frame, Label, Layout, ScrollArea, Sense, Ui, Vec2, Widget};
+
+use egui::{CentralPanel, Frame, Label, ScrollArea, Ui, Vec2, Widget};
 use egui_dnd::dnd;
 
 pub fn main() -> eframe::Result<()> {
@@ -24,11 +24,11 @@ pub fn main() -> eframe::Result<()> {
                 let width = av_width / columns as f32;
                 let size = Vec2::new(width, width) - ui.spacing().item_spacing;
 
-                let mut content = |ui: &mut Ui, items: &mut [i32]| {
+                let content = |ui: &mut Ui, items: &mut [i32]| {
                     dnd(ui, "dnd_example").show_vec_sized(
                         items,
                         size,
-                        |ui, item, handle, state| {
+                        |ui, item, handle, _state| {
                             Frame::none()
                                 .fill(ui.visuals().faint_bg_color)
                                 .show(ui, |ui| {

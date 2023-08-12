@@ -5,7 +5,7 @@
 use egui::{Id, Ui};
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragDropUi, DragUpdate, Handle};
 
-use crate::item::{Item, ItemResponse};
+
 use crate::item_iterator::ItemIterator;
 use std::hash::Hash;
 
@@ -99,7 +99,7 @@ impl<'a> Dnd<'a> {
         items: impl Iterator<Item = T>,
         mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner(|id, ui, drag_drop_ui| {
+        self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
                     iter.next(item.id(), item, i, |item| {
@@ -118,7 +118,7 @@ impl<'a> Dnd<'a> {
         size: egui::Vec2,
         mut item_ui: impl FnMut(&mut egui::Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner(|id, ui, drag_drop_ui| {
+        self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
                     iter.next(item.id(), item, i, |item| {
@@ -154,7 +154,7 @@ impl<'a> Dnd<'a> {
     }
 
     pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
-        self._show_with_inner(|id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
+        self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
     }
 
     pub fn show_custom_vec<T: Hash>(

@@ -29,7 +29,7 @@ impl<'a, T> Item<'a, T> {
     }
 
     pub fn ui(
-        mut self,
+        self,
         ui: &mut Ui,
         add_content: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> ItemResponse {
@@ -37,7 +37,7 @@ impl<'a, T> Item<'a, T> {
     }
 
     pub fn ui_sized(
-        mut self,
+        self,
         ui: &mut Ui,
         size: Vec2,
         add_content: impl FnMut(&mut Ui, T, Handle, ItemState),
@@ -105,7 +105,7 @@ impl<'a, T> Item<'a, T> {
         } else if let DragDetectionState::TransitioningBackAfterDragFinished {
             from,
             id: transitioning_id,
-            dragged_item_size,
+            dragged_item_size: _,
         } = &mut self.dnd_state.detection_state
         {
             if id == *transitioning_id {
