@@ -15,7 +15,7 @@ pub fn main() -> eframe::Result<()> {
 
                 dnd(ui, "custom").show_custom_vec(&mut items, |ui, items, iter| {
                     items.iter().enumerate().for_each(|(i, item)| {
-                        iter.next(item.id(), item, i, |item| {
+                        iter.next(ui, item.id(), item, i, |ui, item| {
                             let mut frame = Frame::none();
 
                             if item.state.dragged {

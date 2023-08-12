@@ -117,8 +117,8 @@ impl<'a> ItemIterator<'a> {
 
         if let Some(dragged_item_rect) = self.dragged_item_rect {
             if !self.layout.main_wrap {
-                let distance = dragged_item_rect.center().distance(rect.center());
-                self.check_closest_item(distance, Some((idx, id)), self.is_after_hovered_item);
+                let (distance, mark_next) = self.get_distance(dragged_item_rect, rect);
+                self.check_closest_item(distance, Some((idx, id)), mark_next);
             } else {
                 if rect.contains(dragged_item_rect.center()) {
                     if self.is_after_hovered_item {
@@ -137,6 +137,25 @@ impl<'a> ItemIterator<'a> {
         self.last_item = Some((idx, id));
     }
 
+    fn get_distance(&mut self, dragged_item_rect: Rect, rect: Rect) -> (f32, bool) {
+        let size_difference = dragged_item_rect.size() - rect.size();
+        let (distance, mark_next) = if self.layout.is_horizontal() {
+            let distance = dragged_item_rect.center().x - rect.center().x;
+            let mark_next = rect.center().x < dragged_item_rect.center().x;
+            (distance, mark_next)
+        } else {
+            let distance = dragged_item_rect.center().y - rect.center().y;
+            let mark_next = if size_difference.y.abs() > 0.0 {
+                rect.center().y < dragged_item_rect.center().y
+            } else {
+                self.is_after_hovered_item
+            };
+            (distance, mark_next)
+        };
+        let distance = distance.abs();
+        (distance, mark_next)
+    }
+
     fn add_space_and_check_closest(&mut self, ui: &mut Ui, id: Id, idx: usize) {
         if let Some(hovering_item) = self.hovering_item {
             if hovering_item == id {
@@ -144,7 +163,7 @@ impl<'a> ItemIterator<'a> {
                 let (id, rect) = ui.allocate_space(self.dragged_item_rect.unwrap().size());
 
                 if let Some(dragged_item_rect) = self.dragged_item_rect {
-                    let distance = dragged_item_rect.center().distance(rect.center());
+                    let (distance, _mark_next) = self.get_distance(dragged_item_rect, rect);
                     self.check_closest_item(distance, None, false);
                 }
             }

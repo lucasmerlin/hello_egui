@@ -585,19 +585,6 @@ impl DragDropUi {
         let pointer_released = ui.input(|i| i.pointer.any_released());
         let should_update = closest_item.map(|i| i.1.is_some()).unwrap_or(false);
 
-        // let should_update =
-        //     if let DragDetectionState::Dragging { hovering_idx, .. } = self.detection_state {
-        //         if let Some((source_idx, source_item)) = source_item {
-        //             hovering_idx != source_idx
-        //         } else {
-        //             false
-        //         }
-        //     } else {
-        //         false
-        //     };
-
-        dbg!(should_update);
-
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {
             self.detection_state =
