@@ -1,4 +1,5 @@
 use std::hash::Hash;
+use std::hint::black_box;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
@@ -143,6 +144,10 @@ pub(crate) enum DragDetectionState {
         offset: Vec2,
         phase: DragPhase,
         dragged_item_size: Vec2,
+        /// This will always be set unless we are at the bottom of the list
+        hovering_above_item: Option<Id>,
+        /// This will be set if we are at the bottom of the list
+        hovering_below_item: Option<Id>,
     },
     TransitioningBackAfterDragFinished {
         id: Id,
@@ -158,11 +163,6 @@ pub(crate) enum DragPhase {
         // For touch devices, we need to remember the last pointer position
         // so we don't loose it during the last frame
         last_pointer_pos: Pos2,
-
-        /// This will always be set unless we are at the bottom of the list
-        hovering_above_item: Option<Id>,
-        /// This will be set if we are at the bottom of the list
-        hovering_below_item: Option<Id>,
 
         // These should only be used during for output, as to not cause issues when item indexes change
         hovering_idx: usize,
@@ -221,12 +221,8 @@ impl DragDetectionState {
     fn hovering_item(&self) -> Option<Id> {
         match self {
             DragDetectionState::Dragging {
-                phase:
-                    DragPhase::Rest {
-                        hovering_above_item: hovering_item,
-                        hovering_below_item,
-                        ..
-                    },
+                hovering_above_item: hovering_item,
+                hovering_below_item,
                 ..
             } => hovering_item.or(*hovering_below_item),
             _ => None,
@@ -236,11 +232,7 @@ impl DragDetectionState {
     fn hovering_below_item(&self) -> Option<Id> {
         match self {
             DragDetectionState::Dragging {
-                phase:
-                    DragPhase::Rest {
-                        hovering_below_item,
-                        ..
-                    },
+                hovering_below_item,
                 ..
             } => *hovering_below_item,
             _ => None,
@@ -373,6 +365,8 @@ impl<'a> Handle<'a> {
                 phase: DragPhase::FirstFrame,
                 // We set this in the Item
                 dragged_item_size: Default::default(),
+                hovering_above_item: Some(self.id),
+                hovering_below_item: Some(self.id),
             };
             self.state.drag_animation_id_count += 1;
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
@@ -602,7 +596,13 @@ impl DragDropUi {
         let mut drag_phase_changed_this_frame = false;
 
         let hovering_item = before_item;
-        if let DragDetectionState::Dragging { phase, .. } = &mut self.detection_state {
+        if let DragDetectionState::Dragging {
+            phase,
+            hovering_above_item: above_out,
+            hovering_below_item: below_out,
+            ..
+        } = &mut self.detection_state
+        {
             if let Some(source_idx) = source_item {
                 if let Some(hovering_idx) =
                     hovering_item.map(|i| i.0).or(after_item.map(|i| i.0 + 1))
@@ -627,11 +627,13 @@ impl DragDropUi {
 
                     *phase = DragPhase::Rest {
                         last_pointer_pos: pointer_pos.unwrap_or_default(),
-                        hovering_above_item,
-                        hovering_below_item,
                         hovering_idx,
                         source_idx: source_idx.0,
                     };
+                    if hovering_above_item.is_some() || hovering_below_item.is_some() {
+                        *above_out = hovering_above_item;
+                        *below_out = hovering_below_item;
+                    }
                 }
             }
         }

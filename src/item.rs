@@ -63,7 +63,7 @@ impl<'a, T> Item<'a, T> {
         } = &mut self.dnd_state.detection_state
         {
             // Draw the item item in it's original position in the first frame to avoid flickering
-            if id == *dragging_id && !phase.is_first_frame() {
+            if id == *dragging_id {
                 ui.output_mut(|o| o.cursor_icon = CursorIcon::Grabbing);
 
                 let _layer_id = LayerId::new(Order::Tooltip, id);
@@ -93,7 +93,7 @@ impl<'a, T> Item<'a, T> {
                     drag_body,
                 );
 
-                ui.allocate_space(rect.size());
+                // ui.allocate_space(rect.size());
 
                 let response = Rect::from_min_size(ui.next_widget_position(), rect.size());
                 return ItemResponse {

@@ -25,8 +25,8 @@ pub fn main() -> eframe::Result<()> {
                 let size = Vec2::new(width, width) - ui.spacing().item_spacing;
 
                 let content = |ui: &mut Ui, items: &mut [i32]| {
-                    dnd(ui, "dnd_example").show_vec_sized(
-                        items,
+                    let response = dnd(ui, "dnd_example").show_sized(
+                        items.iter_mut(),
                         size,
                         |ui, item, handle, _state| {
                             Frame::none()
@@ -43,6 +43,9 @@ pub fn main() -> eframe::Result<()> {
                                 });
                         },
                     );
+                    if response.is_drag_finished() {
+                        response.update_vec(items)
+                    }
                 };
 
                 if example == "wrapping" {

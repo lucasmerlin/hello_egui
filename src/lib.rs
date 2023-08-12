@@ -5,7 +5,6 @@
 use egui::{Id, Ui};
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragDropUi, DragUpdate, Handle};
 
-
 use crate::item_iterator::ItemIterator;
 use std::hash::Hash;
 
@@ -102,7 +101,7 @@ impl<'a> Dnd<'a> {
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
-                    iter.next(item.id(), item, i, |item| {
+                    iter.next(ui, item.id(), item, i, |ui, item| {
                         item.ui(ui, |ui, item, handle, state| {
                             item_ui(ui, item, handle, state)
                         })
@@ -121,7 +120,7 @@ impl<'a> Dnd<'a> {
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
-                    iter.next(item.id(), item, i, |item| {
+                    iter.next(ui, item.id(), item, i, |ui, item| {
                         item.ui_sized(ui, size, |ui, item, handle, state| {
                             item_ui(ui, item, handle, state)
                         })
