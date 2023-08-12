@@ -557,8 +557,6 @@ impl DragDropUi {
                 ..
             } = self.detection_state
             {
-                
-
                 DragDropResponse {
                     finished: false,
                     update: Some(DragUpdate {

@@ -68,7 +68,6 @@ impl Default for MyApp {
                             ..SortableItem::default()
                         },
                     ]),
-                    ..SortableItem::default()
                 },
             ],
         }

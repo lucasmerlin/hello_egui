@@ -137,7 +137,7 @@ pub fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
         });
 }
 
-pub fn stargazers_dnd_ui(ui: &mut Ui, data: &mut Vec<Stargazer>) {
+pub fn stargazers_dnd_ui(ui: &mut Ui, data: &mut [Stargazer]) {
     dnd(ui, "stargazers_dnd")
         .with_touch_config(Some(DragDropConfig::touch_scroll()))
         .show_vec(data, |ui, item, handle, _state| {

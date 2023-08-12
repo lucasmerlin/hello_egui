@@ -210,6 +210,7 @@ impl<'a> Item<'a> {
         ItemResponse(rect)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn draw_floating_at_position(
         state: ItemState,
         dnd_state: &mut DragDropUi,

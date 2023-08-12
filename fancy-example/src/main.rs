@@ -27,7 +27,7 @@ impl Hash for Color {
     }
 }
 
-fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
+fn dnd_ui(items: &mut [Color], ui: &mut Ui, many: bool) {
     let item_size = if many {
         Vec2::splat(32.0)
     } else {
