@@ -5,13 +5,13 @@ use eframe::egui;
 use eframe::egui::Color32;
 use eframe::emath::lerp;
 use egui::ecolor::Hsva;
-use egui::{Align2, Area, Context, Frame, Id, Rounding, ScrollArea, Sense, Ui, Vec2};
+use egui::{Align2, Area, Context, Id, Rounding, Sense, Ui, Vec2};
 
 use egui_dnd::{dnd, DragDropItem};
 
-use crate::load_stargazers::{load_stargazers, ImageState, StargazersState, StargazersType};
+use crate::stargazers::{stargazers_ui, StargazersState, StargazersType};
 
-mod load_stargazers;
+mod stargazers;
 
 #[derive(Clone)]
 struct Color {
@@ -82,83 +82,6 @@ fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
     }
 }
 
-fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
-    let clone = stargazers.clone();
-    let mut guard = stargazers.lock().unwrap();
-
-    ScrollArea::vertical()
-        .max_height(250.0)
-        .auto_shrink([false, false])
-        .show(ui, |ui| {
-            ui.horizontal_wrapped(|ui| {
-                ui.label("Like");
-                ui.hyperlink_to(
-                    "egui_dnd on GitHub",
-                    "https://github.com/lucasmerlin/egui_dnd",
-                );
-                ui.label("to be listed here!");
-            });
-
-            match &mut *guard {
-                StargazersState::None => {
-                    load_stargazers(clone);
-                }
-                StargazersState::Loading => {
-                    ui.spinner();
-                }
-                StargazersState::Data(data) => {
-                    dnd(ui, "stargazers_dnd").show_vec(data, |ui, item, handle, state| {
-                        ui.horizontal(|ui| {
-                            handle.ui(ui, |ui| {
-                                Frame::none()
-                                    .fill(ui.visuals().faint_bg_color)
-                                    .inner_margin(8.0)
-                                    .outer_margin(2.0)
-                                    .rounding(4.0)
-                                    .show(ui, |ui| {
-                                        ui.set_width(ui.available_width());
-
-                                        let size = Vec2::new(32.0, 32.0);
-                                        if ui.is_rect_visible(ui.min_rect().expand2(size)) {
-                                            item.load_image();
-                                        }
-
-                                        let image = item.image.lock().unwrap();
-                                        match &*image {
-                                            ImageState::Data(image) => {
-                                                image.show_size(ui, size);
-                                            }
-                                            ImageState::Loading => {
-                                                ui.allocate_ui(size, |ui| {
-                                                    ui.spinner();
-                                                });
-                                            }
-                                            ImageState::Error(e) => {
-                                                ui.allocate_ui(size, |ui| {
-                                                    ui.label(&*e);
-                                                });
-                                            }
-                                            _ => {
-                                                ui.allocate_space(size);
-                                            }
-                                        }
-
-                                        ui.hyperlink_to(
-                                            item.login.as_str(),
-                                            item.html_url.as_str(),
-                                        );
-                                    });
-                            });
-                        });
-                    });
-                }
-                StargazersState::Error(e) => {
-                    ui.label(&*e);
-                }
-            }
-        });
-}
-
 fn colors() -> Vec<Color> {
     vec![
         Color {
@@ -215,7 +138,6 @@ fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: Starg
             );
         }
 
-
         Area::new("content")
             .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
             .show(ctx, |ui| {
@@ -224,8 +146,14 @@ fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: Starg
                 egui::Frame::none()
                     .fill(ui.style().visuals.panel_fill)
                     .rounding(4.0)
-                    .inner_margin(20.0).show(ui, |ui| {
-                        ui.heading("Color Sort");
+                    .inner_margin(20.0)
+                    .show(ui, |ui| {
+                        if demo == &Demo::Stargazers {
+                            ui.heading("Stargazer Sort");
+                        } else {
+                            ui.heading("Color Sort");
+                        }
+
 
                         ui.horizontal(|ui| {
                             ui.selectable_value(demo, Demo::Vertical, "Vertical");
@@ -240,12 +168,11 @@ fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: Starg
                             *items = many_colors();
                         }
 
+                        ui.add_space(5.0);
+
                         if demo == &Demo::Stargazers {
                             stargazers_ui(ui, stargazers.clone());
                         } else {
-
-
-                            // Done here again in case items changed
                             let many = items.len() > 3;
 
                                 ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
