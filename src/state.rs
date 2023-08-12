@@ -304,8 +304,11 @@ impl<'a> Handle<'a> {
         size: Vec2,
         add_contents: impl FnOnce(&mut Ui),
     ) -> egui::Response {
-        let response = ui.allocate_ui(size, add_contents);
-        self.handle_response(response.response, ui)
+        let response = ui.allocate_ui(size, |ui| {
+            // We somehow have to push a new id here or there will be an id clash at response.interact
+            ui.push_id(self.id.with("handle"), add_contents)
+        });
+        self.handle_response(response.inner.response, ui)
     }
 
     fn handle_response(&mut self, response: egui::Response, ui: &mut Ui) -> egui::Response {

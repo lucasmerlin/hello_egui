@@ -3,6 +3,7 @@ use std::hash::{Hash, Hasher};
 use eframe::egui;
 use eframe::egui::Color32;
 use eframe::emath::lerp;
+use egui::ecolor::Hsva;
 use egui::{Context, Id, Rounding, Sense, Ui, Vec2};
 use egui_extras::{Size, StripBuilder};
 
@@ -13,47 +14,68 @@ struct Color {
     color: Color32,
     name: &'static str,
     rounded: bool,
+    index: usize,
 }
 
 impl Hash for Color {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.name.hash(state)
+        self.index.hash(state)
     }
 }
 
-fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui) {
-    let response = dnd(ui, "fancy_dnd").show_vec(items, |ui, item, handle, state| {
-        ui.horizontal(|ui| {
-            if handle
-                .sense(Sense::click())
-                .ui(ui, |ui| {
-                    let size_factor = ui.ctx().animate_value_with_time(
-                        item.id().with("handle_anim"),
-                        if state.dragged { 1.1 } else { 1.0 },
-                        0.2,
-                    );
-                    let size = 32.0;
+fn dnd_ui(items: &mut Vec<Color>, ui: &mut Ui, many: bool) {
+    let item_size = if many {
+        Vec2::splat(32.0)
+    } else {
+        Vec2::new(ui.available_width(), 32.0)
+    };
 
-                    let (_id, rect) = ui.allocate_space(Vec2::splat(size));
+    let response = dnd(ui, "fancy_dnd").show_custom(|ui, iter| {
+        items.iter_mut().enumerate().for_each(|(index, item)| {
+            dbg!(item.index);
 
-                    let x = ui.ctx().animate_bool(item.id(), item.rounded);
-                    let rounding = x * 16.0 + 1.0;
+            // ui.push_id(item.index, |ui| {
+            iter.next(Id::new(item.index), item, index, |item| {
+                item.ui_sized(ui, item_size, |ui, item, handle, state| {
+                    ui.horizontal(|ui| {
+                        if handle
+                            .sense(Sense::click())
+                            .ui_sized(ui, item_size, |ui| {
+                                let size_factor = ui.ctx().animate_value_with_time(
+                                    item.id().with("handle_anim"),
+                                    if state.dragged { 1.1 } else { 1.0 },
+                                    0.2,
+                                );
+                                let size = 32.0;
 
-                    ui.painter().rect_filled(
-                        rect.shrink(x * 4.0 * size_factor)
-                            .shrink(rect.width() * (1.0 - size_factor)),
-                        Rounding::same(rounding),
-                        item.color,
-                    );
+                                let (_id, rect) = ui.allocate_space(Vec2::splat(size));
 
-                    ui.heading(item.name);
+                                let x = ui.ctx().animate_bool(item.id(), item.rounded);
+                                let rounding = x * 16.0 + 1.0;
+
+                                ui.painter().rect_filled(
+                                    rect.shrink(x * 4.0 * size_factor)
+                                        .shrink(rect.width() * (1.0 - size_factor)),
+                                    Rounding::same(rounding),
+                                    item.color,
+                                );
+
+                                if !many {
+                                    ui.heading(item.name);
+                                }
+                            })
+                            .clicked()
+                        {
+                            item.rounded = !item.rounded;
+                        }
+                    });
                 })
-                .clicked()
-            {
-                item.rounded = !item.rounded;
-            }
+            })
+            // });
         });
     });
+
+    response.update_vec(items);
 
     if let Some(reason) = response.cancellation_reason() {
         println!("Drag has been cancelled because of {:?}", reason);
@@ -66,31 +88,55 @@ fn colors() -> Vec<Color> {
             name: "Panic Purple",
             color: egui::hex_color!("642CA9"),
             rounded: false,
+            index: 0,
         },
         Color {
             name: "Generic Green",
             color: egui::hex_color!("2A9D8F"),
             rounded: false,
+            index: 1,
         },
         Color {
             name: "Ownership Orange*",
             color: egui::hex_color!("E9C46A"),
             rounded: false,
+            index: 2,
         },
     ]
 }
 
+fn many_colors() -> Vec<Color> {
+    let colors = 18;
+
+    (0..colors)
+        .map(|i| {
+            let hue = i as f32 / colors as f32;
+            let color = Color32::from(Hsva::new(hue, 0.8, 0.8, 1.0));
+            Color {
+                name: "Generic Green",
+                color,
+                rounded: false,
+                index: i,
+            }
+        })
+        .collect()
+}
+
 fn app(ctx: &Context, items: &mut Vec<Color>) {
-    egui::CentralPanel::default().frame(egui::Frame::none()).show(ctx, |ui| {
-        vertex_gradient(
-            ui,
-            &Gradient(
-                items
-                    .iter()
-                    .map(|c| c.color)
-                    .collect(),
-            ),
-        );
+    egui::CentralPanel::default().frame(egui::Frame::none()
+        .fill(ctx.style().visuals.panel_fill.gamma_multiply(0.5))
+    ).show(ctx, |ui| {
+        if items.len() == 3 {
+            vertex_gradient(
+                ui,
+                &Gradient(
+                    items
+                        .iter()
+                        .map(|c| c.color)
+                        .collect(),
+                ),
+            );
+        }
 
         StripBuilder::new(ui)
             .size(Size::remainder())
@@ -116,14 +162,36 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
 
                                 egui::Frame::none().outer_margin(20.0).show(ui, |ui| {
                                     ui.heading("Color Sort");
-                                    dnd_ui(items, ui);
 
-                                    ui.add_space(5.0);
-                                    ui.small("* it's actually yellow");
+                                    ui.horizontal(|ui| {
+                                        let many = items.len() > 3;
+                                        if ui.selectable_label(!many, "Vertical").clicked() {
+                                            *items = colors();
+                                        };
+                                        if ui.selectable_label(many, "Horizontal").clicked() {
+                                            *items = many_colors();
+                                        };
+                                    });
+                                    // Done here again in case items changed
+                                    let many = items.len() > 3;
 
-                                    ui.add_space(15.0);
+                                    ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
+                                    if many {
+                                        ui.horizontal_wrapped(|ui| {
+                                            dnd_ui(items, ui, many);
+                                        });
+                                    } else {
+                                        dnd_ui(items, ui, many);
+                                    }
+
+                                        ui.add_space(5.0);
+                                    if !many {
+                                        ui.small("* it's actually yellow");
+                                    } else {
+                                        ui.small(" ");
+                                    }
+
                                     ui.separator();
-                                    ui.add_space(15.0);
 
                                     ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
 
@@ -144,6 +212,7 @@ fn app(ctx: &Context, items: &mut Vec<Color>) {
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     let mut items = colors();
+    let mut many = false;
 
     eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
         app(ctx, &mut items);

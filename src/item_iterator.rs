@@ -29,13 +29,13 @@ impl<'a> ItemIterator<'a> {
         }
     }
 
-    pub fn next<T: DragDropItem>(
+    pub fn next<T>(
         &mut self,
+        id: Id,
         item: T,
         idx: usize,
         content: impl FnOnce(Item<T>) -> ItemResponse,
     ) {
-        let id = item.id();
         let is_dragged_item = self.state.detection_state.is_dragging_item(id);
         if is_dragged_item {
             self.is_after_dragged_item = true;
