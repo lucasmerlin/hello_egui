@@ -390,48 +390,6 @@ impl DragDropConfig {
 }
 
 /// [DragDropUi] stores the state of the Drag & Drop list.
-/// # Example
-/// ```rust;no_run
-/// use egui_dnd::DragDropUi;
-/// use eframe::App;
-/// use eframe::egui::Context;
-/// use eframe::Frame;
-/// use eframe::egui::CentralPanel;
-/// use egui_dnd::utils::shift_vec;
-///
-/// struct DnDApp {
-///     items: Vec<String>,
-///     dnd: DragDropUi,
-/// }
-///
-///
-/// impl App for DnDApp {
-///     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
-///         CentralPanel::default().show(ctx, |ui| {
-///             let response = self.dnd.ui(ui, self.items.iter_mut(), |item, ui, handle, dragging| {
-///                 ui.horizontal(|ui| {
-///                     handle.ui(ui, |ui| {
-///                         ui.label("grab");
-///                     });
-///                     ui.label(item.clone());
-///                 });
-///             });
-///             if let Some(response) = response.final_update() {
-///                 shift_vec(response.from, response.to, &mut self.items);
-///             }
-///         });
-///     }
-/// }
-///
-/// use eframe::NativeOptions;
-/// let dnd = DragDropUi::default();
-/// eframe::run_native("DnD Example", NativeOptions::default(), Box::new(|_| {
-///     Box::new(DnDApp {
-///         dnd: DragDropUi::default(),
-///         items: vec!["a", "b", "c"].into_iter().map(|s| s.to_string()).collect(),
-///     })
-/// }));
-/// ```
 impl DragDropUi {
     /// Sets the config used when dragging with the mouse or when no touch config is set
     pub fn with_mouse_config(mut self, config: DragDropConfig) -> Self {

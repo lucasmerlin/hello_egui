@@ -3,9 +3,10 @@
 #![warn(missing_docs)]
 
 use egui::{Id, Ui};
-pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragDropUi, DragUpdate, Handle};
+pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
 
 use crate::item_iterator::ItemIterator;
+use crate::state::DragDropUi;
 use std::hash::Hash;
 
 mod item;
@@ -111,6 +112,9 @@ impl<'a> Dnd<'a> {
         })
     }
 
+    /// Same as [Dnd::show], but with a fixed size for each item.
+    /// This allows items to be placed in a horizontal_wrapped ui.
+    /// For more info, look at the [horizontal example](https://github.com/lucasmerlin/egui_dnd/blob/main/examples/horizontal.rs).
     pub fn show_sized<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
@@ -141,6 +145,7 @@ impl<'a> Dnd<'a> {
         response
     }
 
+    /// Same as [Dnd::show_sized], but automatically sorts the items.
     pub fn show_vec_sized<T: Hash>(
         self,
         items: &mut [T],
@@ -152,10 +157,13 @@ impl<'a> Dnd<'a> {
         response
     }
 
+    /// This will allow for very flexible UI. You can use it to e.g. render outlines around items
+    /// or render items in complex layouts. This is **experimental**.
     pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
         self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
     }
 
+    /// Same as [Dnd::show_custom], but automatically sorts the items.
     pub fn show_custom_vec<T: Hash>(
         self,
         items: &mut [T],
@@ -166,7 +174,7 @@ impl<'a> Dnd<'a> {
         response
     }
 
-    pub fn _show_with_inner(
+    fn _show_with_inner(
         self,
         inner_fn: impl FnOnce(Id, &mut egui::Ui, &mut DragDropUi) -> DragDropResponse,
     ) -> DragDropResponse {
