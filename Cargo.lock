@@ -843,6 +843,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_inbox"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+]
+
+[[package]]
+name = "egui_infinite_scroll"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_extras",
+ "egui_inbox",
+]
+
+[[package]]
+name = "egui_virtual_list"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+]
+
+[[package]]
 name = "ehttp"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
