@@ -78,7 +78,7 @@ impl Stargazer {
 
 pub fn load_stargazers(state: Arc<Mutex<StargazersState>>) {
     ehttp::fetch(
-        Request::get("https://api.github.com/repos/lucasmerlin/egui_dnd/stargazers"),
+        Request::get("https://api.github.com/repos/lucasmerlin/egui_dnd/stargazers?per_page=100"),
         move |result| {
             if let Ok(data) = result {
                 if let Ok(stargazers) = serde_json::from_slice::<Vec<Stargazer>>(&data.bytes) {
@@ -111,12 +111,16 @@ pub fn stargazers_ui(ui: &mut Ui, stargazers: StargazersType) {
         .auto_shrink([false, false])
         .show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing.x = 0.0;
                 ui.label("Like");
                 ui.hyperlink_to(
-                    "egui_dnd on GitHub",
+                    " egui_dnd on GitHub ",
                     "https://github.com/lucasmerlin/egui_dnd",
                 );
                 ui.label("to be listed here!");
+            });
+            ui.horizontal_wrapped(|ui| {
+                ui.label("On mobile you can drag to scroll and hold + drag to sort items.");
             });
 
             match &mut *guard {

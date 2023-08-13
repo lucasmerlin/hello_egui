@@ -106,7 +106,7 @@ fn colors() -> Vec<Color> {
 }
 
 fn many_colors() -> Vec<Color> {
-    let colors = 18;
+    let colors = 21;
 
     (0..colors)
         .map(|i| {
