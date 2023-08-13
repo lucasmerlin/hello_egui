@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.5.0
  - Added animations
  - Dragging in a ScrollArea will now scroll if we are near the edge
  - Added support for dragging in a ScrollArea on touch devices (by pressing and holding until the scroll is canceled and the drag starts)
