@@ -3,3 +3,5 @@
 /target
 
 fancy-example/dist
+
+.DS_Store
