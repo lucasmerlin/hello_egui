@@ -84,7 +84,7 @@ pub struct Stargazers {
 impl Stargazers {
     pub fn new() -> Self {
         Self {
-            infinite_scroll: InfiniteScroll::new("stargazers").end_loader(|cursor, callback| {
+            infinite_scroll: InfiniteScroll::new().end_loader(|cursor, callback| {
 
 
                 ehttp::fetch(
@@ -136,7 +136,7 @@ impl Stargazers {
             .show_custom(|ui, iter| {
                 self.infinite_scroll.ui(ui, 10, |ui, index, item| {
                     iter.next(ui, Id::new(&*item.login), index, |ui, item_handle| {
-                        item_handle.ui(ui, |ui, handle, state| {
+                        item_handle.ui(ui, |ui, handle, _state| {
                             ui.horizontal(|ui| {
                                 handle.ui(ui, |ui| {
                                     Frame::none()

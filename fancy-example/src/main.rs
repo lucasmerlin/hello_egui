@@ -1,5 +1,4 @@
 use std::hash::{Hash, Hasher};
-use std::sync::{Arc, Mutex};
 
 use eframe::egui;
 use eframe::egui::Color32;

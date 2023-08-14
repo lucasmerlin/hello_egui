@@ -3,7 +3,7 @@ use egui::{CentralPanel, ScrollArea};
 use egui_virtual_list::VirtualList;
 
 pub fn main() -> eframe::Result<()> {
-    let mut items: Vec<_> = (0..100000).collect();
+    let items: Vec<_> = (0..100000).collect();
     let mut virtual_list = VirtualList::new();
 
     eframe::run_simple_native(

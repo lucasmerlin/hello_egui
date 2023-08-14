@@ -3,10 +3,10 @@ use egui::{CentralPanel, ScrollArea};
 use egui_infinite_scroll::InfiniteScroll;
 
 pub fn main() -> eframe::Result<()> {
-    let mut infinite_scroll = InfiniteScroll::new("infinite").end_loader(|cursor, callback| {
+    let mut infinite_scroll = InfiniteScroll::new().end_loader(|cursor, callback| {
         let start = cursor.unwrap_or(0);
         let end = start + 100;
-        callback((start..end).collect(), Some(end));
+        callback(Ok(((start..end).collect(), Some(end))));
     });
 
     eframe::run_simple_native(
@@ -15,7 +15,7 @@ pub fn main() -> eframe::Result<()> {
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
-                    infinite_scroll.ui(ui, 10, |ui, item| {
+                    infinite_scroll.ui(ui, 10, |ui, _index, item| {
                         ui.label(format!("Item {}", item));
                     });
                 });

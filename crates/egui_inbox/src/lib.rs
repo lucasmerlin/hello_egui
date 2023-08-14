@@ -22,7 +22,7 @@ use egui::{Context, Ui};
 ///         move |ctx, _frame| {
 ///             CentralPanel::default().show(ctx, |ui| {
 ///                 inbox.replace(ui, &mut state);
-///                 
+///
 ///                 ui.label(format!("State: {:?}", state));
 ///                 if ui.button("Async Task").clicked() {
 ///                     state = Some("Waiting for async task to complete".to_string());
@@ -36,7 +36,6 @@ use egui::{Context, Ui};
 ///         },
 ///     )
 /// }
-///
 /// ```
 #[derive(Debug)]
 pub struct UiInbox<T: Debug>(Arc<Mutex<State<T>>>);

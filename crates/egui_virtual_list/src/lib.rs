@@ -36,6 +36,12 @@ pub struct VirtualList {
     over_scan: f32,
 }
 
+impl Default for VirtualList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VirtualList {
     pub fn new() -> Self {
         Self {
@@ -183,13 +189,13 @@ impl VirtualList {
 
         let mut hidden_range =
             self.previous_item_range.start..item_range.start.min(self.previous_item_range.end);
-        if hidden_range.len() <= 0 {
+        if hidden_range.is_empty() {
             hidden_range =
                 item_range.end.max(self.previous_item_range.start)..self.previous_item_range.end;
         }
 
         let mut visible_range = self.previous_item_range.end.max(item_range.start)..item_range.end;
-        if visible_range.len() <= 0 {
+        if visible_range.is_empty() {
             visible_range =
                 self.previous_item_range.start..item_range.start.min(self.previous_item_range.end);
         }

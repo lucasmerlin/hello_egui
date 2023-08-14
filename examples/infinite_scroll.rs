@@ -4,7 +4,7 @@ use egui_dnd::dnd;
 use egui_infinite_scroll::InfiniteScroll;
 
 pub fn main() -> eframe::Result<()> {
-    let mut infinite_scroll = InfiniteScroll::new("infinite").end_loader(|cursor, callback| {
+    let mut infinite_scroll = InfiniteScroll::new().end_loader(|cursor, callback| {
         let start = cursor.unwrap_or(0);
         let end = start + 100;
         callback(Ok(((start..end).collect(), Some(end))));

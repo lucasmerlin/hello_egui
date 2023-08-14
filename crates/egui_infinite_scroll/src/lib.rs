@@ -1,8 +1,9 @@
 use std::fmt::{Debug, Formatter};
 use std::mem;
-use std::ops::{Deref, DerefMut, Range, RangeInclusive};
+use std::ops::Range;
 
-use egui::{Id, Rect, Response, Ui, Vec2};
+use egui::Ui;
+
 use egui_inbox::UiInbox;
 use egui_virtual_list::{VirtualList, VirtualListResponse};
 
@@ -25,24 +26,12 @@ enum LoadingState<T, Cursor> {
     Error(String),
 }
 
-// #[cfg_attr(target_arch = "wasm32", async_trait::async_trait(? Send))]
-// #[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
-// pub trait InfiniteScrollLoader<T: InfiniteScrollItem + MaybeSend + MaybeSync>:
-//     Clone + MaybeSend + MaybeSync
-// {
-//     async fn load_top(&self, _previous_item: Option<&T>) -> Option<Result<Vec<T>, String>> {
-//         None
-//     }
-//     async fn load_bottom(&self, previous_item: Option<T::Cursor>) -> anyhow::Result<Vec<T>>;
-// }
+type Callback<T, Cursor> = Box<dyn FnOnce(Result<(Vec<T>, Option<Cursor>), String>) + Send + Sync>;
+type Loader<T, Cursor> = Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync>;
 
-type Callback<T, Cursor: Clone + Debug> =
-    Box<dyn FnOnce(Result<(Vec<T>, Option<Cursor>), String>) + Send + Sync>;
-type Loader<T: Debug, Cursor: Clone + Debug + Send + Sync> =
-    Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync>;
+type FilterType<T> = Box<dyn Fn(&T) -> bool + Send + Sync>;
 
 pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
-    id: Id,
     pub items: Vec<T>,
 
     start_loader: Option<Loader<T, Cursor>>,
@@ -57,7 +46,7 @@ pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
     top_inbox: UiInbox<LoadingState<T, Cursor>>,
     bottom_inbox: UiInbox<LoadingState<T, Cursor>>,
 
-    filter: Option<Box<dyn Fn(&T) -> bool + Send + Sync>>,
+    filter: Option<FilterType<T>>,
 
     virtual_list: VirtualList,
 }
@@ -68,15 +57,23 @@ impl<T: Debug + Send + Sync, Cursor: Clone + Debug> Debug for InfiniteScroll<T, 
     }
 }
 
+impl<T, Cursor> Default for InfiniteScroll<T, Cursor>
+where
+    T: Debug + Send + Sync + 'static,
+    Cursor: Clone + Debug + Send + Sync + 'static,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     InfiniteScroll<T, Cursor>
 {
-    pub fn new(id: &str) -> Self {
+    pub fn new() -> Self {
         let top_inbox = UiInbox::new();
         let bottom_inbox = UiInbox::new();
-        let id = Id::new(id);
         Self {
-            id,
             items: Vec::new(),
             start_loader: None,
             end_loader: None,
@@ -145,7 +142,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
 
         self.top_inbox.read(ui).for_each(|state| {
             self.top_loading_state = match state {
-                LoadingState::Loaded(mut items, cursor) => {
+                LoadingState::Loaded(items, cursor) => {
                     if cursor.is_some() {
                         self.start_cursor = cursor;
                     }
@@ -164,10 +161,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         });
     }
 
-    fn filtered_items<'a>(
-        items: &'a mut Vec<T>,
-        filter: &Option<Box<dyn Fn(&T) -> bool + Send + Sync>>,
-    ) -> Vec<&'a mut T> {
+    fn filtered_items<'a>(items: &'a mut [T], filter: &Option<FilterType<T>>) -> Vec<&'a mut T> {
         if let Some(filter) = filter {
             items
                 .iter_mut()
@@ -235,32 +229,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     }
 
     fn update_items(&mut self, item_range: &Range<usize>, end_prefetch: usize) {
-        let mut items = Self::filtered_items(&mut self.items, &self.filter);
-
-        // for i in self.previous_item_range.start..item_range.start.min(self.previous_item_range.end)
-        // {
-        //     if let Some(item) = items.get_mut(i) {
-        //         item.hidden();
-        //     }
-        // }
-        //
-        // for i in item_range.end.max(self.previous_item_range.start)..self.previous_item_range.end {
-        //     if let Some(item) = items.get_mut(i) {
-        //         item.hidden();
-        //     }
-        // }
-        //
-        // for i in self.previous_item_range.end.max(item_range.start)..item_range.end {
-        //     if let Some(item) = items.get_mut(i) {
-        //         item.visible();
-        //     }
-        // }
-        //
-        // for i in item_range.start..self.previous_item_range.start.min(item_range.end) {
-        //     if let Some(item) = items.get_mut(i) {
-        //         item.visible();
-        //     }
-        // }
+        let items = Self::filtered_items(&mut self.items, &self.filter);
 
         if item_range.end + end_prefetch >= items.len()
             && matches!(self.bottom_loading_state, LoadingState::Idle)
@@ -281,14 +250,6 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     }),
                 );
             }
-
-            // spawn(async move {
-            //     let new_items = loaders.load_bottom(cursor).await;
-            //     inbox.send(match new_items {
-            //         Ok(items) => LoadingState::Loaded(items),
-            //         Err(e) => LoadingState::Error(e.to_string()),
-            //     });
-            // });
         }
     }
 
