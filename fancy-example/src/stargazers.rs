@@ -135,7 +135,7 @@ impl Stargazers {
             .with_touch_config(Some(DragDropConfig::touch_scroll()))
             .show_custom(|ui, iter| {
                 self.infinite_scroll.ui(ui, 10, |ui, index, item| {
-                    iter.next(ui, Id::new(&*item.login), index, |ui, item_handle| {
+                    iter.next(ui, Id::new(&*item.login), index, true, |ui, item_handle| {
                         item_handle.ui(ui, |ui, handle, _state| {
                             ui.horizontal(|ui| {
                                 handle.ui(ui, |ui| {

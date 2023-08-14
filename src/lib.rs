@@ -102,7 +102,7 @@ impl<'a> Dnd<'a> {
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
-                    iter.next(ui, item.id(), i, |ui, item_handle| {
+                    iter.next(ui, item.id(), i, true, |ui, item_handle| {
                         item_handle.ui(ui, |ui, handle, state| item_ui(ui, item, handle, state))
                     });
                 });
@@ -113,6 +113,8 @@ impl<'a> Dnd<'a> {
     /// Same as [Dnd::show], but with a fixed size for each item.
     /// This allows items to be placed in a horizontal_wrapped ui.
     /// For more info, look at the [horizontal example](https://github.com/lucasmerlin/egui_dnd/blob/main/examples/horizontal.rs).
+    /// If you need even more control over the size, use [Dnd::show_custom] instead, where you
+    /// can individually size each item. See the sort_words example for an example.
     pub fn show_sized<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
@@ -122,7 +124,7 @@ impl<'a> Dnd<'a> {
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
-                    iter.next(ui, item.id(), i, |ui, item_handle| {
+                    iter.next(ui, item.id(), i, true, |ui, item_handle| {
                         item_handle.ui_sized(ui, size, |ui, handle, state| {
                             item_ui(ui, item, handle, state)
                         })

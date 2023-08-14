@@ -147,7 +147,7 @@ pub(crate) enum DragDetectionState {
         source_idx: usize,
         offset: Vec2,
         dragged_item_size: Vec2,
-        closest_item: Id,
+        closest_item: (Id, Pos2),
         last_pointer_pos: Pos2,
         hovering_last_item: bool,
 
@@ -260,7 +260,7 @@ impl<'a> Handle<'a> {
             // We somehow have to push a new id here or there will be an id clash at response.interact
             ui.push_id(self.id.with("handle"), add_contents)
         });
-        self.handle_response(response.inner.response, ui)
+        self.handle_response(response.response, ui)
     }
 
     fn handle_response(&mut self, response: egui::Response, ui: &mut Ui) -> egui::Response {
@@ -319,7 +319,7 @@ impl<'a> Handle<'a> {
                 offset,
                 // We set this in the Item
                 dragged_item_size: Default::default(),
-                closest_item: self.id,
+                closest_item: (self.id, self.item_pos),
                 source_idx: self.idx,
                 hovering_idx: self.idx,
                 last_pointer_pos: response.hover_pos().unwrap_or_default(),
@@ -536,8 +536,8 @@ impl DragDropUi {
             ..
         } = &mut self.detection_state
         {
-            if let Some((hovering_idx, hovering_id)) = hovering_item {
-                *closest_out = hovering_id;
+            if let Some((hovering_idx, hovering_id, pos)) = hovering_item {
+                *closest_out = (hovering_id, pos);
                 *hovering_idx_out = hovering_idx;
                 *hovering_last_item_out = hovering_last_item;
             }

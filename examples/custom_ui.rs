@@ -1,5 +1,5 @@
 use eframe::egui;
-use egui::{CentralPanel, Frame, Stroke};
+use egui::{CentralPanel, Frame, Stroke, Ui};
 
 use egui_dnd::{dnd, DragDropItem};
 
@@ -15,29 +15,32 @@ pub fn main() -> eframe::Result<()> {
 
                 dnd(ui, "custom").show_custom_vec(&mut items, |ui, items, iter| {
                     items.iter().enumerate().for_each(|(i, item)| {
-                        iter.next(ui, item.id(), i, |ui, item_handle| {
-                            let mut frame = Frame::none();
-
-                            if item_handle.state.dragged {
-                                frame =
-                                    frame.stroke(Stroke::new(1.0, egui::Color32::from_rgb(0, 0, 0)))
-                            }
-
-                            frame
+                        let space_content = |ui: &mut Ui, space| {
+                            Frame::none()
+                                .stroke(Stroke::new(1.0, egui::Color32::from_rgb(0, 0, 0)))
                                 .show(ui, |ui| {
-                                    item_handle.ui(ui, |ui, handle, state| {
-                                        handle.ui(ui, |ui| {
-                                            if state.dragged {
-                                                ui.label("dragging");
-                                            } else {
-                                                ui.label("drag");
-                                            }
-                                        });
-                                        ui.label(*item);
-                                    })
+                                    ui.set_min_size(space);
                                 })
                                 .inner
-                        })
+                        };
+                        iter.space_before(ui, item.id(), |ui, space| space_content(ui, space));
+
+                        iter.next(ui, item.id(), i, false, |ui, item_handle| {
+                            item_handle.ui(ui, |ui, handle, state| {
+                                ui.horizontal(|ui| {
+                                    handle.ui(ui, |ui| {
+                                        if state.dragged {
+                                            ui.label("dragging");
+                                        } else {
+                                            ui.label("drag");
+                                        }
+                                    });
+                                    ui.label(*item);
+                                });
+                            })
+                        });
+
+                        iter.space_after(ui, item.id(), &space_content);
                     });
                 });
 

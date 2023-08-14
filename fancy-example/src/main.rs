@@ -34,7 +34,7 @@ fn dnd_ui(items: &mut [Color], ui: &mut Ui, many: bool) {
 
     let response = dnd(ui, "fancy_dnd").show_custom(|ui, iter| {
         items.iter_mut().enumerate().for_each(|(index, item)| {
-            iter.next(ui, Id::new(item.index), index, |ui, item_handle| {
+            iter.next(ui, Id::new(item.index), index, true, |ui, item_handle| {
                 item_handle.ui_sized(ui, item_size, |ui, handle, state| {
                     ui.horizontal(|ui| {
                         handle.ui_sized(ui, item_size, |ui| {
@@ -218,8 +218,8 @@ fn main() -> eframe::Result<()> {
 fn main() {
     let web_options = eframe::WebOptions::default();
     let items = colors();
-    let stargazers: Stargazers = Arc::new(Mutex::new(StargazersState::None));
-    let mut demo = Demo::Vertical;
+    let stargazers = Stargazers::new();
+    let demo = Demo::Vertical;
 
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
@@ -236,7 +236,7 @@ fn main() {
 
     impl eframe::App for App {
         fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-            app(ctx, &mut self.2, &mut self.0, self.1.clone());
+            app(ctx, &mut self.2, &mut self.0, &mut self.1);
         }
     }
 }

@@ -1,7 +1,8 @@
+use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+
 use crate::state::DragDetectionState;
 use crate::utils::animate_position;
 use crate::{DragDropUi, Handle, ItemState};
-use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
 
 pub struct Item<'a> {
     id: Id,
@@ -85,7 +86,7 @@ impl<'a> Item<'a> {
                     drag_body,
                 );
 
-                // ui.allocate_space(rect.size());
+                ui.allocate_space(rect.size());
 
                 let rect = Rect::from_min_size(ui.next_widget_position(), rect.size());
                 return ItemResponse(rect);

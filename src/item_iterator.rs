@@ -1,25 +1,26 @@
 use crate::item::{Item, ItemResponse};
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, ItemState};
-use egui::{Id, Layout, Rect, Ui};
+use egui::{Id, Layout, Pos2, Rect, Ui, Vec2};
+use std::mem;
 
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
     dragged_item_rect: Option<Rect>,
-    hovering_item: Option<Id>,
+    hovering_item: Option<(Id, Pos2)>,
     layout: Layout,
     set_next_item_as_hovering_above: bool,
     pub(crate) hovering_last_item: bool,
-    pub(crate) last_item: Option<(usize, Id)>,
+    pub(crate) last_item: Option<(usize, Id, Pos2)>,
 
-    pub(crate) mark_next_as_closest_item: Option<f32>,
+    pub(crate) mark_next_as_closest_item: Option<(f32, Pos2)>,
 
     pub(crate) is_after_dragged_item: bool,
     pub(crate) is_after_hovered_item: bool,
     pub(crate) hovering_over_any_handle: bool,
     pub(crate) source_item: Option<(usize, Id)>,
 
-    pub(crate) closest_item: Option<(f32, Option<(usize, Id)>)>,
+    pub(crate) closest_item: Option<(f32, Option<(usize, Id, Pos2)>)>,
 }
 
 impl<'a> ItemIterator<'a> {
@@ -61,64 +62,79 @@ impl<'a> ItemIterator<'a> {
         ui: &mut Ui,
         id: Id,
         idx: usize,
+        add_surrounding_space_automatically: bool,
         content: impl FnOnce(&mut Ui, Item) -> ItemResponse,
     ) {
         let is_dragged_item = self.state.detection_state.is_dragging_item(id);
 
-        if let Some(distance) = self.mark_next_as_closest_item {
+        if let Some((distance, pos)) = self.mark_next_as_closest_item {
             self.mark_next_as_closest_item = None;
-            self.closest_item = Some((distance, Some((idx, id))));
+            self.closest_item = Some((distance, Some((idx, id, pos))));
         }
 
         if is_dragged_item {
             self.is_after_dragged_item = true;
         }
 
-        if let Some(hovering_item) = self.hovering_item {
-            if hovering_item == id {
+        if let Some((hovering_id, pos)) = self.hovering_item {
+            if hovering_id == id {
                 self.is_after_hovered_item = true;
             }
         }
 
-        if !self.hovering_last_item {
-            self.add_space_and_check_closest(ui, id);
+        if add_surrounding_space_automatically {
+            self.space_before(ui, id, |ui, space| {})
         }
 
         let dragging = self.state.detection_state.is_dragging();
 
-        let ItemResponse(rect) = content(
-            ui,
-            Item::new(
-                id,
-                ItemState {
-                    dragged: is_dragged_item,
-                    index: idx,
-                },
-                self.state,
-                &mut self.hovering_over_any_handle,
-            ),
+        let item = Item::new(
+            id,
+            ItemState {
+                dragged: is_dragged_item,
+                index: idx,
+            },
+            self.state,
+            &mut self.hovering_over_any_handle,
         );
+        let rect = if is_dragged_item {
+            if let Some((id, pos)) = self.hovering_item {
+                let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout());
+                let start = ui.next_widget_position();
+                let rect = child
+                    .allocate_ui_at_rect(Rect::from_min_size(pos, child.available_size()), |ui| {
+                        content(ui, item)
+                    })
+                    .inner
+                    .0;
+                Rect::from_min_size(start, rect.size())
+            } else {
+                content(ui, item).0
+            }
+        } else {
+            content(ui, item).0
+        };
 
         if dragging != self.state.detection_state.is_dragging() {
             self.set_next_item_as_hovering_above = true;
         }
 
-        if self.hovering_last_item {
-            self.add_space_and_check_closest(ui, id);
+        if add_surrounding_space_automatically {
+            self.space_after(ui, id, |ui, space| {})
         }
 
         if let Some(dragged_item_rect) = self.dragged_item_rect {
             if self.layout.main_wrap {
                 if rect.contains(dragged_item_rect.center()) {
                     if self.is_after_hovered_item {
-                        self.mark_next_as_closest_item = Some(0.0);
+                        self.mark_next_as_closest_item = Some((0.0, rect.min));
                     } else {
-                        self.closest_item = Some((0.0, Some((idx, id))));
+                        self.closest_item = Some((0.0, Some((idx, id, rect.min))));
                     }
                 }
             } else {
                 let (distance, mark_next) = self.get_distance(dragged_item_rect, rect);
-                self.check_closest_item(distance, Some((idx, id)), mark_next);
+                self.check_closest_item(distance, rect.min, Some((idx, id)), mark_next);
             }
         }
 
@@ -126,7 +142,7 @@ impl<'a> ItemIterator<'a> {
             self.source_item = Some((idx, id));
         }
 
-        self.last_item = Some((idx, id));
+        self.last_item = Some((idx, id, rect.min));
     }
 
     fn get_distance(&mut self, dragged_item_rect: Rect, rect: Rect) -> (f32, bool) {
@@ -148,24 +164,53 @@ impl<'a> ItemIterator<'a> {
         (distance, mark_next)
     }
 
-    fn add_space_and_check_closest(&mut self, ui: &mut Ui, id: Id) {
-        if let Some(hovering_item) = self.hovering_item {
-            if hovering_item == id {
+    pub fn space_before(&mut self, ui: &mut Ui, id: Id, content: impl FnOnce(&mut Ui, Vec2)) {
+        if !self.hovering_last_item {
+            self.add_space_and_check_closest(ui, id, content);
+        }
+    }
+
+    pub fn space_after(&mut self, ui: &mut Ui, id: Id, content: impl FnOnce(&mut Ui, Vec2)) {
+        if self.hovering_last_item {
+            self.add_space_and_check_closest(ui, id, content);
+        }
+    }
+
+    fn add_space_and_check_closest(
+        &mut self,
+        ui: &mut Ui,
+        id: Id,
+        content: impl FnOnce(&mut Ui, Vec2),
+    ) {
+        if let Some((hovering_id, pos)) = self.hovering_item {
+            if hovering_id == id {
                 if let Some(dragged_item_rect) = self.dragged_item_rect {
-                    let (_id, rect) = ui.allocate_space(dragged_item_rect.size());
+                    let rect = ui
+                        .allocate_ui(dragged_item_rect.size(), |ui| {
+                            ui.set_min_size(dragged_item_rect.size());
+                            content(ui, dragged_item_rect.size());
+                        })
+                        .response
+                        .rect;
                     let (distance, _mark_next) = self.get_distance(dragged_item_rect, rect);
-                    self.check_closest_item(distance, None, false);
+                    self.check_closest_item(distance, rect.min, None, false);
                 }
             }
         }
     }
 
-    fn check_closest_item(&mut self, distance: f32, item: Option<(usize, Id)>, mark_next: bool) {
+    fn check_closest_item(
+        &mut self,
+        distance: f32,
+        pos: Pos2,
+        item: Option<(usize, Id)>,
+        mark_next: bool,
+    ) {
         if self.closest_item.is_none() || distance < self.closest_item.unwrap().0 {
             if !mark_next {
-                self.closest_item = Some((distance, item));
+                self.closest_item = Some((distance, item.map(|(idx, id)| (idx, id, pos))));
             } else {
-                self.mark_next_as_closest_item = Some(distance);
+                self.mark_next_as_closest_item = Some((distance, pos));
             }
         }
     }

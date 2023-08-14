@@ -18,17 +18,18 @@ pub fn main() -> eframe::Result<()> {
                 ScrollArea::vertical().show(ui, |ui| {
                     let response = dnd(ui, "dnd").show_custom(|ui, iter| {
                         infinite_scroll.ui(ui, 10, |ui, index, item| {
-                            iter.next(ui, Id::new(*item), index, |ui, item_handle| {
+                            iter.next(ui, Id::new(*item), index, true, |ui, item_handle| {
                                 item_handle.ui(ui, |ui, handle, state| {
-                                    handle.ui(ui, |ui| {
-                                        if state.dragged {
-                                            ui.label("dragging");
-                                        } else {
-                                            ui.label("drag");
-                                        }
+                                    ui.horizontal(|ui| {
+                                        handle.ui(ui, |ui| {
+                                            if state.dragged {
+                                                ui.label("dragging");
+                                            } else {
+                                                ui.label("drag");
+                                            }
+                                        });
+                                        ui.label(format!("Item {}", item));
                                     });
-
-                                    ui.label(format!("Item {}", item));
                                 })
                             });
                         });

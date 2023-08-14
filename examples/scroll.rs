@@ -23,23 +23,20 @@ fn main() -> eframe::Result<()> {
         move |ctx, _| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
-                    let response =
-                        dnd(ui, "dnd").show_vec(&mut items, |ui, item, handle, _dragging| {
-                            ui.horizontal(|ui| {
-                                let clicked = handle
-                                    .sense(Sense::click())
-                                    .ui(ui, |ui| {
-                                        ui.label("grab");
-                                    })
-                                    .clicked();
-                                if clicked {
-                                    println!("clicked {}", item.number);
-                                }
-                                ui.label(&item.number.to_string());
-                            });
+                    dnd(ui, "dnd").show_vec(&mut items, |ui, item, handle, _dragging| {
+                        ui.horizontal(|ui| {
+                            let clicked = handle
+                                .sense(Sense::click())
+                                .ui(ui, |ui| {
+                                    ui.label("grab");
+                                })
+                                .clicked();
+                            if clicked {
+                                println!("clicked {}", item.number);
+                            }
+                            ui.label(&item.number.to_string());
                         });
-
-                    response.update_vec(&mut items);
+                    });
                 })
             });
         },
