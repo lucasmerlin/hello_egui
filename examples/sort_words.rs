@@ -1,10 +1,10 @@
 // This example shows how to sort items in a horizontal_wrapped layout where each item has a different size.
 use eframe::egui;
 use eframe::emath::Align;
-use egui::{CentralPanel, Color32, Frame, Id, Label, Layout, ScrollArea, Ui, Vec2};
+use egui::{CentralPanel, Frame, Id, Label, Layout, ScrollArea, Ui, Vec2};
 use egui_dnd::dnd;
 
-pub fn dnd_ui(ui: &mut Ui, items: &mut [String]) {
+pub fn dnd_ui(ui: &mut Ui, items: &mut [(usize, String)]) {
     ui.horizontal_wrapped(|ui| {
         dnd(ui, "dnd_example").show_custom_vec(items, |ui, items, item_iter| {
             items.iter().enumerate().for_each(|(idx, item)| {
@@ -23,7 +23,7 @@ pub fn dnd_ui(ui: &mut Ui, items: &mut [String]) {
                 let size = size + Vec2::splat(frame_padding) * 2.0;
 
                 item_iter.next(ui, Id::new(item.0), idx, true, |ui, item_handle| {
-                    item_handle.ui_sized(ui, size, |ui, handle, state| {
+                    item_handle.ui_sized(ui, size, |ui, handle, _state| {
                         Frame::none()
                             .inner_margin(frame_padding)
                             .fill(ui.visuals().extreme_bg_color)
@@ -40,7 +40,7 @@ pub fn dnd_ui(ui: &mut Ui, items: &mut [String]) {
     });
 }
 
-const text: &str = r#"
+const TEXT: &str = r#"
 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
 
 Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
@@ -57,10 +57,11 @@ Consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et
 "#;
 
 pub fn main() -> eframe::Result<()> {
-    let mut items = text
-        .replace("\n", "")
+    let mut items = TEXT
+        .replace('\n', "")
         .split(' ')
         .map(|i| i.trim().to_string())
+        // Store the index so we can use it as id, since there are duplicate words
         .enumerate()
         .collect::<Vec<_>>();
 
@@ -84,6 +85,7 @@ pub fn main() -> eframe::Result<()> {
 
                     ScrollArea::vertical().show(ui, |ui| {
                         ui.set_width(ui.available_width());
+                        dnd_ui(ui, &mut items);
                     });
                 });
         },

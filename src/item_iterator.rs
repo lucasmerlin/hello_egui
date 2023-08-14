@@ -2,7 +2,6 @@ use crate::item::{Item, ItemResponse};
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, ItemState};
 use egui::{Id, Layout, Pos2, Rect, Ui, Vec2};
-use std::mem;
 
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
@@ -20,6 +19,7 @@ pub struct ItemIterator<'a> {
     pub(crate) hovering_over_any_handle: bool,
     pub(crate) source_item: Option<(usize, Id)>,
 
+    #[allow(clippy::type_complexity)]
     pub(crate) closest_item: Option<(f32, Option<(usize, Id, Pos2)>)>,
 }
 
@@ -76,14 +76,14 @@ impl<'a> ItemIterator<'a> {
             self.is_after_dragged_item = true;
         }
 
-        if let Some((hovering_id, pos)) = self.hovering_item {
+        if let Some((hovering_id, _pos)) = self.hovering_item {
             if hovering_id == id {
                 self.is_after_hovered_item = true;
             }
         }
 
         if add_surrounding_space_automatically {
-            self.space_before(ui, id, |ui, space| {})
+            self.space_before(ui, id, |_ui, _space| {})
         }
 
         let dragging = self.state.detection_state.is_dragging();
@@ -98,7 +98,7 @@ impl<'a> ItemIterator<'a> {
             &mut self.hovering_over_any_handle,
         );
         let rect = if is_dragged_item {
-            if let Some((id, pos)) = self.hovering_item {
+            if let Some((_id, pos)) = self.hovering_item {
                 let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout());
                 let start = ui.next_widget_position();
                 let rect = child
@@ -120,7 +120,7 @@ impl<'a> ItemIterator<'a> {
         }
 
         if add_surrounding_space_automatically {
-            self.space_after(ui, id, |ui, space| {})
+            self.space_after(ui, id, |_ui, _space| {})
         }
 
         if let Some(dragged_item_rect) = self.dragged_item_rect {
@@ -182,7 +182,7 @@ impl<'a> ItemIterator<'a> {
         id: Id,
         content: impl FnOnce(&mut Ui, Vec2),
     ) {
-        if let Some((hovering_id, pos)) = self.hovering_item {
+        if let Some((hovering_id, _pos)) = self.hovering_item {
             if hovering_id == id {
                 if let Some(dragged_item_rect) = self.dragged_item_rect {
                     let rect = ui

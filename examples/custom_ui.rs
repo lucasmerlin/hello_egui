@@ -40,7 +40,7 @@ pub fn main() -> eframe::Result<()> {
                             })
                         });
 
-                        iter.space_after(ui, item.id(), &space_content);
+                        iter.space_after(ui, item.id(), space_content);
                     });
                 });
 
