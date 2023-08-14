@@ -4,7 +4,7 @@ use std::ops::{Deref, DerefMut, Range, RangeInclusive};
 
 use egui::{Id, Rect, Response, Ui, Vec2};
 use egui_inbox::UiInbox;
-use egui_virtual_list::VirtualList;
+use egui_virtual_list::{VirtualList, VirtualListResponse};
 
 pub trait InfiniteScrollItem {
     type Cursor: Clone + Send + Sync;
@@ -39,7 +39,7 @@ enum LoadingState<T, Cursor> {
 type Callback<T, Cursor: Clone + Debug> =
     Box<dyn FnOnce(Result<(Vec<T>, Option<Cursor>), String>) + Send + Sync>;
 type Loader<T: Debug, Cursor: Clone + Debug + Send + Sync> =
-    Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>)>;
+    Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync>;
 
 pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
     id: Id,
@@ -91,7 +91,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
-    pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + 'static>(
+    pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
         mut self,
         f: F,
     ) -> Self {
@@ -99,7 +99,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self
     }
 
-    pub fn end_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + 'static>(
+    pub fn end_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
         mut self,
         f: F,
     ) -> Self {
@@ -185,10 +185,10 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         end_prefetch: usize,
         ui: &mut Ui,
         mut layout: impl FnMut(&mut Ui, usize, &mut [&mut T]) -> usize,
-    ) {
+    ) -> VirtualListResponse {
         self.read_inboxes(ui);
 
-        let item_range = ui
+        let response = ui
             .scope(|ui| {
                 let mut items = Self::filtered_items(&mut self.items, &self.filter);
 
@@ -197,8 +197,6 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                         .ui_custom_layout(ui, items.len(), |ui, start_index| {
                             layout(ui, start_index, &mut items[start_index..])
                         });
-
-                let item_range = response.item_range;
 
                 ui.add_space(50.0);
 
@@ -228,13 +226,15 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
 
                 ui.add_space(300.0);
 
-                item_range
+                response
             })
             .inner;
-        self.update_items(item_range, end_prefetch);
+        self.update_items(&response.item_range, end_prefetch);
+
+        response
     }
 
-    fn update_items(&mut self, item_range: Range<usize>, end_prefetch: usize) {
+    fn update_items(&mut self, item_range: &Range<usize>, end_prefetch: usize) {
         let mut items = Self::filtered_items(&mut self.items, &self.filter);
 
         // for i in self.previous_item_range.start..item_range.start.min(self.previous_item_range.end)

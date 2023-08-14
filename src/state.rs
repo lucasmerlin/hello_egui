@@ -536,16 +536,23 @@ impl DragDropUi {
             ..
         } = &mut self.detection_state
         {
+            if let Some((hovering_idx, hovering_id)) = hovering_item {
+                *closest_out = hovering_id;
+                *hovering_idx_out = hovering_idx;
+                *hovering_last_item_out = hovering_last_item;
+            }
+            if let Some(pointer_pos) = pointer_pos {
+                *last_pointer_pos_out = pointer_pos;
+            }
             if let Some(source_item) = source_item {
-                if let Some((hovering_idx, hovering_id)) = hovering_item {
-                    *closest_out = hovering_id;
-                    *hovering_idx_out = hovering_idx;
-                    if let Some(pointer_pos) = pointer_pos {
-                        *last_pointer_pos_out = pointer_pos;
-                    }
-                    *hovering_last_item_out = hovering_last_item;
-                }
                 *source_idx_out = source_item.0;
+            }
+        }
+
+        if self.detection_state.is_dragging() {
+            if let Some(pointer_pos) = pointer_pos {
+                // If we are in a ScrollArea, allow for scrolling while dragging
+                ui.scroll_to_rect(Rect::from_center_size(pointer_pos, Vec2::splat(50.0)), None);
             }
         }
 

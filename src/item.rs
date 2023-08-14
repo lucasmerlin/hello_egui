@@ -74,9 +74,6 @@ impl<'a> Item<'a> {
                 // We animate so the animated position is updated, even though we don't use it here.
                 animate_position(ui, id, position);
 
-                // If we are in a ScrollArea, allow for scrolling while dragging
-                ui.scroll_to_rect(Rect::from_center_size(pointer_pos, Vec2::splat(50.0)), None);
-
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
                     self.state,
                     self.dnd_state,

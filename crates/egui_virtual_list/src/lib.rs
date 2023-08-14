@@ -32,6 +32,8 @@ pub struct VirtualList {
     last_width: f32,
 
     max_rows_calculated_per_frame: usize,
+
+    over_scan: f32,
 }
 
 impl VirtualList {
@@ -45,6 +47,10 @@ impl VirtualList {
             average_items_per_row: None,
 
             max_rows_calculated_per_frame: 1000,
+
+            /// Useful e.g. when used in combination with egui_dnd.
+            /// Renders items this much before and after the visible area.
+            over_scan: 200.0,
         }
     }
 
@@ -72,6 +78,8 @@ impl VirtualList {
                 // This calculates the visual rect inside the scroll area
                 // Should be equivalent to to viewport from ScrollArea::show_viewport()
                 let visible_rect = ui.clip_rect().translate(-ui.min_rect().min.to_vec2());
+
+                let visible_rect = visible_rect.expand2(Vec2::new(0.0, self.over_scan));
 
                 // Find the first row that is visible
                 loop {
@@ -186,8 +194,10 @@ impl VirtualList {
                 self.previous_item_range.start..item_range.start.min(self.previous_item_range.end);
         }
 
+        self.previous_item_range = item_range.clone();
+
         VirtualListResponse {
-            item_range: item_range,
+            item_range,
             newly_visible_items: visible_range,
             hidden_items: hidden_range,
         }

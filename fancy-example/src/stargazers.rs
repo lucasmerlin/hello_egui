@@ -131,7 +131,7 @@ impl Stargazers {
     }
 
     pub fn stargazers_dnd_ui(&mut self, ui: &mut Ui) {
-        dnd(ui, "stargazers_dnd")
+        let response = dnd(ui, "stargazers_dnd")
             .with_touch_config(Some(DragDropConfig::touch_scroll()))
             .show_custom(|ui, iter| {
                 self.infinite_scroll.ui(ui, 10, |ui, index, item| {
@@ -183,5 +183,6 @@ impl Stargazers {
                     });
                 });
             });
+        response.update_vec(&mut self.infinite_scroll.items);
     }
 }
