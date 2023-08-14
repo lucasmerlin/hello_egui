@@ -21,6 +21,7 @@ web-time = "0.2.0"
 
 [dev-dependencies]
 egui_infinite_scroll = { path = "./crates/egui_infinite_scroll" }
+egui_goodies_utils = { path = "./crates/egui_goodies_utils" }
 
 egui_extras = ">=0.22"
 color-hex = "0.2.0"

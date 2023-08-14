@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Add improved way to 
+
 ## v0.5.0
  - Added animations
  - Dragging in a ScrollArea will now scroll if we are near the edge
