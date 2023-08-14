@@ -7,9 +7,8 @@ use eframe::emath::lerp;
 use egui::ecolor::Hsva;
 use egui::{Align2, Area, Context, Id, Rounding, Sense, Ui, Vec2};
 
+use crate::stargazers::Stargazers;
 use egui_dnd::{dnd, DragDropItem};
-
-use crate::stargazers::{stargazers_ui, StargazersState, StargazersType};
 
 mod stargazers;
 
@@ -122,7 +121,7 @@ fn many_colors() -> Vec<Color> {
         .collect()
 }
 
-fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: StargazersType) {
+fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: &mut Stargazers) {
     egui::CentralPanel::default().frame(egui::Frame::none()
         .fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7))
     ).show(ctx, |ui| {
@@ -171,7 +170,7 @@ fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: Starg
                         ui.add_space(5.0);
 
                         if demo == &Demo::Stargazers {
-                            stargazers_ui(ui, stargazers.clone());
+                            stargazers.stargazers_ui(ui);
                         } else {
                             let many = items.len() > 3;
 
@@ -207,11 +206,11 @@ fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: Starg
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     let mut items = colors();
-    let stargazers: StargazersType = Arc::new(Mutex::new(StargazersState::None));
+    let mut stargazers = Stargazers::new();
     let mut demo = Demo::Vertical;
 
     eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
-        app(ctx, &mut demo, &mut items, stargazers.clone());
+        app(ctx, &mut demo, &mut items, &mut stargazers);
     })
 }
 
@@ -220,7 +219,7 @@ fn main() -> eframe::Result<()> {
 fn main() {
     let web_options = eframe::WebOptions::default();
     let items = colors();
-    let stargazers: StargazersType = Arc::new(Mutex::new(StargazersState::None));
+    let stargazers: Stargazers = Arc::new(Mutex::new(StargazersState::None));
     let mut demo = Demo::Vertical;
 
     wasm_bindgen_futures::spawn_local(async {
@@ -234,7 +233,7 @@ fn main() {
             .expect("failed to start eframe");
     });
 
-    struct App(Vec<Color>, StargazersType, Demo);
+    struct App(Vec<Color>, Stargazers, Demo);
 
     impl eframe::App for App {
         fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {

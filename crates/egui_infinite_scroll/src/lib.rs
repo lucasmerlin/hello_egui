@@ -36,12 +36,14 @@ enum LoadingState<T, Cursor> {
 //     async fn load_bottom(&self, previous_item: Option<T::Cursor>) -> anyhow::Result<Vec<T>>;
 // }
 
-type Callback<T, Cursor: Clone + Debug> = Box<dyn FnOnce(Vec<T>, Option<Cursor>)>;
-type Loader<T: Debug, Cursor: Clone + Debug> = Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>)>;
+type Callback<T, Cursor: Clone + Debug> =
+    Box<dyn FnOnce(Result<(Vec<T>, Option<Cursor>), String>) + Send + Sync>;
+type Loader<T: Debug, Cursor: Clone + Debug + Send + Sync> =
+    Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>)>;
 
-pub struct InfiniteScroll<T: Debug, Cursor: Clone + Debug> {
+pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
     id: Id,
-    items: Vec<T>,
+    pub items: Vec<T>,
 
     start_loader: Option<Loader<T, Cursor>>,
     end_loader: Option<Loader<T, Cursor>>,
@@ -60,13 +62,15 @@ pub struct InfiniteScroll<T: Debug, Cursor: Clone + Debug> {
     virtual_list: VirtualList,
 }
 
-impl<T: Debug, Cursor: Clone + Debug> Debug for InfiniteScroll<T, Cursor> {
+impl<T: Debug + Send + Sync, Cursor: Clone + Debug> Debug for InfiniteScroll<T, Cursor> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("InfiniteScroll { ... }")
     }
 }
 
-impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Cursor> {
+impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
+    InfiniteScroll<T, Cursor>
+{
     pub fn new(id: &str) -> Self {
         let top_inbox = UiInbox::new();
         let bottom_inbox = UiInbox::new();
@@ -124,7 +128,9 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         self.bottom_inbox.read(ui).for_each(|state| {
             self.bottom_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
-                    self.end_cursor = cursor;
+                    if cursor.is_some() {
+                        self.end_cursor = cursor;
+                    }
                     let empty = items.is_empty();
                     self.items.extend(items);
                     if empty {
@@ -140,7 +146,9 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         self.top_inbox.read(ui).for_each(|state| {
             self.top_loading_state = match state {
                 LoadingState::Loaded(mut items, cursor) => {
-                    self.start_cursor = cursor;
+                    if cursor.is_some() {
+                        self.start_cursor = cursor;
+                    }
                     let empty = items.is_empty();
                     let mut old_items = mem::take(&mut self.items);
                     self.items = items;
@@ -176,7 +184,7 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         &mut self,
         end_prefetch: usize,
         ui: &mut Ui,
-        mut layout: impl FnMut(&mut Ui, &mut [&mut T]) -> usize,
+        mut layout: impl FnMut(&mut Ui, usize, &mut [&mut T]) -> usize,
     ) {
         self.read_inboxes(ui);
 
@@ -187,7 +195,7 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
                 let response =
                     self.virtual_list
                         .ui_custom_layout(ui, items.len(), |ui, start_index| {
-                            layout(ui, &mut items[start_index..])
+                            layout(ui, start_index, &mut items[start_index..])
                         });
 
                 let item_range = response.item_range;
@@ -263,8 +271,13 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
             if let Some(end_loader) = &mut self.end_loader {
                 end_loader(
                     self.end_cursor.clone(),
-                    Box::new(move |items, cursor| {
-                        inbox.send(LoadingState::Loaded(items, cursor));
+                    Box::new(move |result| match result {
+                        Ok((items, cursor)) => {
+                            inbox.send(LoadingState::Loaded(items, cursor));
+                        }
+                        Err(err) => {
+                            inbox.send(LoadingState::Error(err.to_string()));
+                        }
                     }),
                 );
             }
@@ -285,12 +298,12 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         max_row_height: Option<f32>,
         prefetch_count: usize,
         ui: &mut Ui,
-        mut item_ui: impl FnMut(&mut Ui, &mut T),
+        mut item_ui: impl FnMut(&mut Ui, usize, &mut T),
     ) {
         let max_width = ui.available_width();
         let item_width = max_width / columns as f32
             - (ui.spacing().item_spacing.x / columns as f32 * (columns - 1) as f32);
-        self.ui_custom_layout(prefetch_count, ui, |ui, items| {
+        self.ui_custom_layout(prefetch_count, ui, |ui, start_index, items| {
             let count = items.len().min(columns);
             if let Some(max_row_height) = max_row_height {
                 ui.set_max_height(max_row_height);
@@ -298,10 +311,10 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
             }
 
             ui.horizontal(|ui| {
-                for item in items.iter_mut().take(count) {
+                for (index, item) in items.iter_mut().enumerate().take(count) {
                     ui.scope(|ui| {
                         ui.set_width(item_width);
-                        item_ui(ui, item);
+                        item_ui(ui, start_index + index, item);
                     });
                 }
             });
@@ -310,8 +323,20 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         });
     }
 
-    pub fn ui(&mut self, ui: &mut Ui, prefetch_count: usize, item_ui: impl FnMut(&mut Ui, &mut T)) {
-        self.ui_columns(1, None, prefetch_count, ui, item_ui);
+    pub fn ui(
+        &mut self,
+        ui: &mut Ui,
+        prefetch_count: usize,
+        mut item_ui: impl FnMut(&mut Ui, usize, &mut T),
+    ) {
+        self.ui_custom_layout(prefetch_count, ui, |ui, start_index, items| {
+            if let Some(item) = items.first_mut() {
+                item_ui(ui, start_index, item);
+                1
+            } else {
+                0
+            }
+        });
     }
 
     #[cfg(feature = "egui_extras")]

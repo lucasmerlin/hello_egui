@@ -20,6 +20,8 @@ egui = { version = ">=0.22", default-features = false }
 web-time = "0.2.0"
 
 [dev-dependencies]
+egui_infinite_scroll = { path = "./crates/egui_infinite_scroll" }
+
 egui_extras = ">=0.22"
 color-hex = "0.2.0"
 egui = { version = ">=0.22", features = ["color-hex"] }

@@ -813,6 +813,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui_extras",
+ "egui_infinite_scroll",
  "web-time",
 ]
 
@@ -1004,6 +1005,7 @@ dependencies = [
  "egui",
  "egui_dnd",
  "egui_extras",
+ "egui_infinite_scroll",
  "ehttp",
  "image",
  "serde",

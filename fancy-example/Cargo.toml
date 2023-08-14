@@ -5,12 +5,14 @@ edition = "2021"
 publish = false
 
 [dependencies]
+egui_dnd = { path = ".." }
+egui_infinite_scroll = { path = "../crates/egui_infinite_scroll" }
+
 eframe = "0.22"
 egui_extras = { version = "0.22", features = ["image"] }
 image = { version = "0.24", features = ["jpeg", "png"] }
 color-hex = "0.2.0"
 egui = { version = "0.22", features = ["color-hex"] }
-egui_dnd = { path = ".." }
 
 wasm-bindgen = "0.2.83"
 wasm-bindgen-futures = "0.4.33"
