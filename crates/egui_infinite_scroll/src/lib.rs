@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut, Range, RangeInclusive};
 
 use egui::{Id, Rect, Response, Ui, Vec2};
 use egui_inbox::UiInbox;
+use egui_virtual_list::VirtualList;
 
 pub trait InfiniteScrollItem {
     type Cursor: Clone + Send + Sync;
@@ -35,29 +36,13 @@ enum LoadingState<T, Cursor> {
 //     async fn load_bottom(&self, previous_item: Option<T::Cursor>) -> anyhow::Result<Vec<T>>;
 // }
 
-#[derive(Debug)]
-struct ItemData<T> {
-    item: T,
-    rect: Option<Rect>,
-}
-
-#[derive(Debug)]
-struct RowData {
-    range: Range<usize>,
-    rect: Rect,
-}
-
-impl<T> From<T> for ItemData<T> {
-    fn from(item: T) -> Self {
-        Self { item, rect: None }
-    }
-}
-
 type Callback<T, Cursor: Clone + Debug> = Box<dyn FnOnce(Vec<T>, Option<Cursor>)>;
 type Loader<T: Debug, Cursor: Clone + Debug> = Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>)>;
 
 pub struct InfiniteScroll<T: Debug, Cursor: Clone + Debug> {
     id: Id,
+    items: Vec<T>,
+
     start_loader: Option<Loader<T, Cursor>>,
     end_loader: Option<Loader<T, Cursor>>,
 
@@ -67,25 +52,12 @@ pub struct InfiniteScroll<T: Debug, Cursor: Clone + Debug> {
     top_loading_state: LoadingState<T, Cursor>,
     bottom_loading_state: LoadingState<T, Cursor>,
 
-    items: Vec<T>,
-
-    rows: Vec<RowData>,
-
     top_inbox: UiInbox<LoadingState<T, Cursor>>,
     bottom_inbox: UiInbox<LoadingState<T, Cursor>>,
 
-    previous_item_range: Range<usize>,
-
-    // The index of the first item that has an unknown rect
-    last_known_row_index: Option<usize>,
-
-    average_row_size: Option<Vec2>,
-    average_items_per_row: Option<f32>,
-
-    // We will recalculate every item's rect if the scroll area's width changes
-    last_width: f32,
-
     filter: Option<Box<dyn Fn(&T) -> bool + Send + Sync>>,
+
+    virtual_list: VirtualList,
 }
 
 impl<T: Debug, Cursor: Clone + Debug> Debug for InfiniteScroll<T, Cursor> {
@@ -101,6 +73,7 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         let id = Id::new(id);
         Self {
             id,
+            items: Vec::new(),
             start_loader: None,
             end_loader: None,
             start_cursor: None,
@@ -109,14 +82,8 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
             bottom_loading_state: LoadingState::Idle,
             bottom_inbox,
             top_inbox,
-            items: vec![],
-            previous_item_range: usize::MAX..usize::MAX,
-            last_known_row_index: None,
-            last_width: 0.0,
-            average_row_size: None,
-            rows: vec![],
-            average_items_per_row: None,
             filter: None,
+            virtual_list: VirtualList::new(),
         }
     }
 
@@ -138,24 +105,19 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
 
     pub fn reset(&mut self) {
         self.items.clear();
-        self.rows.clear();
-        self.last_known_row_index = None;
-        self.previous_item_range = usize::MAX..usize::MAX;
-        self.average_row_size = None;
-        self.average_items_per_row = None;
-        self.last_width = 0.0;
         self.top_loading_state = LoadingState::Idle;
         self.bottom_loading_state = LoadingState::Idle;
 
         // Create new inboxes in case there is a request in progress
         self.top_inbox = UiInbox::new();
         self.bottom_inbox = UiInbox::new();
+
+        self.virtual_list.reset();
     }
 
     pub fn set_filter(&mut self, filter: impl Fn(&T) -> bool + Send + Sync + 'static) {
         self.filter = Some(Box::new(filter));
-        self.previous_item_range = usize::MAX..usize::MAX;
-        self.rows.clear();
+        self.virtual_list.reset();
     }
 
     fn read_inboxes(&mut self, ui: &mut Ui) {
@@ -222,132 +184,41 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
             .scope(|ui| {
                 let mut items = Self::filtered_items(&mut self.items, &self.filter);
 
-                if ui.available_width() != self.last_width {
-                    self.last_known_row_index = None;
-                    self.last_width = ui.available_width();
-                    self.rows.clear();
-                }
+                let response =
+                    self.virtual_list
+                        .ui_custom_layout(ui, items.len(), |ui, start_index| {
+                            layout(ui, &mut items[start_index..])
+                        });
 
-                // Start of the scroll area (!=0 after scrolling)
-                let min = ui.next_widget_position();
+                let item_range = response.item_range;
 
-                let mut row_start_index = self.last_known_row_index.unwrap_or(0);
+                ui.add_space(50.0);
 
-                // This calculates the visual rect inside the scroll area
-                // Should be equivalent to to viewport from ScrollArea::show_viewport()
-                let visible_rect = ui.clip_rect().translate(-ui.min_rect().min.to_vec2());
+                ui.separator();
 
-                // Find the first row that is visible
-                loop {
-                    if row_start_index == 0 {
-                        break;
+                ui.add_space(50.0);
+
+                ui.vertical_centered(|ui| match &self.bottom_loading_state {
+                    LoadingState::Loading => {
+                        ui.spinner();
                     }
-
-                    if let Some(row) = self.rows.get(row_start_index) {
-                        if row.rect.min.y <= visible_rect.min.y {
-                            ui.add_space(row.rect.min.y);
-                            break;
+                    LoadingState::Idle => {
+                        ui.spinner();
+                    }
+                    LoadingState::NoMoreItems => {
+                        ui.label("No more items");
+                    }
+                    LoadingState::Error(e) => {
+                        ui.label(format!("Error: {}", e));
+                        if ui.button("Try again").clicked() {
+                            self.bottom_loading_state = LoadingState::Idle;
+                            ui.ctx().request_repaint();
                         }
                     }
-                    row_start_index -= 1;
-                }
-                let mut current_row = row_start_index;
+                    _ => {}
+                });
 
-                let item_start_index = self
-                    .rows
-                    .get(row_start_index)
-                    .map(|row| row.range.start)
-                    .unwrap_or(0);
-
-                let mut current_item_index = item_start_index;
-
-                loop {
-                    // let item = self.items.get_mut(current_row);
-                    if current_item_index < items.len() {
-                        let scoped = ui.scope(|ui| layout(ui, &mut items[current_item_index..]));
-                        let count = scoped.inner;
-                        let rect = scoped.response.rect.translate(-(min.to_vec2()));
-
-                        let range = current_item_index..current_item_index + count;
-
-                        if let Some(row) = self.rows.get_mut(current_row) {
-                            row.range = range;
-                            row.rect = rect;
-                        } else {
-                            self.rows.push(RowData {
-                                range: current_item_index..current_item_index + count,
-                                rect,
-                            });
-                            self.average_row_size = Some(
-                                self.average_row_size
-                                    .map(|size| {
-                                        (current_row as f32 * size + rect.size())
-                                            / (current_row as f32 + 1.0)
-                                    })
-                                    .unwrap_or(rect.size()),
-                            );
-
-                            self.average_items_per_row = Some(
-                                self.average_items_per_row
-                                    .map(|avg_count| {
-                                        (current_row as f32 * avg_count + count as f32)
-                                            / (current_row as f32 + 1.0)
-                                    })
-                                    .unwrap_or(count as f32),
-                            );
-
-                            self.last_known_row_index = Some(current_row);
-                        }
-
-                        current_item_index += count;
-
-                        if rect.max.y > visible_rect.max.y {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-
-                    current_row += 1;
-                }
-
-                let item_range = item_start_index..current_item_index;
-
-                if item_range.end < items.len() {
-                    ui.set_min_height(
-                        (items.len() - item_range.end) as f32
-                            / self.average_items_per_row.unwrap_or(1.0)
-                            * self.average_row_size.unwrap_or(Vec2::ZERO).y,
-                    );
-                } else {
-                    ui.add_space(50.0);
-
-                    ui.separator();
-
-                    ui.add_space(50.0);
-
-                    ui.vertical_centered(|ui| match &self.bottom_loading_state {
-                        LoadingState::Loading => {
-                            ui.spinner();
-                        }
-                        LoadingState::Idle => {
-                            ui.spinner();
-                        }
-                        LoadingState::NoMoreItems => {
-                            ui.label("No more items");
-                        }
-                        LoadingState::Error(e) => {
-                            ui.label(format!("Error: {}", e));
-                            if ui.button("Try again").clicked() {
-                                self.bottom_loading_state = LoadingState::Idle;
-                                ui.ctx().request_repaint();
-                            }
-                        }
-                        _ => {}
-                    });
-
-                    ui.add_space(300.0);
-                }
+                ui.add_space(300.0);
 
                 item_range
             })
@@ -382,8 +253,6 @@ impl<T: Debug + 'static, Cursor: Clone + Debug + 'static> InfiniteScroll<T, Curs
         //         item.visible();
         //     }
         // }
-
-        self.previous_item_range = item_range.clone();
 
         if item_range.end + end_prefetch >= items.len()
             && matches!(self.bottom_loading_state, LoadingState::Idle)
