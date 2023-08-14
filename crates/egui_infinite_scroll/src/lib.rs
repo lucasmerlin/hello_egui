@@ -182,47 +182,42 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     ) -> VirtualListResponse {
         self.read_inboxes(ui);
 
-        let response = ui
-            .scope(|ui| {
-                let mut items = Self::filtered_items(&mut self.items, &self.filter);
+        let mut items = Self::filtered_items(&mut self.items, &self.filter);
 
-                let response =
-                    self.virtual_list
-                        .ui_custom_layout(ui, items.len(), |ui, start_index| {
-                            layout(ui, start_index, &mut items[start_index..])
-                        });
+        let response = self
+            .virtual_list
+            .ui_custom_layout(ui, items.len(), |ui, start_index| {
+                layout(ui, start_index, &mut items[start_index..])
+            });
 
-                ui.add_space(50.0);
+        ui.add_space(20.0);
 
-                ui.separator();
+        ui.separator();
 
-                ui.add_space(50.0);
+        ui.add_space(20.0);
 
-                ui.vertical_centered(|ui| match &self.bottom_loading_state {
-                    LoadingState::Loading => {
-                        ui.spinner();
-                    }
-                    LoadingState::Idle => {
-                        ui.spinner();
-                    }
-                    LoadingState::NoMoreItems => {
-                        ui.label("No more items");
-                    }
-                    LoadingState::Error(e) => {
-                        ui.label(format!("Error: {}", e));
-                        if ui.button("Try again").clicked() {
-                            self.bottom_loading_state = LoadingState::Idle;
-                            ui.ctx().request_repaint();
-                        }
-                    }
-                    _ => {}
-                });
+        ui.vertical_centered(|ui| match &self.bottom_loading_state {
+            LoadingState::Loading => {
+                ui.spinner();
+            }
+            LoadingState::Idle => {
+                ui.spinner();
+            }
+            LoadingState::NoMoreItems => {
+                ui.label("No more items");
+            }
+            LoadingState::Error(e) => {
+                ui.label(format!("Error: {}", e));
+                if ui.button("Try again").clicked() {
+                    self.bottom_loading_state = LoadingState::Idle;
+                    ui.ctx().request_repaint();
+                }
+            }
+            _ => {}
+        });
 
-                ui.add_space(300.0);
+        ui.add_space(20.0);
 
-                response
-            })
-            .inner;
         self.update_items(&response.item_range, end_prefetch);
 
         response

@@ -1,4 +1,4 @@
-use egui::{Rect, Ui, Vec2};
+use egui::{Pos2, Rect, Ui, Vec2};
 use std::ops::Range;
 
 pub struct VirtualListResponse {
@@ -14,7 +14,7 @@ pub struct VirtualListResponse {
 #[derive(Debug)]
 struct RowData {
     range: Range<usize>,
-    rect: Rect,
+    pos: Pos2,
 }
 
 pub struct VirtualList {
@@ -68,124 +68,118 @@ impl VirtualList {
         length: usize,
         mut layout: impl FnMut(&mut Ui, usize) -> usize,
     ) -> VirtualListResponse {
-        let item_range = ui
-            .scope(|ui| {
-                if ui.available_width() != self.last_width {
-                    self.last_known_row_index = None;
-                    self.last_width = ui.available_width();
-                    self.rows.clear();
+        if ui.available_width() != self.last_width {
+            self.last_known_row_index = None;
+            self.last_width = ui.available_width();
+            self.rows.clear();
+        }
+
+        // Start of the scroll area (!=0 after scrolling)
+        let min = ui.next_widget_position();
+
+        let mut row_start_index = self.last_known_row_index.unwrap_or(0);
+
+        // This calculates the visual rect inside the scroll area
+        // Should be equivalent to to viewport from ScrollArea::show_viewport()
+        let visible_rect = ui.clip_rect().translate(-ui.min_rect().min.to_vec2());
+
+        let visible_rect = visible_rect.expand2(Vec2::new(0.0, self.over_scan));
+
+        // Find the first row that is visible
+        loop {
+            if row_start_index == 0 {
+                break;
+            }
+
+            if let Some(row) = self.rows.get(row_start_index) {
+                if row.pos.y <= visible_rect.min.y {
+                    ui.add_space(row.pos.y);
+                    break;
                 }
+            }
+            row_start_index -= 1;
+        }
+        let mut current_row = row_start_index;
 
-                // Start of the scroll area (!=0 after scrolling)
-                let min = ui.next_widget_position();
+        let item_start_index = self
+            .rows
+            .get(row_start_index)
+            .map(|row| row.range.start)
+            .unwrap_or(0);
 
-                let mut row_start_index = self.last_known_row_index.unwrap_or(0);
+        let mut current_item_index = item_start_index;
 
-                // This calculates the visual rect inside the scroll area
-                // Should be equivalent to to viewport from ScrollArea::show_viewport()
-                let visible_rect = ui.clip_rect().translate(-ui.min_rect().min.to_vec2());
+        let mut iterations = 0;
 
-                let visible_rect = visible_rect.expand2(Vec2::new(0.0, self.over_scan));
+        loop {
+            // Bail out if we're recalculating too many items
+            if iterations > self.max_rows_calculated_per_frame {
+                ui.ctx().request_repaint();
+                break;
+            }
+            iterations += 1;
 
-                // Find the first row that is visible
-                loop {
-                    if row_start_index == 0 {
-                        break;
-                    }
+            // let item = self.items.get_mut(current_row);
+            if current_item_index < length {
+                let pos = ui.next_widget_position() - min.to_vec2();
+                let count = layout(ui, current_item_index);
+                let size = ui.next_widget_position() - min.to_vec2() - pos;
+                let rect = Rect::from_min_size(pos, size);
 
-                    if let Some(row) = self.rows.get(row_start_index) {
-                        if row.rect.min.y <= visible_rect.min.y {
-                            ui.add_space(row.rect.min.y);
-                            break;
-                        }
-                    }
-                    row_start_index -= 1;
-                }
-                let mut current_row = row_start_index;
+                let range = current_item_index..current_item_index + count;
 
-                let item_start_index = self
-                    .rows
-                    .get(row_start_index)
-                    .map(|row| row.range.start)
-                    .unwrap_or(0);
+                if let Some(row) = self.rows.get_mut(current_row) {
+                    row.range = range;
+                    row.pos = pos;
+                } else {
+                    self.rows.push(RowData {
+                        range: current_item_index..current_item_index + count,
+                        pos,
+                    });
 
-                let mut current_item_index = item_start_index;
+                    let size_with_space = size;
 
-                let mut iterations = 0;
-
-                loop {
-                    // Bail out if we're recalculating too many items
-                    if iterations > self.max_rows_calculated_per_frame {
-                        ui.ctx().request_repaint();
-                        break;
-                    }
-                    iterations += 1;
-
-                    // let item = self.items.get_mut(current_row);
-                    if current_item_index < length {
-                        let scoped = ui.scope(|ui| layout(ui, current_item_index));
-                        let count = scoped.inner;
-                        let rect = scoped.response.rect.translate(-(min.to_vec2()));
-
-                        let range = current_item_index..current_item_index + count;
-
-                        if let Some(row) = self.rows.get_mut(current_row) {
-                            row.range = range;
-                            row.rect = rect;
-                        } else {
-                            self.rows.push(RowData {
-                                range: current_item_index..current_item_index + count,
-                                rect,
-                            });
-
-                            let size_with_space = rect.size() + ui.spacing().item_spacing;
-
-                            self.average_row_size = Some(
-                                self.average_row_size
-                                    .map(|size| {
-                                        (current_row as f32 * size + size_with_space)
-                                            / (current_row as f32 + 1.0)
-                                    })
-                                    .unwrap_or(rect.size()),
-                            );
-
-                            self.average_items_per_row = Some(
-                                self.average_items_per_row
-                                    .map(|avg_count| {
-                                        (current_row as f32 * avg_count + count as f32)
-                                            / (current_row as f32 + 1.0)
-                                    })
-                                    .unwrap_or(count as f32),
-                            );
-
-                            self.last_known_row_index = Some(current_row);
-                        }
-
-                        current_item_index += count;
-
-                        if rect.max.y > visible_rect.max.y {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-
-                    current_row += 1;
-                }
-
-                let item_range = item_start_index..current_item_index;
-
-                if item_range.end < length {
-                    ui.set_min_height(
-                        (length - item_range.end) as f32
-                            / self.average_items_per_row.unwrap_or(1.0)
-                            * self.average_row_size.unwrap_or(Vec2::ZERO).y,
+                    self.average_row_size = Some(
+                        self.average_row_size
+                            .map(|size| {
+                                (current_row as f32 * size + size_with_space)
+                                    / (current_row as f32 + 1.0)
+                            })
+                            .unwrap_or(size),
                     );
+
+                    self.average_items_per_row = Some(
+                        self.average_items_per_row
+                            .map(|avg_count| {
+                                (current_row as f32 * avg_count + count as f32)
+                                    / (current_row as f32 + 1.0)
+                            })
+                            .unwrap_or(count as f32),
+                    );
+
+                    self.last_known_row_index = Some(current_row);
                 }
 
-                item_range
-            })
-            .inner;
+                current_item_index += count;
+
+                if rect.max.y > visible_rect.max.y {
+                    break;
+                }
+            } else {
+                break;
+            }
+
+            current_row += 1;
+        }
+
+        let item_range = item_start_index..current_item_index;
+
+        if item_range.end < length {
+            ui.set_min_height(
+                (length - item_range.end) as f32 / self.average_items_per_row.unwrap_or(1.0)
+                    * self.average_row_size.unwrap_or(Vec2::ZERO).y,
+            );
+        }
 
         let mut hidden_range =
             self.previous_item_range.start..item_range.start.min(self.previous_item_range.end);
