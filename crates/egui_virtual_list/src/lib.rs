@@ -30,6 +30,8 @@ pub struct VirtualList {
 
     // We will recalculate every item's rect if the scroll area's width changes
     last_width: f32,
+
+    max_rows_calculated_per_frame: usize,
 }
 
 impl VirtualList {
@@ -41,6 +43,8 @@ impl VirtualList {
             average_row_size: None,
             rows: vec![],
             average_items_per_row: None,
+
+            max_rows_calculated_per_frame: 1000,
         }
     }
 
@@ -93,7 +97,16 @@ impl VirtualList {
 
                 let mut current_item_index = item_start_index;
 
+                let mut iterations = 0;
+
                 loop {
+                    // Bail out if we're recalculating too many items
+                    if iterations > self.max_rows_calculated_per_frame {
+                        ui.ctx().request_repaint();
+                        break;
+                    }
+                    iterations += 1;
+
                     // let item = self.items.get_mut(current_row);
                     if current_item_index < length {
                         let scoped = ui.scope(|ui| layout(ui, current_item_index));
@@ -110,10 +123,13 @@ impl VirtualList {
                                 range: current_item_index..current_item_index + count,
                                 rect,
                             });
+
+                            let size_with_space = rect.size() + ui.spacing().item_spacing;
+
                             self.average_row_size = Some(
                                 self.average_row_size
                                     .map(|size| {
-                                        (current_row as f32 * size + rect.size())
+                                        (current_row as f32 * size + size_with_space)
                                             / (current_row as f32 + 1.0)
                                     })
                                     .unwrap_or(rect.size()),
