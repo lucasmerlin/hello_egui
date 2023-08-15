@@ -1,7 +1,7 @@
 use eframe::egui;
 use eframe::emath::Align;
 use egui::{CentralPanel, ComboBox, Layout, ScrollArea, Vec2};
-use egui_animation::animate_ui_translation;
+use egui_animation::{animate_ui_translation, Collapse};
 use egui_goodies_utils::measure_text;
 use rand::seq::SliceRandom;
 
@@ -51,6 +51,8 @@ pub fn main() -> eframe::Result<()> {
 
     let mut words: Vec<_> = text.split("").collect();
     let mut ids: Vec<_> = (0..words.len()).collect();
+
+    let mut visible = true;
 
     eframe::run_simple_native(
         "DnD Simple Example",
@@ -160,26 +162,32 @@ pub fn main() -> eframe::Result<()> {
                     );
                 });
 
-                ui.group(|ui| {
-                    ScrollArea::vertical()
-                        .max_height(100.0)
-                        .auto_shrink([false, false])
-                        .show(ui, |ui| {
-                            ui.add_space(50.0);
+                if ui.button("Toggle Collapse").clicked() {
+                    visible = !visible;
+                }
 
-                            animate_ui_translation(
-                                ui,
-                                "haaa",
-                                simple_easing::cubic_in_out,
-                                Vec2::new(200.0, 10.0),
-                                true,
-                                |ui| {
-                                    ui.label("Ayyy");
-                                },
-                            );
+                Collapse::vertical("collapse", visible).ui(ui, |ui| {
+                    ui.group(|ui| {
+                        ScrollArea::vertical()
+                            .max_height(100.0)
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                ui.add_space(50.0);
 
-                            ui.add_space(1000.0);
-                        });
+                                animate_ui_translation(
+                                    ui,
+                                    "haaa",
+                                    simple_easing::cubic_in_out,
+                                    Vec2::new(200.0, 10.0),
+                                    true,
+                                    |ui| {
+                                        ui.label(text_de);
+                                    },
+                                );
+
+                                ui.add_space(1000.0);
+                            });
+                    });
                 });
             });
         },

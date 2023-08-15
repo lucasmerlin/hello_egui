@@ -8,10 +8,10 @@ edition = "2021"
 [dependencies]
 egui = { version = "0.22.0", default-features = false }
 egui_goodies_utils = { path = "../egui_goodies_utils" }
+simple-easing = "1"
 
 
 [dev-dependencies]
 
 eframe = "0.22.0"
-simple-easing = "1"
 rand = "0.8.5"

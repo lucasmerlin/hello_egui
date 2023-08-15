@@ -1,8 +1,11 @@
+mod collapse;
+
 use std::cmp::max;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::ptr::replace;
 
+pub use collapse::*;
 use egui::{Context, Id, Pos2, Rect, Response, Sense, Ui, Vec2};
 use egui_goodies_utils::current_scroll_delta;
 
@@ -13,6 +16,17 @@ struct AnimationState {
 }
 
 type Easing = fn(f32) -> f32;
+
+pub fn animate_bool_eased(
+    ctx: &Context,
+    id: impl Hash + Sized,
+    bool: bool,
+    easing: Easing,
+    time: f32,
+) -> f32 {
+    let x = ctx.animate_bool_with_time(Id::new(id), bool, time);
+    easing(x)
+}
 
 pub fn animate_eased(
     ctx: &Context,
@@ -85,7 +99,7 @@ pub fn animate_ui_translation(
 
     let target_pos = rect.min;
 
-    let current_pos = animate_position(ui, id, target_pos, 1.0, easing, !prevent_scroll_animation);
+    let current_pos = animate_position(ui, id, target_pos, 1.0, easing, prevent_scroll_animation);
 
     // let max_rect = ui.available_rect_before_wrap();
 
