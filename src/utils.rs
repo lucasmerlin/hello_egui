@@ -1,18 +1,3 @@
-use egui::{Pos2, Ui};
-
-pub(crate) fn animate_position(ui: &mut Ui, id: egui::Id, pos: Pos2) -> Pos2 {
-    let Pos2 { x, y } = pos;
-
-    let x = ui
-        .ctx()
-        .animate_value_with_time(id.with("anim_pos_x"), x, ui.style().animation_time);
-    let y = ui
-        .ctx()
-        .animate_value_with_time(id.with("anim_pos_y"), y, ui.style().animation_time);
-
-    Pos2::new(x, y)
-}
-
 /// Move an item in a slice according to the drag and drop logic.
 ///
 /// Rotates the section of the slice between `source_idx` and `target_idx` such that the item

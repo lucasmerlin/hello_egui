@@ -1,5 +1,6 @@
 use eframe::egui;
-use egui::{CentralPanel, ComboBox};
+use eframe::emath::Align;
+use egui::{CentralPanel, ComboBox, Layout, ScrollArea, Vec2};
 use egui_animation::animate_ui_translation;
 use egui_goodies_utils::measure_text;
 use rand::seq::SliceRandom;
@@ -49,7 +50,7 @@ pub fn main() -> eframe::Result<()> {
     let mut text = text_de;
 
     let mut words: Vec<_> = text.split("").collect();
-    let mut ids = words.iter().enumerate().map(|(i, _)| i).collect::<Vec<_>>();
+    let mut ids: Vec<_> = (0..words.len()).collect();
 
     eframe::run_simple_native(
         "DnD Simple Example",
@@ -100,46 +101,85 @@ pub fn main() -> eframe::Result<()> {
                         }
                     });
 
-                    ui.horizontal_wrapped(|ui| {
-                        ui.spacing_mut().item_spacing.x = 0.0;
+                    ui.with_layout(
+                        Layout::left_to_right(Align::Min).with_main_wrap(true),
+                        |ui| {
+                            ui.spacing_mut().item_spacing.x = 0.0;
 
-                        let mut iter = words.iter().zip(ids.iter());
+                            let mut iter = words.iter().zip(ids.iter()).peekable();
 
-                        let mut words = vec![];
+                            let mut words = vec![];
 
-                        while let Some((text, id)) = iter.next() {
-                            if text.len() > 1 {
-                                let size = measure_text(ui, *text);
-                                animate_ui_translation(
-                                    ui,
-                                    *id,
-                                    simple_easing::cubic_out,
-                                    size,
-                                    |ui| {
-                                        ui.label(*text);
-                                    },
-                                );
-                            } else if text == &" " {
-                                words.push((*id, text));
-
-                                words.iter().for_each(|(id, text)| {
-                                    let size = measure_text(ui, **text);
+                            while let Some((text, id)) = iter.next() {
+                                if text.chars().count() > 1 {
+                                    let size = measure_text(ui, *text);
                                     animate_ui_translation(
                                         ui,
-                                        id,
+                                        *id,
                                         simple_easing::cubic_out,
                                         size,
+                                        false,
                                         |ui| {
-                                            ui.label(**text);
+                                            ui.label(*text);
                                         },
                                     );
-                                });
-                                words = vec![];
-                            } else {
-                                words.push((*id, text));
+                                } else if text == &" " || !iter.peek().is_some() {
+                                    words.push((*id, text));
+
+                                    let text = words.iter().map(|(_, text)| text).fold(
+                                        String::new(),
+                                        |mut acc, text| {
+                                            acc.push_str(text);
+                                            acc
+                                        },
+                                    );
+
+                                    let size = measure_text(ui, text) + Vec2::new(4.0, 0.0);
+
+                                    ui.allocate_ui(size, |ui| {
+                                        words.iter().for_each(|(id, text)| {
+                                            let size = measure_text(ui, **text);
+                                            animate_ui_translation(
+                                                ui,
+                                                id,
+                                                simple_easing::cubic_out,
+                                                size,
+                                                false,
+                                                |ui| {
+                                                    ui.label(**text);
+                                                },
+                                            );
+                                        });
+                                    });
+                                    words = vec![];
+                                } else {
+                                    words.push((*id, text));
+                                }
                             }
-                        }
-                    });
+                        },
+                    );
+                });
+
+                ui.group(|ui| {
+                    ScrollArea::vertical()
+                        .max_height(100.0)
+                        .auto_shrink([false, false])
+                        .show(ui, |ui| {
+                            ui.add_space(50.0);
+
+                            animate_ui_translation(
+                                ui,
+                                "haaa",
+                                simple_easing::cubic_in_out,
+                                Vec2::new(200.0, 10.0),
+                                true,
+                                |ui| {
+                                    ui.label("Ayyy");
+                                },
+                            );
+
+                            ui.add_space(1000.0);
+                        });
                 });
             });
         },

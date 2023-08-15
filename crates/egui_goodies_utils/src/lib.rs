@@ -12,3 +12,8 @@ pub fn measure_text(ui: &mut Ui, text: impl Into<WidgetText>) -> Vec2 {
 
     size
 }
+
+/// Returns the approximate current scroll delta of the ui
+pub fn current_scroll_delta(ui: &Ui) -> Vec2 {
+    -ui.min_rect().min.to_vec2()
+}

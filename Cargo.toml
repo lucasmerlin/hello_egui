@@ -14,7 +14,9 @@ license = "MIT"
 members = ["fancy-example", "crates/*"]
 
 [dependencies]
+egui_animation = {path = "./crates/egui_animation"}
 egui = { version = ">=0.22", default-features = false }
+simple-easing = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-time = "0.2.0"

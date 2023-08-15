@@ -100,7 +100,6 @@ impl DragDropResponse {
 #[derive(Clone, Debug)]
 pub struct DragDropUi {
     pub(crate) detection_state: DragDetectionState,
-    pub(crate) drag_animation_id_count: usize,
     /// If the mobile config is set, we will use it if we detect a touch event
     touch_config: Option<DragDropConfig>,
     mouse_config: DragDropConfig,
@@ -110,7 +109,6 @@ impl Default for DragDropUi {
     fn default() -> Self {
         DragDropUi {
             detection_state: DragDetectionState::None,
-            drag_animation_id_count: 0,
             touch_config: Some(DragDropConfig::touch()),
             mouse_config: DragDropConfig::mouse(),
         }
@@ -325,7 +323,6 @@ impl<'a> Handle<'a> {
                 last_pointer_pos: response.hover_pos().unwrap_or_default(),
                 hovering_last_item: false,
             };
-            self.state.drag_animation_id_count += 1;
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));
         }
 

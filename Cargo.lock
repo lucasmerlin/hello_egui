@@ -823,9 +823,11 @@ dependencies = [
  "color-hex",
  "eframe",
  "egui",
+ "egui_animation",
  "egui_extras",
  "egui_goodies_utils",
  "egui_infinite_scroll",
+ "simple-easing",
  "web-time",
 ]
 

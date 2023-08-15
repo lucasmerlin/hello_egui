@@ -3,7 +3,8 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::ptr::replace;
 
-use egui::{Context, Id, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{Context, Id, Pos2, Rect, Response, Sense, Ui, Vec2};
+use egui_goodies_utils::current_scroll_delta;
 
 #[derive(Debug, Clone)]
 struct AnimationState {
@@ -46,17 +47,29 @@ pub fn animate_eased(
 }
 
 pub fn animate_position(
-    ctx: &Context,
+    ui: &mut Ui,
     id: impl Hash + Sized,
     value: Pos2,
     time: f32,
     easing: Easing,
+    scroll_correction: bool,
 ) -> Pos2 {
     let id1 = Id::new(id);
-    Pos2::new(
-        animate_eased(ctx, id1.with("x"), value.x, time, easing),
-        animate_eased(ctx, id1.with("y"), value.y, time, easing),
-    )
+
+    let scroll_offset = if scroll_correction {
+        current_scroll_delta(ui)
+    } else {
+        Vec2::ZERO
+    };
+
+    let value = value + scroll_offset;
+
+    let position = Pos2::new(
+        animate_eased(ui.ctx(), id1.with("x"), value.x, time, easing),
+        animate_eased(ui.ctx(), id1.with("y"), value.y, time, easing),
+    );
+
+    position - scroll_offset
 }
 
 pub fn animate_ui_translation(
@@ -64,19 +77,15 @@ pub fn animate_ui_translation(
     id: impl Hash + Sized + Debug + Copy,
     easing: Easing,
     size: Vec2,
+    prevent_scroll_animation: bool,
     content: impl FnOnce(&mut Ui),
-) {
+) -> Rect {
     let (_, response) = ui.allocate_exact_size(size, Sense::hover());
     let rect = response.rect;
 
     let target_pos = rect.min;
-    let current_pos = animate_position(
-        ui.ctx(),
-        Id::new(id).with("animate_ui_translation"),
-        target_pos,
-        1.0,
-        easing,
-    );
+
+    let current_pos = animate_position(ui, id, target_pos, 1.0, easing, !prevent_scroll_animation);
 
     // let max_rect = ui.available_rect_before_wrap();
 
@@ -92,5 +101,5 @@ pub fn animate_ui_translation(
         })
         .response;
 
-    dbg!(&id, response.rect.size());
+    rect
 }
