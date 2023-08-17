@@ -20,9 +20,9 @@ const TEXTS: [&str; 5] = [
     "flow nicely in yor layout",
 ];
 pub fn main() -> eframe::Result<()> {
-    let mut buttons: Vec<_> = TEXTS.iter().map(|s| s.to_string()).collect();
+    let buttons: Vec<_> = TEXTS.iter().map(|s| s.to_string()).collect();
 
-    let mut many_buttons = (0..100).fold(Vec::new(), |mut acc, _| {
+    let many_buttons = (0..100).fold(Vec::new(), |mut acc, _| {
         acc.push(buttons.choose(&mut rand::thread_rng()).unwrap().to_string());
         acc
     });
@@ -191,7 +191,7 @@ pub fn main() -> eframe::Result<()> {
                             },
                             Layout::centered_and_justified(Direction::TopDown),
                             move |ui| {
-                                ui.button(&*button);
+                                ui.button(button);
                             },
                         );
                     }
@@ -200,7 +200,7 @@ pub fn main() -> eframe::Result<()> {
 
                     ui.separator();
 
-                    Resize::default().show(ui, |ui| list_example(ui));
+                    Resize::default().show(ui, list_example);
                 });
             });
         },

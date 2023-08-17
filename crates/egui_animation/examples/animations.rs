@@ -61,7 +61,7 @@ pub fn main() -> eframe::Result<()> {
             CentralPanel::default().show(ctx, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     ComboBox::new("easing", "Select Easing")
-                        .selected_text(EASINGS.iter().find(|(val, name)| *val == easing).unwrap().1)
+                        .selected_text(EASINGS.iter().find(|(val, _name)| *val == easing).unwrap().1)
                         .width(200.0)
                         .show_ui(ui, |ui| {
                             EASINGS.iter().for_each(|(easing_fn, name)| {
@@ -99,7 +99,7 @@ pub fn main() -> eframe::Result<()> {
                             let mut rng = rand::thread_rng();
                             ids.shuffle(&mut rng);
                             text = if text == text_de { text_en } else { text_de };
-                            words = text.split_inclusive(" ").collect();
+                            words = text.split_inclusive(' ').collect();
                         }
                     });
 
@@ -125,7 +125,7 @@ pub fn main() -> eframe::Result<()> {
                                             ui.label(*text);
                                         },
                                     );
-                                } else if text == &" " || !iter.peek().is_some() {
+                                } else if text == &" " || iter.peek().is_none() {
                                     words.push((*id, text));
 
                                     let text = words.iter().map(|(_, text)| text).fold(

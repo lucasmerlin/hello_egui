@@ -1,5 +1,5 @@
 use crate::animate_bool_eased;
-use egui::{Align, Direction, Id, Rect, ScrollArea, Ui, Vec2};
+use egui::{Id, Rect, Ui, Vec2};
 
 pub struct Collapse {
     horizontal: bool,
@@ -45,7 +45,7 @@ impl Collapse {
 
         let mut child = ui.child_ui(
             Rect::from_min_size(ui.next_widget_position(), ui.available_size()),
-            ui.layout().clone(),
+            *ui.layout(),
         );
 
         let current_size = last_size * x;

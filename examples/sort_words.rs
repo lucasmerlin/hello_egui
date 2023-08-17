@@ -1,7 +1,7 @@
 // This example shows how to sort items in a horizontal_wrapped layout where each item has a different size.
 use eframe::egui;
-use eframe::emath::Align;
-use egui::{CentralPanel, Frame, Id, Label, Layout, ScrollArea, Ui, Vec2};
+
+use egui::{CentralPanel, Frame, Id, ScrollArea, Ui, Vec2};
 use egui_dnd::dnd;
 use egui_goodies_utils::measure_text;
 

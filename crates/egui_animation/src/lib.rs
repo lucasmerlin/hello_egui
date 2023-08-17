@@ -1,12 +1,12 @@
 mod collapse;
 
-use std::cmp::max;
+
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::ptr::replace;
+
 
 pub use collapse::*;
-use egui::{Context, Id, Pos2, Rect, Response, Sense, Ui, Vec2};
+use egui::{Context, Id, Pos2, Rect, Sense, Ui, Vec2};
 use egui_goodies_utils::current_scroll_delta;
 
 #[derive(Debug, Clone)]
@@ -107,7 +107,7 @@ pub fn animate_ui_translation(
 
     //let rect = max_rect.translate(target_pos.to_vec2() - current_pos.to_vec2());
 
-    let response = child
+    let _response = child
         .allocate_ui_at_rect(Rect::from_min_size(current_pos, rect.size()), |ui| {
             ui.allocate_ui(size, |ui| {
                 content(ui);

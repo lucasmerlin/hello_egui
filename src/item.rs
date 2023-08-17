@@ -1,5 +1,5 @@
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
-use egui_animation::{animate_position, animate_ui_translation};
+use egui_animation::{animate_position};
 
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, Handle, ItemState};

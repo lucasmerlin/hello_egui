@@ -107,7 +107,7 @@ impl<'a> TaffyPass<'a> {
         self._add_children(style, Some(Box::new(content)), f);
     }
 
-    pub fn add_children(&mut self, style: Style, mut f: impl FnMut(&mut TaffyPass<'a>)) {
+    pub fn add_children(&mut self, style: Style, f: impl FnMut(&mut TaffyPass<'a>)) {
         self._add_children(style, None, f);
     }
 
@@ -125,7 +125,7 @@ impl<'a> TaffyPass<'a> {
             self.content_fns.push(content);
 
             if let Some(c_node) = state.children.get_mut(index) {
-                if let EguiTaffyNode::Node(node, parent) = c_node {
+                if let EguiTaffyNode::Node(node, _parent) = c_node {
                     if state.taffy.style(*node).unwrap() != &style {
                         state.taffy.set_style(*node, style).unwrap();
                     }
@@ -176,7 +176,7 @@ impl<'a> TaffyPass<'a> {
                 state.children.get_mut(content_idx)
             {
                 if *c_id != id
-                    || state.taffy.style(c_node.clone()).unwrap() != &style
+                    || state.taffy.style(*c_node).unwrap() != &style
                     || *c_layout != layout
                     || *c_parent != self.current_node
                 {
@@ -288,14 +288,14 @@ impl<'a> TaffyPass<'a> {
                     state.last_size = self.ui.available_size();
                     println!("dirty");
 
-                    let mut content_fns = unsafe {
+                    let content_fns = unsafe {
                         mem::transmute::<
                             &mut Vec<Option<ContentFn<'a>>>,
                             &mut Vec<Option<ContentFn<'static>>>,
                         >(&mut self.content_fns)
                     };
 
-                    let result = state
+                    state
                         .taffy
                         .compute_layout_with_context(
                             state.root_node,
@@ -323,10 +323,10 @@ impl<'a> TaffyPass<'a> {
                     .children
                     .iter()
                     .map(|node| match node {
-                        EguiTaffyNode::Leaf(id, child, egui_layout, parent) => {
+                        EguiTaffyNode::Leaf(_id, child, egui_layout, parent) => {
                             let parent_rect = parent_layouts.get(&(*parent).into()).unwrap();
 
-                            let layout = state.taffy.layout(child.clone()).unwrap();
+                            let layout = state.taffy.layout(*child).unwrap();
 
                             let rect = egui::Rect::from_min_size(
                                 Pos2::new(layout.location.x, layout.location.y),
@@ -340,7 +340,7 @@ impl<'a> TaffyPass<'a> {
                         EguiTaffyNode::Node(node, parent) => {
                             let parent_rect = parent_layouts.get(&(*parent).into()).unwrap();
 
-                            let layout = state.taffy.layout(node.clone()).unwrap();
+                            let layout = state.taffy.layout(*node).unwrap();
 
                             let rect = egui::Rect::from_min_size(
                                 Pos2::new(layout.location.x, layout.location.y),
@@ -364,7 +364,7 @@ impl<'a> TaffyPass<'a> {
         layouts
             .iter()
             .zip(self.content_fns)
-            .for_each(|((rect, egui_layout), mut content)| {
+            .for_each(|((rect, egui_layout), content)| {
                 if let Some(mut content) = content {
                     let offset = self.ui.next_widget_position().to_vec2();
 
