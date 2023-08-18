@@ -1,23 +1,15 @@
 // This example shows how to sort items in a horizontal_wrapped layout where each item has a different size.
 use eframe::egui;
-use eframe::emath::Align;
-use egui::{CentralPanel, Frame, Id, Label, Layout, ScrollArea, Ui, Vec2};
+
+use egui::{CentralPanel, Frame, Id, ScrollArea, Ui, Vec2};
 use egui_dnd::dnd;
+use hello_egui_utils::measure_text;
 
 pub fn dnd_ui(ui: &mut Ui, items: &mut [(usize, String)]) {
     ui.horizontal_wrapped(|ui| {
         dnd(ui, "dnd_example").show_custom_vec(items, |ui, items, item_iter| {
             items.iter().enumerate().for_each(|(idx, item)| {
-                // We use this to measure the size of the item
-                // There might be a more elegant way but this is enough
-                // for the example
-                let res = Label::new(&item.1).layout_in_ui(&mut ui.child_ui(
-                    ui.available_rect_before_wrap(),
-                    Layout::left_to_right(Align::Center),
-                ));
-                // There seem to be rounding errors in egui's text rendering
-                // so we add a little bit of padding
-                let size = res.2.rect.size() + Vec2::new(0.1, 0.0);
+                let size = measure_text(ui, &item.1);
 
                 let frame_padding = 4.0;
                 let size = size + Vec2::splat(frame_padding) * 2.0;

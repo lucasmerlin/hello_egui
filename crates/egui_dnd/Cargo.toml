@@ -1,0 +1,28 @@
+[package]
+name = "egui_dnd"
+version = "0.5.0"
+edition = "2021"
+authors = ["Lucas Meurer"]
+repository = "https://github.com/lucasmerlin/egui_dnd"
+keywords = ["egui", "drag", "drop", "ui"]
+description = "A drag and drop library for egui"
+license = "MIT"
+
+
+[dependencies]
+egui_animation = {path = "../egui_animation"}
+egui = { version = ">=0.22", default-features = false }
+simple-easing = "1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-time = "0.2.0"
+
+[dev-dependencies]
+egui_infinite_scroll = { path = "../egui_infinite_scroll" }
+hello_egui_utils = { path = "../hello_egui_utils" }
+
+egui_extras = ">=0.22"
+color-hex = "0.2.0"
+egui = { version = ">=0.22", features = ["color-hex"] }
+eframe = ">=0.22"
+

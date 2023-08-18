@@ -1,7 +1,7 @@
 use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use egui_animation::animate_position;
 
 use crate::state::DragDetectionState;
-use crate::utils::animate_position;
 use crate::{DragDropUi, Handle, ItemState};
 
 pub struct Item<'a> {
@@ -73,7 +73,14 @@ impl<'a> Item<'a> {
                 let position = pointer_pos + *offset;
 
                 // We animate so the animated position is updated, even though we don't use it here.
-                animate_position(ui, id, position);
+                animate_position(
+                    ui,
+                    id,
+                    position,
+                    ui.style().animation_time,
+                    simple_easing::cubic_in_out,
+                    false,
+                );
 
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
                     self.state,
@@ -104,7 +111,14 @@ impl<'a> Item<'a> {
                     (ui.next_widget_position(), None)
                 };
 
-                let position = animate_position(ui, id, end_pos);
+                let position = animate_position(
+                    ui,
+                    id,
+                    end_pos,
+                    ui.style().animation_time,
+                    simple_easing::cubic_out,
+                    false,
+                );
 
                 let InnerResponse { inner: rect, .. } = Self::draw_floating_at_position(
                     self.state,
@@ -140,7 +154,14 @@ impl<'a> Item<'a> {
             // of the top left corner
             let (_, rect) = ui.allocate_space(size);
 
-            let animated_position = animate_position(ui, id, rect.min);
+            let animated_position = animate_position(
+                ui,
+                id,
+                rect.min,
+                ui.style().animation_time,
+                simple_easing::cubic_in_out,
+                true,
+            );
 
             let position = if self.dnd_state.detection_state.is_dragging() {
                 animated_position
@@ -167,7 +188,14 @@ impl<'a> Item<'a> {
             rect
         } else {
             let position = ui.next_widget_position();
-            let animated_position = animate_position(ui, id, position);
+            let animated_position = animate_position(
+                ui,
+                id,
+                position,
+                ui.style().animation_time,
+                simple_easing::cubic_in_out,
+                true,
+            );
 
             let position = if self.dnd_state.detection_state.is_dragging() {
                 animated_position

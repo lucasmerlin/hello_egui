@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-egui_dnd = { path = ".." }
+egui_dnd = { path = "../crates/egui_dnd" }
 egui_infinite_scroll = { path = "../crates/egui_infinite_scroll" }
 
 eframe = "0.22"

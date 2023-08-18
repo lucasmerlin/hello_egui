@@ -1,0 +1,17 @@
+[package]
+name = "egui_animation"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui = { version = "0.22.0", default-features = false }
+hello_egui_utils = { path = "../hello_egui_utils" }
+simple-easing = "1"
+
+
+[dev-dependencies]
+
+eframe = "0.22.0"
+rand = "0.8.5"

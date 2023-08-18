@@ -1,23 +1,42 @@
-# egui_dnd
+# Hello Egui!
+This projects contains a collection of egui tools I've created during
+development of the native app for https://hellopaint.io (still unreleased, stay tuned!).
 
-[![egui_ver](https://img.shields.io/badge/egui-0.22.0-blue)](https://github.com/emilk/egui)
-[![Latest version](https://img.shields.io/crates/v/egui_dnd.svg)](https://crates.io/crates/egui_dnd)
-[![Documentation](https://docs.rs/egui_dnd/badge.svg)](https://docs.rs/egui_dnd)
-[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![License](https://img.shields.io/crates/l/egui_dnd.svg)](https://crates.io/crates/egui_dnd)
+The crates have varying levels of maturity, some are ready for use in production
+while others are highly experimental.
+If you're interested in using one of the experimental crates, open an issue, and I'll try to
+release it on crates.io.
 
-... is a drag & drop library for [egui](https://github.com/emilk/egui). 
+## Example app
+An example using most of the crates is available [here](https://lucasmerlin.github.io/egui_dnd/).
+Source code in [fancy-example](fancy-example).
 
-Give it a try here: <https://lucasmerlin.github.io/egui_dnd/>
+## **Mature** Crates
+- [egui_dnd](crates/egui_dnd)
+  - Drag & drop sorting library for egui
+  - released on [crates.io](https://crates.io/crates/egui_dnd)
 
+## **Experimental** Crates
 
+- [egui_virtual_list](crates/egui_virtual_list)
+  - Flexible virtual scroll widget for egui with support for dynamic heights and complex layouts
+  - Compatible with [egui_dnd](crates/egui_dnd) (let me know if you need an example)
+  - Experimental, unreleased
 
-To get started, take a look at the [simple example.](https://github.com/lucasmerlin/egui_dnd/blob/main/examples/simple.rs)
+- [egui_infinite_scroll](crates/egui_infinite_scroll)
+  - Infinite scroll based on [egui_virtual_list](crates/egui_virtual_list)
+  - Experimental, unreleased
 
-Demo Videos:
+- [egui_animation](crates/egui_animation)
+  - Animation utilities for egui
+  - Experimental, used internally by [egui_dnd](crates/egui_dnd)
 
-<https://github.com/lucasmerlin/egui_dnd/assets/8009393/a05fa961-ef12-479c-a3fd-f765160e048e>
+- [egui_taffy](crates/egui_taffy)
+  - Adds flexbox layout to egui using [taffy](https://github.com/DioxusLabs/taffy)
+  - Highly experimental, unreleased
 
+- [egui_inbox](crates/egui_inbox)
+  - Simple utility for sending messages to egui uis from other threads / async functions
 
-<https://github.com/lucasmerlin/egui_dnd/assets/8009393/4e3b7843-822f-4900-8e8b-d516794590b7>
-
+- [hello_egui_utils](crates/hello_egui_utils)
+  - Collection of utilities used by the other crates
