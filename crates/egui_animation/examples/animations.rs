@@ -2,7 +2,7 @@ use eframe::egui;
 use eframe::emath::Align;
 use egui::{CentralPanel, ComboBox, Layout, ScrollArea, Vec2};
 use egui_animation::{animate_ui_translation, Collapse};
-use egui_goodies_utils::measure_text;
+use hello_egui_utils::measure_text;
 use rand::seq::SliceRandom;
 
 const EASINGS: [(fn(f32) -> f32, &str); 31] = [
@@ -61,7 +61,13 @@ pub fn main() -> eframe::Result<()> {
             CentralPanel::default().show(ctx, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     ComboBox::new("easing", "Select Easing")
-                        .selected_text(EASINGS.iter().find(|(val, _name)| *val == easing).unwrap().1)
+                        .selected_text(
+                            EASINGS
+                                .iter()
+                                .find(|(val, _name)| *val == easing)
+                                .unwrap()
+                                .1,
+                        )
                         .width(200.0)
                         .show_ui(ui, |ui| {
                             EASINGS.iter().for_each(|(easing_fn, name)| {

@@ -289,7 +289,7 @@ fn list_example(ui: &mut Ui) {
                             flex_shrink: 1.0,
                             ..Default::default()
                         },
-                        egui::Layout::left_to_right(Align::Center).with_main_wrap(true),
+                        Layout::left_to_right(Align::Center).with_main_wrap(true),
                         |ui| {
                             ui.heading(*text);
                         },

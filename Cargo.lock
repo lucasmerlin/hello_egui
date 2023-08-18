@@ -789,16 +789,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-taffy"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui",
- "rand",
- "taffy",
-]
-
-[[package]]
 name = "egui-winit"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -821,7 +811,7 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "egui",
- "egui_goodies_utils",
+ "hello_egui_utils",
  "rand",
  "simple-easing",
 ]
@@ -833,13 +823,11 @@ dependencies = [
  "color-hex",
  "eframe",
  "egui",
- "egui-taffy",
  "egui_animation",
  "egui_extras",
- "egui_goodies_utils",
  "egui_infinite_scroll",
+ "hello_egui_utils",
  "simple-easing",
- "taffy",
  "web-time",
 ]
 
@@ -870,13 +858,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui_goodies_utils"
-version = "0.1.0"
-dependencies = [
- "egui",
-]
-
-[[package]]
 name = "egui_inbox"
 version = "0.1.0"
 dependencies = [
@@ -893,6 +874,16 @@ dependencies = [
  "egui_extras",
  "egui_inbox",
  "egui_virtual_list",
+]
+
+[[package]]
+name = "egui_taffy"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "rand",
+ "taffy",
 ]
 
 [[package]]
@@ -1323,6 +1314,13 @@ name = "hashbrown"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
+
+[[package]]
+name = "hello_egui_utils"
+version = "0.1.0"
+dependencies = [
+ "egui",
+]
 
 [[package]]
 name = "hermit-abi"

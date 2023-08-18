@@ -3,7 +3,7 @@ use eframe::egui;
 
 use egui::{CentralPanel, Frame, Id, ScrollArea, Ui, Vec2};
 use egui_dnd::dnd;
-use egui_goodies_utils::measure_text;
+use hello_egui_utils::measure_text;
 
 pub fn dnd_ui(ui: &mut Ui, items: &mut [(usize, String)]) {
     ui.horizontal_wrapped(|ui| {

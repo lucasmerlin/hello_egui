@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 egui = { version = "0.22.0", default-features = false }
-egui_goodies_utils = { path = "../egui_goodies_utils" }
+hello_egui_utils = { path = "../hello_egui_utils" }
 simple-easing = "1"
 
 

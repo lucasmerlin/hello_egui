@@ -1,5 +1,5 @@
 [package]
-name = "egui_goodies_utils"
+name = "egui_taffy"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 egui = { version = "0.22.0", default-features = false }
+taffy = "0.3"
+
+[dev-dependencies]
+eframe = "0.22.0"
+rand = "0.8.5"
+
