@@ -9,7 +9,6 @@ type Node = NodeId;
 
 struct TaffyState {
     taffy: Taffy<MeasureFunc<&'static mut Vec<Option<ContentFn<'static>>>>>,
-    ctx: Context,
 
     children: Vec<EguiTaffyNode>,
 
@@ -29,14 +28,13 @@ unsafe impl Send for TaffyState {}
 unsafe impl Sync for TaffyState {}
 
 impl TaffyState {
-    pub fn new(ctx: Context) -> Self {
+    pub fn new() -> Self {
         let mut taffy = Taffy::new();
 
         Self {
             root_node: taffy.new_with_children(Style::default(), &[]).unwrap(),
             node_style: Style::default(),
             taffy,
-            ctx,
             children: Vec::new(),
             last_size: egui::Vec2::ZERO,
         }
@@ -62,7 +60,7 @@ pub struct TaffyPass<'a> {
 
     ui: &'a mut Ui,
 
-    content_fns: Vec<Option<Box<dyn FnMut(&mut Ui) + Send + 'a>>>,
+    content_fns: Vec<Option<ContentFn<'a>>>,
 
     current_node: Node,
     current_node_index: usize,
@@ -73,7 +71,7 @@ pub struct TaffyPass<'a> {
 impl<'a> TaffyPass<'a> {
     fn with_state<T>(id: Id, ctx: Context, f: impl FnOnce(&mut TaffyState) -> T) -> T {
         ctx.data_mut(|data: &mut IdTypeMap| {
-            let data = data.get_temp_mut_or_insert_with(id, || TaffyState::new(ctx.clone()));
+            let data = data.get_temp_mut_or_insert_with(id, TaffyState::new);
 
             f(data)
         })

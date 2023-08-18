@@ -5,6 +5,7 @@ use egui_animation::{animate_ui_translation, Collapse};
 use hello_egui_utils::measure_text;
 use rand::seq::SliceRandom;
 
+#[allow(clippy::type_complexity)]
 const EASINGS: [(fn(f32) -> f32, &str); 31] = [
     (simple_easing::cubic_in_out, "Cubic in-out"),
     (simple_easing::cubic_in, "Cubic in"),

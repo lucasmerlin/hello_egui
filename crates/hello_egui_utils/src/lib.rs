@@ -8,7 +8,6 @@ pub fn measure_text(ui: &mut Ui, text: impl Into<WidgetText>) -> Vec2 {
     ));
     // There seem to be rounding errors in egui's text rendering
     // so we add a little bit of padding
-    
 
     res.2.rect.size() + Vec2::new(0.1, 0.0)
 }

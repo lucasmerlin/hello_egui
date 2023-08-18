@@ -2,6 +2,8 @@ use crate::animate_bool_eased;
 use egui::{Id, Rect, Ui, Vec2};
 
 pub struct Collapse {
+    // TODO: Implement horizontal collapse
+    #[allow(dead_code)]
     horizontal: bool,
     visible: bool,
     id: Id,

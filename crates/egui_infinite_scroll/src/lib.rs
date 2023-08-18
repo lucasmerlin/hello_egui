@@ -4,6 +4,8 @@ use std::ops::Range;
 
 use egui::Ui;
 
+#[cfg(feature = "egui_extras")]
+use egui_extras::{TableBody, TableRow};
 use egui_inbox::UiInbox;
 use egui_virtual_list::{VirtualList, VirtualListResponse};
 
@@ -298,14 +300,12 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     #[cfg(feature = "egui_extras")]
     pub fn ui_table(
         &mut self,
-        table: TableBody,
+        mut table: TableBody,
         prefetch_count: usize,
         row_height: f32,
         mut row_ui: impl FnMut(TableRow, &mut T),
     ) {
-        use egui_extras::{TableBody, TableRow};
-
-        self.read_inboxes();
+        self.read_inboxes(table.ui_mut());
 
         let mut min_item = 0;
         let mut max_item = 0;
@@ -318,6 +318,6 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         });
 
         let item_range = min_item..max_item;
-        self.update_items(item_range, prefetch_count);
+        self.update_items(&item_range, prefetch_count);
     }
 }

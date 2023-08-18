@@ -1,13 +1,11 @@
 mod collapse;
 
-
 use std::fmt::Debug;
 use std::hash::Hash;
 
-
 pub use collapse::*;
 use egui::{Context, Id, Pos2, Rect, Sense, Ui, Vec2};
-use egui_goodies_utils::current_scroll_delta;
+use hello_egui_utils::current_scroll_delta;
 
 #[derive(Debug, Clone)]
 struct AnimationState {

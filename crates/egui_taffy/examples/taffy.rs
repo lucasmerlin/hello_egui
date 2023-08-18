@@ -64,7 +64,7 @@ pub fn main() -> eframe::Result<()> {
                         },
                         Layout::centered_and_justified(Direction::TopDown),
                         |ui| {
-                            ui.button("Button 2 With long text");
+                            let _ = ui.button("Button 2 With long text");
                         },
                     );
 
@@ -112,7 +112,7 @@ pub fn main() -> eframe::Result<()> {
                                 },
                                 Layout::centered_and_justified(Direction::TopDown),
                                 |ui| {
-                                    ui.button("Button 1");
+                                    let _ = ui.button("Button 1");
                                 },
                             );
                             taffy.add(
@@ -123,7 +123,7 @@ pub fn main() -> eframe::Result<()> {
                                 },
                                 Layout::centered_and_justified(Direction::TopDown),
                                 |ui| {
-                                    ui.button("Button 2 With long text");
+                                    let _ = ui.button("Button 2 With long text");
                                 },
                             );
                         },
@@ -137,8 +137,8 @@ pub fn main() -> eframe::Result<()> {
                         },
                         Layout::top_down(Align::Center),
                         |ui| {
-                            ui.button("Button 1");
-                            ui.button("Button 2");
+                            let _ = ui.button("Button 1");
+                            let _ = ui.button("Button 2");
                         },
                     );
                     taffy.add(
@@ -154,7 +154,7 @@ pub fn main() -> eframe::Result<()> {
                         },
                         Layout::centered_and_justified(Direction::TopDown),
                         |ui| {
-                            ui.button("Button 2");
+                            let _ = ui.button("Button 2");
                         },
                     );
                     taffy.show();
@@ -191,7 +191,7 @@ pub fn main() -> eframe::Result<()> {
                             },
                             Layout::centered_and_justified(Direction::TopDown),
                             move |ui| {
-                                ui.button(button);
+                                let _ = ui.button(button);
                             },
                         );
                     }
