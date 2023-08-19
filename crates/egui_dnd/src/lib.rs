@@ -112,7 +112,7 @@ impl<'a> Dnd<'a> {
 
     /// Same as [Dnd::show], but with a fixed size for each item.
     /// This allows items to be placed in a horizontal_wrapped ui.
-    /// For more info, look at the [horizontal example](https://github.com/lucasmerlin/egui_dnd/blob/main/examples/horizontal.rs).
+    /// For more info, look at the [horizontal example](https://github.com/lucasmerlin/hello_egui/blob/main/crates/egui_dnd/examples/horizontal.rs).
     /// If you need even more control over the size, use [Dnd::show_custom] instead, where you
     /// can individually size each item. See the sort_words example for an example.
     pub fn show_sized<T: DragDropItem>(

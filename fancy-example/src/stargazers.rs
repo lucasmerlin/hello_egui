@@ -88,7 +88,7 @@ impl Stargazers {
 
 
                 ehttp::fetch(
-                    Request::get(format!("https://api.github.com/repos/lucasmerlin/egui_dnd/stargazers?per_page=100&page={}", cursor.unwrap_or(1))),
+                    Request::get(format!("https://api.github.com/repos/lucasmerlin/hello_egui/stargazers?per_page=100&page={}", cursor.unwrap_or(1))),
                     move |result| {
                         dbg!(&result);
                         if let Ok(data) = result {
@@ -118,7 +118,7 @@ impl Stargazers {
                     ui.label("Like");
                     ui.hyperlink_to(
                         " egui_dnd on GitHub ",
-                        "https://github.com/lucasmerlin/egui_dnd",
+                        "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
                     );
                     ui.label("to be listed here!");
                 });

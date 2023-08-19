@@ -8,7 +8,7 @@ If you're interested in using one of the experimental crates, open an issue, and
 release it on crates.io.
 
 ## Example app
-An example using most of the crates is available [here](https://lucasmerlin.github.io/egui_dnd/).
+An example using most of the crates is available [here](https://lucasmerlin.github.io/hello_egui/).
 Source code in [fancy-example](fancy-example).
 
 ## **Mature** Crates
