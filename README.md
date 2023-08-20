@@ -16,6 +16,10 @@ Source code in [fancy-example](fancy-example).
   - Drag & drop sorting library for egui
   - released on [crates.io](https://crates.io/crates/egui_dnd)
 
+- [egui_inbox](crates/egui_inbox)
+    - Simple utility for sending messages to egui uis from other threads / async functions
+    - released on [crates.io](https://crates.io/crates/egui_inbox)
+
 ## **Experimental** Crates
 
 - [egui_virtual_list](crates/egui_virtual_list)
@@ -34,9 +38,6 @@ Source code in [fancy-example](fancy-example).
 - [egui_taffy](crates/egui_taffy)
   - Adds flexbox layout to egui using [taffy](https://github.com/DioxusLabs/taffy)
   - Highly experimental, unreleased
-
-- [egui_inbox](crates/egui_inbox)
-  - Simple utility for sending messages to egui uis from other threads / async functions
 
 - [hello_egui_utils](crates/hello_egui_utils)
   - Collection of utilities used by the other crates
