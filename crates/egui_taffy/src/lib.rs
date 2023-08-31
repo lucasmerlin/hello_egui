@@ -7,8 +7,8 @@ use taffy::prelude::*;
 
 type Node = NodeId;
 
-struct TaffyState {
-    taffy: Taffy<MeasureFunc<&'static mut Vec<Option<ContentFn<'static>>>>>,
+struct TaffyState<'f> {
+    taffy: Taffy<MeasureFunc<Vec<Option<ContentFn<'f>>>>>,
 
     children: Vec<EguiTaffyNode>,
 
@@ -18,16 +18,16 @@ struct TaffyState {
     last_size: egui::Vec2,
 }
 
-impl Clone for TaffyState {
+impl<'f> Clone for TaffyState<'f> {
     fn clone(&self) -> Self {
         panic!("TaffyState is not cloneable")
     }
 }
 
-unsafe impl Send for TaffyState {}
-unsafe impl Sync for TaffyState {}
+unsafe impl<'f> Send for TaffyState<'f> {}
+unsafe impl<'f> Sync for TaffyState<'f> {}
 
-impl TaffyState {
+impl<'f> TaffyState<'f> {
     pub fn new() -> Self {
         let mut taffy = Taffy::new();
 
@@ -55,12 +55,12 @@ enum EguiTaffyNode {
     Node(Node, Node),
 }
 
-pub struct TaffyPass<'a> {
+pub struct TaffyPass<'a, 'f> {
     id: Id,
 
     ui: &'a mut Ui,
 
-    content_fns: Vec<Option<ContentFn<'a>>>,
+    content_fns: Vec<Option<ContentFn<'f>>>,
 
     current_node: Node,
     current_node_index: usize,
@@ -68,7 +68,7 @@ pub struct TaffyPass<'a> {
     measure_ctx: Context,
 }
 
-impl<'a> TaffyPass<'a> {
+impl<'a, 'f> TaffyPass<'a, 'f> {
     fn with_state<T>(id: Id, ctx: Context, f: impl FnOnce(&mut TaffyState) -> T) -> T {
         ctx.data_mut(|data: &mut IdTypeMap| {
             let data = data.get_temp_mut_or_insert_with(id, TaffyState::new);
@@ -99,21 +99,21 @@ impl<'a> TaffyPass<'a> {
     pub fn add_children_with_ui(
         &mut self,
         style: Style,
-        content: impl FnMut(&mut Ui) + Send + 'a,
-        f: impl FnMut(&mut TaffyPass<'a>),
+        content: impl FnMut(&mut Ui) + Send + 'f,
+        f: impl FnMut(&mut TaffyPass<'a, 'f>),
     ) {
         self._add_children(style, Some(Box::new(content)), f);
     }
 
-    pub fn add_children(&mut self, style: Style, f: impl FnMut(&mut TaffyPass<'a>)) {
+    pub fn add_children(&mut self, style: Style, f: impl FnMut(&mut TaffyPass<'a, 'f>)) {
         self._add_children(style, None, f);
     }
 
     fn _add_children(
         &mut self,
         style: Style,
-        content: Option<ContentFn<'a>>,
-        mut f: impl FnMut(&mut TaffyPass<'a>),
+        content: Option<ContentFn<'f>>,
+        mut f: impl FnMut(&mut TaffyPass<'a, 'f>),
     ) {
         let previous_node = self.current_node;
         let previous_node_index = self.current_node_index;
@@ -161,7 +161,7 @@ impl<'a> TaffyPass<'a> {
         id: Id,
         style: Style,
         layout: egui::Layout,
-        content: impl FnMut(&mut Ui) + Send + 'a,
+        content: impl FnMut(&mut Ui) + Send + 'f,
     ) {
         Self::with_state(self.id, self.ui.ctx().clone(), |state| {
             let content_idx = self.content_fns.len();
@@ -279,18 +279,27 @@ impl<'a> TaffyPass<'a> {
 
     pub fn show(mut self) {
         let (layouts, node) =
-            Self::with_state(self.id, self.ui.ctx().clone(), |state: &mut TaffyState| {
+            //Self::with_state(self.id, self.ui.ctx().clone(), |state: &mut TaffyState| {
+            self.ui.ctx().data_mut(|data: &mut IdTypeMap| {
+                let mut state: &mut TaffyState = data.get_temp_mut_or_insert_with(self.id, TaffyState::new);
+
                 if state.taffy.dirty(state.root_node).unwrap()
                     || self.ui.available_size() != state.last_size
                 {
                     state.last_size = self.ui.available_size();
-                    println!("dirty");
 
-                    let content_fns = unsafe {
+                    // let mut content_fns = unsafe {
+                    //     mem::transmute::<
+                    //         &mut Vec<Option<ContentFn<'a>>>,
+                    //         &mut Vec<Option<ContentFn<'static>>>,
+                    //     >(&mut self.content_fns)
+                    // };
+
+                    let state = unsafe {
                         mem::transmute::<
-                            &mut Vec<Option<ContentFn<'a>>>,
-                            &mut Vec<Option<ContentFn<'static>>>,
-                        >(&mut self.content_fns)
+                            &mut TaffyState<'static>,
+                            &mut TaffyState<'f>,
+                        >(&mut state)
                     };
 
                     state
@@ -301,7 +310,7 @@ impl<'a> TaffyPass<'a> {
                                 width: AvailableSpace::Definite(self.ui.available_width()),
                                 height: AvailableSpace::Definite(self.ui.available_height()),
                             },
-                            content_fns,
+                            &mut self.content_fns,
                         )
                         .unwrap();
                 }

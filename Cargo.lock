@@ -2456,7 +2456,7 @@ dependencies = [
 [[package]]
 name = "taffy"
 version = "0.3.11"
-source = "git+https://github.com/nicoburns/taffy?branch=measure-func-context#6e408a6f6d4ae10016bc310fce84daadbe688c6e"
+source = "git+https://github.com/nicoburns/taffy?branch=measure-func-context#cc906592cf4f6dc51aed642220f2b566f06b9b62"
 dependencies = [
  "arrayvec",
  "grid",
