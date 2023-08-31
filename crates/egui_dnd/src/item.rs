@@ -9,6 +9,7 @@ pub struct Item<'a> {
     pub state: ItemState,
     dnd_state: &'a mut DragDropUi,
     hovering_over_any_handle: &'a mut bool,
+    easing: fn(f32) -> f32,
 }
 
 impl<'a> Item<'a> {
@@ -23,6 +24,7 @@ impl<'a> Item<'a> {
             state,
             dnd_state,
             hovering_over_any_handle,
+            easing: simple_easing::linear,
         }
     }
 
@@ -78,7 +80,7 @@ impl<'a> Item<'a> {
                     id,
                     position,
                     ui.style().animation_time,
-                    simple_easing::cubic_in_out,
+                    self.easing,
                     false,
                 );
 
@@ -116,7 +118,7 @@ impl<'a> Item<'a> {
                     id,
                     end_pos,
                     ui.style().animation_time,
-                    simple_easing::cubic_out,
+                    self.easing,
                     false,
                 );
 
@@ -159,7 +161,7 @@ impl<'a> Item<'a> {
                 id,
                 rect.min,
                 ui.style().animation_time,
-                simple_easing::cubic_in_out,
+                self.easing,
                 true,
             );
 
@@ -193,7 +195,7 @@ impl<'a> Item<'a> {
                 id,
                 position,
                 ui.style().animation_time,
-                simple_easing::cubic_in_out,
+                self.easing,
                 true,
             );
 
