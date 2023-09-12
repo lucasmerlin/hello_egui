@@ -127,12 +127,13 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.bottom_inbox.read(ui).for_each(|state| {
             self.bottom_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
-                    if cursor.is_some() {
+                    let has_cursor = cursor.is_some();
+                    if has_cursor {
                         self.end_cursor = cursor;
                     }
                     let empty = items.is_empty();
                     self.items.extend(items);
-                    if empty {
+                    if empty || !has_cursor {
                         LoadingState::NoMoreItems
                     } else {
                         LoadingState::Idle
@@ -145,14 +146,15 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.top_inbox.read(ui).for_each(|state| {
             self.top_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
-                    if cursor.is_some() {
+                    let has_cursor = cursor.is_some();
+                    if has_cursor {
                         self.start_cursor = cursor;
                     }
                     let empty = items.is_empty();
                     let mut old_items = mem::take(&mut self.items);
                     self.items = items;
                     self.items.append(&mut old_items);
-                    if empty {
+                    if empty || !has_cursor {
                         LoadingState::NoMoreItems
                     } else {
                         LoadingState::Idle
