@@ -8,19 +8,19 @@ publish = false
 egui_dnd = { path = "../crates/egui_dnd" }
 egui_infinite_scroll = { path = "../crates/egui_infinite_scroll" }
 
-eframe = "0.22"
-egui_extras = { version = "0.22", features = ["image"] }
+egui = { workspace = true, features = ["color-hex"] }
+eframe = { workspace = true, default-features = true }
+egui_extras = { workspace = true, features = ["image"] }
+ehttp = { version = "0.3.0" }
+
 image = { version = "0.24", features = ["jpeg", "png"] }
 color-hex = "0.2.0"
-egui = { version = "0.22", features = ["color-hex"] }
 
 wasm-bindgen = "0.2.83"
 wasm-bindgen-futures = "0.4.33"
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-ehttp = { version = "0.3.0" }
 
 [package.metadata.release]
 release = false

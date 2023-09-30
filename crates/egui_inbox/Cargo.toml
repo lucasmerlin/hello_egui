@@ -9,7 +9,7 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_in
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-egui = { version = "0.22.0", default-features = false }
+egui.workspace = true
 
 [dev-dependencies]
-eframe = "0.22.0"
+eframe = { workspace = true, default-features = true }
