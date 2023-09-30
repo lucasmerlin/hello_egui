@@ -6,8 +6,9 @@ use eframe::emath::lerp;
 use egui::ecolor::Hsva;
 use egui::{Align2, Area, Context, Id, Rounding, Sense, Ui, Vec2};
 
-use crate::stargazers::Stargazers;
 use egui_dnd::{dnd, DragDropItem};
+
+use crate::stargazers::Stargazers;
 
 mod stargazers;
 

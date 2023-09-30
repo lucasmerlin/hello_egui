@@ -79,7 +79,7 @@ impl<'a> Item<'a> {
                     ui,
                     id,
                     position,
-                    ui.style().animation_time,
+                    self.dnd_state.swap_animation_time,
                     self.easing,
                     false,
                 );
@@ -117,7 +117,7 @@ impl<'a> Item<'a> {
                     ui,
                     id,
                     end_pos,
-                    ui.style().animation_time,
+                    self.dnd_state.return_animation_time,
                     self.easing,
                     false,
                 );
@@ -160,7 +160,7 @@ impl<'a> Item<'a> {
                 ui,
                 id,
                 rect.min,
-                ui.style().animation_time,
+                self.dnd_state.swap_animation_time,
                 self.easing,
                 true,
             );
@@ -194,7 +194,7 @@ impl<'a> Item<'a> {
                 ui,
                 id,
                 position,
-                ui.style().animation_time,
+                self.dnd_state.swap_animation_time,
                 self.easing,
                 true,
             );

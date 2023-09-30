@@ -53,8 +53,11 @@ pub struct Dnd<'a> {
 /// ```
 pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd {
     let id = Id::new(id_source).with("dnd");
-    let dnd_ui: DragDropUi =
+    let mut dnd_ui: DragDropUi =
         ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());
+
+    dnd_ui.return_animation_time = ui.style().animation_time;
+    dnd_ui.swap_animation_time = ui.style().animation_time;
 
     Dnd {
         id,
@@ -82,6 +85,31 @@ impl<'a> Dnd<'a> {
     /// For dragging in a ScrollArea, use [DragDropConfig::touch_scroll]
     pub fn with_touch_config(mut self, config: Option<DragDropConfig>) -> Self {
         self.drag_drop_ui = self.drag_drop_ui.with_touch_config(config);
+        self
+    }
+
+    /// Sets the animation time for the return animation (after dropping an item)
+    /// The default is the same as the egui animation time
+    /// If you want to disable the animation, set it to 0
+    pub fn with_return_animation_time(mut self, animation_time: f32) -> Self {
+        self.drag_drop_ui.return_animation_time = animation_time;
+        self
+    }
+
+    /// Sets the animation time for the swap animation (when dragging an item over another item)
+    /// The default is the same as the egui animation time
+    /// If you want to disable the animation, set it to 0
+    pub fn with_swap_animation_time(mut self, animation_time: f32) -> Self {
+        self.drag_drop_ui.swap_animation_time = animation_time;
+        self
+    }
+
+    /// Sets the animation time for all animations
+    /// The default is the same as the egui animation time
+    /// If you want to disable all animations, set it to 0
+    pub fn with_animation_time(mut self, animation_time: f32) -> Self {
+        self.drag_drop_ui.return_animation_time = animation_time;
+        self.drag_drop_ui.swap_animation_time = animation_time;
         self
     }
 

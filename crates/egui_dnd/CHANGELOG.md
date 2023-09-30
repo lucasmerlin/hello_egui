@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.1
+ - Added setting to configure animation duration for swap and return animations
+ - Add support for egui 0.23
+
 ## v0.5.0
  - Added animations
  - Dragging in a ScrollArea will now scroll if we are near the edge

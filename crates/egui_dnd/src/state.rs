@@ -103,6 +103,8 @@ pub struct DragDropUi {
     /// If the mobile config is set, we will use it if we detect a touch event
     touch_config: Option<DragDropConfig>,
     mouse_config: DragDropConfig,
+    pub(crate) swap_animation_time: f32,
+    pub(crate) return_animation_time: f32,
 }
 
 impl Default for DragDropUi {
@@ -111,6 +113,8 @@ impl Default for DragDropUi {
             detection_state: DragDetectionState::None,
             touch_config: Some(DragDropConfig::touch()),
             mouse_config: DragDropConfig::mouse(),
+            swap_animation_time: 0.2,
+            return_animation_time: 0.2,
         }
     }
 }
