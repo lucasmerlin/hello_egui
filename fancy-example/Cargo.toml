@@ -10,7 +10,7 @@ egui_infinite_scroll = { path = "../crates/egui_infinite_scroll" }
 
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
-egui_extras = { workspace = true, features = ["image"] }
+egui_extras = { workspace = true, features = ["http", "image"] }
 ehttp = { version = "0.3.0" }
 
 image = { version = "0.24", features = ["jpeg", "png"] }

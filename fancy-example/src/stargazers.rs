@@ -1,79 +1,23 @@
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::sync::{Arc, Mutex};
 
-use egui::{Frame, Id, ScrollArea, Ui, Vec2};
-use egui_extras::RetainedImage;
+use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
 use ehttp::Request;
 use serde::Deserialize;
 
 use egui_dnd::{dnd, DragDropConfig};
 use egui_infinite_scroll::InfiniteScroll;
 
-#[derive(Default)]
-pub enum ImageState {
-    #[default]
-    None,
-    Loading,
-    Data(RetainedImage),
-    Error(String),
-}
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Stargazer {
     pub login: String,
     pub html_url: String,
     pub avatar_url: String,
-    #[serde(skip)]
-    pub image: Arc<Mutex<ImageState>>,
 }
 
 impl Hash for Stargazer {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.login.hash(state);
-    }
-}
-
-impl Debug for Stargazer {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Stargazer")
-            .field("login", &self.login)
-            .field("html_url", &self.html_url)
-            .field("avatar_url", &self.avatar_url)
-            .finish()
-    }
-}
-
-impl Stargazer {
-    pub fn load_image(&self) {
-        {
-            let mut guard = self.image.lock().unwrap();
-            if let ImageState::None = *guard {
-                *guard = ImageState::Loading;
-            } else {
-                return;
-            }
-        }
-
-        let image_state = self.image.clone();
-        let login = self.login.clone();
-        let avatar_url = self.avatar_url.clone();
-        ehttp::fetch(Request::get(avatar_url), move |result| {
-            if let Ok(data) = result {
-                let image = RetainedImage::from_image_bytes(login, &data.bytes);
-
-                let mut guard = image_state.lock().unwrap();
-                match image {
-                    Ok(image) => {
-                        *guard = ImageState::Data(image);
-                    }
-                    Err(err) => {
-                        dbg!(err);
-                        *guard = ImageState::Error("Failed to load image".to_string());
-                    }
-                }
-            }
-        });
     }
 }
 
@@ -85,12 +29,9 @@ impl Stargazers {
     pub fn new() -> Self {
         Self {
             infinite_scroll: InfiniteScroll::new().end_loader(|cursor, callback| {
-
-
                 ehttp::fetch(
                     Request::get(format!("https://api.github.com/repos/lucasmerlin/hello_egui/stargazers?per_page=100&page={}", cursor.unwrap_or(1))),
                     move |result| {
-                        dbg!(&result);
                         if let Ok(data) = result {
                             if let Ok(stargazers) = serde_json::from_slice::<Vec<Stargazer>>(&data.bytes) {
                                 callback(Ok((stargazers, Some(cursor.unwrap_or(1) + 1))));
@@ -102,8 +43,6 @@ impl Stargazers {
                         };
                     },
                 );
-
-
             }),
         }
     }
@@ -148,29 +87,15 @@ impl Stargazers {
                                             ui.set_width(ui.available_width());
 
                                             let size = Vec2::new(32.0, 32.0);
-                                            if ui.is_rect_visible(ui.min_rect().expand2(size)) {
-                                                item.load_image();
-                                            }
 
-                                            let image = item.image.lock().unwrap();
-                                            match &*image {
-                                                ImageState::Data(image) => {
-                                                    image.show_size(ui, size);
-                                                }
-                                                ImageState::Loading => {
-                                                    ui.allocate_ui(size, |ui| {
-                                                        ui.spinner();
-                                                    });
-                                                }
-                                                ImageState::Error(e) => {
-                                                    ui.allocate_ui(size, |ui| {
-                                                        ui.label(e);
-                                                    });
-                                                }
-                                                _ => {
-                                                    ui.allocate_space(size);
-                                                }
-                                            }
+                                            ui.add(
+                                                Image::new(format!(
+                                                    "{}&s={}",
+                                                    item.avatar_url,
+                                                    size.x as u32 * 2
+                                                ))
+                                                .fit_to_exact_size(size),
+                                            );
 
                                             ui.hyperlink_to(
                                                 item.login.as_str(),
