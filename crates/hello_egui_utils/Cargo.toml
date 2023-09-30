@@ -2,6 +2,10 @@
 name = "hello_egui_utils"
 version = "0.1.0"
 edition = "2021"
+description = "Utilities used by crates from https://github.com/lucasmerlin/hello_egui"
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui"
+homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/hello_egui_utils"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

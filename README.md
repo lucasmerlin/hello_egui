@@ -33,7 +33,7 @@ Source code in [fancy-example](fancy-example).
 
 - [egui_animation](crates/egui_animation)
   - Animation utilities for egui
-  - Experimental, used internally by [egui_dnd](crates/egui_dnd)
+  - Experimental, released on [crates.io](https://crates.io/crates/egui_animation), used internally by [egui_dnd](crates/egui_dnd)
 
 - [egui_taffy](crates/egui_taffy)
   - Adds flexbox layout to egui using [taffy](https://github.com/DioxusLabs/taffy)
