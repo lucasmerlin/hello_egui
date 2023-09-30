@@ -43,6 +43,10 @@ impl Default for VirtualList {
 }
 
 impl VirtualList {
+    /// Create a new VirtualList
+    ///
+    /// `over_scan` is useful e.g. when used in combination with egui_dnd.
+    /// Renders items this much before and after the visible area.
     pub fn new() -> Self {
         Self {
             previous_item_range: usize::MAX..usize::MAX,
@@ -51,11 +55,7 @@ impl VirtualList {
             average_row_size: None,
             rows: vec![],
             average_items_per_row: None,
-
             max_rows_calculated_per_frame: 1000,
-
-            /// Useful e.g. when used in combination with egui_dnd.
-            /// Renders items this much before and after the visible area.
             over_scan: 200.0,
         }
     }
