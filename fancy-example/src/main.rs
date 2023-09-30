@@ -228,7 +228,10 @@ fn main() {
             .start(
                 "canvas",
                 web_options,
-                Box::new(|_a| Box::new(App(items, stargazers, demo))),
+                Box::new(|a| {
+                    egui_extras::install_image_loaders(&a.egui_ctx);
+                    Box::new(App(items, stargazers, demo))
+                }),
             )
             .await
             .expect("failed to start eframe");
