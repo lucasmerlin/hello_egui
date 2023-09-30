@@ -11,7 +11,7 @@ license = "MIT"
 
 
 [dependencies]
-egui_animation = {path = "../egui_animation"}
+egui_animation.workspace = true
 
 egui.workspace = true
 

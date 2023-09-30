@@ -5,6 +5,10 @@
 members = ["fancy-example", "crates/*"]
 
 [workspace.dependencies]
+egui_dnd = { path = "./crates/egui_dnd", version = "0.5.0" }
+egui_animation = { path = "./crates/egui_animation", version = "0.1.0" }
+hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.1.0" }
+
 egui = { version = ">=0.22", default-features = false }
 eframe = { version = ">=0.22", default-features = false }
 egui_extras = { version = ">=0.22", default-features = false }
