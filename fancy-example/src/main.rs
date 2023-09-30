@@ -210,7 +210,7 @@ fn main() -> eframe::Result<()> {
     let mut demo = Demo::Vertical;
 
     eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
-        egui_extras::install_image_loaders(&ctx);
+        egui_extras::install_image_loaders(ctx);
         app(ctx, &mut demo, &mut items, &mut stargazers);
     })
 }
