@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::mem;
 
 use egui::util::IdTypeMap;
 use egui::{Context, Id, LayerId, Order, Pos2, Ui};
@@ -7,8 +6,8 @@ use taffy::prelude::*;
 
 type Node = NodeId;
 
-struct TaffyState<'f> {
-    taffy: Taffy<MeasureFunc<Vec<Option<ContentFn<'f>>>>>,
+struct TaffyState {
+    taffy: Taffy<(usize, egui::Layout)>,
 
     children: Vec<EguiTaffyNode>,
 
@@ -18,16 +17,16 @@ struct TaffyState<'f> {
     last_size: egui::Vec2,
 }
 
-impl<'f> Clone for TaffyState<'f> {
+impl Clone for TaffyState {
     fn clone(&self) -> Self {
         panic!("TaffyState is not cloneable")
     }
 }
 
-unsafe impl<'f> Send for TaffyState<'f> {}
-unsafe impl<'f> Sync for TaffyState<'f> {}
+unsafe impl Send for TaffyState {}
+unsafe impl Sync for TaffyState {}
 
-impl<'f> TaffyState<'f> {
+impl TaffyState {
     pub fn new() -> Self {
         let mut taffy = Taffy::new();
 
@@ -184,69 +183,9 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                     state.taffy.set_style(*c_node, style).unwrap();
                 }
             } else {
-                let ctx = self.measure_ctx.clone();
-
                 let node = state
                     .taffy
-                    .new_leaf_with_measure(
-                        style,
-                        MeasureFunc::Boxed(Box::new(
-                            move |known_size: Size<Option<f32>>,
-                                  avaiable_space: Size<AvailableSpace>,
-                                  data|
-                                  -> Size<f32> {
-                                let f = data.get_mut(content_idx).unwrap();
-
-                                let available_width = match avaiable_space.width {
-                                    AvailableSpace::Definite(num) => num,
-                                    AvailableSpace::MinContent => 0.0,
-                                    AvailableSpace::MaxContent => f32::MAX,
-                                };
-
-                                let available_height = match avaiable_space.height {
-                                    AvailableSpace::Definite(num) => num,
-                                    AvailableSpace::MinContent => 0.0,
-                                    AvailableSpace::MaxContent => f32::MAX,
-                                };
-
-                                let rect = egui::Rect::from_min_size(
-                                    Default::default(),
-                                    egui::Vec2::new(
-                                        known_size.width.unwrap_or(available_width),
-                                        known_size.height.unwrap_or(available_height),
-                                    ),
-                                );
-
-                                let mut ui = Ui::new(
-                                    ctx.clone(),
-                                    LayerId::new(Order::Background, Id::new("measure")),
-                                    Id::new("measure"),
-                                    rect,
-                                    egui::Rect::from_min_size(
-                                        Default::default(),
-                                        Default::default(),
-                                    ),
-                                );
-                                let response = ui.with_layout(
-                                    egui::Layout {
-                                        main_dir: layout.main_dir,
-                                        main_wrap: layout.main_wrap,
-                                        ..egui::Layout::default()
-                                    },
-                                    |ui| {
-                                        f.as_mut().expect("Expected content fn to be set!")(ui);
-                                    },
-                                );
-
-                                let result_rect = response.response.rect;
-
-                                Size {
-                                    width: result_rect.width().ceil(),
-                                    height: result_rect.height(),
-                                }
-                            },
-                        )),
-                    )
+                    .new_leaf_with_context(style, (content_idx, layout))
                     .unwrap();
 
                 let egui_node = EguiTaffyNode::Leaf(id, node, layout, self.current_node);
@@ -261,112 +200,137 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                         .replace_child_at_index(self.current_node, node_idx, node)
                         .unwrap();
                 }
-
-                // state
-                //     .taffy
-                //     .set_children(
-                //         state.root_node,
-                //         &state
-                //             .children
-                //             .iter()
-                //             .map(|(id, node, layout)| node.clone())
-                //             .collect::<Vec<_>>(),
-                //     )
-                //     .unwrap();
             }
         });
     }
 
     pub fn show(mut self) {
-        let (layouts, node) =
-            //Self::with_state(self.id, self.ui.ctx().clone(), |state: &mut TaffyState| {
-            self.ui.ctx().data_mut(|data: &mut IdTypeMap| {
-                let mut state: &mut TaffyState = data.get_temp_mut_or_insert_with(self.id, TaffyState::new);
+        let ctx = self.measure_ctx.clone();
+        let (layouts, node) = self.ui.ctx().data_mut(|data: &mut IdTypeMap| {
+            let state: &mut TaffyState = data.get_temp_mut_or_insert_with(self.id, TaffyState::new);
 
-                if state.taffy.dirty(state.root_node).unwrap()
-                    || self.ui.available_size() != state.last_size
-                {
-                    state.last_size = self.ui.available_size();
+            if state.taffy.dirty(state.root_node).unwrap()
+                || self.ui.available_size() != state.last_size
+            {
+                state.last_size = self.ui.available_size();
 
-                    // let mut content_fns = unsafe {
-                    //     mem::transmute::<
-                    //         &mut Vec<Option<ContentFn<'a>>>,
-                    //         &mut Vec<Option<ContentFn<'static>>>,
-                    //     >(&mut self.content_fns)
-                    // };
+                state
+                    .taffy
+                    .compute_layout_with_measure(
+                        state.root_node,
+                        Size {
+                            width: AvailableSpace::Definite(self.ui.available_width()),
+                            height: AvailableSpace::Definite(self.ui.available_height()),
+                        },
+                        |known_size: Size<Option<f32>>,
+                         available_space: Size<AvailableSpace>,
+                         _id,
+                         context|
+                         -> Size<f32> {
+                            let (content_idx, layout) = context.unwrap();
+                            let f = self.content_fns.get_mut(*content_idx).unwrap();
 
-                    let state = unsafe {
-                        mem::transmute::<
-                            &mut TaffyState<'static>,
-                            &mut TaffyState<'f>,
-                        >(&mut state)
-                    };
+                            let available_width = match available_space.width {
+                                AvailableSpace::Definite(num) => num,
+                                AvailableSpace::MinContent => 0.0,
+                                AvailableSpace::MaxContent => f32::MAX,
+                            };
 
-                    state
-                        .taffy
-                        .compute_layout_with_context(
-                            state.root_node,
+                            let available_height = match available_space.height {
+                                AvailableSpace::Definite(num) => num,
+                                AvailableSpace::MinContent => 0.0,
+                                AvailableSpace::MaxContent => f32::MAX,
+                            };
+
+                            let rect = egui::Rect::from_min_size(
+                                Default::default(),
+                                egui::Vec2::new(
+                                    known_size.width.unwrap_or(available_width),
+                                    known_size.height.unwrap_or(available_height),
+                                ),
+                            );
+
+                            let mut ui = Ui::new(
+                                ctx.clone(),
+                                LayerId::new(Order::Background, Id::new("measure")),
+                                Id::new("measure"),
+                                rect,
+                                egui::Rect::from_min_size(Default::default(), Default::default()),
+                            );
+                            let response = ui.with_layout(
+                                egui::Layout {
+                                    main_dir: layout.main_dir,
+                                    main_wrap: layout.main_wrap,
+                                    ..egui::Layout::default()
+                                },
+                                |ui| {
+                                    f.as_mut().expect("Expected content fn to be set!")(ui);
+                                },
+                            );
+
+                            let result_rect = response.response.rect;
+
                             Size {
-                                width: AvailableSpace::Definite(self.ui.available_width()),
-                                height: AvailableSpace::Definite(self.ui.available_height()),
-                            },
-                            &mut self.content_fns,
-                        )
-                        .unwrap();
-                }
+                                width: result_rect.width().ceil(),
+                                height: result_rect.height(),
+                            }
+                        },
+                    )
+                    .unwrap();
+            }
 
-                let mut parent_layouts = HashMap::new();
+            let mut parent_layouts = HashMap::new();
 
-                let root_layout = state.taffy.layout(state.root_node).unwrap();
+            let root_layout = state.taffy.layout(state.root_node).unwrap();
 
-                let rect = egui::Rect::from_min_size(
-                    Pos2::new(root_layout.location.x, root_layout.location.y),
-                    egui::Vec2::new(root_layout.size.width, root_layout.size.height),
-                );
+            let rect = egui::Rect::from_min_size(
+                Pos2::new(root_layout.location.x, root_layout.location.y),
+                egui::Vec2::new(root_layout.size.width, root_layout.size.height),
+            );
 
-                parent_layouts.insert(Into::<u64>::into(state.root_node), rect);
+            parent_layouts.insert(Into::<u64>::into(state.root_node), rect);
 
-                let layouts: Vec<_> = state
-                    .children
-                    .iter()
-                    .map(|node| match node {
-                        EguiTaffyNode::Leaf(_id, child, egui_layout, parent) => {
-                            let parent_rect = parent_layouts.get(&(*parent).into()).unwrap();
+            let layouts: Vec<_> = state
+                .children
+                .iter()
+                .map(|node| match node {
+                    EguiTaffyNode::Leaf(_id, child, egui_layout, parent) => {
+                        let parent_rect = parent_layouts.get(&(*parent).into()).unwrap();
 
-                            let layout = state.taffy.layout(*child).unwrap();
+                        let layout = state.taffy.layout(*child).unwrap();
 
-                            let rect = egui::Rect::from_min_size(
-                                Pos2::new(layout.location.x, layout.location.y),
-                                egui::Vec2::new(layout.size.width, layout.size.height),
-                            );
+                        let rect = egui::Rect::from_min_size(
+                            Pos2::new(layout.location.x, layout.location.y),
+                            egui::Vec2::new(layout.size.width, layout.size.height),
+                        );
 
-                            let rect = rect.translate(parent_rect.min.to_vec2());
+                        let rect = rect.translate(parent_rect.min.to_vec2());
 
-                            (rect, *egui_layout)
-                        }
-                        EguiTaffyNode::Node(node, parent) => {
-                            let parent_rect = parent_layouts.get(&(*parent).into()).unwrap();
+                        (rect, *egui_layout)
+                    }
+                    EguiTaffyNode::Node(node, parent) => {
+                        let parent_rect = parent_layouts.get(&(*parent).into()).unwrap();
 
-                            let layout = state.taffy.layout(*node).unwrap();
+                        let layout = state.taffy.layout(*node).unwrap();
 
-                            let rect = egui::Rect::from_min_size(
-                                Pos2::new(layout.location.x, layout.location.y),
-                                egui::Vec2::new(layout.size.width, layout.size.height),
-                            );
+                        let rect = egui::Rect::from_min_size(
+                            Pos2::new(layout.location.x, layout.location.y),
+                            egui::Vec2::new(layout.size.width, layout.size.height),
+                        );
 
-                            let rect = rect.translate(parent_rect.min.to_vec2());
+                        let rect = rect.translate(parent_rect.min.to_vec2());
 
-                            parent_layouts.insert(Into::<u64>::into(*node), rect);
+                        parent_layouts.insert(Into::<u64>::into(*node), rect);
 
-                            (rect, egui::Layout::default())
-                        }
-                    })
-                    .collect();
+                        (rect, egui::Layout::default())
+                    }
+                })
+                .collect();
 
-                let node = state.taffy.layout(state.root_node).unwrap();
+            let node = state.taffy.layout(state.root_node).unwrap();
 
-                (layouts, *node)
-            });
+            (layouts, *node)
+        });
 
         layouts
             .iter()
