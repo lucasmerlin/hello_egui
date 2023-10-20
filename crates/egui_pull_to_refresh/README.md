@@ -5,9 +5,9 @@ display a refresh indicator when the user pulls down the widget.
 
 ## Demo Videos:
 
-https://github.com/lucasmerlin/hello_egui/assets/8009393/b8a7ca7f-4e4b-4ae9-bfad-1e98a88bf5ba
+<https://github.com/lucasmerlin/hello_egui/assets/8009393/b8a7ca7f-4e4b-4ae9-bfad-1e98a88bf5ba>
 
-https://github.com/lucasmerlin/hello_egui/assets/8009393/c76e778e-6362-43cd-bef4-2d6e51eaf8d1
+<https://github.com/lucasmerlin/hello_egui/assets/8009393/c76e778e-6362-43cd-bef4-2d6e51eaf8d1>
 
 ## Usage
 ```rust
