@@ -3,6 +3,7 @@
 
 [workspace]
 members = ["fancy-example", "crates/*"]
+resolver = "2"
 
 [workspace.dependencies]
 egui_dnd = { path = "./crates/egui_dnd", version = "0.5.1" }

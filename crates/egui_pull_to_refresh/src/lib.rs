@@ -1,3 +1,7 @@
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
 use egui::scroll_area::ScrollAreaOutput;
 use egui::{Align2, Area, Color32, Id, Rect, Sense, Ui, Vec2};
 
@@ -5,13 +9,22 @@ use crate::progress_spinner::ProgressSpinner;
 
 mod progress_spinner;
 
+/// The current state of the pull to refresh widget.
 #[derive(Debug, Clone)]
 pub enum PullToRefreshState {
+    /// The widget is idle, no refresh is happening.
     Idle,
-    Dragging { distance: f32, far_enough: bool },
+    /// The user is dragging.
+    Dragging {
+        /// `distance` is the distance the user dragged.
+        distance: f32,
+        /// `far_enough` is true if the user dragged far enough to trigger a refresh.
+        far_enough: bool,
+    },
+    /// The user dragged far enough to trigger a refresh and released the pointer.
     DoRefresh,
+    /// The refresh is currently happening.
     Refreshing,
-    Done,
 }
 
 impl PullToRefreshState {
@@ -23,23 +36,27 @@ impl PullToRefreshState {
             }
             PullToRefreshState::DoRefresh => Some(1.0),
             PullToRefreshState::Refreshing => None,
-            PullToRefreshState::Done => None,
         }
     }
 }
 
+/// The response of the pull to refresh widget.
 #[derive(Debug, Clone)]
 pub struct PullToRefreshResponse<T> {
+    /// Current state of the pull to refresh widget.
     pub state: PullToRefreshState,
+    /// The inner response of the widget you wrapped in [`PullToRefresh::ui`] or [`PullToRefresh::scroll_area_ui`].
     pub inner: T,
 }
 
 impl<T> PullToRefreshResponse<T> {
+    /// Returns true if the user dragged far enough to trigger a refresh.
     pub fn should_refresh(&self) -> bool {
         matches!(self.state, PullToRefreshState::DoRefresh)
     }
 }
 
+/// A widget that allows the user to pull to refresh.
 pub struct PullToRefresh {
     id: Id,
     loading: bool,
@@ -97,6 +114,8 @@ impl PullToRefresh {
         }
     }
 
+    /// Shows the pull to refresh widget, wrapping a [egui::ScrollArea].
+    /// Pass the output of the scroll area to the content function.
     pub fn scroll_area_ui<T>(
         self,
         ui: &mut Ui,
@@ -133,7 +152,7 @@ impl PullToRefresh {
         }
 
         if !self.loading && matches!(state, PullToRefreshState::Refreshing) {
-            state = PullToRefreshState::Done;
+            state = PullToRefreshState::Idle;
         }
 
         if can_refresh && !self.loading {
@@ -206,7 +225,6 @@ impl PullToRefresh {
             }
             PullToRefreshState::DoRefresh => 1.0,
             PullToRefreshState::Refreshing => 1.0,
-            PullToRefreshState::Done => 0.0,
         } as f32;
 
         let anim_progress = ui.ctx().animate_value_with_time(

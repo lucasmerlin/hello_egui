@@ -23,7 +23,7 @@ pub fn main() -> eframe::Result<()> {
                                 })
                                 .inner
                         };
-                        iter.space_before(ui, item.id(), |ui, space| space_content(ui, space));
+                        iter.space_before(ui, item.id(), space_content);
 
                         iter.next(ui, item.id(), i, false, |ui, item_handle| {
                             item_handle.ui(ui, |ui, handle, state| {
