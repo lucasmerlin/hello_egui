@@ -873,7 +873,7 @@ dependencies = [
 
 [[package]]
 name = "egui_pull_to_refresh"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "eframe",
  "egui",
