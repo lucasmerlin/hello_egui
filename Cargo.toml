@@ -16,4 +16,4 @@ eframe = { version = ">=0.22", default-features = false }
 egui_extras = { version = ">=0.22", default-features = false }
 
 [patch.crates-io]
-taffy = { git = "https://github.com/nicoburns/taffy", branch = "measure-func-context" }
+taffy = { git = "https://github.com/DioxusLabs/taffy", branch = "main" }
