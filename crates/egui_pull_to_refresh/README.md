@@ -11,6 +11,8 @@ https://github.com/lucasmerlin/hello_egui/assets/8009393/c76e778e-6362-43cd-bef4
 
 ## Usage
 ```rust
+use egui::{Ui};
+use egui_pull_to_refresh::PullToRefresh;
 // This is the minimal example. Wrap some ui in a [`PullToRefresh`] widget
 // and refresh when should_refresh() returns true.
 fn my_ui(ui: &mut Ui, count: u64, loading: bool) -> bool {
