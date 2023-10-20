@@ -1,0 +1,17 @@
+[package]
+name = "egui_pull_to_refresh"
+version = "0.1.0"
+edition = "2021"
+description = "A pull to refresh library for egui"
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_pull_to_refresh"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui.workspace = true
+
+[dev-dependencies]
+eframe = { workspace = true, default-features = true }
+egui_inbox.workspace = true
+ehttp = "0.3.1"

@@ -872,6 +872,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_pull_to_refresh"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_inbox",
+ "ehttp",
+]
+
+[[package]]
 name = "egui_taffy"
 version = "0.1.0"
 dependencies = [

@@ -17,8 +17,12 @@ Source code in [fancy-example](fancy-example).
   - released on [crates.io](https://crates.io/crates/egui_dnd)
 
 - [egui_inbox](crates/egui_inbox)
-    - Simple utility for sending messages to egui uis from other threads / async functions
-    - released on [crates.io](https://crates.io/crates/egui_inbox)
+  - Simple utility for sending messages to egui uis from other threads / async functions
+  - released on [crates.io](https://crates.io/crates/egui_inbox)
+
+- [egui_pull_to_refresh](crates/egui_pull_to_refresh)
+  - Adds pull to refresh functionality to egui.
+  - released on [crates.io](https://crates.io/crates/egui_pull_to_refresh)
 
 ## **Experimental** Crates
 
