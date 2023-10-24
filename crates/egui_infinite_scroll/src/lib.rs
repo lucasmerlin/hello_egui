@@ -42,7 +42,7 @@ type FilterType<T> = Box<dyn Fn(&T) -> bool + Send + Sync>;
 pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
     pub items: Vec<T>,
 
-    start_loader: Option<Loader<T, Cursor>>,
+    // start_loader: Option<Loader<T, Cursor>>,
     end_loader: Option<Loader<T, Cursor>>,
 
     start_cursor: Option<Cursor>,
@@ -84,7 +84,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         let bottom_inbox = UiInbox::new();
         Self {
             items: Vec::new(),
-            start_loader: None,
+            // start_loader: None,
             end_loader: None,
             start_cursor: None,
             end_cursor: None,
@@ -97,13 +97,13 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
-    fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
-        mut self,
-        f: F,
-    ) -> Self {
-        self.start_loader = Some(Box::new(f));
-        self
-    }
+    // fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
+    //     mut self,
+    //     f: F,
+    // ) -> Self {
+    //     self.start_loader = Some(Box::new(f));
+    //     self
+    // }
 
     /// Sets the loader function for the end of the list.
     /// The loader function is called initially and when the user scrolls to the end of the list.
