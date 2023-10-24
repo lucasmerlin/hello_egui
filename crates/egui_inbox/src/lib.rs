@@ -62,8 +62,27 @@ impl<T: Debug> Clone for UiInbox<T> {
 }
 
 impl<T: Debug> UiInbox<T> {
+    /// Create a new inbox.
+    /// The context is grabbed from the [Ui] passed to [UiInbox::read], so
+    /// if you call [UiInbox::send] before [UiInbox::read], no repaint is requested.
+    /// If you want to set the context on creation, use [UiInbox::new_with_ctx].
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Create a new inbox with a context.
+    pub fn new_with_ctx(ctx: Context) -> Self {
+        Self(Arc::new(Mutex::new(State {
+            items: Vec::new(),
+            ctx: Some(ctx),
+        })))
+    }
+
+    /// Set the [Context] to use for requesting repaints.
+    /// Usually this is not needed, since the [Context] is grabbed from the [Ui] passed to [UiInbox::read].
+    pub fn set_ctx(&mut self, ctx: Context) {
+        let mut guard = self.0.lock().unwrap();
+        guard.ctx = Some(ctx);
     }
 
     /// Send an item to the inbox.
@@ -92,6 +111,14 @@ impl<T: Debug> UiInbox<T> {
         mem::take(&mut inbox.items).into_iter()
     }
 
+    /// Same as [UiInbox::read], but you don't need to pass a reference to [Ui].
+    /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
+    /// [UiInbox::new_with_ctx] manually.
+    pub fn read_without_ui(&self) -> impl Iterator<Item = T> {
+        let mut inbox = self.0.lock().unwrap();
+        mem::take(&mut inbox.items).into_iter()
+    }
+
     /// Replaces the value of `target` with the last item sent to the inbox.
     /// Any other updates are discarded.
     /// If no item was sent to the inbox, `target` is not updated.
@@ -105,6 +132,20 @@ impl<T: Debug> UiInbox<T> {
         if inbox.ctx.is_none() {
             inbox.ctx = Some(ui.ctx().clone());
         }
+        let data = mem::take(&mut inbox.items);
+        if let Some(item) = data.into_iter().last() {
+            *target = item;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Same as [UiInbox::replace], but you don't need to pass a reference to [Ui].
+    /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
+    /// [UiInbox::new_with_ctx] manually.
+    pub fn replace_without_ui(&self, target: &mut T) -> bool {
+        let mut inbox = self.0.lock().unwrap();
         let data = mem::take(&mut inbox.items);
         if let Some(item) = data.into_iter().last() {
             *target = item;

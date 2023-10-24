@@ -20,12 +20,18 @@ pub trait InfiniteScrollItem {
 }
 
 #[derive(Debug)]
-enum LoadingState<T, Cursor> {
+pub enum LoadingState<T, Cursor> {
     Loaded(Vec<T>, Option<Cursor>),
     Loading,
     Idle,
     NoMoreItems,
     Error(String),
+}
+
+impl<T, C> LoadingState<T, C> {
+    pub fn loading(&self) -> bool {
+        matches!(self, Self::Loading)
+    }
 }
 
 type Callback<T, Cursor> = Box<dyn FnOnce(Result<(Vec<T>, Option<Cursor>), String>) + Send + Sync>;
@@ -72,6 +78,7 @@ where
 impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     InfiniteScroll<T, Cursor>
 {
+    /// Create a new infinite scroll.
     pub fn new() -> Self {
         let top_inbox = UiInbox::new();
         let bottom_inbox = UiInbox::new();
@@ -90,7 +97,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
-    pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
+    fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
         mut self,
         f: F,
     ) -> Self {
@@ -98,6 +105,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self
     }
 
+    /// Sets the loader function for the end of the list.
+    /// The loader function is called initially and when the user scrolls to the end of the list.
     pub fn end_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
         mut self,
         f: F,
@@ -106,6 +115,29 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self
     }
 
+    /// Returns true if the initial loading is in progress (no items and loading state is loading)
+    pub fn initial_loading(&self) -> bool {
+        self.items.is_empty()
+            && (self.top_loading_state.loading() || self.bottom_loading_state.loading())
+    }
+
+    /// Returns true if there is a request in progress
+    pub fn loading(&self) -> bool {
+        self.top_loading_state.loading() || self.bottom_loading_state.loading()
+    }
+
+    /// Returns information about the top loading state
+    pub fn top_loading_state(&self) -> &LoadingState<T, Cursor> {
+        &self.top_loading_state
+    }
+
+    /// Returns information about the bottom loading state
+    pub fn bottom_loading_state(&self) -> &LoadingState<T, Cursor> {
+        &self.bottom_loading_state
+    }
+
+    /// Resets the infinite scroll, clearing all items and loading states.
+    /// This is a alias for [InfiniteScroll::reload].
     pub fn reset(&mut self) {
         self.items.clear();
         self.top_loading_state = LoadingState::Idle;
@@ -118,6 +150,17 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.virtual_list.reset();
     }
 
+    /// Resets the infinite scroll, clearing all items and loading states.
+    /// This is a alias for [InfiniteScroll::reset].
+    pub fn reload(&mut self) {
+        self.reset();
+    }
+
+    /// Use this to filter on the client. Not recommended for large datasets.
+    /// If the filter filters enough items, the loader will be called again and again,
+    /// until enough items to filter the screen are found or the loader returns no more items.
+    /// So in the worst case, this could result in loading *all* items.
+    /// The list will update automatically when the filter is set.
     pub fn set_filter(&mut self, filter: impl Fn(&T) -> bool + Send + Sync + 'static) {
         self.filter = Some(Box::new(filter));
         self.virtual_list.reset();
@@ -176,8 +219,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
+    /// Custom layout function for the virtual list. You can place items in each row however you please.
     /// The layout function is called with the remaining items and should return the count of items used.
-    /// It should return the index of the end of the row.
     pub fn ui_custom_layout(
         &mut self,
         end_prefetch: usize,
@@ -252,6 +295,9 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
+    /// A simple layout with multiple columns.
+    /// You can also make it responsive by using eg
+    /// `(ui.available_width() / 300.0).ceil() as usize` as the column count.
     pub fn ui_columns(
         &mut self,
         columns: usize,
@@ -283,6 +329,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         });
     }
 
+    /// A single column layout.
     pub fn ui(
         &mut self,
         ui: &mut Ui,
@@ -299,6 +346,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         });
     }
 
+    /// Layout for to use with [egui_extras::TableBody].
     #[cfg(feature = "egui_extras")]
     pub fn ui_table(
         &mut self,
