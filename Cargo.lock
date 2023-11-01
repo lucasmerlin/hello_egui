@@ -899,6 +899,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_suspense"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_inbox",
+ "rand",
+]
+
+[[package]]
 name = "egui_taffy"
 version = "0.1.0"
 dependencies = [
@@ -1363,6 +1373,17 @@ name = "hashbrown"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f93e7192158dbcda357bdec5fb5788eebf8bbac027f3f33e719d29135ae84156"
+
+[[package]]
+name = "hello_egui"
+version = "0.1.0"
+dependencies = [
+ "egui_animation",
+ "egui_dnd",
+ "egui_inbox",
+ "egui_pull_to_refresh",
+ "egui_suspense",
+]
 
 [[package]]
 name = "hello_egui_utils"

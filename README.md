@@ -1,6 +1,6 @@
 # Hello Egui!
-This projects contains a collection of egui tools I've created during
-development of the native app for https://hellopaint.io (still unreleased, stay tuned!).
+This project contains a collection of egui tools I've created during
+development of the native app for <https://hellopaint.io> (still unreleased, stay tuned!).
 
 The crates have varying levels of maturity, some are ready for use in production
 while others are highly experimental.
@@ -10,6 +10,11 @@ release it on crates.io.
 ## Example app
 An example using most of the crates is available [here](https://lucasmerlin.github.io/hello_egui/).
 Source code in [fancy-example](fancy-example).
+
+## **hello_egui**, this crate
+A collection of reexports for the other crates, if you want to use all or most of them.
+You can toggle individual features to only include the crates you need. By default, all crates are included.
+Only includes crates that have been released on [crates.io](https://crates.io/).
 
 ## **Mature** Crates
 - [egui_dnd](crates/egui_dnd)
@@ -23,6 +28,10 @@ Source code in [fancy-example](fancy-example).
 - [egui_pull_to_refresh](crates/egui_pull_to_refresh)
   - Adds pull to refresh functionality to egui.
   - released on [crates.io](https://crates.io/crates/egui_pull_to_refresh)
+
+- [egui_suspense](crates/egui_suspense)
+  - A helper to display loading, error and retry uis when waiting for asynchronous data.
+  - released on [crates.io](https://crates.io/crates/egui_suspense)
 
 ## **Experimental** Crates
 

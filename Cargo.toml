@@ -1,5 +1,35 @@
 
+[package]
+name = "hello_egui"
+version = "0.1.0"
+edition = "2021"
+description = "A collection of useful crates for egui."
+authors = ["Lucas Meurer"]
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui"
+homepage = "https://lucasmerlin.github.io/hello_egui/"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["dnd", "inbox", "pull_to_refresh", "animation", "suspense"]
+
+dnd = ["dep:egui_dnd"]
+inbox = ["dep:egui_inbox"]
+pull_to_refresh = ["dep:egui_pull_to_refresh"]
+animation = ["dep:egui_animation"]
+suspense = ["dep:egui_suspense"]
+
+[dependencies]
+egui_dnd = { workspace = true, optional = true }
+egui_inbox = { workspace = true, optional = true }
+egui_pull_to_refresh = { workspace = true, optional = true }
+egui_animation = { workspace = true, optional = true }
+egui_suspense = { workspace = true, optional = true }
+
+
+
+
 
 [workspace]
 members = ["fancy-example", "crates/*"]
@@ -10,6 +40,9 @@ egui_dnd = { path = "./crates/egui_dnd", version = "0.5.1" }
 egui_animation = { path = "./crates/egui_animation", version = "0.1.0" }
 hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.1.0" }
 egui_inbox = { path = "./crates/egui_inbox", version = "0.1.1" }
+egui_pull_to_refresh = { path = "./crates/egui_pull_to_refresh", version = "0.1.1" }
+egui_suspense = { path = "./crates/egui_suspense", version = "0.1.0" }
+hello_egui = { path = ".", version = "0.1.0" }
 
 egui = { version = ">=0.22", default-features = false }
 eframe = { version = ">=0.22", default-features = false }

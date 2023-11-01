@@ -1,0 +1,19 @@
+[package]
+name = "egui_suspense"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lucas Meurer"]
+description = "Automatically show loading and error uis for egui"
+keywords = ["egui", "ui"]
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_suspense"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui_inbox.workspace = true
+egui.workspace = true
+
+[dev-dependencies]
+eframe = {workspace = true, default-features = true}
+rand = "0.8.5"
