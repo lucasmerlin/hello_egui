@@ -11,7 +11,7 @@ release it on crates.io.
 An example using most of the crates is available [here](https://lucasmerlin.github.io/hello_egui/).
 Source code in [fancy-example](fancy-example).
 
-## **hello_egui**, this crate
+## [**hello_egui**](https://crates.io/crates/hello_egui), this crate
 A collection of reexports for the other crates, if you want to use all or most of them.
 You can toggle individual features to only include the crates you need. By default, all crates are included.
 Only includes crates that have been released on [crates.io](https://crates.io/).

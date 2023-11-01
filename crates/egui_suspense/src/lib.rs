@@ -8,6 +8,12 @@ use std::fmt::{Debug, Display};
 
 type CallbackFn<T> = dyn FnOnce(T) + Send;
 
+type ReloadFn<T, E> = dyn FnMut(Box<CallbackFn<Result<T, E>>>) + Send + Sync;
+
+type ErrorUiFn<E> = dyn Fn(&mut Ui, &E, &mut State<'_>) + Send + Sync;
+
+type LoadingUiFn = dyn Fn(&mut Ui) + Send + Sync;
+
 /// Helper struct to call the reload function.
 pub struct State<'a> {
     /// True if this is a reloadable suspense.
@@ -28,10 +34,10 @@ pub struct EguiSuspense<T: Debug, E: Display + Debug = String> {
     inbox: UiInbox<Result<T, E>>,
     data: Option<Result<T, E>>,
 
-    reload_fn: Option<Box<dyn FnMut(Box<CallbackFn<Result<T, E>>>) + Send + Sync>>,
+    reload_fn: Option<Box<ReloadFn<T, E>>>,
 
-    error_ui: Option<Box<dyn Fn(&mut Ui, &E, &mut State) + Send + Sync>>,
-    loading_ui: Option<Box<dyn Fn(&mut Ui) + Send + Sync>>,
+    error_ui: Option<Box<ErrorUiFn<E>>>,
+    loading_ui: Option<Box<LoadingUiFn>>,
 }
 
 impl<T: Debug, E: Display + Debug> Debug for EguiSuspense<T, E> {
@@ -135,9 +141,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
     ) -> Option<R> {
         let mut result = None;
 
-        self.inbox.read(ui).last().map(|result| {
+        if let Some(result) = self.inbox.read(ui).last() {
             self.data = Some(result);
-        });
+        }
 
         let mut clear_data = false;
         let clear_data_ref = &mut clear_data;
