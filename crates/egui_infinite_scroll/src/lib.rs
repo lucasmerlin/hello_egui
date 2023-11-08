@@ -142,6 +142,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.items.clear();
         self.top_loading_state = LoadingState::Idle;
         self.bottom_loading_state = LoadingState::Idle;
+        self.start_cursor = None;
+        self.end_cursor = None;
 
         // Create new inboxes in case there is a request in progress
         self.top_inbox = UiInbox::new();

@@ -15,6 +15,10 @@ pub fn main() -> eframe::Result<()> {
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
+                    if ui.button("Reset").clicked() {
+                        infinite_scroll.reset();
+                    };
+
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
                         ui.label(format!("Item {}", item));
                     });
