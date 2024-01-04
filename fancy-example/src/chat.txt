@@ -1,0 +1,11 @@
+Lucas, 2: Hi!
+
+Lucas, 4: Thanks for trying the chat example.
+
+Lucas, 8: The above history was generated with ChatGPT to add some content (so what you read above is basically glibberish).
+
+Lucas, 10: This is now real Lucas talking.
+
+Lucas, 13: If you enjoy my crates, please consider leaving a star on the github repo.
+
+Lucas, 15: This provides no real value but tingles my dopamine receptors.

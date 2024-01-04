@@ -23,19 +23,19 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-targets --all-features -- -D warnings
+          args: --all-targets --all-features --workspace -- -D warnings
 
       - name: RustFmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --all --check
 
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features
+          args: --all-features --workspace
 
       - name: Cargo Doc
         if: ${{ matrix.os == 'ubuntu-latest' }}

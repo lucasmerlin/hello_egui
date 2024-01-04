@@ -1,228 +1,161 @@
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 
-use eframe::egui;
 use eframe::egui::Color32;
 use eframe::emath::lerp;
-use egui::ecolor::Hsva;
-use egui::{Align2, Area, Context, Id, Rounding, Sense, Ui, Vec2};
+use eframe::{egui, Frame};
+use egui::{Align2, Area, Context, Id, SidePanel, Ui, Vec2};
 
-use egui_dnd::{dnd, DragDropItem};
+use color_sort::ColorSort;
+use shared_state::SharedState;
+use sidebar::{Category, SideBar};
 
+use crate::chat::ChatExample;
 use crate::stargazers::Stargazers;
 
+mod chat;
+mod color_sort;
+mod futures;
+mod shared_state;
+mod sidebar;
 mod stargazers;
 
-#[derive(Clone)]
-struct Color {
-    color: Color32,
-    name: &'static str,
-    rounded: bool,
-    index: usize,
+pub struct App {
+    sidebar: SideBar,
+    sidebar_expanded: bool,
+    shared_state: SharedState,
 }
 
-impl Hash for Color {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.index.hash(state)
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
-fn dnd_ui(items: &mut [Color], ui: &mut Ui, many: bool) {
-    let item_size = if many {
-        Vec2::splat(32.0)
-    } else {
-        Vec2::new(ui.available_width(), 32.0)
-    };
-
-    let response = dnd(ui, "fancy_dnd").show_custom(|ui, iter| {
-        items.iter_mut().enumerate().for_each(|(index, item)| {
-            iter.next(ui, Id::new(item.index), index, true, |ui, item_handle| {
-                item_handle.ui_sized(ui, item_size, |ui, handle, state| {
-                    ui.horizontal(|ui| {
-                        handle.ui_sized(ui, item_size, |ui| {
-                            let size_factor = ui.ctx().animate_value_with_time(
-                                item.id().with("handle_anim"),
-                                if state.dragged { 1.1 } else { 1.0 },
-                                0.2,
-                            );
-                            let size = 32.0;
-
-                            let (_id, response) =
-                                ui.allocate_exact_size(Vec2::splat(size), Sense::click());
-
-                            if response.clicked() {
-                                item.rounded = !item.rounded;
-                            }
-                            let rect = response.rect;
-
-                            let x = ui.ctx().animate_bool(item.id(), item.rounded);
-                            let rounding = x * 16.0 + 1.0;
-
-                            ui.painter().rect_filled(
-                                rect.shrink(x * 4.0 * size_factor)
-                                    .shrink(rect.width() * (1.0 - size_factor)),
-                                Rounding::same(rounding),
-                                item.color,
-                            );
-
-                            if !many {
-                                ui.heading(item.name);
-                            }
-                        });
-                    });
-                })
-            })
-        });
-    });
-
-    response.update_vec(items);
-
-    if let Some(reason) = response.cancellation_reason() {
-        println!("Drag has been cancelled because of {:?}", reason);
-    }
-}
-
-fn colors() -> Vec<Color> {
-    vec![
-        Color {
-            name: "Panic Purple",
-            color: egui::hex_color!("642CA9"),
-            rounded: false,
-            index: 0,
-        },
-        Color {
-            name: "Generic Green",
-            color: egui::hex_color!("2A9D8F"),
-            rounded: false,
-            index: 1,
-        },
-        Color {
-            name: "Ownership Orange*",
-            color: egui::hex_color!("E9C46A"),
-            rounded: false,
-            index: 2,
-        },
-    ]
-}
-
-fn many_colors() -> Vec<Color> {
-    let colors = 21;
-
-    (0..colors)
-        .map(|i| {
-            let hue = i as f32 / colors as f32;
-            let color = Color32::from(Hsva::new(hue, 0.8, 0.8, 1.0));
-            Color {
-                name: "Generic Green",
-                color,
-                rounded: false,
-                index: i,
-            }
-        })
-        .collect()
-}
-
-fn app(ctx: &Context, demo: &mut Demo, items: &mut Vec<Color>, stargazers: &mut Stargazers) {
-    egui::CentralPanel::default().frame(egui::Frame::none()
-        .fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7))
-    ).show(ctx, |ui| {
-        if items.len() == 3 {
-            vertex_gradient(
-                ui,
-                &Gradient(
-                    items
-                        .iter()
-                        .map(|c| c.color)
-                        .collect(),
-                ),
-            );
+impl App {
+    pub fn new() -> Self {
+        Self {
+            sidebar: SideBar::new(vec![
+                Category {
+                    name: "Drag and Drop".to_string(),
+                    examples: vec![
+                        Box::new(ColorSort::vertical()),
+                        Box::new(ColorSort::wrapped()),
+                        Box::new(Stargazers::new()),
+                    ],
+                },
+                Category {
+                    name: "Infinite Scroll".to_string(),
+                    examples: vec![Box::new(ChatExample::new())],
+                },
+            ]),
+            shared_state: SharedState::new(),
+            sidebar_expanded: false,
         }
+    }
+}
 
-        Area::new("content")
-            .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
-            .show(ctx, |ui| {
-                ui.set_width(300.0);
+impl eframe::App for App {
+    fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        let width = ctx.screen_rect().width();
+        let collapsible_sidebar = width < 800.0;
+        let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
 
-                egui::Frame::none()
-                    .fill(ui.style().visuals.panel_fill)
-                    .rounding(4.0)
-                    .inner_margin(20.0)
-                    .show(ui, |ui| {
-                        if demo == &Demo::Stargazers {
-                            ui.heading("Stargazer Sort");
-                        } else {
-                            ui.heading("Color Sort");
-                        }
-
-
-                        ui.horizontal(|ui| {
-                            ui.selectable_value(demo, Demo::Vertical, "Vertical");
-                            ui.selectable_value(demo, Demo::Horizontal, "Horizontal");
-                            ui.selectable_value(demo, Demo::Stargazers, "Stargazers");
-                        });
-
-                        if demo == &Demo::Vertical && items.len() > 3 {
-                            *items = colors();
-                        }
-                        if demo == &Demo::Horizontal && items.len() == 3 {
-                            *items = many_colors();
-                        }
-
-                        ui.add_space(5.0);
-
-                        if demo == &Demo::Stargazers {
-                            stargazers.stargazers_ui(ui);
-                        } else {
-                            let many = items.len() > 3;
-
-                                ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
-                                if many {
-                                    ui.horizontal_wrapped(|ui| {
-                                        dnd_ui(items, ui, many);
-                                    });
-                                } else {
-                                    dnd_ui(items, ui, many);
-                                }
-
-                            ui.add_space(5.0);
-                            if !many {
-                                ui.small("* it's actually yellow");
-                            } else {
-                                ui.small(" ");
-                            }
-                        }
-
-                        ui.separator();
-
-                        ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
-
-                        ui.hyperlink_to("View on GitHub", "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd");
-                        ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
-                        ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
-                    });
+        SidePanel::left("sidebar")
+            .resizable(false)
+            .exact_width(110.0)
+            .show_animated(ctx, is_expanded, |ui| {
+                if self.sidebar.ui(ui) {
+                    self.sidebar_expanded = false;
+                }
             });
-    });
+
+        let example = self.sidebar.active_example_mut();
+
+        egui::CentralPanel::default()
+            .frame(egui::Frame::none().fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7)))
+            .show(ctx, |ui| {
+                vertex_gradient(
+                    ui,
+                    &Gradient(
+                        self.shared_state
+                            .background_colors
+                            .iter()
+                            .map(|c| c.color)
+                            .collect(),
+                    ),
+                );
+
+                if collapsible_sidebar {
+                    ui.add_space(16.0);
+                    ui.horizontal(|ui| {
+                        ui.add_space(16.0);
+                        if ui.add(egui::Button::new("☰")).clicked() {
+                            self.sidebar_expanded = !self.sidebar_expanded;
+                        }
+                    });
+                }
+
+                if !(collapsible_sidebar && is_expanded) {
+                    example.ui(ui, &mut self.shared_state);
+                }
+            });
+    }
+}
+
+pub fn demo_area(ui: &mut Ui, title: &str, width: f32, content: impl FnOnce(&mut Ui)) {
+    Area::new(Id::new(title))
+        .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+        .show(ui.ctx(), |ui| {
+            let width = f32::min(ui.available_width() - 20.0, width);
+            ui.set_width(width);
+
+            egui::Frame::none()
+                .fill(ui.style().visuals.panel_fill)
+                .rounding(4.0)
+                .inner_margin(20.0)
+                .show(ui, |ui| {
+                    ui.heading(title);
+                    ui.add_space(5.0);
+
+                    content(ui);
+                });
+        });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
-    let mut items = colors();
-    let mut stargazers = Stargazers::new();
-    let mut demo = Demo::Vertical;
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("Unable to create Runtime");
 
-    eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
-        egui_extras::install_image_loaders(ctx);
-        app(ctx, &mut demo, &mut items, &mut stargazers);
-    })
+    // Enter the runtime so that `tokio::spawn` is available immediately.
+    let _enter = rt.enter();
+
+    // Execute the runtime in its own thread.
+    // The future doesn't have to do anything. In this example, it just sleeps forever.
+    std::thread::spawn(move || {
+        rt.block_on(async {
+            loop {
+                tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+            }
+        })
+    });
+
+    eframe::run_native(
+        "Dnd Example App",
+        Default::default(),
+        Box::new(move |ctx| {
+            egui_extras::install_image_loaders(&ctx.egui_ctx);
+            Box::new(App::new()) as Box<dyn eframe::App>
+        }),
+    )
 }
 
 // when compiling to web using trunk.
 #[cfg(target_arch = "wasm32")]
 fn main() {
     let web_options = eframe::WebOptions::default();
-    let items = colors();
-    let stargazers = Stargazers::new();
-    let demo = Demo::Vertical;
-
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
             .start(
@@ -230,31 +163,16 @@ fn main() {
                 web_options,
                 Box::new(|a| {
                     egui_extras::install_image_loaders(&a.egui_ctx);
-                    Box::new(App(items, stargazers, demo))
+                    Box::new(App::new()) as Box<dyn eframe::App>
                 }),
             )
             .await
             .expect("failed to start eframe");
     });
-
-    struct App(Vec<Color>, Stargazers, Demo);
-
-    impl eframe::App for App {
-        fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-            app(ctx, &mut self.2, &mut self.0, &mut self.1);
-        }
-    }
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 struct Gradient(pub Vec<Color32>);
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-enum Demo {
-    Horizontal,
-    Vertical,
-    Stargazers,
-}
 
 // taken from the egui demo
 fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {

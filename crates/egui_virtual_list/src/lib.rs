@@ -17,6 +17,7 @@ struct RowData {
     pos: Pos2,
 }
 
+#[derive(Debug)]
 pub struct VirtualList {
     rows: Vec<RowData>,
 
@@ -34,6 +35,11 @@ pub struct VirtualList {
     max_rows_calculated_per_frame: usize,
 
     over_scan: f32,
+
+    // If set, the list will scroll by this many items from the top.
+    // Useful when items at the top are added, and the scroll position should be maintained.
+    // The value should be the number of items that were added at the top.
+    items_inserted_at_start: Option<usize>,
 }
 
 impl Default for VirtualList {
@@ -57,7 +63,19 @@ impl VirtualList {
             average_items_per_row: None,
             max_rows_calculated_per_frame: 1000,
             over_scan: 200.0,
+            items_inserted_at_start: None,
         }
+    }
+
+    /// Set the number of items that were added at the top.
+    pub fn items_inserted_at_start(&mut self, scroll_top_items: usize) {
+        self.items_inserted_at_start = Some(scroll_top_items);
+    }
+
+    /// Set the overscan, or how much the list should render outside of the visible area.
+    /// The default is 200.0.
+    pub fn over_scan(&mut self, over_scan: f32) {
+        self.over_scan = over_scan;
     }
 
     /// Layout gets called with the index of the first item that should be displayed.
@@ -74,16 +92,48 @@ impl VirtualList {
             self.rows.clear();
         }
 
-        // Start of the scroll area (!=0 after scrolling)
-        let min = ui.next_widget_position();
+        // Start of the scroll area (basically scroll_offset + whatever is above the scroll area)
+        let min = ui.next_widget_position().to_vec2();
 
         let mut row_start_index = self.last_known_row_index.unwrap_or(0);
 
-        // This calculates the visual rect inside the scroll area
-        // Should be equivalent to to viewport from ScrollArea::show_viewport()
-        let visible_rect = ui.clip_rect().translate(-ui.min_rect().min.to_vec2());
+        // This calculates the visible rect inside the scroll area
+        // Should be equivalent to to viewport from ScrollArea::show_viewport(), offset by whatever is above the scroll area
+        let visible_rect = ui.clip_rect().translate(-min);
 
         let visible_rect = visible_rect.expand2(Vec2::new(0.0, self.over_scan));
+
+        let mut index_offset = 0;
+
+        // Calculate the added_height for items that were added at the top and scroll by that amount
+        // to maintain the scroll position
+        let scroll_items_top_step_2 =
+            if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
+                let mut measure_ui = ui.child_ui(ui.max_rect(), *ui.layout());
+                measure_ui.set_visible(false);
+
+                let start_height = measure_ui.next_widget_position();
+                for i in 0..scroll_top_items {
+                    layout(&mut measure_ui, i);
+                }
+                let end_height = measure_ui.next_widget_position();
+
+                let added_height = end_height.y - start_height.y + ui.spacing().item_spacing.y;
+
+                // TODO: Ideally we should be able to use scroll_with_delta here but that doesn't work
+                // until https://github.com/emilk/egui/issues/2783 is fixed. Before, scroll_to_rect
+                // only works when the mouse is over the scroll area.
+                // ui.scroll_with_delta(Vec2::new(0.0, -added_height));
+                ui.scroll_to_rect(ui.clip_rect().translate(Vec2::new(0.0, added_height)), None);
+
+                index_offset = scroll_top_items;
+
+                ui.ctx().request_repaint();
+
+                Some(added_height)
+            } else {
+                None
+            };
 
         // Find the first row that is visible
         loop {
@@ -105,11 +155,14 @@ impl VirtualList {
             .rows
             .get(row_start_index)
             .map(|row| row.range.start)
-            .unwrap_or(0);
+            .unwrap_or(0)
+            + index_offset;
 
         let mut current_item_index = item_start_index;
 
         let mut iterations = 0;
+
+        let mut first_visible_item_index = None;
 
         loop {
             // Bail out if we're recalculating too many items
@@ -121,12 +174,16 @@ impl VirtualList {
 
             // let item = self.items.get_mut(current_row);
             if current_item_index < length {
-                let pos = ui.next_widget_position() - min.to_vec2();
+                let pos = ui.next_widget_position() - min;
                 let count = layout(ui, current_item_index);
-                let size = ui.next_widget_position() - min.to_vec2() - pos;
+                let size = ui.next_widget_position() - min - pos;
                 let rect = Rect::from_min_size(pos, size);
 
                 let range = current_item_index..current_item_index + count;
+
+                if first_visible_item_index.is_none() && pos.y >= visible_rect.min.y {
+                    first_visible_item_index = Some(current_item_index);
+                }
 
                 if let Some(row) = self.rows.get_mut(current_row) {
                     row.range = range;
@@ -172,7 +229,7 @@ impl VirtualList {
             current_row += 1;
         }
 
-        let item_range = item_start_index..current_item_index;
+        let item_range = first_visible_item_index.unwrap_or(item_start_index)..current_item_index;
 
         if item_range.end < length {
             ui.set_min_height(
@@ -195,6 +252,12 @@ impl VirtualList {
         }
 
         self.previous_item_range = item_range.clone();
+
+        if let Some(added_height) = scroll_items_top_step_2 {
+            // We need to add the height at the bottom or else we might not be able to scroll
+            ui.add_space(added_height);
+            self.reset();
+        }
 
         VirtualListResponse {
             item_range,
