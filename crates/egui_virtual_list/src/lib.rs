@@ -98,51 +98,36 @@ impl VirtualList {
         let visible_rect = visible_rect.expand2(Vec2::new(0.0, self.over_scan));
 
         let mut index_offset = 0;
-        let mut prepend_items_when_done = None;
 
-        let mut updates = None;
+        // Calculate the added_height for items that were added at the top and scroll by that amount
+        // to maintain the scroll position
+        let scroll_items_top_step_2 =
+            if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
+                let mut measure_ui = ui.child_ui(ui.max_rect(), *ui.layout());
+                measure_ui.set_visible(false);
 
-        let mut reset_when_done = false;
+                let start_height = measure_ui.next_widget_position();
+                for i in 0..scroll_top_items {
+                    layout(&mut measure_ui, i);
+                }
+                let end_height = measure_ui.next_widget_position();
 
-        if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
-            let mut measure_ui = ui.child_ui(ui.max_rect(), *ui.layout());
-            measure_ui.set_visible(false);
+                let added_height = end_height.y - start_height.y + ui.spacing().item_spacing.y;
 
-            let mut items = Vec::with_capacity(scroll_top_items);
+                // TODO: Ideally we should be able to use scroll_with_delta here but that doesn't work
+                // until https://github.com/emilk/egui/issues/2783 is fixed. Before, scroll_to_rect
+                // only works when the mouse is over the scroll area.
+                // ui.scroll_with_delta(Vec2::new(0.0, -added_height));
+                ui.scroll_to_rect(ui.clip_rect().translate(Vec2::new(0.0, added_height)), None);
 
-            let start_height = measure_ui.next_widget_position().to_vec2() - min;
-            let mut last_rect = Rect::ZERO;
+                index_offset = scroll_top_items;
 
-            for i in 0..scroll_top_items {
-                let pos = measure_ui.next_widget_position() - min;
-                let count = layout(&mut measure_ui, i);
-                let size = measure_ui.next_widget_position() - min - pos;
-                last_rect = Rect::from_min_size(pos, size);
+                ui.ctx().request_repaint();
 
-                let range = i..i + count;
-
-                items.push(RowData { range, pos });
-            }
-
-            let added_height = last_rect.max.y - start_height.y + ui.spacing().item_spacing.y;
-
-            // TODO: Ideally we should be able to use scroll_with_delta here but that doesn't work
-            // until https://github.com/emilk/egui/issues/2783 is fixed. Before, scroll_to_rect
-            // only works when the mouse is over the scroll area.
-            // ui.scroll_with_delta(Vec2::new(0.0, -added_height));
-            ui.scroll_to_rect(ui.clip_rect().translate(Vec2::new(0.0, added_height)), None);
-
-            prepend_items_when_done = Some(items);
-            index_offset = scroll_top_items;
-
-            dbg!(ui.next_widget_position());
-
-            ui.ctx().request_repaint();
-
-            updates = Some((added_height, scroll_top_items));
-
-            reset_when_done = true;
-        }
+                Some(added_height)
+            } else {
+                None
+            };
 
         // Find the first row that is visible
         loop {
@@ -262,21 +247,9 @@ impl VirtualList {
 
         self.previous_item_range = item_range.clone();
 
-        if let Some((added_height, scroll_top_items)) = updates {
-            for row in self.rows.iter_mut() {
-                row.pos.y += added_height;
-                row.range.start += scroll_top_items;
-                row.range.end += scroll_top_items;
-            }
-
+        if let Some(added_height) = scroll_items_top_step_2 {
+            // We need to add the height at the bottom or else we might not be able to scroll
             ui.add_space(added_height);
-        }
-
-        if let Some(items) = prepend_items_when_done {
-            self.rows.splice(0..0, items);
-        }
-
-        if reset_when_done {
             self.reset();
         }
 
