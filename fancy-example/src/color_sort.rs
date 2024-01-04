@@ -1,3 +1,4 @@
+use crate::demo_area;
 use crate::shared_state::SharedState;
 use crate::sidebar::Example;
 use eframe::emath::Vec2;
@@ -94,15 +95,11 @@ impl ColorSort {
         });
 
         response.update_vec(items);
-
-        if let Some(reason) = response.cancellation_reason() {
-            println!("Drag has been cancelled because of {:?}", reason);
-        }
     }
 }
 
 impl Example for ColorSort {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         match self.kind {
             ColorSortKind::Vertical => "Color Sort",
             ColorSortKind::Wrapped { .. } => "Color Sort (wrapped)",
@@ -110,19 +107,33 @@ impl Example for ColorSort {
     }
 
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
-        match &mut self.kind {
-            ColorSortKind::Vertical => {
-                Self::dnd_ui(&mut shared_state.background_colors, ui, false);
-                ui.add_space(5.0);
-                ui.small("* it's actually yellow");
+        demo_area(ui, self.name(), 286.0, |ui| {
+            ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
+            match &mut self.kind {
+                ColorSortKind::Vertical => {
+                    Self::dnd_ui(&mut shared_state.background_colors, ui, false);
+                    ui.add_space(5.0);
+                    ui.small("* it's actually yellow");
+                }
+                ColorSortKind::Wrapped { colors } => {
+                    ui.horizontal_wrapped(|ui| {
+                        Self::dnd_ui(colors, ui, true);
+                    });
+                    ui.small("");
+                }
             }
-            ColorSortKind::Wrapped { colors } => {
-                ui.horizontal_wrapped(|ui| {
-                    Self::dnd_ui(colors, ui, true);
-                });
-            }
-        }
+
+            ui.separator();
+
+            ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
+
+            ui.hyperlink_to(
+                "View on GitHub",
+                "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
+            );
+            ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
+            ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
+        });
     }
 }
 

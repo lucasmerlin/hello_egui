@@ -2,7 +2,7 @@ use crate::shared_state::SharedState;
 use egui::{Align, Layout, Ui};
 
 pub trait Example {
-    fn name(&self) -> &str;
+    fn name(&self) -> &'static str;
 
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState);
 }
@@ -27,14 +27,20 @@ impl SideBar {
         }
     }
 
-    pub fn ui(&mut self, ui: &mut Ui) {
+    pub fn ui(&mut self, ui: &mut Ui) -> bool {
+        let mut clicked = false;
         ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
+            ui.add_space(4.0);
+            ui.heading("hello_egui");
+            ui.add_space(4.0);
+
             for (category_idx, category) in &mut self.categories.iter_mut().enumerate() {
                 ui.small(&category.name);
                 for (example_idx, example) in category.examples.iter_mut().enumerate() {
                     if ui.button(example.name()).clicked() {
                         self.active_category = category_idx;
                         self.active_example = example_idx;
+                        clicked = true;
                     }
                 }
             }
@@ -47,6 +53,8 @@ impl SideBar {
                 "https://github.com/lucasmerlin/hello_egui",
             );
         });
+
+        clicked
     }
 
     pub fn active_example_mut(&mut self) -> &mut dyn Example {

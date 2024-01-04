@@ -7,12 +7,10 @@ use eframe::{egui, Frame};
 use egui::{Align2, Area, Context, Id, SidePanel, Ui, Vec2};
 
 use color_sort::ColorSort;
-
 use shared_state::SharedState;
 use sidebar::{Category, SideBar};
 
 use crate::chat::ChatExample;
-use crate::futures::sleep;
 use crate::stargazers::Stargazers;
 
 mod chat;
@@ -24,6 +22,7 @@ mod stargazers;
 
 pub struct App {
     sidebar: SideBar,
+    sidebar_expanded: bool,
     shared_state: SharedState,
 }
 
@@ -47,66 +46,81 @@ impl App {
                 },
                 Category {
                     name: "Infinite Scroll".to_string(),
-                    examples: vec![Box::new(Stargazers::new()), Box::new(ChatExample::new())],
+                    examples: vec![Box::new(ChatExample::new())],
                 },
             ]),
             shared_state: SharedState::new(),
+            sidebar_expanded: false,
         }
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        let width = ctx.screen_rect().width();
+        let collapsible_sidebar = width < 800.0;
+        let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
+
         SidePanel::left("sidebar")
             .resizable(false)
             .exact_width(110.0)
-            .show(ctx, |ui| {
-                self.sidebar.ui(ui);
+            .show_animated(ctx, is_expanded, |ui| {
+                if self.sidebar.ui(ui) {
+                    self.sidebar_expanded = false;
+                }
             });
 
         let example = self.sidebar.active_example_mut();
 
-        egui::CentralPanel::default().frame(egui::Frame::none()
-            .fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7))
-        ).show(ctx, |ui| {
+        egui::CentralPanel::default()
+            .frame(egui::Frame::none().fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7)))
+            .show(ctx, |ui| {
                 vertex_gradient(
                     ui,
                     &Gradient(
-                        self.shared_state.background_colors
+                        self.shared_state
+                            .background_colors
                             .iter()
                             .map(|c| c.color)
                             .collect(),
                     ),
                 );
 
-            Area::new(Id::new(example.name()))
-                .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
-                .show(ctx, |ui| {
-                    ui.set_width(300.0);
+                if collapsible_sidebar {
+                    ui.add_space(16.0);
+                    ui.horizontal(|ui| {
+                        ui.add_space(16.0);
+                        if ui.add(egui::Button::new("☰")).clicked() {
+                            self.sidebar_expanded = !self.sidebar_expanded;
+                        }
+                    });
+                }
 
-                    egui::Frame::none()
-                        .fill(ui.style().visuals.panel_fill)
-                        .rounding(4.0)
-                        .inner_margin(20.0)
-                        .show(ui, |ui| {
+                if !(collapsible_sidebar && is_expanded) {
+                    example.ui(ui, &mut self.shared_state);
+                }
+            });
+    }
+}
 
-                            ui.heading(example.name());
+pub fn demo_area(ui: &mut Ui, title: &str, width: f32, content: impl FnOnce(&mut Ui)) {
+    Area::new(Id::new(title))
+        .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+        .show(ui.ctx(), |ui| {
+            let width = f32::min(ui.available_width() - 20.0, width);
+            ui.set_width(width);
 
-                            ui.add_space(5.0);
+            egui::Frame::none()
+                .fill(ui.style().visuals.panel_fill)
+                .rounding(4.0)
+                .inner_margin(20.0)
+                .show(ui, |ui| {
+                    ui.heading(title);
+                    ui.add_space(5.0);
 
-                            example.ui(ui, &mut self.shared_state);
-
-                            ui.separator();
-
-                            ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
-
-                            ui.hyperlink_to("View on GitHub", "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd");
-                            ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
-                            ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
-                        });
+                    content(ui);
                 });
         });
-    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -127,11 +141,6 @@ fn main() -> eframe::Result<()> {
                 tokio::time::sleep(Duration::from_secs(3600)).await;
             }
         })
-    });
-
-    tokio::spawn(async move {
-        sleep(std::time::Duration::from_secs(1)).await;
-        println!("Hello from tokio!");
     });
 
     eframe::run_native(

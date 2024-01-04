@@ -4,12 +4,15 @@ use std::time::Duration;
 use std::usize;
 
 use eframe::emath::Vec2;
-use egui::{Align, Frame, Label, Layout, RichText, ScrollArea, Ui, Widget};
+use egui::{
+    Align, Frame, Label, Layout, Rect, RichText, Rounding, ScrollArea, Shape, Stroke, Ui, Widget,
+};
 
 use egui_animation::animate_continuous;
 use egui_inbox::UiInbox;
 use egui_infinite_scroll::InfiniteScroll;
 
+use crate::demo_area;
 use crate::futures::{sleep, spawn};
 use crate::shared_state::SharedState;
 use crate::sidebar::Example;
@@ -123,9 +126,6 @@ impl ChatExample {
                 let history_loader = history_loader_clone.clone();
                 spawn(async move {
                     let (messages, cursor) = history_loader.load(cursor).await;
-
-                    dbg!(&messages);
-
                     cb(Ok((messages, cursor)));
                 });
             }),
@@ -160,125 +160,169 @@ impl ChatExample {
             self.msgs_received += 1;
         });
 
-        ScrollArea::vertical()
-            .max_height(200.0)
-            .stick_to_bottom(true)
-            .show(ui, |ui| {
-                ui.set_width(ui.available_width());
+        let title = self.name();
+        demo_area(ui, title, 500.0, |ui| {
+            ScrollArea::vertical()
+                .max_height(400.0)
+                .auto_shrink([false, false])
+                .stick_to_bottom(true)
+                .show(ui, |ui| {
+                    ui.set_width(ui.available_width());
 
-                ui.vertical_centered(|ui| {
-                    ui.set_visible(self.messages.top_loading_state().loading());
-                    ui.spinner();
-                });
+                    ui.vertical_centered(|ui| {
+                        ui.set_visible(self.messages.top_loading_state().loading());
+                        ui.spinner();
+                    });
 
-                let max_msg_width = ui.available_width() - 20.0;
-                let inner_margin = 8.0;
-                let outer_margin = 8.0;
+                    let max_msg_width = ui.available_width() - 40.0;
+                    let inner_margin = 8.0;
+                    let outer_margin = 8.0;
 
-                self.messages.ui(ui, 10, |ui, _index, item| {
-                    let is_message_from_myself = item.from.is_some();
+                    self.messages.ui(ui, 10, |ui, _index, item| {
+                        let is_message_from_myself = item.from.is_none();
 
-                    // Messages from the user are right-aligned.
-                    let layout = if is_message_from_myself {
-                        Layout::top_down(Align::Min)
-                    } else {
-                        Layout::top_down(Align::Max)
-                    };
-
-                    ui.with_layout(layout, |ui| {
-                        ui.set_max_width(max_msg_width);
-
-                        let mut measure = |text| {
-                            let label = Label::new(text);
-                            // We need to calculate the text width here to enable the typical
-                            // chat bubble layout where the own bubbles are right-aligned and
-                            // the text within is left-aligned.
-                            let (_pos, galley, _response) =
-                                label.layout_in_ui(&mut ui.child_ui(ui.max_rect(), *ui.layout()));
-                            let rect = galley.galley.rect;
-                            // Calculate the width of the frame based on the width of
-                            // the text and add 0.1 to account for floating point errors.
-                            f32::min(
-                                rect.width() + inner_margin * 2.0 + outer_margin * 2.0 + 0.1,
-                                max_msg_width,
-                            )
-                        };
-
-                        let content = RichText::new(&item.content);
-                        let mut msg_width = measure(content.clone());
-                        let name = if let Some(from) = &item.from {
-                            let name = RichText::new(from).strong();
-                            let width = measure(name.clone());
-                            msg_width = f32::max(msg_width, width);
-                            Some(name)
+                        // Messages from the user are right-aligned.
+                        let layout = if is_message_from_myself {
+                            Layout::top_down(Align::Max)
                         } else {
-                            None
+                            Layout::top_down(Align::Min)
                         };
 
-                        // Set the width of the ui to the width of the message.
-                        ui.set_min_width(msg_width);
+                        ui.with_layout(layout, |ui| {
+                            ui.set_max_width(max_msg_width);
 
-                        // ui.allocate_exact_size(
-                        //     Vec2::new(rect.width() + 16.0, 0.0),
-                        //     egui::Sense::hover(),
-                        // );
+                            let mut measure = |text| {
+                                let label = Label::new(text);
+                                // We need to calculate the text width here to enable the typical
+                                // chat bubble layout where the own bubbles are right-aligned and
+                                // the text within is left-aligned.
+                                let (_pos, galley, _response) = label
+                                    .layout_in_ui(&mut ui.child_ui(ui.max_rect(), *ui.layout()));
+                                let rect = galley.galley.rect;
+                                // Calculate the width of the frame based on the width of
+                                // the text and add 0.1 to account for floating point errors.
+                                f32::min(
+                                    rect.width() + inner_margin * 2.0 + outer_margin * 2.0 + 0.1,
+                                    max_msg_width,
+                                )
+                            };
 
+                            let content = RichText::new(&item.content);
+                            let mut msg_width = measure(content.clone());
+                            let name = if let Some(from) = &item.from {
+                                let name = RichText::new(from).strong();
+                                let width = measure(name.clone());
+                                msg_width = f32::max(msg_width, width);
+                                Some(name)
+                            } else {
+                                None
+                            };
+
+                            // Set the width of the ui to the width of the message.
+                            ui.set_min_width(msg_width);
+
+                            let msg_color = if is_message_from_myself {
+                                ui.style().visuals.widgets.inactive.bg_fill
+                            } else {
+                                ui.style().visuals.extreme_bg_color
+                            };
+
+                            let rounding = 8.0;
+                            let margin = 8.0;
+                            let response = Frame::none()
+                                .rounding(Rounding {
+                                    ne: if is_message_from_myself {
+                                        0.0
+                                    } else {
+                                        rounding
+                                    },
+                                    nw: if is_message_from_myself {
+                                        rounding
+                                    } else {
+                                        0.0
+                                    },
+                                    se: rounding,
+                                    sw: rounding,
+                                })
+                                .inner_margin(margin)
+                                .outer_margin(margin)
+                                .fill(msg_color)
+                                .show(ui, |ui| {
+                                    ui.with_layout(Layout::top_down(Align::Min), |ui| {
+                                        if let Some(from) = name {
+                                            Label::new(from).ui(ui);
+                                        }
+
+                                        ui.label(&item.content);
+                                    });
+                                })
+                                .response;
+
+                            let points = if !is_message_from_myself {
+                                let top = response.rect.left_top() + Vec2::splat(margin);
+                                let arrow_rect =
+                                    Rect::from_two_pos(top, top + Vec2::new(-rounding, rounding));
+
+                                vec![
+                                    arrow_rect.left_top(),
+                                    arrow_rect.right_top(),
+                                    arrow_rect.right_bottom(),
+                                ]
+                            } else {
+                                let top = response.rect.right_top() + Vec2::new(-margin, margin);
+                                let arrow_rect =
+                                    Rect::from_two_pos(top, top + Vec2::new(rounding, rounding));
+
+                                vec![
+                                    arrow_rect.left_top(),
+                                    arrow_rect.right_top(),
+                                    arrow_rect.left_bottom(),
+                                ]
+                            };
+
+                            ui.painter()
+                                .add(Shape::convex_polygon(points, msg_color, Stroke::NONE))
+                        });
+                    });
+
+                    if self.msgs_received < self.history_loader.messages.len()
+                        && !self.messages.initial_loading()
+                    {
                         Frame::none()
                             .rounding(8.0)
                             .inner_margin(8.0)
                             .outer_margin(8.0)
-                            .fill(if is_message_from_myself {
-                                ui.style().visuals.faint_bg_color
-                            } else {
-                                ui.style().visuals.extreme_bg_color
-                            })
+                            .fill(ui.style().visuals.faint_bg_color)
                             .show(ui, |ui| {
-                                ui.with_layout(Layout::top_down(Align::Min), |ui| {
-                                    if let Some(from) = name {
-                                        Label::new(from).ui(ui);
-                                    }
+                                ui.horizontal_top(|ui| {
+                                    let mut dot = |offset| {
+                                        let t = animate_continuous(
+                                            ui,
+                                            egui_animation::easing::sine_in_out,
+                                            Duration::from_secs_f32(1.0),
+                                            offset,
+                                        );
 
-                                    ui.label(&item.content);
+                                        let res = ui.allocate_response(
+                                            Vec2::splat(4.0),
+                                            egui::Sense::hover(),
+                                        );
+
+                                        ui.painter().circle_filled(
+                                            res.rect.center() + Vec2::Y * t * 4.0,
+                                            res.rect.width() / 2.0,
+                                            ui.style().visuals.text_color(),
+                                        )
+                                    };
+
+                                    dot(0.0);
+                                    dot(0.3);
+                                    dot(8.6);
                                 });
                             });
-                    });
+                    }
                 });
-
-                if self.msgs_received < self.history_loader.messages.len()
-                    && !self.messages.initial_loading()
-                {
-                    Frame::none()
-                        .rounding(8.0)
-                        .inner_margin(8.0)
-                        .outer_margin(8.0)
-                        .fill(ui.style().visuals.faint_bg_color)
-                        .show(ui, |ui| {
-                            ui.horizontal_top(|ui| {
-                                let mut dot = |offset| {
-                                    let t = animate_continuous(
-                                        ui,
-                                        egui_animation::easing::sine_in_out,
-                                        Duration::from_secs_f32(1.0),
-                                        offset,
-                                    );
-
-                                    let res = ui
-                                        .allocate_response(Vec2::splat(4.0), egui::Sense::hover());
-
-                                    ui.painter().circle_filled(
-                                        res.rect.center() + Vec2::Y * t * 4.0,
-                                        res.rect.width() / 2.0,
-                                        ui.style().visuals.text_color(),
-                                    )
-                                };
-
-                                dot(0.0);
-                                dot(0.3);
-                                dot(8.6);
-                            });
-                        });
-                }
-            });
+        });
     }
 }
 

@@ -62,7 +62,7 @@ impl VirtualList {
             rows: vec![],
             average_items_per_row: None,
             max_rows_calculated_per_frame: 1000,
-            over_scan: 0.0,
+            over_scan: 200.0,
             items_inserted_at_start: None,
         }
     }
@@ -70,6 +70,12 @@ impl VirtualList {
     /// Set the number of items that were added at the top.
     pub fn items_inserted_at_start(&mut self, scroll_top_items: usize) {
         self.items_inserted_at_start = Some(scroll_top_items);
+    }
+
+    /// Set the overscan, or how much the list should render outside of the visible area.
+    /// The default is 200.0.
+    pub fn over_scan(&mut self, over_scan: f32) {
+        self.over_scan = over_scan;
     }
 
     /// Layout gets called with the index of the first item that should be displayed.

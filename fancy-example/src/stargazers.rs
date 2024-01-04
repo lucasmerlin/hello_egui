@@ -5,6 +5,7 @@ use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
 use ehttp::Request;
 use serde::Deserialize;
 
+use crate::demo_area;
 use crate::sidebar::Example;
 use egui_dnd::{dnd, DragDropConfig};
 use egui_infinite_scroll::InfiniteScroll;
@@ -27,7 +28,7 @@ pub struct Stargazers {
 }
 
 impl Example for Stargazers {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "Stargazers"
     }
 
@@ -59,25 +60,37 @@ impl Stargazers {
     }
 
     pub fn stargazers_ui(&mut self, ui: &mut Ui) {
-        ScrollArea::vertical()
-            .max_height(250.0)
-            .auto_shrink([false, false])
-            .show(ui, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.label("Like");
-                    ui.hyperlink_to(
-                        " egui_dnd on GitHub ",
-                        "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
-                    );
-                    ui.label("to be listed here!");
-                });
-                ui.horizontal_wrapped(|ui| {
-                    ui.label("On mobile you can drag to scroll and hold + drag to sort items.");
+        demo_area(ui, self.name(), 300.0, |ui| {
+            ScrollArea::vertical()
+                .max_height(250.0)
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    ui.horizontal_wrapped(|ui| {
+                        ui.spacing_mut().item_spacing.x = 0.0;
+                        ui.label("Like");
+                        ui.hyperlink_to(
+                            " egui_dnd on GitHub ",
+                            "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
+                        );
+                        ui.label("to be listed here!");
+                    });
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label("On mobile you can drag to scroll and hold + drag to sort items.");
+                    });
+                    self.stargazers_dnd_ui(ui);
                 });
 
-                self.stargazers_dnd_ui(ui);
-            });
+            ui.separator();
+
+            ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
+
+            ui.hyperlink_to(
+                "View on GitHub",
+                "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
+            );
+            ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
+            ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
+        });
     }
 
     pub fn stargazers_dnd_ui(&mut self, ui: &mut Ui) {
