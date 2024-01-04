@@ -3,9 +3,9 @@ use std::mem;
 use std::ops::Range;
 
 use egui::Ui;
-
 #[cfg(feature = "egui_extras")]
 use egui_extras::{TableBody, TableRow};
+
 use egui_inbox::UiInbox;
 use egui_virtual_list::{VirtualList, VirtualListResponse};
 
@@ -42,7 +42,7 @@ type FilterType<T> = Box<dyn Fn(&T) -> bool + Send + Sync>;
 pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
     pub items: Vec<T>,
 
-    // start_loader: Option<Loader<T, Cursor>>,
+    start_loader: Option<Loader<T, Cursor>>,
     end_loader: Option<Loader<T, Cursor>>,
 
     start_cursor: Option<Cursor>,
@@ -59,9 +59,25 @@ pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
     virtual_list: VirtualList,
 }
 
-impl<T: Debug + Send + Sync, Cursor: Clone + Debug> Debug for InfiniteScroll<T, Cursor> {
+impl<T, Cursor> Debug for InfiniteScroll<T, Cursor>
+where
+    T: Debug + Send + Sync,
+    Cursor: Clone + Debug + Send + Sync,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("InfiniteScroll { ... }")
+        f.debug_struct("InfiniteScroll")
+            .field("items", &self.items)
+            .field("start_loader", &self.start_loader.is_some())
+            .field("end_loader", &self.end_loader.is_some())
+            .field("start_cursor", &self.start_cursor)
+            .field("end_cursor", &self.end_cursor)
+            .field("top_loading_state", &self.top_loading_state)
+            .field("bottom_loading_state", &self.bottom_loading_state)
+            .field("top_inbox", &self.top_inbox)
+            .field("bottom_inbox", &self.bottom_inbox)
+            .field("filter", &self.filter.is_some())
+            .field("virtual_list", &self.virtual_list)
+            .finish()
     }
 }
 
@@ -84,7 +100,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         let bottom_inbox = UiInbox::new();
         Self {
             items: Vec::new(),
-            // start_loader: None,
+            start_loader: None,
             end_loader: None,
             start_cursor: None,
             end_cursor: None,
@@ -97,13 +113,13 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
-    // fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
-    //     mut self,
-    //     f: F,
-    // ) -> Self {
-    //     self.start_loader = Some(Box::new(f));
-    //     self
-    // }
+    pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
+        mut self,
+        f: F,
+    ) -> Self {
+        self.start_loader = Some(Box::new(f));
+        self
+    }
 
     /// Sets the loader function for the end of the list.
     /// The loader function is called initially and when the user scrolls to the end of the list.
@@ -134,6 +150,22 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     /// Returns information about the bottom loading state
     pub fn bottom_loading_state(&self) -> &LoadingState<T, Cursor> {
         &self.bottom_loading_state
+    }
+
+    /// Retry loading the top items
+    /// This only works if the top loading state is [LoadingState::Error]
+    pub fn retry_top(&mut self) {
+        if let LoadingState::Error(_) = self.top_loading_state {
+            self.top_loading_state = LoadingState::Idle;
+        }
+    }
+
+    /// Retry loading the bottom items
+    /// This only works if the bottom loading state is [LoadingState::Error]
+    pub fn retry_bottom(&mut self) {
+        if let LoadingState::Error(_) = self.bottom_loading_state {
+            self.bottom_loading_state = LoadingState::Idle;
+        }
     }
 
     /// Resets the infinite scroll, clearing all items and loading states.
@@ -178,6 +210,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     }
                     let empty = items.is_empty();
                     self.items.extend(items);
+
+                    ui.ctx().request_repaint();
                     if empty || !has_cursor {
                         LoadingState::NoMoreItems
                     } else {
@@ -191,6 +225,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.top_inbox.read(ui).for_each(|state| {
             self.top_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
+                    self.virtual_list.items_inserted_at_start(items.len());
                     let has_cursor = cursor.is_some();
                     if has_cursor {
                         self.start_cursor = cursor;
@@ -199,6 +234,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     let mut old_items = mem::take(&mut self.items);
                     self.items = items;
                     self.items.append(&mut old_items);
+
+                    ui.ctx().request_repaint();
                     if empty || !has_cursor {
                         LoadingState::NoMoreItems
                     } else {
@@ -239,34 +276,6 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                 layout(ui, start_index, &mut items[start_index..])
             });
 
-        ui.add_space(20.0);
-
-        ui.separator();
-
-        ui.add_space(20.0);
-
-        ui.vertical_centered(|ui| match &self.bottom_loading_state {
-            LoadingState::Loading => {
-                ui.spinner();
-            }
-            LoadingState::Idle => {
-                ui.spinner();
-            }
-            LoadingState::NoMoreItems => {
-                ui.label("No more items");
-            }
-            LoadingState::Error(e) => {
-                ui.label(format!("Error: {}", e));
-                if ui.button("Try again").clicked() {
-                    self.bottom_loading_state = LoadingState::Idle;
-                    ui.ctx().request_repaint();
-                }
-            }
-            _ => {}
-        });
-
-        ui.add_space(20.0);
-
         self.update_items(&response.item_range, end_prefetch);
 
         response
@@ -276,7 +285,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         let items = Self::filtered_items(&mut self.items, &self.filter);
 
         if item_range.end + end_prefetch >= items.len()
-            && matches!(self.bottom_loading_state, LoadingState::Idle)
+            && matches!(self.bottom_loading_state, LoadingState::Idle { .. })
         {
             self.bottom_loading_state = LoadingState::Loading;
             let inbox = self.bottom_inbox.clone();
@@ -284,6 +293,27 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             if let Some(end_loader) = &mut self.end_loader {
                 end_loader(
                     self.end_cursor.clone(),
+                    Box::new(move |result| match result {
+                        Ok((items, cursor)) => {
+                            inbox.send(LoadingState::Loaded(items, cursor));
+                        }
+                        Err(err) => {
+                            inbox.send(LoadingState::Error(err.to_string()));
+                        }
+                    }),
+                );
+            }
+        }
+
+        if item_range.start < end_prefetch
+            && matches!(self.top_loading_state, LoadingState::Idle { .. })
+        {
+            self.top_loading_state = LoadingState::Loading;
+            let inbox = self.top_inbox.clone();
+
+            if let Some(start_loader) = &mut self.start_loader {
+                start_loader(
+                    self.start_cursor.clone(),
                     Box::new(move |result| match result {
                         Ok((items, cursor)) => {
                             inbox.send(LoadingState::Loaded(items, cursor));

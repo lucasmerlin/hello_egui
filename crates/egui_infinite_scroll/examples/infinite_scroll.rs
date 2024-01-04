@@ -10,7 +10,7 @@ pub fn main() -> eframe::Result<()> {
     });
 
     eframe::run_simple_native(
-        "DnD Simple Example",
+        "Infinite Scroll Simple Example",
         Default::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {

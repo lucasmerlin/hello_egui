@@ -2,6 +2,11 @@ mod collapse;
 
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::time::Duration;
+
+pub mod easing {
+    pub use simple_easing::*;
+}
 
 pub use collapse::*;
 use egui::{Context, Id, Pos2, Rect, Sense, Ui, Vec2};
@@ -110,4 +115,12 @@ pub fn animate_ui_translation(
         .response;
 
     rect
+}
+
+pub fn animate_continuous(ui: &mut Ui, easing: Easing, duration: Duration, offset: f32) -> f32 {
+    ui.ctx().request_repaint();
+
+    let t = ui.input(|i| i.time as f32 + offset);
+    let x = t % duration.as_secs_f32();
+    easing::roundtrip(easing(x / duration.as_secs_f32()))
 }

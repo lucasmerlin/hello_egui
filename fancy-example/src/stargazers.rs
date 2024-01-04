@@ -5,6 +5,7 @@ use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
 use ehttp::Request;
 use serde::Deserialize;
 
+use crate::sidebar::Example;
 use egui_dnd::{dnd, DragDropConfig};
 use egui_infinite_scroll::InfiniteScroll;
 
@@ -23,6 +24,16 @@ impl Hash for Stargazer {
 
 pub struct Stargazers {
     infinite_scroll: InfiniteScroll<Stargazer, usize>,
+}
+
+impl Example for Stargazers {
+    fn name(&self) -> &str {
+        "Stargazers"
+    }
+
+    fn ui(&mut self, ui: &mut Ui, _shared_state: &mut crate::shared_state::SharedState) {
+        self.stargazers_ui(ui);
+    }
 }
 
 impl Stargazers {
