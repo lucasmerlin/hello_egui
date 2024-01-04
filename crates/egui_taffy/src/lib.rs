@@ -7,7 +7,7 @@ use taffy::prelude::*;
 type Node = NodeId;
 
 struct TaffyState {
-    taffy: Taffy<(usize, egui::Layout)>,
+    taffy: TaffyTree<(usize, egui::Layout)>,
 
     children: Vec<EguiTaffyNode>,
 
@@ -28,7 +28,7 @@ unsafe impl Sync for TaffyState {}
 
 impl TaffyState {
     pub fn new() -> Self {
-        let mut taffy = Taffy::new();
+        let mut taffy = TaffyTree::new();
 
         Self {
             root_node: taffy.new_with_children(Style::default(), &[]).unwrap(),
@@ -271,7 +271,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                             let result_rect = response.response.rect;
 
                             Size {
-                                width: result_rect.width().ceil(),
+                                width: result_rect.width().ceil() + 0.01,
                                 height: result_rect.height(),
                             }
                         },
