@@ -1,27 +1,27 @@
 <head>
     <style>
-        head, body, textarea {
+        head, body, #input {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
         }
 
-        textarea {
+        #input {
             resize: none;
             border: transparent 2px solid;
         }
 
-        textarea:hover, textarea:focus {
+        #input:hover, #input:focus {
             border: darkgray 2px solid;
         }
     </style>
     <script>
         function set_text(text) {
-            document.getElementById("textarea").value = text;
+            document.getElementById("input").value = text;
         }
     </script>
 </head>
 <body>
-<textarea id="textarea" oninput="window.ipc.postMessage(this.value)"></textarea>
+<_tag _parameters id="input" oninput="window.ipc.postMessage(this.value)"></_tag>
 </body>

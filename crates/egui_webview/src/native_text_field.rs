@@ -1,6 +1,34 @@
-use crate::EguiWebView;
 use egui::{Context, Ui, Vec2};
+
 use egui_inbox::UiInbox;
+
+use crate::EguiWebView;
+
+#[derive(Debug)]
+pub enum TextFieldType {
+    Text,
+    Password,
+    Email,
+    Textarea,
+}
+
+impl TextFieldType {
+    pub fn parameters(&self) -> &'static str {
+        match self {
+            TextFieldType::Text => "type=\"text\"",
+            TextFieldType::Password => "type=\"password\"",
+            TextFieldType::Email => "type=\"email\"",
+            TextFieldType::Textarea => "",
+        }
+    }
+
+    pub fn tag(&self) -> &'static str {
+        match self {
+            TextFieldType::Textarea => "textarea",
+            _ => "input",
+        }
+    }
+}
 
 /// Since there still is no text input on when using egui/winit natively on ios and android
 /// I thought that maybe we could use a webview as a very overcomplicated text input.
@@ -9,29 +37,38 @@ pub struct NativeTextField {
     webview: EguiWebView,
     current_text: String,
     inbox: UiInbox<String>,
+    field_type: TextFieldType,
 }
 
 unsafe impl Send for NativeTextField {}
 unsafe impl Sync for NativeTextField {}
 
 impl NativeTextField {
-    pub fn new(ctx: &Context) -> NativeTextField {
+    pub fn new(ctx: &Context, text_field_type: TextFieldType) -> NativeTextField {
         let inbox = UiInbox::new();
         let inbox_clone = inbox.clone();
         let view = EguiWebView::new(ctx, "webview", |b| {
-            b.with_html(include_str!("native_text_field.html"))
-                .unwrap()
-                .with_ipc_handler(move |msg| {
-                    println!("Got message: {:?}", msg);
-                    inbox_clone.send(msg);
-                })
-                .with_devtools(true)
+            b.with_html(
+                include_str!("native_text_field.html")
+                    .replace("_tag", text_field_type.tag())
+                    .replace("_parameters", text_field_type.parameters()),
+            )
+            .unwrap()
+            .with_ipc_handler(move |msg| {
+                inbox_clone.send(msg);
+            })
+            .with_devtools(true)
         });
         NativeTextField {
             webview: view,
             inbox,
             current_text: "".to_string(),
+            field_type: text_field_type,
         }
+    }
+
+    pub fn field_type(&self) -> &TextFieldType {
+        &self.field_type
     }
 
     pub fn ui(&mut self, ui: &mut Ui, size: Vec2) {
