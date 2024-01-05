@@ -52,5 +52,11 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
   - Adds flexbox layout to egui using [taffy](https://github.com/DioxusLabs/taffy)
   - Highly experimental, unreleased
 
+- [egui_webview](crates/egui_webview)
+  - WebView widget for egui, based on wry
+  - Experimental, unreleased
+  - Warning: Currently uses some unsafe to get around Send / Sync limitations,
+    so it probably has some safety issues.
+
 - [hello_egui_utils](crates/hello_egui_utils)
   - Collection of utilities used by the other crates
