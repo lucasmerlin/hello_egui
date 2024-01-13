@@ -30,11 +30,11 @@ impl Gallery {
         let backend = serde_json::from_str::<Vec<GalleryItem>>(items).unwrap();
         let items = InfiniteScroll::new().end_loader(move |cursor, callback| {
             let cursor = cursor.unwrap_or(0);
-            let items: Vec<_> = backend.iter().cloned().skip(cursor).take(10).collect();
-            if items.len() == 0 {
+            let items: Vec<_> = backend.iter().skip(cursor).take(10).cloned().collect();
+            if items.is_empty() {
                 println!("Resetting");
                 // For the sake of the example we want the gallery to be infinite
-                callback(Ok((backend[0..10].iter().cloned().collect(), Some(10))));
+                callback(Ok((backend[0..10].to_vec(), Some(10))));
             } else {
                 callback(Ok((items, Some(cursor + 10))));
             }
@@ -94,8 +94,8 @@ impl Example for Gallery {
                                     size,
                                     ThumbhashImage::new(
                                         Image::new(format!(
-                                            "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/gallery/{}.jpg#{}",
-                                            item.image_url,
+                                            "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp#{}",
+                                            item.id,
                                             start_idx + idx
                                         ))
                                         .sense(Sense::click()),

@@ -16,15 +16,14 @@ pub fn register(ctx: &Context) {
     ctx.add_image_loader(Arc::new(ThumbhashImageLoader::new()))
 }
 
+#[derive(Clone, Default)]
 pub struct ThumbhashImageLoader {
     images: Mutex<HashMap<u64, Arc<ColorImage>>>,
 }
 
 impl ThumbhashImageLoader {
     pub fn new() -> Self {
-        Self {
-            images: Mutex::new(HashMap::default()),
-        }
+        Self::default()
     }
 }
 
@@ -93,7 +92,7 @@ pub fn thumbhash_to_uri(thumbhash: &[u8]) -> String {
 }
 
 pub fn uri_to_thumbhash(uri: &str) -> Option<Vec<u8>> {
-    let mut split = uri.split(":");
+    let mut split = uri.split(':');
     let prefix = split.next()?;
     if prefix != "thumbhash" {
         return None;

@@ -90,6 +90,6 @@ mod run {
         let json = serde_json::to_string_pretty(&items).unwrap();
 
         let mut index_file = File::create("fancy-example/src/gallery/index.json").unwrap();
-        index_file.write_all(&json.as_bytes()).unwrap();
+        index_file.write_all(json.as_bytes()).unwrap();
     }
 }

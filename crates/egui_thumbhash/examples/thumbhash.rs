@@ -26,12 +26,12 @@ fn col(ui: &mut Ui, items: &[GalleryItem]) {
         image_size,
         ThumbhashImage::new(
           Image::new(format!(
-            "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/gallery/{}.jpg",
-            item.image_url
+            "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp",
+            item.id
           ))
           .show_loading_spinner(false)
           .rounding(8.0),
-          &item.thumbhash.as_ref().unwrap(),
+          item.thumbhash.as_ref().unwrap(),
         ),
       );
     } else {
