@@ -262,8 +262,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     /// The layout function is called with the remaining items and should return the count of items used.
     pub fn ui_custom_layout(
         &mut self,
-        end_prefetch: usize,
         ui: &mut Ui,
+        end_prefetch: usize,
         mut layout: impl FnMut(&mut Ui, usize, &mut [&mut T]) -> usize,
     ) -> VirtualListResponse {
         self.read_inboxes(ui);
@@ -332,16 +332,16 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     /// `(ui.available_width() / 300.0).ceil() as usize` as the column count.
     pub fn ui_columns(
         &mut self,
+        ui: &mut Ui,
+        prefetch_count: usize,
         columns: usize,
         max_row_height: Option<f32>,
-        prefetch_count: usize,
-        ui: &mut Ui,
         mut item_ui: impl FnMut(&mut Ui, usize, &mut T),
     ) {
         let max_width = ui.available_width();
         let item_width = max_width / columns as f32
             - (ui.spacing().item_spacing.x / columns as f32 * (columns - 1) as f32);
-        self.ui_custom_layout(prefetch_count, ui, |ui, start_index, items| {
+        self.ui_custom_layout(ui, prefetch_count, |ui, start_index, items| {
             let count = items.len().min(columns);
             if let Some(max_row_height) = max_row_height {
                 ui.set_max_height(max_row_height);
@@ -368,7 +368,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         prefetch_count: usize,
         mut item_ui: impl FnMut(&mut Ui, usize, &mut T),
     ) {
-        self.ui_custom_layout(prefetch_count, ui, |ui, start_index, items| {
+        self.ui_custom_layout(ui, prefetch_count, |ui, start_index, items| {
             if let Some(item) = items.first_mut() {
                 item_ui(ui, start_index, item);
                 1

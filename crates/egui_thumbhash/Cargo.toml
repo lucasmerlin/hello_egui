@@ -1,0 +1,20 @@
+[package]
+name = "egui_thumbhash"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thumbhash = "0.1.0"
+egui = { workspace = true }
+base64 = "0.21.7"
+
+[dev-dependencies]
+eframe = { workspace = true, default-features = true }
+egui_extras = { workspace = true, default-features = true, features = ["file", "image", "http"] }
+
+oxhttp = { version = "0.1.7", default-features = false, features = ["client", "rustls"] }
+serde = "1"
+serde_json = "1"
+image = "0.24.7"

@@ -15,6 +15,7 @@ use crate::stargazers::Stargazers;
 mod chat;
 mod color_sort;
 mod futures;
+mod gallery;
 mod shared_state;
 mod sidebar;
 mod stargazers;
@@ -45,7 +46,10 @@ impl App {
                 },
                 Category {
                     name: "Infinite Scroll".to_string(),
-                    examples: vec![Box::new(ChatExample::new())],
+                    examples: vec![
+                        Box::new(ChatExample::new()),
+                        Box::new(gallery::Gallery::new()),
+                    ],
                 },
             ]),
             shared_state: SharedState::new(),
@@ -147,6 +151,7 @@ fn main() -> eframe::Result<()> {
         Default::default(),
         Box::new(move |ctx| {
             egui_extras::install_image_loaders(&ctx.egui_ctx);
+            egui_thumbhash::register(&ctx.egui_ctx);
             Box::new(App::new()) as Box<dyn eframe::App>
         }),
     )
@@ -163,6 +168,7 @@ fn main() {
                 web_options,
                 Box::new(|a| {
                     egui_extras::install_image_loaders(&a.egui_ctx);
+                    egui_thumbhash::register(&a.egui_ctx);
                     Box::new(App::new()) as Box<dyn eframe::App>
                 }),
             )

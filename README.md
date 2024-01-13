@@ -44,6 +44,11 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
   - Infinite scroll based on [egui_virtual_list](crates/egui_virtual_list)
   - Experimental, unreleased
 
+- [egui_thumbhash](crates/egui_thumbhash)
+  - Easily use [thumbhashes](https://evanw.github.io/thumbhash/) in egui.
+  - For a showcase, check the [gallery example](https://lucasmerlin.github.io/hello_egui/).
+  - Experimental, unreleased
+
 - [egui_animation](crates/egui_animation)
   - Animation utilities for egui
   - Experimental, released on [crates.io](https://crates.io/crates/egui_animation), used internally by [egui_dnd](crates/egui_dnd)
