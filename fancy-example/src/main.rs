@@ -6,24 +6,34 @@ use eframe::{egui, Frame};
 use egui::{Align2, Area, Context, Id, SidePanel, Ui, Vec2};
 
 use color_sort::ColorSort;
+use egui_inbox::UiInbox;
 use shared_state::SharedState;
 use sidebar::{Category, SideBar};
 
 use crate::chat::ChatExample;
+use crate::crate_ui::CrateUi;
+use crate::sidebar::ActiveElement;
 use crate::stargazers::Stargazers;
 
 mod chat;
 mod color_sort;
+mod crate_ui;
 mod futures;
 mod gallery;
 mod shared_state;
 mod sidebar;
 mod stargazers;
 
+pub enum FancyMessage {
+    SelectPage(ActiveElement),
+}
+
 pub struct App {
     sidebar: SideBar,
     sidebar_expanded: bool,
     shared_state: SharedState,
+    crate_ui: CrateUi,
+    inbox: UiInbox<FancyMessage>,
 }
 
 impl Default for App {
@@ -34,7 +44,9 @@ impl Default for App {
 
 impl App {
     pub fn new() -> Self {
+        let (tx, inbox) = UiInbox::channel();
         Self {
+            inbox,
             sidebar: SideBar::new(vec![
                 Category {
                     name: "Drag and Drop".to_string(),
@@ -52,28 +64,34 @@ impl App {
                     ],
                 },
             ]),
-            shared_state: SharedState::new(),
+            shared_state: SharedState::new(tx),
             sidebar_expanded: false,
+            crate_ui: CrateUi::new(),
         }
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        self.inbox.set_ctx(ctx.clone());
+        self.inbox.read_without_ui().for_each(|msg| match msg {
+            FancyMessage::SelectPage(active) => {
+                self.sidebar.active = active;
+            }
+        });
+
         let width = ctx.screen_rect().width();
         let collapsible_sidebar = width < 800.0;
         let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
 
         SidePanel::left("sidebar")
             .resizable(false)
-            .exact_width(110.0)
+            .exact_width(170.0)
             .show_animated(ctx, is_expanded, |ui| {
                 if self.sidebar.ui(ui) {
                     self.sidebar_expanded = false;
                 }
             });
-
-        let example = self.sidebar.active_example_mut();
 
         egui::CentralPanel::default()
             .frame(egui::Frame::none().fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7)))
@@ -100,7 +118,13 @@ impl eframe::App for App {
                 }
 
                 if !(collapsible_sidebar && is_expanded) {
-                    example.ui(ui, &mut self.shared_state);
+                    if let Some(example) = self.sidebar.active_example_mut() {
+                        example.ui(ui, &mut self.shared_state);
+                    }
+
+                    if let Some(crate_usage) = self.sidebar.active_crate() {
+                        self.crate_ui.ui(ui, crate_usage);
+                    }
                 }
             });
     }
@@ -111,7 +135,8 @@ pub fn demo_area(ui: &mut Ui, title: &str, width: f32, content: impl FnOnce(&mut
         .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
         .show(ui.ctx(), |ui| {
             let width = f32::min(ui.available_width() - 20.0, width);
-            ui.set_width(width);
+            ui.set_max_width(width);
+            ui.set_max_height(ui.available_height() - 20.0);
 
             egui::Frame::none()
                 .fill(ui.style().visuals.panel_fill)

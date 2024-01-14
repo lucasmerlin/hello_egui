@@ -4,6 +4,8 @@ use egui::util::IdTypeMap;
 use egui::{Context, Id, LayerId, Order, Pos2, Ui};
 use taffy::prelude::*;
 
+pub use taffy;
+
 type Node = NodeId;
 
 struct TaffyState {
@@ -47,7 +49,7 @@ impl TaffyState {
     }
 }
 
-type ContentFn<'a> = Box<dyn FnMut(&mut Ui) + Send + 'a>;
+type ContentFn<'a> = Box<dyn FnMut(&mut Ui) + 'a>;
 
 enum EguiTaffyNode {
     Leaf(Id, Node, egui::Layout, Node),
@@ -160,7 +162,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         id: Id,
         style: Style,
         layout: egui::Layout,
-        content: impl FnMut(&mut Ui) + Send + 'f,
+        content: impl FnMut(&mut Ui) + 'f,
     ) {
         Self::with_state(self.id, self.ui.ctx().clone(), |state| {
             let content_idx = self.content_fns.len();

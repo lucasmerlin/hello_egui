@@ -5,8 +5,10 @@ use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
 use ehttp::Request;
 use serde::Deserialize;
 
-use crate::demo_area;
+use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::shared_state::SharedState;
 use crate::sidebar::Example;
+use crate::{crate_usage, demo_area};
 use egui_dnd::{dnd, DragDropConfig};
 use egui_infinite_scroll::InfiniteScroll;
 
@@ -32,8 +34,13 @@ impl Example for Stargazers {
         "Stargazers"
     }
 
-    fn ui(&mut self, ui: &mut Ui, _shared_state: &mut crate::shared_state::SharedState) {
-        self.stargazers_ui(ui);
+    crate_usage!(
+        CrateUsage::simple(Crate::EguiDnd),
+        CrateUsage::simple(Crate::EguiInfiniteScroll),
+    );
+
+    fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
+        self.stargazers_ui(ui, shared_state);
     }
 }
 
@@ -59,7 +66,7 @@ impl Stargazers {
         }
     }
 
-    pub fn stargazers_ui(&mut self, ui: &mut Ui) {
+    pub fn stargazers_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         demo_area(ui, self.name(), 300.0, |ui| {
             ScrollArea::vertical()
                 .max_height(250.0)
@@ -80,16 +87,7 @@ impl Stargazers {
                     self.stargazers_dnd_ui(ui);
                 });
 
-            ui.separator();
-
-            ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
-
-            ui.hyperlink_to(
-                "View on GitHub",
-                "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
-            );
-            ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
-            ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
+            crate_usage_ui(ui, self.crates(), shared_state);
         });
     }
 

@@ -5,12 +5,14 @@ edition = "2021"
 publish = false
 
 [dependencies]
-egui_dnd = { path = "../crates/egui_dnd" }
-egui_infinite_scroll = { path = "../crates/egui_infinite_scroll" }
-hello_egui_utils = { path = "../crates/hello_egui_utils" }
-egui_inbox = { path = "../crates/egui_inbox" }
-egui_animation = { path = "../crates/egui_animation" }
-egui_thumbhash = { path = "../crates/egui_thumbhash" }
+egui_dnd.workspace = true
+egui_infinite_scroll.workspace = true
+hello_egui_utils.workspace = true
+egui_inbox.workspace = true
+egui_animation.workspace = true
+egui_thumbhash.workspace = true
+egui_pull_to_refresh.workspace = true
+egui_taffy = { path = "../crates/egui_taffy" }
 
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
@@ -26,6 +28,11 @@ wasm-bindgen-futures = "0.4.33"
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+casey = "0.4.0"
+
+syntect = { version = "5.1.0", features = ["yaml-rust"] }
+egui_commonmark = { version = "0.11.0", features = [] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["time", "rt", "macros"] }

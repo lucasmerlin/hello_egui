@@ -1,13 +1,17 @@
 use crate::color_sort::Color;
+use crate::FancyMessage;
+use egui_inbox::UiInboxSender;
 
 pub struct SharedState {
     pub background_colors: Vec<Color>,
+    pub tx: UiInboxSender<FancyMessage>,
 }
 
 impl SharedState {
-    pub fn new() -> Self {
+    pub fn new(tx: UiInboxSender<FancyMessage>) -> Self {
         Self {
             background_colors: colors(),
+            tx,
         }
     }
 }

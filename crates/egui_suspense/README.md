@@ -3,7 +3,7 @@
 A helper to display loading, error and retry uis when waiting for asynchronous data.
 
 ## Minimal example
-```rust no_run
+```rust
 use eframe::egui;
 use egui::CentralPanel;
 use egui_suspense::EguiSuspense;

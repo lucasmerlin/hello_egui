@@ -1,6 +1,7 @@
-use crate::demo_area;
+use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
 use crate::shared_state::SharedState;
 use crate::sidebar::Example;
+use crate::{crate_usage, demo_area};
 use eframe::emath::Vec2;
 use eframe::epaint::{Color32, Hsva, Rounding};
 use egui::{Id, Sense, Ui};
@@ -106,6 +107,8 @@ impl Example for ColorSort {
         }
     }
 
+    crate_usage!(CrateUsage::simple(Crate::EguiDnd));
+
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         demo_area(ui, self.name(), 286.0, |ui| {
             ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
@@ -123,16 +126,7 @@ impl Example for ColorSort {
                 }
             }
 
-            ui.separator();
-
-            ui.label("This is a demo for egui_dnd, a drag and drop sorting library for egui.");
-
-            ui.hyperlink_to(
-                "View on GitHub",
-                "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd",
-            );
-            ui.hyperlink_to("View on Crates.io", "https://crates.io/crates/egui_dnd");
-            ui.hyperlink_to("View on docs.rs", "https://docs.rs/egui_dnd");
+            crate_usage_ui(ui, self.crates(), shared_state);
         });
     }
 }

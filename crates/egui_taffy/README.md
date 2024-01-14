@@ -1,4 +1,4 @@
-# Egui Taffy
+# egui_taffy
 This crate allows you to use the flexbox library [taffy](https://github.com/DioxusLabs/taffy) with egui.
 It's currently an early prototype, so I wouldn't recommend using it in production.
 Also it's based on [WIP changes in taffy](https://github.com/DioxusLabs/taffy/pull/490), a release of 

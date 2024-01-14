@@ -12,10 +12,11 @@ use egui_animation::animate_continuous;
 use egui_inbox::UiInbox;
 use egui_infinite_scroll::InfiniteScroll;
 
-use crate::demo_area;
+use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
 use crate::futures::{sleep, spawn};
 use crate::shared_state::SharedState;
 use crate::sidebar::Example;
+use crate::{crate_usage, demo_area};
 
 pub const CHAT_HISTORY: &str = include_str!("chat_history.txt");
 
@@ -136,7 +137,7 @@ impl ChatExample {
         }
     }
 
-    pub fn ui(&mut self, ui: &mut Ui) {
+    pub fn ui(&mut self, ui: &mut Ui, shared_state: &SharedState) {
         if !self.shown {
             self.shown = true;
 
@@ -198,7 +199,7 @@ impl ChatExample {
                                 // the text within is left-aligned.
                                 let (_pos, galley, _response) = label
                                     .layout_in_ui(&mut ui.child_ui(ui.max_rect(), *ui.layout()));
-                                let rect = galley.galley.rect;
+                                let rect = galley.rect;
                                 // Calculate the width of the frame based on the width of
                                 // the text and add 0.1 to account for floating point errors.
                                 f32::min(
@@ -322,6 +323,9 @@ impl ChatExample {
                             });
                     }
                 });
+
+            ui.add_space(8.0);
+            crate_usage_ui(ui, self.crates(), shared_state);
         });
     }
 }
@@ -331,7 +335,13 @@ impl Example for ChatExample {
         "Chat"
     }
 
-    fn ui(&mut self, ui: &mut Ui, _shared_state: &mut SharedState) {
-        self.ui(ui)
+    crate_usage!(
+        CrateUsage::simple(Crate::EguiInfiniteScroll),
+        CrateUsage::new(Crate::EguiInbox, "For \"receiving\" messages"),
+        CrateUsage::new(Crate::EguiAnimation, "For animating the loading dots"),
+    );
+
+    fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
+        self.ui(ui, shared_state)
     }
 }

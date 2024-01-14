@@ -23,15 +23,14 @@ fn col(ui: &mut Ui, items: &[GalleryItem]) {
             // fit_to_exact_size while loading, it's easiest to use add_sized to set the image to a fixed size.
             // If this is not done, the thumbhash size might not fit the final image size.
             ui.add_sized(
-        image_size,
-        ThumbhashImage::new(
-          Image::new(format!(
-            "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp",
-            item.id
-          ))
-          .show_loading_spinner(false),
-          item.thumbhash.as_ref().unwrap(),
-        ).rounding(8.0),
+                image_size,
+                ThumbhashImage::new(
+                    Image::new(format!(
+                        "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp",
+                        item.id
+                    )).show_loading_spinner(false),
+                    item.thumbhash.as_ref().unwrap(),
+                ).rounding(8.0),
       );
         } else {
             ui.allocate_exact_size(image_size, Sense::hover());
