@@ -3,7 +3,8 @@
 #![warn(missing_docs)]
 
 use std::fmt::Debug;
-use std::sync::{mpsc, Arc};
+use std::mem;
+use std::sync::Arc;
 
 use egui::mutex::Mutex;
 use egui::{Context, Ui};
@@ -41,41 +42,48 @@ use egui::{Context, Ui};
 ///     )
 /// }
 /// ```
+
 pub struct UiInbox<T> {
-    state: Arc<Mutex<State>>,
-    rx: mpsc::Receiver<T>,
-    tx: mpsc::Sender<T>,
+    state: Arc<Mutex<State<T>>>,
 }
+
 impl<T> Debug for UiInbox<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("UiInbox")
-            .field("rx", &self.rx)
-            .finish_non_exhaustive()
+        f.debug_struct("UiInbox").finish_non_exhaustive()
     }
 }
 
-struct State {
+#[derive(Debug)]
+struct State<T> {
     ctx: Option<Context>,
+    queue: Vec<T>,
+    dropped: bool,
+}
+
+impl<T> State<T> {
+    fn new(ctx: Option<Context>) -> Self {
+        Self {
+            ctx,
+            queue: Vec::new(),
+            dropped: false,
+        }
+    }
 }
 
 /// Sender for [UiInbox].
 pub struct UiInboxSender<T> {
-    tx: mpsc::Sender<T>,
-    state: Arc<Mutex<State>>,
+    state: Arc<Mutex<State<T>>>,
 }
 
 impl<T> Debug for UiInboxSender<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("UiInboxSender")
-            .field("tx", &self.tx)
-            .finish_non_exhaustive()
+        f.debug_struct("UiInboxSender").finish_non_exhaustive()
     }
 }
 
 impl<T> Clone for UiInboxSender<T> {
     fn clone(&self) -> Self {
         Self {
-            tx: self.tx.clone(),
             state: self.state.clone(),
         }
     }
@@ -84,6 +92,13 @@ impl<T> Clone for UiInboxSender<T> {
 impl<T> Default for UiInbox<T> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<T> Drop for UiInbox<T> {
+    fn drop(&mut self) {
+        let mut state = self.state.lock();
+        state.dropped = true;
     }
 }
 
@@ -102,10 +117,8 @@ impl<T> UiInbox<T> {
     }
 
     fn _new(ctx: Option<Context>) -> Self {
-        let (tx, rx) = mpsc::channel();
-
-        let state = Arc::new(Mutex::new(State { ctx }));
-        Self { state, rx, tx }
+        let state = Arc::new(Mutex::new(State::new(ctx)));
+        Self { state }
     }
 
     /// Create a inbox and a sender for it.
@@ -134,19 +147,20 @@ impl<T> UiInbox<T> {
     /// The ui is only passed here so we can grab a reference to [Context].
     /// This is mostly done for convenience, so you don't have to pass a reference to [Context]
     /// to every struct that uses an inbox on creation.
-    pub fn read<'a>(&'a self, ui: &mut Ui) -> impl Iterator<Item = T> + 'a {
+    pub fn read(&self, ui: &mut Ui) -> impl Iterator<Item = T> {
         let mut state = self.state.lock();
         if state.ctx.is_none() {
             state.ctx = Some(ui.ctx().clone());
         }
-        self.rx.try_iter()
+        mem::take(&mut state.queue).into_iter()
     }
 
     /// Same as [UiInbox::read], but you don't need to pass a reference to [Ui].
     /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
     /// [UiInbox::new_with_ctx] manually.
-    pub fn read_without_ui(&self) -> impl Iterator<Item = T> + '_ {
-        self.rx.try_iter()
+    pub fn read_without_ui(&self) -> impl Iterator<Item = T> {
+        let mut state = self.state.lock();
+        mem::take(&mut state.queue).into_iter()
     }
 
     /// Replaces the value of `target` with the last item sent to the inbox.
@@ -163,7 +177,7 @@ impl<T> UiInbox<T> {
             state.ctx = Some(ui.ctx().clone());
         }
 
-        let item = self.rx.try_iter().last();
+        let item = mem::take(&mut state.queue).pop();
         if let Some(item) = item {
             *target = item;
             true
@@ -176,7 +190,8 @@ impl<T> UiInbox<T> {
     /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
     /// [UiInbox::new_with_ctx] manually.
     pub fn replace_without_ui(&self, target: &mut T) -> bool {
-        let item = self.rx.try_iter().last();
+        let mut state = self.state.lock();
+        let item = mem::take(&mut state.queue).pop();
         if let Some(item) = item {
             *target = item;
             true
@@ -188,7 +203,6 @@ impl<T> UiInbox<T> {
     /// Returns a sender for this inbox.
     pub fn sender(&self) -> UiInboxSender<T> {
         UiInboxSender {
-            tx: self.tx.clone(),
             state: self.state.clone(),
         }
     }
@@ -202,11 +216,16 @@ impl<T> UiInboxSender<T> {
     ///
     /// This returns an error if the inbox was dropped.
     pub fn send(&self, item: T) -> Result<(), SendError<T>> {
-        let result = self.tx.send(item);
-        if let Some(ctx) = &self.state.lock().ctx {
-            ctx.request_repaint();
+        let mut state = self.state.lock();
+        if state.dropped {
+            Err(SendError(item))
+        } else {
+            state.queue.push(item);
+            if let Some(ctx) = &state.ctx {
+                ctx.request_repaint();
+            }
+            Ok(())
         }
-        result.map_err(Into::into)
     }
 }
 
@@ -214,9 +233,3 @@ impl<T> UiInboxSender<T> {
 /// This can happen if the inbox was dropped.
 /// The message is returned in the error, so it can be recovered.
 pub struct SendError<T>(pub T);
-
-impl<T> From<mpsc::SendError<T>> for SendError<T> {
-    fn from(err: mpsc::SendError<T>) -> Self {
-        Self(err.0)
-    }
-}
