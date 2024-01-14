@@ -1,5 +1,7 @@
-use egui::{Pos2, Rect, Ui, Vec2};
 use std::ops::Range;
+
+use egui::{Align, Pos2, Rect, Ui, Vec2};
+use web_time::{Duration, SystemTime};
 
 pub struct VirtualListResponse {
     /// The range of items that was displayed
@@ -40,6 +42,13 @@ pub struct VirtualList {
     // Useful when items at the top are added, and the scroll position should be maintained.
     // The value should be the number of items that were added at the top.
     items_inserted_at_start: Option<usize>,
+
+    check_for_resize: bool,
+    scroll_position_sync_on_resize: bool,
+    hide_on_resize: Option<Duration>,
+    /// Stores the index and visibility percentage of the last item that was at the top of the list
+    last_top_most_item: Option<(usize, f32)>,
+    last_resize: SystemTime,
 }
 
 impl Default for VirtualList {
@@ -64,6 +73,11 @@ impl VirtualList {
             max_rows_calculated_per_frame: 1000,
             over_scan: 200.0,
             items_inserted_at_start: None,
+            check_for_resize: true,
+            scroll_position_sync_on_resize: true,
+            hide_on_resize: Some(Duration::from_millis(100)),
+            last_top_most_item: None,
+            last_resize: SystemTime::now(),
         }
     }
 
@@ -78,6 +92,26 @@ impl VirtualList {
         self.over_scan = over_scan;
     }
 
+    /// Checks if the list was resized and resets the cached sizes if it was.
+    /// If you are certain that the item heights won't change on resize, you can disable this.
+    /// The default is true.
+    pub fn check_for_resize(&mut self, check_for_resize: bool) {
+        self.check_for_resize = check_for_resize;
+    }
+
+    /// Tries to keep the first visible item at the top of the screen when the window is resized.
+    /// Depending on the contents, this may cause some flicker.
+    /// The default is true.
+    pub fn scroll_position_sync_on_resize(&mut self, scroll_position_sync_on_resize: bool) {
+        self.scroll_position_sync_on_resize = scroll_position_sync_on_resize;
+    }
+
+    /// Prevent flickering while resizing by hiding the list until the resize is done.
+    /// The default is true.
+    pub fn hide_on_resize(&mut self, hide_on_resize: impl Into<Option<Duration>>) {
+        self.hide_on_resize = hide_on_resize.into();
+    }
+
     /// Layout gets called with the index of the first item that should be displayed.
     /// It should return the number of items that were displayed.
     pub fn ui_custom_layout(
@@ -86,10 +120,24 @@ impl VirtualList {
         length: usize,
         mut layout: impl FnMut(&mut Ui, usize) -> usize,
     ) -> VirtualListResponse {
+        let mut scroll_to_item_index_visibility = None;
         if ui.available_width() != self.last_width {
-            self.last_known_row_index = None;
             self.last_width = ui.available_width();
-            self.rows.clear();
+            if self.check_for_resize {
+                self.last_known_row_index = None;
+                self.rows.clear();
+                self.last_resize = SystemTime::now();
+                if self.scroll_position_sync_on_resize {
+                    scroll_to_item_index_visibility = self.last_top_most_item;
+                }
+            }
+        }
+
+        if let Some(hide_on_resize) = self.hide_on_resize {
+            if self.last_resize.elapsed().unwrap_or_default() < hide_on_resize {
+                ui.set_visible(false);
+                ui.ctx().request_repaint();
+            }
         }
 
         // Start of the scroll area (basically scroll_offset + whatever is above the scroll area)
@@ -142,7 +190,13 @@ impl VirtualList {
             }
 
             if let Some(row) = self.rows.get(row_start_index) {
-                if row.pos.y <= visible_rect.min.y {
+                let skip = if let Some((idx, _)) = scroll_to_item_index_visibility {
+                    row.range.start >= idx
+                } else {
+                    false
+                };
+
+                if row.pos.y <= visible_rect.min.y && !skip {
                     ui.add_space(row.pos.y);
                     break;
                 }
@@ -163,6 +217,8 @@ impl VirtualList {
         let mut iterations = 0;
 
         let mut first_visible_item_index = None;
+        let mut first_visible_item_visibility = None;
+        let mut did_scroll = false;
 
         loop {
             // Bail out if we're recalculating too many items
@@ -181,8 +237,25 @@ impl VirtualList {
 
                 let range = current_item_index..current_item_index + count;
 
-                if first_visible_item_index.is_none() && pos.y >= visible_rect.min.y {
+                if let Some((scroll_to, visibility)) = scroll_to_item_index_visibility {
+                    if range.contains(&scroll_to) {
+                        // TODO: Somehow correct for overscan here
+                        ui.scroll_to_rect(
+                            Rect::from_min_size(
+                                pos + min + Vec2::new(0.0, size.y * visibility),
+                                Vec2::ZERO,
+                            ),
+                            Some(Align::Min),
+                        );
+                        scroll_to_item_index_visibility = None;
+                        did_scroll = true;
+                    }
+                }
+
+                if first_visible_item_index.is_none() && rect.max.y >= visible_rect.min.y {
                     first_visible_item_index = Some(current_item_index);
+                    first_visible_item_visibility =
+                        Some((visible_rect.min.y - rect.min.y) / (rect.max.y - rect.min.y));
                 }
 
                 if let Some(row) = self.rows.get_mut(current_row) {
@@ -219,7 +292,7 @@ impl VirtualList {
 
                 current_item_index += count;
 
-                if rect.max.y > visible_rect.max.y {
+                if rect.max.y > visible_rect.max.y && scroll_to_item_index_visibility.is_none() {
                     break;
                 }
             } else {
@@ -230,6 +303,18 @@ impl VirtualList {
         }
 
         let item_range = first_visible_item_index.unwrap_or(item_start_index)..current_item_index;
+
+        // If we scrolled this frame, don't store the last top most item
+        if !did_scroll
+            && self.last_resize.elapsed().unwrap_or_default() > Duration::from_millis(1000)
+        {
+            if let Some((first_visible_item_index, first_visible_item_visibility)) =
+                first_visible_item_index.zip(first_visible_item_visibility)
+            {
+                self.last_top_most_item =
+                    Some((first_visible_item_index, first_visible_item_visibility));
+            }
+        }
 
         if item_range.end < length {
             ui.set_min_height(

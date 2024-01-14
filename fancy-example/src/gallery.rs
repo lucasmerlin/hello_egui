@@ -1,4 +1,4 @@
-use egui::{Id, Image, OpenUrl, ScrollArea, Sense, Ui, Vec2};
+use egui::{Id, Image, OpenUrl, ScrollArea, Ui, Vec2};
 use serde::Deserialize;
 
 use egui_infinite_scroll::InfiniteScroll;
@@ -97,15 +97,15 @@ impl Example for Gallery {
                                             "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp#{}",
                                             item.id,
                                             start_idx + idx
-                                        ))
-                                        .sense(Sense::click()),
+                                        )),
                                         &item.thumbhash,
                                     )
                                     .id(Id::new("gallery_item").with(start_idx + idx))
                                     .rounding(8.0),
                                 );
 
-                                if response.clicked() {
+                                // Workaround for buttons blocking touch scroll: https://github.com/emilk/egui/pull/3815
+                                if ui.input(|i| i.pointer.any_released() && !i.pointer.is_decidedly_dragging()) && response.hovered() {
                                     ui.ctx().open_url(OpenUrl::new_tab(format!(
                                         "https://hellopaint.io/gallery/post/{}",
                                         item.id

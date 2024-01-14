@@ -1191,6 +1191,7 @@ dependencies = [
  "eframe",
  "egui",
  "rand 0.8.5",
+ "web-time",
 ]
 
 [[package]]
