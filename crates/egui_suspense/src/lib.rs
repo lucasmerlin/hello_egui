@@ -57,9 +57,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
         f: impl FnOnce(Box<CallbackFn<Result<T, E>>>) + 'static + Send + Sync,
     ) -> Self {
         let inbox = UiInbox::new();
-        let inbox_clone = inbox.clone();
+        let tx = inbox.sender();
         f(Box::new(move |result| {
-            inbox_clone.send(result);
+            tx.send(result).ok();
         }));
         Self {
             inbox,
@@ -79,9 +79,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
         mut f: impl FnMut(Box<CallbackFn<Result<T, E>>>) + 'static + Send + Sync,
     ) -> Self {
         let inbox = UiInbox::new();
-        let inbox_clone = inbox.clone();
+        let inbox_clone = inbox.sender();
         f(Box::new(move |result| {
-            inbox_clone.send(result);
+            inbox_clone.send(result).ok();
         }));
         Self {
             inbox,
@@ -155,6 +155,7 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
                 }
             }
             Some(Ok(data)) => {
+                let tx = self.inbox.sender();
                 result = Some(content(
                     ui,
                     data,
@@ -163,9 +164,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
                         reload_fn: &mut || {
                             if let Some(reload_fn) = &mut self.reload_fn {
                                 *clear_data_ref = true;
-                                let inbox = self.inbox.clone();
+                                let tx = tx.clone();
                                 reload_fn(Box::new(move |result| {
-                                    inbox.send(result);
+                                    tx.send(result).ok();
                                 }));
                             }
                         },
@@ -174,7 +175,7 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
             }
             Some(Err(err)) => {
                 if let Some(err_ui) = &mut self.error_ui {
-                    let inbox = self.inbox.clone();
+                    let tx = self.inbox.sender();
 
                     if let Some(reload) = &mut self.reload_fn {
                         err_ui(
@@ -185,9 +186,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
                                 reload_fn: &mut move || {
                                     *clear_data_ref = true;
 
-                                    let inbox = inbox.clone();
+                                    let inbox = tx.clone();
                                     reload(Box::new(move |result| {
-                                        inbox.send(result);
+                                        inbox.send(result).ok();
                                     }));
                                 },
                             },
@@ -210,9 +211,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
                     if let Some(retry_fn) = &mut self.reload_fn {
                         if ui.button("Retry").clicked() {
                             self.data = None;
-                            let inbox = self.inbox.clone();
+                            let tx = self.inbox.sender();
                             retry_fn(Box::new(move |result| {
-                                inbox.send(result);
+                                tx.send(result).ok();
                             }));
                         }
                     }
@@ -233,9 +234,9 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
     pub fn reload(&mut self) {
         if let Some(reload_fn) = &mut self.reload_fn {
             self.data = None;
-            let inbox = self.inbox.clone();
+            let tx = self.inbox.sender();
             reload_fn(Box::new(move |result| {
-                inbox.send(result);
+                tx.send(result).ok();
             }));
         }
     }

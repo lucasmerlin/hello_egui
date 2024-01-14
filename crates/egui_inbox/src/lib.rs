@@ -1,7 +1,11 @@
-use std::fmt::Debug;
-use std::mem;
-use std::sync::{Arc, Mutex};
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
+use std::fmt::Debug;
+use std::sync::{mpsc, Arc};
+
+use egui::mutex::Mutex;
 use egui::{Context, Ui};
 
 /// Utility to send messages to egui views from async functions, callbacks, etc. without
@@ -26,10 +30,10 @@ use egui::{Context, Ui};
 ///                 ui.label(format!("State: {:?}", state));
 ///                 if ui.button("Async Task").clicked() {
 ///                     state = Some("Waiting for async task to complete".to_string());
-///                     let mut inbox_clone = inbox.clone();
+///                     let mut sender = inbox.sender();
 ///                     std::thread::spawn(move || {
 ///                         std::thread::sleep(std::time::Duration::from_secs(1));
-///                         inbox_clone.send(Some("Hello from another thread!".to_string()));
+///                         sender.send(Some("Hello from another thread!".to_string())).ok();
 ///                     });
 ///                 }
 ///             });
@@ -37,64 +41,91 @@ use egui::{Context, Ui};
 ///     )
 /// }
 /// ```
-#[derive(Debug)]
-pub struct UiInbox<T: Debug>(Arc<Mutex<State<T>>>);
+pub struct UiInbox<T> {
+    state: Arc<Mutex<State>>,
+    rx: mpsc::Receiver<T>,
+    tx: mpsc::Sender<T>,
+}
+impl<T> Debug for UiInbox<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UiInbox")
+            .field("rx", &self.rx)
+            .finish_non_exhaustive()
+    }
+}
 
-#[derive(Debug)]
-struct State<T: Debug> {
-    items: Vec<T>,
+struct State {
     ctx: Option<Context>,
 }
 
-impl<T: Debug> Default for UiInbox<T> {
-    fn default() -> Self {
-        Self(Arc::new(Mutex::new(State {
-            items: Vec::new(),
-            ctx: None,
-        })))
+/// Sender for [UiInbox].
+pub struct UiInboxSender<T> {
+    tx: mpsc::Sender<T>,
+    state: Arc<Mutex<State>>,
+}
+
+impl<T> Debug for UiInboxSender<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UiInboxSender")
+            .field("tx", &self.tx)
+            .finish_non_exhaustive()
     }
 }
 
-impl<T: Debug> Clone for UiInbox<T> {
+impl<T> Clone for UiInboxSender<T> {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self {
+            tx: self.tx.clone(),
+            state: self.state.clone(),
+        }
     }
 }
 
-impl<T: Debug> UiInbox<T> {
+impl<T> Default for UiInbox<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> UiInbox<T> {
     /// Create a new inbox.
     /// The context is grabbed from the [Ui] passed to [UiInbox::read], so
     /// if you call [UiInbox::send] before [UiInbox::read], no repaint is requested.
     /// If you want to set the context on creation, use [UiInbox::new_with_ctx].
     pub fn new() -> Self {
-        Default::default()
+        Self::_new(None)
     }
 
     /// Create a new inbox with a context.
     pub fn new_with_ctx(ctx: Context) -> Self {
-        Self(Arc::new(Mutex::new(State {
-            items: Vec::new(),
-            ctx: Some(ctx),
-        })))
+        Self::_new(Some(ctx))
+    }
+
+    fn _new(ctx: Option<Context>) -> Self {
+        let (tx, rx) = mpsc::channel();
+
+        let state = Arc::new(Mutex::new(State { ctx }));
+        Self { state, rx, tx }
+    }
+
+    /// Create a inbox and a sender for it.
+    pub fn channel() -> (UiInboxSender<T>, Self) {
+        let inbox = Self::new();
+        let sender = inbox.sender();
+        (sender, inbox)
+    }
+
+    /// Create a inbox with a context and a sender for it.
+    pub fn channel_with_ctx(ctx: Context) -> (UiInboxSender<T>, Self) {
+        let inbox = Self::new_with_ctx(ctx);
+        let sender = inbox.sender();
+        (sender, inbox)
     }
 
     /// Set the [Context] to use for requesting repaints.
     /// Usually this is not needed, since the [Context] is grabbed from the [Ui] passed to [UiInbox::read].
     pub fn set_ctx(&mut self, ctx: Context) {
-        let mut guard = self.0.lock().unwrap();
-        guard.ctx = Some(ctx);
-    }
-
-    /// Send an item to the inbox.
-    /// Calling this will request a repaint from egui.
-    /// If this is called before a call to `UiInbox::read` was done, no repaint is requested
-    /// (Since we didn't have a chance to get a reference to [Context] yet).
-    pub fn send(&self, item: T) {
-        let mut guard = self.0.lock().unwrap();
-        guard.items.push(item);
-        if let Some(ctx) = &guard.ctx {
-            ctx.request_repaint();
-        }
+        self.state.lock().ctx = Some(ctx);
     }
 
     /// Returns an iterator over all items sent to the inbox.
@@ -103,20 +134,19 @@ impl<T: Debug> UiInbox<T> {
     /// The ui is only passed here so we can grab a reference to [Context].
     /// This is mostly done for convenience, so you don't have to pass a reference to [Context]
     /// to every struct that uses an inbox on creation.
-    pub fn read(&self, ui: &mut Ui) -> impl Iterator<Item = T> {
-        let mut inbox = self.0.lock().unwrap();
-        if inbox.ctx.is_none() {
-            inbox.ctx = Some(ui.ctx().clone());
+    pub fn read<'a>(&'a self, ui: &mut Ui) -> impl Iterator<Item = T> + 'a {
+        let mut state = self.state.lock();
+        if state.ctx.is_none() {
+            state.ctx = Some(ui.ctx().clone());
         }
-        mem::take(&mut inbox.items).into_iter()
+        self.rx.try_iter()
     }
 
     /// Same as [UiInbox::read], but you don't need to pass a reference to [Ui].
     /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
     /// [UiInbox::new_with_ctx] manually.
-    pub fn read_without_ui(&self) -> impl Iterator<Item = T> {
-        let mut inbox = self.0.lock().unwrap();
-        mem::take(&mut inbox.items).into_iter()
+    pub fn read_without_ui(&self) -> impl Iterator<Item = T> + '_ {
+        self.rx.try_iter()
     }
 
     /// Replaces the value of `target` with the last item sent to the inbox.
@@ -128,12 +158,13 @@ impl<T: Debug> UiInbox<T> {
     /// This is mostly done for convenience, so you don't have to pass a reference to [Context]
     /// to every struct that uses an inbox on creation.
     pub fn replace(&self, ui: &mut Ui, target: &mut T) -> bool {
-        let mut inbox = self.0.lock().unwrap();
-        if inbox.ctx.is_none() {
-            inbox.ctx = Some(ui.ctx().clone());
+        let mut state = self.state.lock();
+        if state.ctx.is_none() {
+            state.ctx = Some(ui.ctx().clone());
         }
-        let data = mem::take(&mut inbox.items);
-        if let Some(item) = data.into_iter().last() {
+
+        let item = self.rx.try_iter().last();
+        if let Some(item) = item {
             *target = item;
             true
         } else {
@@ -145,13 +176,47 @@ impl<T: Debug> UiInbox<T> {
     /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
     /// [UiInbox::new_with_ctx] manually.
     pub fn replace_without_ui(&self, target: &mut T) -> bool {
-        let mut inbox = self.0.lock().unwrap();
-        let data = mem::take(&mut inbox.items);
-        if let Some(item) = data.into_iter().last() {
+        let item = self.rx.try_iter().last();
+        if let Some(item) = item {
             *target = item;
             true
         } else {
             false
         }
+    }
+
+    /// Returns a sender for this inbox.
+    pub fn sender(&self) -> UiInboxSender<T> {
+        UiInboxSender {
+            tx: self.tx.clone(),
+            state: self.state.clone(),
+        }
+    }
+}
+
+impl<T> UiInboxSender<T> {
+    /// Send an item to the inbox.
+    /// Calling this will request a repaint from egui.
+    /// If this is called before a call to `UiInbox::read` was done, no repaint is requested
+    /// (Since we didn't have a chance to get a reference to [Context] yet).
+    ///
+    /// This returns an error if the inbox was dropped.
+    pub fn send(&self, item: T) -> Result<(), SendError<T>> {
+        let result = self.tx.send(item);
+        if let Some(ctx) = &self.state.lock().ctx {
+            ctx.request_repaint();
+        }
+        result.map_err(Into::into)
+    }
+}
+
+/// Error returned when sending a message to the inbox fails.
+/// This can happen if the inbox was dropped.
+/// The message is returned in the error, so it can be recovered.
+pub struct SendError<T>(pub T);
+
+impl<T> From<mpsc::SendError<T>> for SendError<T> {
+    fn from(err: mpsc::SendError<T>) -> Self {
+        Self(err.0)
     }
 }

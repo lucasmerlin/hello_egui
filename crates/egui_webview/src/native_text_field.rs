@@ -46,7 +46,7 @@ unsafe impl Sync for NativeTextField {}
 impl NativeTextField {
     pub fn new(ctx: &Context, text_field_type: TextFieldType) -> NativeTextField {
         let inbox = UiInbox::new();
-        let inbox_clone = inbox.clone();
+        let tx = inbox.sender();
         let view = EguiWebView::new(ctx, "webview", |b| {
             b.with_html(
                 include_str!("native_text_field.html")
@@ -55,7 +55,7 @@ impl NativeTextField {
             )
             .unwrap()
             .with_ipc_handler(move |msg| {
-                inbox_clone.send(msg);
+                tx.send(msg).ok();
             })
             .with_devtools(true)
         });

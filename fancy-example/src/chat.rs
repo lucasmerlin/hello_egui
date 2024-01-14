@@ -140,17 +140,17 @@ impl ChatExample {
         if !self.shown {
             self.shown = true;
 
-            let inbox_clone = self.inbox.clone();
+            let tx = self.inbox.sender();
             self.history_loader
                 .messages
                 .iter()
                 .for_each(|(message, duration)| {
-                    let inbox_clone = inbox_clone.clone();
+                    let tx = tx.clone();
                     let duration = *duration;
                     let message = message.clone();
                     spawn(async move {
                         sleep(duration).await;
-                        inbox_clone.send(message);
+                        tx.send(message).ok();
                     });
                 });
         }

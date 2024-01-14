@@ -1,11 +1,3 @@
-# egui_inbox
-
-Channel to send messages to egui views from async functions, callbacks, etc. without having to use interior mutability.
-Will automatically call `request_repaint()` on the `Ui` when a message is received.
-
-Example:
-    
-```rust
 use eframe::egui;
 use egui::CentralPanel;
 use egui_inbox::UiInbox;
@@ -42,4 +34,3 @@ pub fn main() -> eframe::Result<()> {
         },
     )
 }
-```

@@ -288,17 +288,17 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             && matches!(self.bottom_loading_state, LoadingState::Idle { .. })
         {
             self.bottom_loading_state = LoadingState::Loading;
-            let inbox = self.bottom_inbox.clone();
+            let sender = self.bottom_inbox.sender();
 
             if let Some(end_loader) = &mut self.end_loader {
                 end_loader(
                     self.end_cursor.clone(),
                     Box::new(move |result| match result {
                         Ok((items, cursor)) => {
-                            inbox.send(LoadingState::Loaded(items, cursor));
+                            sender.send(LoadingState::Loaded(items, cursor)).ok();
                         }
                         Err(err) => {
-                            inbox.send(LoadingState::Error(err.to_string()));
+                            sender.send(LoadingState::Error(err.to_string())).ok();
                         }
                     }),
                 );
@@ -309,17 +309,17 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             && matches!(self.top_loading_state, LoadingState::Idle { .. })
         {
             self.top_loading_state = LoadingState::Loading;
-            let inbox = self.top_inbox.clone();
+            let sender = self.top_inbox.sender();
 
             if let Some(start_loader) = &mut self.start_loader {
                 start_loader(
                     self.start_cursor.clone(),
                     Box::new(move |result| match result {
                         Ok((items, cursor)) => {
-                            inbox.send(LoadingState::Loaded(items, cursor));
+                            sender.send(LoadingState::Loaded(items, cursor)).ok();
                         }
                         Err(err) => {
-                            inbox.send(LoadingState::Error(err.to_string()));
+                            sender.send(LoadingState::Error(err.to_string())).ok();
                         }
                     }),
                 );

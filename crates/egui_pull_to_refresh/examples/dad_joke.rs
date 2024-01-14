@@ -2,7 +2,7 @@ use eframe::egui;
 use egui::{Align2, Area, CentralPanel, Frame, Vec2};
 use ehttp::Request;
 
-use egui_inbox::UiInbox;
+use egui_inbox::{UiInbox, UiInboxSender};
 use egui_pull_to_refresh::PullToRefresh;
 
 pub fn main() -> eframe::Result<()> {
@@ -10,7 +10,7 @@ pub fn main() -> eframe::Result<()> {
     let mut loading = true;
     let inbox = UiInbox::new();
 
-    load_joke(inbox.clone());
+    load_joke(inbox.sender());
 
     eframe::run_simple_native(
         "Pull to refresh dad jokes",
@@ -39,14 +39,14 @@ pub fn main() -> eframe::Result<()> {
                         });
                         ui.label("Pull to get a new joke!");
                         if ui.button("Or click me!").clicked() {
-                            load_joke(inbox.clone());
+                            load_joke(inbox.sender());
                             loading = true;
                         }
                     });
                 });
 
                 if response.should_refresh() {
-                    load_joke(inbox.clone());
+                    load_joke(inbox.sender());
                     loading = true;
                 }
             });
@@ -63,7 +63,7 @@ pub fn main() -> eframe::Result<()> {
     )
 }
 
-fn load_joke(inbox: UiInbox<Option<String>>) {
+fn load_joke(tx: UiInboxSender<Option<String>>) {
     let mut request = Request::get("https://icanhazdadjoke.com/");
     request
         .headers
@@ -71,6 +71,6 @@ fn load_joke(inbox: UiInbox<Option<String>>) {
     ehttp::fetch(request, move |response| {
         let response = response.unwrap();
         let joke = response.text().unwrap();
-        inbox.send(Some(joke.to_string()));
+        tx.send(Some(joke.to_string())).ok();
     });
 }
