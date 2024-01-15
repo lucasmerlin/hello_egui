@@ -16,7 +16,7 @@ Will automatically call `request_repaint()` on the `Ui` when a message is receiv
 
 Example:
     
-```rust
+```rust no_run
 use eframe::egui;
 use egui::CentralPanel;
 use egui_inbox::UiInbox;

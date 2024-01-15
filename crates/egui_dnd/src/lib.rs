@@ -27,7 +27,7 @@ pub struct Dnd<'a> {
 /// Use either [Dnd::show] or [Dnd::show_vec] to display the drag and drop UI.
 /// You can use [Dnd::with_mouse_config] or [Dnd::with_touch_config] to configure the drag detection.
 /// Example usage:
-/// ```rust;no_run
+/// ```rust no_run
 /// use std::hash::Hash;
 /// use eframe::egui;
 /// use egui::CentralPanel;

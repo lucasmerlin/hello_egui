@@ -203,7 +203,14 @@ impl CrateUi {
                     .map(|(_, a)| a)
                     .unwrap_or(readme);
 
-                CommonMarkViewer::new(item.name()).show(ui, &mut self.markdown_cache, readme_split);
+                // TODO: Find a better solution or cache string
+                let readme_split = readme_split.replace(" no_run", "");
+
+                CommonMarkViewer::new(item.name()).show(
+                    ui,
+                    &mut self.markdown_cache,
+                    &readme_split,
+                );
             });
         });
     }
