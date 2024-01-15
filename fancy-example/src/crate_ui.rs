@@ -1,11 +1,14 @@
 use casey::snake;
-use egui::{Button, OpenUrl, Response, ScrollArea, Ui, Widget};
+use egui::{Button, Response, ScrollArea, Ui, Widget};
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
+
+use Crate::*;
 
 use crate::shared_state::SharedState;
 use crate::sidebar::ActiveElement;
 use crate::{demo_area, FancyMessage};
-use Crate::*;
+
+pub const README_CONTENT_SEPARATOR: &str = "[content]:#";
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -20,20 +23,6 @@ pub enum Crate {
     EguiVirtualList,
 }
 
-// Gets passed a list of crates and generates the following functions:
-/*
-pub fn name(&self) -> &'static str {
-    match self {
-        Self::Animation => "egui_animation",
-        Self::Dnd => "egui_dnd",
-        Self::Inbox => "egui_inbox",
-        Self::InfiniteScroll => "egui_infinite_scroll",
-        Self::PullToRefresh => "egui_pull_to_refresh",
-        Self::Suspense => "egui_suspense",
-        Self::Thumbhash => "egui_thumbhash",
-        Self::VirtualList => "egui_virtual_list",
-    }
-}*/
 macro_rules! crate_impl {
     ($($name:ident),*) => {
         pub const ALL_CRATES: &[Crate] = &[$($name),*];
@@ -48,6 +37,24 @@ macro_rules! crate_impl {
             pub fn readme(&self) -> &'static str {
                 match self {
                     $(Self::$name => include_str!(concat!("../../crates/", snake!(stringify!($name)), "/README.md")),)*
+                }
+            }
+
+            pub fn docs_link(&self) -> &'static str {
+                match self {
+                    $(Self::$name => concat!("https://docs.rs/", snake!(stringify!($name))),)*
+                }
+            }
+
+            pub fn crates_io_link(&self) -> &'static str {
+                match self {
+                    $(Self::$name => concat!("https://crates.io/crates/", snake!(stringify!($name))),)*
+                }
+            }
+
+            pub fn github_link(&self) -> &'static str {
+                match self {
+                    $(Self::$name => concat!("https://github.com/lucasmerlin/hello_egui/tree/main/crates/", snake!(stringify!($name))),)*
                 }
             }
         }
@@ -87,10 +94,6 @@ impl Crate {
             Self::EguiSuspense => "Suspense widget for egui for ergonomic data fetching",
             Self::EguiThumbhash => "Image loading and caching for egui",
         }
-    }
-
-    pub fn crates_io_link(&self) -> String {
-        format!("https://crates.io/crates/{}", self.name())
     }
 }
 
@@ -187,14 +190,20 @@ impl CrateUi {
     pub fn ui(&mut self, ui: &mut Ui, item: &Crate) {
         demo_area(ui, item.name(), 1000.0, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.hyperlink_to("docs.rs", item.docs_link());
+                    ui.hyperlink_to("crates.io", item.crates_io_link());
+                    ui.hyperlink_to("github", item.github_link());
+                });
+
                 let readme = item.readme();
-                CommonMarkViewer::new(item.name()).show(
-                    ui,
-                    &mut self.markdown_cache,
-                    readme
-                        .strip_prefix(&format!("# {}", item.name()))
-                        .unwrap_or(readme),
-                );
+
+                let readme_split = readme
+                    .split_once(README_CONTENT_SEPARATOR)
+                    .map(|(_, a)| a)
+                    .unwrap_or(readme);
+
+                CommonMarkViewer::new(item.name()).show(ui, &mut self.markdown_cache, readme_split);
             });
         });
     }

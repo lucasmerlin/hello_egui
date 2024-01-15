@@ -1,4 +1,4 @@
-use crate::crate_ui::{crate_button_ui, crate_usage_ui, Crate, CrateUsage, ALL_CRATES};
+use crate::crate_ui::{crate_button_ui, Crate, CrateUsage, ALL_CRATES};
 use crate::shared_state::SharedState;
 use egui::{Align, Direction, Layout, RichText, Ui};
 use egui_dnd::DragDropItem;

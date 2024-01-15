@@ -35,7 +35,7 @@ egui_thumbhash = { workspace = true, optional = true }
 
 
 [workspace]
-members = ["fancy-example", "crates/*"]
+members = ["fancy-example", "crates/*", "scripts"]
 resolver = "2"
 
 [workspace.dependencies]

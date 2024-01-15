@@ -1,4 +1,16 @@
 # egui_pull_to_refresh
+
+[![egui_ver](https://img.shields.io/badge/egui->=0.22-blue)](https://github.com/emilk/egui)
+[![Latest version](https://img.shields.io/crates/v/egui_pull_to_refresh.svg)](https://crates.io/crates/egui_pull_to_refresh)
+[![Documentation](https://docs.rs/egui_pull_to_refresh/badge.svg)](https://docs.rs/egui_pull_to_refresh)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
+[![License](https://img.shields.io/crates/l/egui_pull_to_refresh.svg)](https://crates.io/crates/egui_pull_to_refresh)
+
+
+
+[content]:#
+
+
 ... adds pull to refresh functionality to egui.
 It works by wrapping a widget in a `PullToRefresh` widget, which will
 display a refresh indicator when the user pulls down the widget.
