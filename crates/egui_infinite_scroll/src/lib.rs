@@ -12,6 +12,7 @@ use egui_extras::{TableBody, TableRow};
 
 use egui_inbox::UiInbox;
 use egui_virtual_list::{VirtualList, VirtualListResponse};
+use hello_egui_utils::async_callback;
 
 /// The loading state of the infinite scroll, for either the start or end of the list.
 #[derive(Debug)]
@@ -35,7 +36,8 @@ impl<T, C> LoadingState<T, C> {
     }
 }
 
-type Callback<T, Cursor> = Box<dyn FnOnce(Result<(Vec<T>, Option<Cursor>), String>) + Send + Sync>;
+type CallbackResult<T, Cursor> = Result<(Vec<T>, Option<Cursor>), String>;
+type Callback<T, Cursor> = Box<dyn FnOnce(CallbackResult<T, Cursor>) + Send + Sync>;
 type Loader<T, Cursor> = Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync>;
 
 type FilterType<T> = Box<dyn Fn(&T) -> bool + Send + Sync>;
@@ -116,14 +118,16 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
-    /// Set the start loader, it will be called when the user scrolls to the top of the list.
-    pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
-        mut self,
-        f: F,
-    ) -> Self {
-        self.start_loader = Some(Box::new(f));
-        self
-    }
+    async_callback!(
+        /// Set the start loader, it will be called when the user scrolls to the top of the list.
+        pub fn start_loader start_loader_async(
+            mut self,;
+            mut f: CallbackMut<cursor: Option<Cursor>, ;res CallbackResult<T, Cursor>> + 'static + Send + Sync,
+        ) -> Self {
+            self.start_loader = Some(Box::new(f));
+            self
+        }
+    );
 
     /// Sets the loader function for the end of the list.
     /// The loader function is called initially and when the user scrolls to the end of the list.

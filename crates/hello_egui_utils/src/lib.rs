@@ -52,23 +52,44 @@ macro_rules! async_callback {
     };
     (
         $(#[$outer:meta])*
-        $vis:vis fn $name:ident $async_name:ident(mut $f:ident: CallbackMut<$result:ty> $(, $arg:ident: $arg_ty:ty)*) -> $ret:ty $body:block
+        $vis:vis fn $name:ident $async_name:ident(
+            $($mutself:ident $($self:ident)?,)?;
+            mut $f:ident: CallbackMut<
+                $( $cb_arg_name:ident: $cb_arg_ty:ty ,)*
+                ;res $result:ty
+            > $($tr:tt)*
+        ) -> $ret:ty $body:block
     ) => {
         $(#[$outer])*
-        $vis fn $name($($arg: $arg_ty),* mut $f: impl FnMut($crate::CallbackFn<$result>) + 'static + Send + Sync) -> $ret {
+        $vis fn $name(
+            $($mutself $($self)?)?,
+            mut $f: impl FnMut(
+                $( $cb_arg_ty ,)*
+                $crate::CallbackFn<$result>
+            ) $( $tr )*
+        ) -> $ret {
             $body
         }
 
         #[cfg(feature = "async")]
         $(#[$outer])*
         #[doc = concat!("This is the async version of [", stringify!($name), "]")]
-        $vis fn $async_name<F: Future<Output = $result> + 'static + Send + Sync>($($arg: $arg_ty),* mut future: impl FnMut() -> F + 'static + Send + Sync) -> $ret {
-            Self::$name(move |__callback| {
-                let mut future = future();
-                ::hello_egui_utils::spawn(async move {
-                    __callback(future.await);
-                });
-            })
+        $vis fn $async_name<F: std::future::Future<Output = $result> + 'static + Send + Sync>(mut future: impl FnMut() -> F + 'static + Send + Sync) -> $ret {
+            Self::$name(
+                $($($self)?)?,
+                move |
+                    $( $cb_arg_name ,)*
+                    __callback
+                | {
+                    let mut future = future();
+                    ::hello_egui_utils::spawn(async move {
+                        __callback(
+                            $( $cb_arg_name ,)*
+                            future.await
+                        );
+                    });
+                }
+            )
         }
     };
 }
@@ -78,7 +99,7 @@ pub struct Test<T, E> {
     _e: std::marker::PhantomData<E>,
 }
 
-pub type CallbackFn<T> = Box<dyn FnOnce(T) + Send>;
+pub type CallbackFn<T> = Box<dyn FnOnce(T) + Send + Sync>;
 
 type CallbackOnce<T> = Box<CallbackFn<T>>;
 

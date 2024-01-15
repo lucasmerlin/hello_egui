@@ -8,15 +8,22 @@ publish = false
 
 [features]
 egui_extras = ["dep:egui_extras"]
+async = ["hello_egui_utils/async"]
+tokio = ["async", "hello_egui_utils/tokio"]
 
 [[example]]
 name = "infinite_scroll_table"
 required-features = ["egui_extras"]
 
+[[example]]
+name = "infinite_scroll_async"
+required-features = ["tokio"]
+
 
 [dependencies]
-egui_inbox = { path = "../egui_inbox" }
-egui_virtual_list = { path = "../egui_virtual_list" }
+egui_inbox.workspace = true
+egui_virtual_list.workspace = true
+hello_egui_utils.workspace = true
 
 egui.workspace = true
 egui_extras = { workspace = true, optional = true }
@@ -25,3 +32,5 @@ web-time = "1"
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 rand = "0.8"
+
+tokio = { version = "1", features = ["full"] }
