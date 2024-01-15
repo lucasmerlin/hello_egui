@@ -392,7 +392,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         let mut min_item = 0;
         let mut max_item = 0;
 
-        table.rows(row_height, self.items.len(), |index, row| {
+        table.rows(row_height, self.items.len(), |row| {
+            let index = row.index();
             min_item = min_item.min(index);
             max_item = max_item.max(index);
             let item = &mut self.items[index];

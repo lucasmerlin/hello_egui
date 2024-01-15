@@ -8,7 +8,7 @@ use crate::shared_state::SharedState;
 use crate::sidebar::ActiveElement;
 use crate::{demo_area, FancyMessage};
 
-pub const README_CONTENT_SEPARATOR: &str = "[content]:#";
+pub const README_CONTENT_SEPARATOR: &str = "[content]:<>";
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, Debug, PartialEq)]

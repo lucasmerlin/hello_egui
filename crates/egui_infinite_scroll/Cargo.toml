@@ -9,6 +9,11 @@ publish = false
 [features]
 egui_extras = ["dep:egui_extras"]
 
+[[example]]
+name = "infinite_scroll_table"
+required-features = ["egui_extras"]
+
+
 [dependencies]
 egui_inbox = { path = "../egui_inbox" }
 egui_virtual_list = { path = "../egui_virtual_list" }

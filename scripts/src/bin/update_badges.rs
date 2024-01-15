@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fs::{read_to_string, write, DirEntry};
 
-pub const CONTENT_MARKER: &str = "[content]:#";
+pub const CONTENT_MARKER: &str = "[content]:<>";
 
 fn main() -> Result<(), Box<dyn Error>> {
     // list dirs under crates
