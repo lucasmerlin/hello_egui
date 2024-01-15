@@ -2,9 +2,13 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use egui::Ui;
-use egui_inbox::UiInbox;
 use std::fmt::{Debug, Display};
+use std::future::Future;
+
+use egui::Ui;
+
+use egui_inbox::UiInbox;
+use hello_egui_utils::async_callback;
 
 type CallbackFn<T> = dyn FnOnce(T) + Send;
 
@@ -51,49 +55,53 @@ impl<T: Debug, E: Display + Debug> Debug for EguiSuspense<T, E> {
 impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static>
     EguiSuspense<T, E>
 {
-    /// Create a new suspense that will only try to load the data once.
-    /// No retry button will be shown on error.
-    pub fn single_try(
-        f: impl FnOnce(Box<CallbackFn<Result<T, E>>>) + 'static + Send + Sync,
-    ) -> Self {
-        let inbox = UiInbox::new();
-        let tx = inbox.sender();
-        f(Box::new(move |result| {
-            tx.send(result).ok();
-        }));
-        Self {
-            inbox,
-            data: None,
+    async_callback! (
+        /// Create a new suspense that will only try to load the data once.
+        /// No retry button will be shown on error.
+        pub fn single_try single_try_async(
+            f: CallbackOnce<Result<T, E>>
+        ) -> Self {
+            let inbox = UiInbox::new();
+            let tx = inbox.sender();
+            f(Box::new(move |result| {
+                tx.send(result).ok();
+            }));
+            Self {
+                inbox,
+                data: None,
 
-            reload_fn: None,
-            error_ui: None,
-            loading_ui: Some(Box::new(|ui| {
-                ui.spinner();
-            })),
+                reload_fn: None,
+                error_ui: None,
+                loading_ui: Some(Box::new(|ui| {
+                    ui.spinner();
+                })),
+            }
         }
-    }
+    );
 
-    /// Create a new reloadable suspense.
-    /// A retry button will be shown on error.
-    pub fn reloadable(
-        mut f: impl FnMut(Box<CallbackFn<Result<T, E>>>) + 'static + Send + Sync,
-    ) -> Self {
-        let inbox = UiInbox::new();
-        let inbox_clone = inbox.sender();
-        f(Box::new(move |result| {
-            inbox_clone.send(result).ok();
-        }));
-        Self {
-            inbox,
-            data: None,
+    async_callback!(
+        /// Create a new reloadable suspense.
+        /// A retry button will be shown on error.
+        pub fn reloadable reloadable_async(
+            mut f: CallbackMut<Result<T, E>>
+        ) -> Self {
+            let inbox = UiInbox::new();
+            let inbox_clone = inbox.sender();
+            f(Box::new(move |result| {
+                inbox_clone.send(result).ok();
+            }));
+            Self {
+                inbox,
+                data: None,
 
-            reload_fn: Some(Box::new(f)),
-            error_ui: None,
-            loading_ui: Some(Box::new(|ui| {
-                ui.spinner();
-            })),
+                reload_fn: Some(Box::new(f)),
+                error_ui: None,
+                loading_ui: Some(Box::new(|ui| {
+                    ui.spinner();
+                })),
+            }
         }
-    }
+    );
 
     /// Create a new suspense that is already loaded.
     pub fn loaded(data: T) -> Self {

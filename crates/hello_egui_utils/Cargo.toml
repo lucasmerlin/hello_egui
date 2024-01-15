@@ -11,3 +11,9 @@ homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/hello_egu
 
 [dependencies]
 egui.workspace = true
+
+tokio = { version = "1", optional = true, features = ["rt"] }
+
+[features]
+async = []
+tokio = ["async", "dep:tokio"]
