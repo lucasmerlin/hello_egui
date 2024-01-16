@@ -107,10 +107,8 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
 
     asyncify!(
         reloadable,
-        FnMut,
         callback_mut: (impl FnMut(CallbackType<Result<T, E>>, ) + Send + Sync + 'static),
         call_prefix: (Self::),
-        self_usage: (no_self),
         generics: (),
         async_generics: (<F: Future<Output = Result<T, E>> + Send + 'static>),
         parameters: (),
@@ -138,16 +136,14 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
 
     asyncify!(
         single_try,
-        FnOnce,
-        callback_once: CallbackType<Result<T, E>>,
+        callback_once: (impl FnOnce(CallbackType<Result<T, E>>) + Send + Sync + 'static),
         call_prefix: (Self::),
-        self_usage: (no_self),
         generics: (),
         async_generics: (<F: Future<Output = Result<T, E>> + Send + Sync + 'static>),
         parameters: (),
         future: F,
         return_type: (Self),
-        body: {
+        body: |()| {
             let mut callback_once = callback_once;
             let inbox = UiInbox::new();
             let inbox_clone = inbox.sender();

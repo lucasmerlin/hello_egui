@@ -169,10 +169,8 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
 
     asyncify! {
         end_loader,
-        FnMut,
         f: (impl FnMut(Callback<T, Cursor>, c: Option<Cursor>,) + Send + Sync + 'static),
         call_prefix: (Self::),
-        self_usage: (mut_self),
         generics: (),
         async_generics: (<F: Future<Output = CallbackResult<T, Cursor>> + Send + Sync + 'static>),
         parameters: (),

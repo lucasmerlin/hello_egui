@@ -33,147 +33,97 @@ pub fn spawn(future: impl Future<Output = ()> + Send + 'static) {
 }
 
 #[macro_export]
-macro_rules! strip_self {
-    (mut $self:expr,) => {
-        $self
+macro_rules! call_self_fn {
+    ($path:path, &mut $self:expr, ($($arg:expr,)*)) => {
+        $path($self, $($arg,)*)
     };
-    (&mut $self:expr,) => {
-        $self
+    ($path:path, mut $self:expr, ($($arg:expr,)*)) => {
+        $path($self, $($arg,)*)
     };
-    (&$self:expr,) => {
-        $self
+    ($path:path, &$self:expr, ($($arg:expr,)*)) => {
+        $path($self, $($arg,)*)
     };
-    ($self:expr,) => {
-        $self
+    ($path:path, $self:expr, ($($arg:expr,)*)) => {
+        $path($self, $($arg,)*)
     };
-    () => {};
-    ($($tt:tt)*) => {
-        $crate::strip_self!($($tt)*,)
+    ($path:path, ($($arg:expr,)*)) => {
+        $path($($arg,)*)
     };
 }
 
 struct T;
 
 impl T {
-    fn test(self) {
-        strip_self!(&mut self);
-    }
+    fn test() {}
 }
 
-/// This macro generates another macro that in turn generates the async fn, based on the self usage
-macro_rules! gen_async_fn_def {
+/// This macro generates the async fn
+#[macro_export]
+macro_rules! async_fn_def {
     (
-        // We need to pass the dollar sign to the macro to `escape` it
-        dollar($dollar:tt);
-        $((
-            $self_type:ident: ($($self:tt)*);
-            self_ref: $($self_ref:tt)*
-        ),)*
+        // Block that contains the async logic
+        $body:block,
+        // The name of the async fn
+        $name:ident,
+        // The path to the callback fn (e.g. Self::callback)
+        $callback_fn_path:path,
+        // The parameters of the async fn. The semicolon in front of the mutt is a hack to circumvent ambiguity
+        ($($(;$mutt:ident)? $arg:ident: $typ:ty,)*)
+        // The parameters of the call to the callback fn
+        ($($call_args:ident,)*)
+        // The generics of the async fn
+        ($($gen:tt)*),
+        // Return type
+        ($($return_type:tt)*),
+        // Self reference
+        ($($callback_body_self:tt)*),
     ) => {
+        // We use concat_idents to generate the name for the async fn
+        $crate::concat_idents!(fn_name = $name, _async {
+            pub fn fn_name$($gen)*(
+                $($callback_body_self)*
+                $($($mutt)? $arg: $typ,)*
+            ) -> $($return_type)* {
+                let callback = $body;
 
-        #[macro_export]
-        macro_rules! async_fn_def {
-            $(
-                (
-                    // The type of self that is used in the async fn
-                    $self_type,
-                    // Block that contains the async logic
-                    $dollar body:block,
-                    // The name of the async fn
-                    $dollar name:ident,
-                    // The path to the callback fn (e.g. Self::callback)
-                    $dollar callback_fn_path:path,
-                    // The parameters of the async fn. The semicolon in front of the mutt is a hack to circumvent ambiguity
-                    ($dollar ($dollar (;$dollar mutt:ident)? $dollar arg:ident: $dollar typ:ty,)*)
-                    // The parameters of the call to the callback fn
-                    ($dollar ($dollar call_args:ident,)*)
-                    // The generics of the async fn
-                    ($dollar ($dollar gen:tt)*),
-                    // Return type
-                    ($dollar ($dollar return_type:tt)*),
-                    // Self reference
-                    ($dollar ($dollar callback_body_self:tt)*),
-                ) => {
-                    // We use concat_idents to generate the name for the async fn
-                    $crate::concat_idents!(fn_name = $dollar name, _async {
-                        pub fn fn_name$dollar ($dollar gen)*(
-                            $dollar ($dollar callback_body_self)*
-                            $dollar ($dollar ($dollar mutt)? $dollar arg: $dollar typ,)*
-                        ) -> $dollar ($dollar return_type)* {
-                            let callback = $dollar body;
-
-                            // Construct the call to the callback fn
-                            $dollar callback_fn_path (
-                                $crate::strip_self!($dollar ($dollar callback_body_self)*),
-                                $dollar ($dollar call_args,)*
-                                callback,
-                            )
-                        }
-                    });
-                };
-            )*
-        }
-    };
-}
-
-gen_async_fn_def!(
-    dollar($);
-    (ref_mut_self: (&mut self,); self_ref: self,),
-    (ref_self: (&self,); self_ref: self,),
-    (mut_self: (self,); self_ref: self,),
-    (just_self: (self,); self_ref: self,),
-    (no_self: (); self_ref: ),
-);
-
-/// This macro generates the callback fn, based on the self usage
-macro_rules! gen_fn_def {
-    (
-        // We need to pass the dollar sign to the macro to `escape` it
-        dollar($dollar:tt);
-        $((
-            $self_type:ident: ($($self:tt)*);
-        ),)*
-    ) => {
-
-        #[macro_export]
-        macro_rules! fn_def {
-            $(
-                (
-                    // The type of self that is used in the async fn
-                    $self_type,
-                    // Block that contains the callback function body
-                    $dollar body:block,
-                    // The name of the callback fn
-                    $dollar name:ident,
-                    // The parameters of the callback fn
-                    $dollar ($dollar arg:ident: $dollar typ:ty,)*
-                    // The generics of the callback fn
-                    ($dollar ($dollar gen:tt)*),
-                    // The return type
-                    ($dollar ($dollar return_type:tt)*),
-                    // The self declaration
-                    ($dollar ($dollar callback_body_self:tt)*),
-                ) => {
-                    pub fn $dollar name $dollar ($dollar gen)*(
-                        $dollar ($dollar callback_body_self)*
-                        $dollar ($dollar arg: $dollar typ,)*
-                    ) -> $dollar ($dollar return_type)* {
-                        $dollar body
+                // Construct the call to the callback fn
+                    $crate::call_self_fn!{
+                        $callback_fn_path,
+                        $($callback_body_self)*
+                        ($($call_args,)*
+                        callback,)
                     }
-                };
-            )*
-        }
+
+            }
+        });
     };
 }
 
-gen_fn_def!(
-    dollar($);
-    (ref_mut_self: (&mut self,);),
-    (ref_self: (&self,);),
-    (mut_self: (mut self,);),
-    (just_self: (self,);),
-    (no_self: ();),
-);
+/// This macro generates the callback fn
+#[macro_export]
+macro_rules! fn_def {
+    (
+        // Block that contains the callback function body
+        $body:block,
+        // The name of the callback fn
+        $name:ident,
+        // The parameters of the callback fn
+        $($arg:ident: $typ:ty,)*
+        // The generics of the callback fn
+        ($($gen:tt)*),
+        // The return type
+        ($($return_type:tt)*),
+        // The self declaration
+        ($($callback_body_self:tt)*),
+    ) => {
+        pub fn $name $($gen)*(
+            $($callback_body_self)*
+            $($arg: $typ,)*
+        ) -> $($return_type)* {
+            $body
+        }
+    };
+}
 
 /// This macro generates the async fn and the callback fn
 #[macro_export]
@@ -189,11 +139,9 @@ macro_rules! fnify {
         async_generics: ($($async_gen:tt)*),
         return_type: ($($return_type:tt)*),
         call_prefix: ($($call_prefix:tt)*),
-        self_usage: ($self_usage:ident),
         callback_body_self: ($($callback_body_self:tt)*),
     ) => {
         $crate::fn_def!(
-            $self_usage,
             $body,
             $name,
             $($arg: $typ,)*
@@ -203,7 +151,6 @@ macro_rules! fnify {
         );
 
         $crate::async_fn_def!(
-            $self_usage,
             $async_body,
             $name,
             $($call_prefix)*$name,
@@ -220,10 +167,8 @@ macro_rules! fnify {
 macro_rules! asyncify {
     (
         $name:ident,
-        FnMut,
         $callback_name:ident: (impl FnMut($callback_type:ty, $($closure_arg_name:ident: $closure_arg:ty,)*) $($bounds:tt)*),
         call_prefix: ($($call_prefix:tt)*),
-        self_usage: ($self_usage:ident),
         generics: ($($gen:tt)*),
         async_generics: ($($async_gen:tt)*),
         parameters: ($($arg:ident: $typ:ty,)*),
@@ -250,27 +195,24 @@ macro_rules! asyncify {
             async_generics: ($($async_gen)*),
             return_type: ($($return_type)*),
             call_prefix: ($($call_prefix)*),
-            self_usage: ($self_usage),
             callback_body_self: ($($callback_body_self)*),
         }
     };
     (
         $name:ident,
-        FnOnce,
-        $callback_name:ident: $callback_type:ty,
+        $callback_name:ident: (impl FnOnce($callback_type:ty) $($bounds:tt)*),
         call_prefix: ($($call_prefix:tt)*),
-        self_usage: ($self_usage:ident),
         generics: ($($gen:tt)*),
         async_generics: ($($async_gen:tt)*),
         parameters: ($($arg:ident: $typ:ty,)*),
         future: $future:ty,
         return_type: ($($return_type:tt)*),
-        body: $body:block,
+        body: |($($callback_body_self:tt)*)| $body:block,
     ) => {
         $crate::fnify!{
             $name,
             body: $body,
-            parameters: ($($arg: $typ,)* $callback_name: impl FnOnce($callback_type) + Send + Sync + 'static,),
+            parameters: ($($arg: $typ,)* $callback_name: impl FnOnce($callback_type) $($bounds)*,),
             async_body: {
                 Box::new(move |callback: $callback_type| {
                     let fut = future;
@@ -286,7 +228,7 @@ macro_rules! asyncify {
             async_generics: ($($async_gen)*),
             return_type: ($($return_type)*),
             call_prefix: ($($call_prefix)*),
-            self_usage: ($self_usage),
+            callback_body_self: ($($callback_body_self)*),
         }
     };
 }
