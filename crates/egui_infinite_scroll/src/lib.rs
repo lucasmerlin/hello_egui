@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 
 use std::fmt::{Debug, Formatter};
+use std::future::Future;
 use std::mem;
 use std::ops::Range;
 
@@ -12,7 +13,7 @@ use egui_extras::{TableBody, TableRow};
 
 use egui_inbox::UiInbox;
 use egui_virtual_list::{VirtualList, VirtualListResponse};
-use hello_egui_utils::async_callback;
+use hello_egui_utils::{asyncify, CallbackType};
 
 /// The loading state of the infinite scroll, for either the start or end of the list.
 #[derive(Debug)]
@@ -118,25 +119,69 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
-    async_callback!(
-        /// Set the start loader, it will be called when the user scrolls to the top of the list.
-        pub fn start_loader start_loader_async(
-            mut self,;
-            mut f: CallbackMut<cursor: Option<Cursor>, ;res CallbackResult<T, Cursor>> + 'static + Send + Sync,
-        ) -> Self {
-            self.start_loader = Some(Box::new(f));
-            self
-        }
-    );
-
-    /// Sets the loader function for the end of the list.
-    /// The loader function is called initially and when the user scrolls to the end of the list.
-    pub fn end_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
+    /// Sets the loader function for the start of the list.
+    /// The loader function is called initially and when the user scrolls to the start of the list.
+    pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
         mut self,
         f: F,
     ) -> Self {
-        self.end_loader = Some(Box::new(f));
+        self.start_loader = Some(Box::new(f));
         self
+    }
+
+    pub fn start_loader_async<
+        F: Future<Output = CallbackResult<T, Cursor>> + Send + Sync + 'static,
+    >(
+        mut self,
+        mut f: impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static,
+    ) -> Self {
+        Self::start_loader(self, move |cursor, callback| {
+            let future = f(cursor);
+            hello_egui_utils::spawn(async move {
+                callback(future.await);
+            });
+        })
+    }
+
+    // /// Sets the loader function for the end of the list.
+    // /// The loader function is called initially and when the user scrolls to the end of the list.
+    // pub fn end_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
+    //     mut self,
+    //     f: F,
+    // ) -> Self {
+    //     self.end_loader = Some(Box::new(f));
+    //     self
+    // }
+    //
+    // pub fn end_loader_async<
+    //     F: Future<Output = CallbackResult<T, Cursor>> + Send + Sync + 'static,
+    // >(
+    //     mut self,
+    //     mut f: impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static,
+    // ) -> Self {
+    //     Self::end_loader(self, move |cursor, callback| {
+    //         let future = f(cursor);
+    //         hello_egui_utils::spawn(async move {
+    //             callback(future.await);
+    //         });
+    //     })
+    // }
+
+    asyncify! {
+        end_loader,
+        FnMut,
+        f: (impl FnMut(Callback<T, Cursor>, c: Option<Cursor>,) + Send + Sync + 'static),
+        call_prefix: (Self::),
+        self_usage: (mut_self),
+        generics: (),
+        async_generics: (<F: Future<Output = CallbackResult<T, Cursor>> + Send + Sync + 'static>),
+        parameters: (),
+        future: (impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static),
+        return_type: (Self),
+        body: |(mut self,)| {
+            self.end_loader = Some(Box::new(f));
+            self
+        },
     }
 
     /// Returns true if the initial loading is in progress (no items and loading state is loading)

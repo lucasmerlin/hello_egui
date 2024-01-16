@@ -14,6 +14,8 @@ egui.workspace = true
 
 tokio = { version = "1", optional = true, features = ["rt"] }
 
+concat-idents = "1"
+
 [features]
 async = []
 tokio = ["async", "dep:tokio"]
