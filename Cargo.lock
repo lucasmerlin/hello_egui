@@ -1245,9 +1245,15 @@ dependencies = [
 name = "egui_webview"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "eframe",
  "egui",
+ "egui_extras",
  "egui_inbox",
+ "image",
+ "log",
+ "serde",
+ "serde_json",
  "wry",
 ]
 

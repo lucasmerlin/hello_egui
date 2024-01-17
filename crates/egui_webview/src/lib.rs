@@ -1,16 +1,26 @@
 use std::collections::{HashMap, HashSet};
+use std::error::Error;
 use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
-use egui::{Context, Id, Ui, Vec2};
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
+use egui::mutex::Mutex;
+use egui::{ColorImage, Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use serde::{Deserialize, Serialize};
 use wry::raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use wry::WebView;
+
+use egui_inbox::UiInbox;
 
 pub mod native_text_field;
 
 pub struct EguiWebView {
-    view: Arc<wry::WebView>,
+    pub view: Arc<wry::WebView>,
     id: Id,
+    inbox: UiInbox<WebViewEvent>,
+    current_image: Option<TextureHandle>,
+    focused: bool,
 }
 
 impl Debug for EguiWebView {
@@ -19,12 +29,37 @@ impl Debug for EguiWebView {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum JsEvent {
+    Screenshot { base64: String },
+    Focus,
+    Blur,
+}
+
+pub enum WebViewEvent {
+    ScreenshotReceived(TextureHandle),
+    Focus,
+    Blur,
+    Loaded,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum PageCommand {
+    Screenshot,
+    Click { x: f32, y: f32 },
+    Back,
+    Forward,
+}
+
 impl EguiWebView {
     pub fn new(
         ctx: &Context,
         id: impl Into<Id>,
         build: impl FnOnce(wry::WebViewBuilder) -> wry::WebViewBuilder,
     ) -> Self {
+        let (tx, inbox) = UiInbox::channel();
         let id = id.into();
         let handle = ctx.memory_mut(|mem| {
             mem.data
@@ -39,8 +74,43 @@ impl EguiWebView {
 
         builder = build(builder);
 
+        let view_ref = Arc::new(Mutex::new(None::<Arc<WebView>>));
+        let view_ref_weak = view_ref.clone();
+        let ctx_clone = ctx.clone();
+
+        let tx_clone = tx.clone();
+
+        builder = builder
+            .with_devtools(true)
+            .with_on_page_load_handler(move |event, url| {
+                let arc = Some(view_ref_weak.clone());
+                if let Some(guard) = arc {
+                    let mut guard = guard.lock();
+                    if let Some(view) = guard.as_ref() {
+                        println!("Loading screenshot script");
+                        view.evaluate_script(include_str!("html-to-image.js"));
+                        view.evaluate_script(include_str!("screenshot.js"));
+                    }
+                }
+
+                tx_clone.send(WebViewEvent::Loaded).ok();
+            })
+            .with_ipc_handler(move |msg| {
+                let result = Self::handle_js_event(msg, &ctx_clone);
+                match result {
+                    Ok(event) => {
+                        tx.send(event).ok();
+                    }
+                    Err(err) => {
+                        println!("Error handling js event: {}", err);
+                    }
+                }
+            });
+
         #[allow(clippy::arc_with_non_send_sync)]
         let web_view = Arc::new(builder.build().unwrap());
+
+        *view_ref.lock() = Some(web_view.clone());
 
         ctx.data_mut(|data| {
             let state = data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
@@ -50,28 +120,135 @@ impl EguiWebView {
             state.views.insert(id, Arc::downgrade(&web_view));
         });
 
-        Self { view: web_view, id }
+        Self {
+            inbox,
+            view: web_view,
+            id,
+            current_image: None,
+            focused: false,
+        }
+    }
+
+    fn handle_js_event(msg: String, ctx: &Context) -> Result<WebViewEvent, Box<dyn Error>> {
+        let event = serde_json::from_str(&msg)?;
+
+        match event {
+            JsEvent::Focus => Ok(WebViewEvent::Focus),
+            JsEvent::Blur => Ok(WebViewEvent::Blur),
+            JsEvent::Screenshot { base64 } => {
+                let data = BASE64_STANDARD.decode(base64.as_bytes())?;
+                let image = image::load_from_memory(&data)?;
+
+                Ok(WebViewEvent::ScreenshotReceived(ctx.load_texture(
+                    "browser_screenshot",
+                    ColorImage::from_rgba_unmultiplied(
+                        [image.width() as usize, image.height() as usize],
+                        &image.to_rgba8(),
+                    ),
+                    Default::default(),
+                )))
+            }
+        }
+    }
+
+    fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
+        let json = serde_json::to_string(&command)?;
+        self.view
+            .evaluate_script(&format!("__egui_webview_handle_command({})", json))?;
+        Ok(())
+    }
+
+    pub fn back(&self) {
+        self.send_command(PageCommand::Back).ok();
+    }
+
+    pub fn forward(&self) {
+        self.send_command(PageCommand::Forward).ok();
     }
 
     pub fn ui(&mut self, ui: &mut Ui, size: Vec2) {
-        ui.ctx().memory_mut(|mem| {
-            let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                Id::new(WEBVIEW_ID),
-                || unreachable!(),
-            );
-            state.rendered_this_frame.insert(self.id);
-        });
+        let response = ui.allocate_response(size, Sense::click());
 
-        let (_id, rect) = ui.allocate_space(size);
+        if let Some(img) = self.inbox.read(ui).last() {
+            match img {
+                WebViewEvent::ScreenshotReceived(img) => {
+                    self.current_image = Some(img.clone());
+                }
+                WebViewEvent::Focus => {
+                    ui.memory_mut(|mem| mem.request_focus(response.id));
+                }
+                WebViewEvent::Blur => {}
+                WebViewEvent::Loaded => {
+                    self.send_command(PageCommand::Screenshot).ok();
+                }
+            }
+        }
 
-        let rect = rect * ui.ctx().zoom_factor();
+        if response.clicked() {
+            response.request_focus();
+            let pos = response.hover_pos();
+            if let Some(pos) = pos {
+                let relative = (pos - response.rect.min) / ui.ctx().pixels_per_point();
+
+                self.send_command(PageCommand::Click {
+                    x: relative.x,
+                    y: relative.y,
+                })
+                .ok();
+            }
+        }
+
+        let my_layer = ui.layer_id();
+
+        let is_my_layer_top =
+            ui.memory(|mut mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
+
+        if !is_my_layer_top {
+            response.surrender_focus();
+        }
+
+        if response.gained_focus() {
+            println!("Gained focus");
+            self.view.focus();
+        }
+
+        if response.lost_focus() {
+            self.send_command(PageCommand::Screenshot).ok();
+        }
+
+        if let Some(image) = &self.current_image {
+            Image::new(image).paint_at(ui, response.rect);
+        }
+
+        let should_display = ui
+            .memory(|mem| mem.has_focus(response.id) || (is_my_layer_top && !mem.any_popup_open()));
+
+        if should_display {
+            ui.ctx().memory_mut(|mem| {
+                let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
+                    Id::new(WEBVIEW_ID),
+                    || unreachable!(),
+                );
+                state.rendered_this_frame.insert(self.id);
+            });
+        }
+
+        let wv_rect = response.rect * ui.ctx().zoom_factor();
 
         self.view.set_bounds(wry::Rect {
-            x: rect.min.x as i32,
-            y: rect.min.y as i32,
-            width: rect.width() as u32,
-            height: rect.height() as u32,
+            x: wv_rect.min.x as i32,
+            y: wv_rect.min.y as i32,
+            width: wv_rect.width() as u32,
+            height: wv_rect.height() as u32,
         });
+    }
+
+    pub fn screenshot_ui(&mut self, ui: &mut Ui) {
+        if let Some(img) = self.current_image.as_ref() {
+            Image::new(img)
+                .fit_to_exact_size(img.size_vec2() / ui.ctx().pixels_per_point())
+                .ui(ui);
+        }
     }
 }
 
