@@ -5,11 +5,13 @@ use std::sync::{Arc, Weak};
 
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use egui::load::SizedTexture;
 use egui::mutex::Mutex;
-use egui::{ColorImage, Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui::{vec2, Context, Id, Image, Sense, Ui, Vec2, Widget};
 use serde::{Deserialize, Serialize};
+use wgpu::{Extent3d, TextureAspect, TextureDescriptor};
 use wry::raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
-use wry::WebView;
+use wry::{ScreenshotRegion, WebView};
 
 use egui_inbox::UiInbox;
 
@@ -19,8 +21,11 @@ pub struct EguiWebView {
     pub view: Arc<wry::WebView>,
     id: Id,
     inbox: UiInbox<WebViewEvent>,
-    current_image: Option<TextureHandle>,
+    current_image: Option<TextureRef>,
     focused: bool,
+    context: Context,
+
+    wgpu_ctx: Option<egui_wgpu::RenderState>,
 }
 
 impl Debug for EguiWebView {
@@ -38,7 +43,7 @@ pub enum JsEvent {
 }
 
 pub enum WebViewEvent {
-    ScreenshotReceived(TextureHandle),
+    ScreenshotReceived(TextureRef),
     Focus,
     Blur,
     Loaded,
@@ -47,10 +52,38 @@ pub enum WebViewEvent {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum PageCommand {
-    Screenshot,
+    // Screenshot,
     Click { x: f32, y: f32 },
     Back,
     Forward,
+}
+
+enum TextureRef {
+    Wgpu {
+        sized_texture: SizedTexture,
+        wgpu_ctx: egui_wgpu::RenderState,
+    },
+}
+
+impl TextureRef {
+    pub fn sized_texture(&self) -> &SizedTexture {
+        match self {
+            TextureRef::Wgpu { sized_texture, .. } => sized_texture,
+        }
+    }
+}
+
+impl Drop for TextureRef {
+    fn drop(&mut self) {
+        match self {
+            TextureRef::Wgpu {
+                sized_texture,
+                wgpu_ctx,
+            } => {
+                wgpu_ctx.renderer.write().free_texture(&sized_texture.id);
+            }
+        }
+    }
 }
 
 impl EguiWebView {
@@ -126,7 +159,13 @@ impl EguiWebView {
             id,
             current_image: None,
             focused: false,
+            context: ctx.clone(),
+            wgpu_ctx: None,
         }
+    }
+
+    pub fn set_wgpu_ctx(&mut self, ctx: egui_wgpu::RenderState) {
+        self.wgpu_ctx = Some(ctx);
     }
 
     fn handle_js_event(msg: String, ctx: &Context) -> Result<WebViewEvent, Box<dyn Error>> {
@@ -139,16 +178,109 @@ impl EguiWebView {
                 let data = BASE64_STANDARD.decode(base64.as_bytes())?;
                 let image = image::load_from_memory(&data)?;
 
-                Ok(WebViewEvent::ScreenshotReceived(ctx.load_texture(
-                    "browser_screenshot",
-                    ColorImage::from_rgba_unmultiplied(
-                        [image.width() as usize, image.height() as usize],
-                        &image.to_rgba8(),
-                    ),
-                    Default::default(),
-                )))
+                // Ok(WebViewEvent::ScreenshotReceived(ctx.load_texture(
+                //     "browser_screenshot",
+                //     ColorImage::from_rgba_unmultiplied(
+                //         [image.width() as usize, image.height() as usize],
+                //         &image.to_rgba8(),
+                //     ),
+                //     Default::default(),
+                // )))
+                Err("Not implemented".into())
             }
         }
+    }
+
+    fn take_screenshot(&mut self) {
+        let ctx = self.context.clone();
+        let tx = self.inbox.sender();
+
+        let wgpu_ctx = self.wgpu_ctx.as_ref().map(|ctx| ctx.clone());
+
+        self.view
+            .screenshot_raw(ScreenshotRegion::Visible, move |data| {
+                let ctx = ctx.clone();
+                let tx = tx.clone();
+                if let Ok(screenshot) = data {
+                    // // let image = image::load_from_memory(&vec).unwrap();
+                    // let image = ColorImage::from_rgba_premultiplied(
+                    //     [screenshot.width as usize, screenshot.height as usize],
+                    //     screenshot.data,
+                    // );
+                    // let handle = ctx.load_texture("browser_screenshot", image, Default::default());
+                    // tx.send(WebViewEvent::ScreenshotReceived(handle)).ok();
+
+                    let mut rgba8 = Vec::with_capacity(screenshot.data.len());
+
+                    // convert BGRA to RGBA
+                    for i in (0..screenshot.data.len()).step_by(4) {
+                        rgba8.push(screenshot.data[i + 2]);
+                        rgba8.push(screenshot.data[i + 1]);
+                        rgba8.push(screenshot.data[i]);
+                        rgba8.push(screenshot.data[i + 3]);
+                    }
+
+                    if let Some(wgpu_ctx) = &wgpu_ctx {
+                        let size = Extent3d {
+                            width: screenshot.width,
+                            height: screenshot.height,
+                            depth_or_array_layers: 1,
+                        };
+                        let texture = wgpu_ctx.device.create_texture(&TextureDescriptor {
+                            label: Some("EguiWebView screenshot texture"),
+                            size: size,
+                            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                            dimension: wgpu::TextureDimension::D2,
+                            usage: wgpu::TextureUsages::COPY_DST
+                                | wgpu::TextureUsages::TEXTURE_BINDING
+                                | wgpu::TextureUsages::RENDER_ATTACHMENT,
+                            mip_level_count: 1,
+                            sample_count: 1,
+                            view_formats: &[wgpu::TextureFormat::Rgba8UnormSrgb],
+                        });
+
+                        wgpu_ctx.queue.write_texture(
+                            wgpu::ImageCopyTexture {
+                                texture: &texture,
+                                mip_level: 0,
+                                origin: wgpu::Origin3d::ZERO,
+                                aspect: TextureAspect::All,
+                            },
+                            &rgba8,
+                            wgpu::ImageDataLayout {
+                                offset: 0,
+                                bytes_per_row: Some(4 * screenshot.width),
+                                rows_per_image: Some(screenshot.height),
+                            },
+                            size,
+                        );
+
+                        let id = wgpu_ctx.renderer.write().register_native_texture(
+                            &wgpu_ctx.device,
+                            &texture.create_view(&wgpu::TextureViewDescriptor {
+                                label: Some("EguiWebView screenshot texture view"),
+                                mip_level_count: None,
+                                format: Some(wgpu::TextureFormat::Rgba8UnormSrgb),
+                                dimension: Some(wgpu::TextureViewDimension::D2),
+                                aspect: TextureAspect::All,
+                                array_layer_count: None,
+                                ..Default::default()
+                            }),
+                            wgpu::FilterMode::Linear,
+                        );
+
+                        tx.send(WebViewEvent::ScreenshotReceived(TextureRef::Wgpu {
+                            sized_texture: SizedTexture::new(
+                                id,
+                                vec2(screenshot.width as f32, screenshot.height as f32),
+                            ),
+                            wgpu_ctx: wgpu_ctx.clone(),
+                        }))
+                        .ok();
+                    }
+                }
+            })
+            .ok();
     }
 
     fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
@@ -167,19 +299,22 @@ impl EguiWebView {
     }
 
     pub fn ui(&mut self, ui: &mut Ui, size: Vec2) {
+        //self.take_screenshot();
+
         let response = ui.allocate_response(size, Sense::click());
 
         if let Some(img) = self.inbox.read(ui).last() {
             match img {
                 WebViewEvent::ScreenshotReceived(img) => {
-                    self.current_image = Some(img.clone());
+                    self.current_image = Some(img);
+                    self.take_screenshot();
                 }
                 WebViewEvent::Focus => {
                     ui.memory_mut(|mem| mem.request_focus(response.id));
                 }
                 WebViewEvent::Blur => {}
                 WebViewEvent::Loaded => {
-                    self.send_command(PageCommand::Screenshot).ok();
+                    self.take_screenshot();
                 }
             }
         }
@@ -213,11 +348,13 @@ impl EguiWebView {
         }
 
         if response.lost_focus() {
-            self.send_command(PageCommand::Screenshot).ok();
+            //self.take_screenshot();
         }
 
+        println!("Focused: {}", response.has_focus());
+
         if let Some(image) = &self.current_image {
-            Image::new(image).paint_at(ui, response.rect);
+            Image::new(image.sized_texture().clone()).paint_at(ui, response.rect);
         }
 
         let should_display = ui
@@ -245,8 +382,10 @@ impl EguiWebView {
 
     pub fn screenshot_ui(&mut self, ui: &mut Ui) {
         if let Some(img) = self.current_image.as_ref() {
-            Image::new(img)
-                .fit_to_exact_size(img.size_vec2() / ui.ctx().pixels_per_point())
+            let source = img.sized_texture().clone();
+            let sie = source.size;
+            Image::new(source)
+                .fit_to_exact_size(sie / ui.ctx().pixels_per_point())
                 .ui(ui);
         }
     }

@@ -58,3 +58,4 @@ egui_extras = { version = "0.25", default-features = false }
 
 [patch.crates-io]
 taffy = { git = "https://github.com/DioxusLabs/taffy", branch = "main" }
+wry = { path = "../../RustroverProjects/github/wry" }

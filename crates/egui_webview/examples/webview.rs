@@ -13,9 +13,15 @@ pub fn main() -> eframe::Result<()> {
         if view.is_none() {
             init_webview(ctx, _frame);
 
-            view = Some(egui_webview::EguiWebView::new(ctx, "webview", |b| {
-                b.with_url(&url_bar).unwrap()
-            }));
+            let mut web_view =
+                egui_webview::EguiWebView::new(ctx, "webview", |b| b.with_url(&url_bar).unwrap());
+
+            let option = _frame.wgpu_render_state();
+            if let Some(option) = option {
+                web_view.set_wgpu_ctx(option.clone());
+            }
+
+            view = Some(web_view);
         }
 
         let view = view.as_mut().unwrap();
