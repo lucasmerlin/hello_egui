@@ -1,4 +1,6 @@
-mod image;
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -12,16 +14,22 @@ use egui::{ahash, ColorImage, Context, SizeHint};
 
 pub use image::ThumbhashImage;
 
+mod image;
+
+/// Register the thumbhash image loader with the given egui context.
+/// Do this once while the app is initializing.
 pub fn register(ctx: &Context) {
     ctx.add_image_loader(Arc::new(ThumbhashImageLoader::new()))
 }
 
+/// The ImageLoader implementation for thumbhash images.
 #[derive(Clone, Default)]
 pub struct ThumbhashImageLoader {
     images: Mutex<HashMap<u64, Arc<ColorImage>>>,
 }
 
 impl ThumbhashImageLoader {
+    /// Create a new ThumbhashImageLoader.
     pub fn new() -> Self {
         Self::default()
     }
@@ -87,17 +95,21 @@ impl ImageLoader for ThumbhashImageLoader {
     }
 }
 
+/// Convert a thumbhash to a URI that can be loaded by the image loader.
 pub fn thumbhash_to_uri(thumbhash: &[u8]) -> String {
     format!("thumbhash:{}", BASE64_STANDARD_NO_PAD.encode(thumbhash))
 }
 
+/// Get the thumbhash data from the thumbhash URI.
+/// Returns None if the URI is not a valid thumbhash URI.
+/// Will not check whether the thumbhash is valid.
 pub fn uri_to_thumbhash(uri: &str) -> Option<Vec<u8>> {
-    let mut split = uri.split(':');
-    let prefix = split.next()?;
-    if prefix != "thumbhash" {
-        return None;
+    if let Some((prefix, base64)) = uri.split_once(':') {
+        if prefix != "thumbhash" {
+            return None;
+        }
+        BASE64_STANDARD_NO_PAD.decode(base64.as_bytes()).ok()
+    } else {
+        None
     }
-
-    let base64 = split.next()?;
-    BASE64_STANDARD_NO_PAD.decode(base64.as_bytes()).ok()
 }

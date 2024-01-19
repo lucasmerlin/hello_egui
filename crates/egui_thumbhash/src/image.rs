@@ -4,6 +4,7 @@ use egui::{Color32, Id, Image, Rect, Response, Rounding, SizeHint, TextureOption
 
 use crate::thumbhash_to_uri;
 
+/// A widget that displays a thumbhash while the actual image is loading.
 pub struct ThumbhashImage<'a, 'h> {
     image: Image<'a>,
     thumbhash: &'h [u8],
@@ -14,6 +15,10 @@ pub struct ThumbhashImage<'a, 'h> {
 }
 
 impl<'a, 'h> ThumbhashImage<'a, 'h> {
+    /// Create a new ThumbhashImage widget.
+    /// You should pass a [Image] with the configuration you want.
+    /// Since the width of the egui Image is currently a bit finicky, you can use
+    /// [Image::fit_to_exact_size] to make sure the image is the size you want.
     pub fn new(image: Image<'a>, thumbhash: &'h [u8]) -> Self {
         Self {
             id: Id::new(thumbhash),
@@ -25,26 +30,36 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
         }
     }
 
+    /// Set a unique id for this widget, used for the fade animation.
+    /// By default, the thumbhash data is used as the id.
     pub fn id(mut self, id: Id) -> Self {
         self.id = id;
         self
     }
 
+    /// Set whether the image should fade in when it's loaded.
+    /// Defaults to true.
     pub fn fade(mut self, fade: bool) -> Self {
         self.fade = fade;
         self
     }
 
+    /// Set the exact size the image should be shown at.
+    /// This will override the size of the image widget.
     pub fn fit_to_exact_size(mut self, size: egui::Vec2) -> Self {
         self.fit_to_exact_size = Some(size);
         self
     }
 
+    /// Set the rounding of the image.
+    /// Use this instead of [Image::rounding] to make sure the rounding is applied to the
+    /// thumbhash image as well.
     pub fn rounding(mut self, rounding: impl Into<Rounding>) -> Self {
         self.rounding = Some(rounding.into());
         self
     }
 
+    /// Show the image.
     pub fn ui(mut self, ui: &mut egui::Ui) -> Response {
         if let Some(size) = self.fit_to_exact_size {
             self.image = self.image.fit_to_exact_size(size);
@@ -78,11 +93,6 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
                 TextureOptions::LINEAR,
                 SizeHint::default(),
             );
-            // Image::new(image)
-            //     .maintain_aspect_ratio(false)
-            //     .tint(Color32::from_rgba_premultiplied(i, i, i, i))
-            //     .sense(egui::Sense::hover())
-            //     .paint_at(ui, response.rect);
             if let Ok(TexturePoll::Ready { texture, .. }) = image {
                 ui.painter().add(RectShape {
                     rect: Rect::from_min_size(

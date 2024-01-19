@@ -1,0 +1,1 @@
+This crate contains helper methods and structs used all over the hello_egui project.

@@ -1,9 +1,14 @@
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
 mod collapse;
 
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::time::Duration;
 
+/// Re-export of [simple_easing](https://crates.io/crates/simple_easing)
 pub mod easing {
     pub use simple_easing::*;
 }
@@ -20,6 +25,7 @@ struct AnimationState {
 
 type Easing = fn(f32) -> f32;
 
+/// Same as [Context::animate_bool_with_time] but with an easing function.
 pub fn animate_bool_eased(
     ctx: &Context,
     id: impl Hash + Sized,
@@ -31,6 +37,7 @@ pub fn animate_bool_eased(
     easing(x)
 }
 
+/// Same as [Context::animate_value_with_time] but with an easing function.
 pub fn animate_eased(
     ctx: &Context,
     id: impl Hash + Sized,
@@ -63,6 +70,9 @@ pub fn animate_eased(
     easing(x) * (target - source) + source
 }
 
+/// Animate a position. Useful to e.g. animate swapping items in a list.
+/// This is basically a wrapper around [animate_eased] that animates both x and y.
+/// It will try to correct for scrolling, since in egui, scroll will change a widgets y position.
 pub fn animate_position(
     ui: &mut Ui,
     id: impl Hash + Sized,
@@ -89,6 +99,7 @@ pub fn animate_position(
     position - scroll_offset
 }
 
+/// A wrapper around [animate_position] that animates the position of a child ui.
 pub fn animate_ui_translation(
     ui: &mut Ui,
     id: impl Hash + Sized + Debug + Copy,
@@ -117,10 +128,21 @@ pub fn animate_ui_translation(
     rect
 }
 
-pub fn animate_continuous(ui: &mut Ui, easing: Easing, duration: Duration, offset: f32) -> f32 {
+/// Creates a repeating animation based on the current time.
+/// Useful for e.g. animating a loading spinner.
+/// It will repeatedly go from 0.0 to 1.0 and jump back to 0.0.
+pub fn animate_repeating(ui: &mut Ui, easing: Easing, duration: Duration, offset: f32) -> f32 {
     ui.ctx().request_repaint();
 
     let t = ui.input(|i| i.time as f32 + offset);
     let x = t % duration.as_secs_f32();
-    easing::roundtrip(easing(x / duration.as_secs_f32()))
+    easing(x / duration.as_secs_f32())
+}
+
+/// Creates a continuous animation based on the current time.
+/// Useful for e.g. animating a bouncing ball.
+/// It will repeatedly go from 0.0 to 1.0 and back to 0.0.
+pub fn animate_continuous(ui: &mut Ui, easing: Easing, duration: Duration, offset: f32) -> f32 {
+    let t = animate_repeating(ui, easing::linear, duration, offset);
+    easing::roundtrip(easing(t))
 }

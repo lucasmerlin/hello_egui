@@ -6,6 +6,8 @@ use rand::{Rng, SeedableRng};
 
 pub fn main() -> eframe::Result<()> {
     let items: Vec<_> = (0..100000).collect();
+
+    // Since the list stores state that is expensive to calculate, we have to store it somewhere in our application.
     let mut virtual_list = VirtualList::new();
 
     eframe::run_simple_native(
@@ -18,8 +20,9 @@ pub fn main() -> eframe::Result<()> {
                     virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {
                         let item = &items[start_index];
 
+                        // For the sake of the example we generate a random height based on the item index
+                        // but if your row height e.g. depends on some text with varying rows this would also work.
                         let mut rng = StdRng::seed_from_u64(*item as u64);
-                        // Should be random height based on start_index between 0 and 100
                         let height = rng.gen_range(0.0..=100.0);
 
                         Frame::canvas(ui.style())
@@ -29,6 +32,8 @@ pub fn main() -> eframe::Result<()> {
                                 ui.label(format!("Item {}", item));
                             });
 
+                        // Return the amount of items that were rendered this row,
+                        // so you could vary the amount of items per row
                         1
                     });
                 });

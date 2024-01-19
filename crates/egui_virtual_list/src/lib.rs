@@ -1,8 +1,13 @@
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
 use std::ops::Range;
 
 use egui::{Align, Pos2, Rect, Ui, Vec2};
 use web_time::{Duration, SystemTime};
 
+/// The response from a call to [`VirtualList::ui_custom_layout`]
 pub struct VirtualListResponse {
     /// The range of items that was displayed
     pub item_range: Range<usize>,
@@ -19,6 +24,7 @@ struct RowData {
     pos: Pos2,
 }
 
+/// Virtual list widget for egui.
 #[derive(Debug)]
 pub struct VirtualList {
     rows: Vec<RowData>,
@@ -59,9 +65,6 @@ impl Default for VirtualList {
 
 impl VirtualList {
     /// Create a new VirtualList
-    ///
-    /// `over_scan` is useful e.g. when used in combination with egui_dnd.
-    /// Renders items this much before and after the visible area.
     pub fn new() -> Self {
         Self {
             previous_item_range: usize::MAX..usize::MAX,
@@ -81,7 +84,9 @@ impl VirtualList {
         }
     }
 
-    /// Set the number of items that were added at the top.
+    /// Call this when you insert items at the start of the list.
+    /// The list will offset the scroll position by the height of these items, so that for the user,
+    /// the scroll position stays the same.
     pub fn items_inserted_at_start(&mut self, scroll_top_items: usize) {
         self.items_inserted_at_start = Some(scroll_top_items);
     }
@@ -112,7 +117,7 @@ impl VirtualList {
         self.hide_on_resize = hide_on_resize.into();
     }
 
-    /// Layout gets called with the index of the first item that should be displayed.
+    /// The layout closure gets called with the index of the first item that should be displayed.
     /// It should return the number of items that were displayed.
     pub fn ui_custom_layout(
         &mut self,
@@ -351,6 +356,8 @@ impl VirtualList {
         }
     }
 
+    /// Resets the list, clearing all cached data. Call this if items changed size, items were replaced, etc.
+    /// The heights will be recalculated on the next frame.
     pub fn reset(&mut self) {
         self.last_known_row_index = None;
         self.last_width = 0.0;

@@ -9,5 +9,11 @@
 
 
 [content]:<>
+Infinite scroll widget for [egui](https://github.com/emilk/egui).
 
+Supports loading items of varying heights, from the top or bottom of the list.
+
+Check the [Gallery and Chat example](https://lucasmerlin.github.io/hello_egui/) for a demo.
+
+Internally this uses the [egui_virtual_list](https://crates.io/crates/egui_virtual_list) crate as a virtual list.
 

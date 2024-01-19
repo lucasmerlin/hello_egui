@@ -1,6 +1,8 @@
 use crate::animate_bool_eased;
 use egui::{Id, Rect, Ui, Vec2};
 
+/// Collapse animation to hide/show content.
+/// Currently only vertical collapse is supported.
 pub struct Collapse {
     // TODO: Implement horizontal collapse
     #[allow(dead_code)]
@@ -11,15 +13,16 @@ pub struct Collapse {
 }
 
 impl Collapse {
-    pub fn horizontal(id: impl Into<Id>, visible: bool) -> Self {
-        Self {
-            horizontal: true,
-            visible,
-            id: id.into(),
-            duration: 0.2,
-        }
-    }
+    // pub fn horizontal(id: impl Into<Id>, visible: bool) -> Self {
+    //     Self {
+    //         horizontal: true,
+    //         visible,
+    //         id: id.into(),
+    //         duration: 0.2,
+    //     }
+    // }
 
+    /// Creates a new vertical collapse animation.
     pub fn vertical(id: impl Into<Id>, visible: bool) -> Self {
         Self {
             horizontal: false,
@@ -29,6 +32,7 @@ impl Collapse {
         }
     }
 
+    /// Show the content.
     pub fn ui(self, ui: &mut Ui, content: impl FnOnce(&mut Ui)) {
         let id = self.id;
         let visible = self.visible;

@@ -1,3 +1,7 @@
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
 use std::fmt::{Debug, Formatter};
 use std::mem;
 use std::ops::Range;
@@ -9,26 +13,23 @@ use egui_extras::{TableBody, TableRow};
 use egui_inbox::UiInbox;
 use egui_virtual_list::{VirtualList, VirtualListResponse};
 
-pub trait InfiniteScrollItem {
-    type Cursor: Clone + Send + Sync;
-
-    fn visible(&mut self) {}
-
-    fn hidden(&mut self) {}
-
-    fn cursor(&self) -> Self::Cursor;
-}
-
+/// The loading state of the infinite scroll, for either the start or end of the list.
 #[derive(Debug)]
 pub enum LoadingState<T, Cursor> {
+    /// The loader has just received more items, which will be added to the list during the current or next frame.
     Loaded(Vec<T>, Option<Cursor>),
+    /// The loader is currently loading items.
     Loading,
+    /// The loader is currently idle.
     Idle,
+    /// The loader has no more items to load.
     NoMoreItems,
+    /// The loader has encountered an error.
     Error(String),
 }
 
 impl<T, C> LoadingState<T, C> {
+    /// Returns true if the state is [LoadingState::Loading]
     pub fn loading(&self) -> bool {
         matches!(self, Self::Loading)
     }
@@ -39,7 +40,9 @@ type Loader<T, Cursor> = Box<dyn FnMut(Option<Cursor>, Callback<T, Cursor>) + Se
 
 type FilterType<T> = Box<dyn Fn(&T) -> bool + Send + Sync>;
 
+/// A infinite scroll widget.
 pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
+    /// Access to the items.
     pub items: Vec<T>,
 
     start_loader: Option<Loader<T, Cursor>>,
@@ -113,6 +116,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         }
     }
 
+    /// Set the start loader, it will be called when the user scrolls to the top of the list.
     pub fn start_loader<F: FnMut(Option<Cursor>, Callback<T, Cursor>) + Send + Sync + 'static>(
         mut self,
         f: F,
@@ -181,6 +185,13 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.top_inbox = UiInbox::new();
         self.bottom_inbox = UiInbox::new();
 
+        self.virtual_list.reset();
+    }
+
+    /// Reset the underlying virtual list.
+    /// Call this if a item's height has been modified or you manually inserted items somewhere in the list.
+    /// This will only delete the cached heights.
+    pub fn reset_virtual_list(&mut self) {
         self.virtual_list.reset();
     }
 
