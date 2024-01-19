@@ -1333,7 +1333,6 @@ dependencies = [
  "base64",
  "eframe",
  "egui",
- "egui-wgpu",
  "egui_extras",
  "egui_inbox",
  "image",
@@ -1341,7 +1340,6 @@ dependencies = [
  "rgb",
  "serde",
  "serde_json",
- "wgpu",
  "wry",
 ]
 

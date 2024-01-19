@@ -8,27 +8,6 @@
         window.ipc.postMessage(JSON.stringify(data));
     }
 
-    const captureScreenshot = () => {
-        htmlToImage.toPng(document.body, {
-            width: window.innerWidth,
-            height: window.innerHeight,
-            style: {
-                transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
-                background: "white",
-            },
-        })
-            .then(function (dataUrl) {
-                console.log("Captured screenshot");
-                sendEvent({
-                    type: "Screenshot",
-                    base64: dataUrl.replace("data:image/png;base64,", "")
-                });
-            })
-            .catch(function (error) {
-                console.error('oops, something went wrong!', error);
-            });
-    }
-
     document.addEventListener("focus", (e) => {
         sendEvent({
             type: "Focus",
@@ -44,9 +23,6 @@
     });
 
     window["__egui_webview_handle_command"] = (command) => {
-        if (command.type === "Screenshot") {
-            captureScreenshot();
-        }
         if (command.type === "Click") {
             // convert from physical to logical pixels
             let x = command.x * window.devicePixelRatio;
