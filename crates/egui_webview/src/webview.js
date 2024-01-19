@@ -4,8 +4,11 @@
         return;
     }
 
-    const sendEvent = (data) => {
-        window.ipc.postMessage(JSON.stringify(data));
+    const sendEvent = (event) => {
+        window.ipc.postMessage(JSON.stringify({
+            event,
+            __egui_webview: true,
+        }));
     }
 
     document.addEventListener("focus", (e) => {
@@ -29,7 +32,13 @@
             let y = command.y * window.devicePixelRatio;
             let element = document.elementFromPoint(x, y);
             if (element) {
-                element.click();
+                let event = new MouseEvent("click", {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y,
+                });
+                element.dispatchEvent(event);
             }
         }
         if (command.type === "Back") {

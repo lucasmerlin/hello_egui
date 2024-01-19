@@ -18,7 +18,6 @@ pub struct EguiWebView {
     id: Id,
     inbox: UiInbox<WebViewEvent>,
     current_image: Option<TextureHandle>,
-    focused: bool,
     context: Context,
 
     displayed_last_frame: bool,
@@ -31,8 +30,14 @@ impl Debug for EguiWebView {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+struct JsEvent {
+    event: JsEventType,
+    __egui_webview: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
-pub enum JsEvent {
+enum JsEventType {
     Focus,
     Blur,
 }
@@ -43,6 +48,7 @@ pub enum WebViewEvent {
     Blur,
     Loading(String),
     Loaded(String),
+    Ipc(String),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -134,18 +140,18 @@ impl EguiWebView {
             view: web_view,
             id,
             current_image: None,
-            focused: false,
             context: ctx.clone(),
             displayed_last_frame: false,
         }
     }
 
     fn handle_js_event(msg: String, _ctx: &Context) -> Result<WebViewEvent, Box<dyn Error>> {
-        let event = serde_json::from_str(&msg)?;
+        let event = serde_json::from_str::<JsEvent>(&msg).map(|e| e.event);
 
         match event {
-            JsEvent::Focus => Ok(WebViewEvent::Focus),
-            JsEvent::Blur => Ok(WebViewEvent::Blur),
+            Ok(JsEventType::Focus) => Ok(WebViewEvent::Focus),
+            Ok(JsEventType::Blur) => Ok(WebViewEvent::Blur),
+            Err(_) => Ok(WebViewEvent::Ipc(msg)),
         }
     }
 
@@ -209,6 +215,7 @@ impl EguiWebView {
                 WebViewEvent::Blur => {}
                 WebViewEvent::Loaded(_) => {}
                 WebViewEvent::Loading(_) => {}
+                WebViewEvent::Ipc(_) => {}
             })
             .collect();
 
@@ -232,7 +239,7 @@ impl EguiWebView {
             ui.memory(|mut mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
 
         if !is_my_layer_top {
-            response.surrender_focus();
+            //response.surrender_focus();
         }
 
         if response.gained_focus() {
@@ -240,14 +247,11 @@ impl EguiWebView {
             self.view.focus();
         }
 
-        println!("Focused: {}", response.has_focus());
-
         if let Some(image) = &self.current_image {
             Image::new(image).paint_at(ui, response.rect);
         }
 
-        let should_display = ui
-            .memory(|mem| mem.has_focus(response.id) || (is_my_layer_top && !mem.any_popup_open()));
+        let should_display = ui.memory(|mem| (is_my_layer_top && !mem.any_popup_open()));
 
         if (!should_display && self.displayed_last_frame) {
             self.current_image = None;

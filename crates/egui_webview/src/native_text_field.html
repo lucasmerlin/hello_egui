@@ -20,8 +20,20 @@
         function set_text(text) {
             document.getElementById("input").value = text;
         }
+
+        window.addEventListener("focusout", () => {
+            window.ipc.postMessage(JSON.stringify({"type": "FocusOut"}));
+        });
+
+        window.addEventListener("focus", () => {
+            document.getElementById("input").focus();
+        })
+
     </script>
 </head>
 <body>
-<_tag _parameters id="input" oninput="window.ipc.postMessage(this.value)"></_tag>
+<_tag _parameters autofocus id="input" oninput="window.ipc.postMessage(JSON.stringify({
+    type: 'Input'   ,
+    'text': this.value
+}))"></_tag>
 </body>

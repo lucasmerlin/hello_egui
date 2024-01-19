@@ -11,9 +11,9 @@ pub fn main() -> eframe::Result<()> {
             init_webview(ctx, _frame);
 
             view = Some((
-                NativeTextField::new(ctx, TextFieldType::Email),
-                NativeTextField::new(ctx, TextFieldType::Password),
-                NativeTextField::new(ctx, TextFieldType::Textarea),
+                NativeTextField::new(ctx, "email", TextFieldType::Email),
+                NativeTextField::new(ctx, "password", TextFieldType::Password),
+                NativeTextField::new(ctx, "textarea", TextFieldType::Textarea),
             ));
         }
 

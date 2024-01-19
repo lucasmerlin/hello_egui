@@ -19,4 +19,4 @@ log = "0.4.20"
 rgb = "0.8"
 
 [dev-dependencies]
-eframe = { workspace = true, default-features = true, features = ["wgpu"] }
+eframe = { workspace = true, default-features = true }
