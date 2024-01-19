@@ -33,21 +33,21 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
   - A helper to display loading, error and retry uis when waiting for asynchronous data.
   - released on [crates.io](https://crates.io/crates/egui_suspense)
 
-## **Experimental** Crates
-
 - [egui_virtual_list](crates/egui_virtual_list)
   - Flexible virtual scroll widget for egui with support for dynamic heights and complex layouts
   - Compatible with [egui_dnd](crates/egui_dnd) (let me know if you need an example)
-  - Experimental, unreleased
+  - released on [crates.io](https://crates.io/crates/egui_virtual_list)
 
 - [egui_infinite_scroll](crates/egui_infinite_scroll)
   - Infinite scroll based on [egui_virtual_list](crates/egui_virtual_list)
-  - Experimental, unreleased
+  - released on [crates.io](https://crates.io/crates/egui_infinite_scroll)
 
 - [egui_thumbhash](crates/egui_thumbhash)
   - Easily use [thumbhashes](https://evanw.github.io/thumbhash/) in egui.
   - For a showcase, check the [gallery example](https://lucasmerlin.github.io/hello_egui/).
-  - Experimental, unreleased
+  - released on [crates.io](https://crates.io/crates/egui_thumbhash)
+
+## **Experimental** Crates
 
 - [egui_animation](crates/egui_animation)
   - Animation utilities for egui

@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.6.0
+- Updated to egui 0.25.0, dropping support for older versions.
+
 ## v0.5.1
  - Added setting to configure animation duration for swap and return animations
  - Add support for egui 0.23
