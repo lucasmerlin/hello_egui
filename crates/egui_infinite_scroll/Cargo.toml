@@ -20,7 +20,7 @@ egui_virtual_list = { path = "../egui_virtual_list" }
 
 egui.workspace = true
 egui_extras = { workspace = true, optional = true }
-web-time = "0.2"
+web-time = "1"
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }

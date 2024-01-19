@@ -18,7 +18,7 @@ egui.workspace = true
 simple-easing = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-time = "0.2.0"
+web-time = "1"
 
 [dev-dependencies]
 egui_infinite_scroll = { path = "../egui_infinite_scroll" }
