@@ -14,7 +14,7 @@ pub use egui_infinite_scroll as infinite_scroll;
 pub use egui_pull_to_refresh as pull_to_refresh;
 #[cfg(feature = "suspense")]
 pub use egui_suspense as suspense;
-#[cfg(feature = "egui_thumbhash")]
+#[cfg(feature = "thumbhash")]
 pub use egui_thumbhash as thumbhash;
 #[cfg(feature = "virtual_list")]
 pub use egui_virtual_list as virtual_list;

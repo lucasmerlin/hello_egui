@@ -22,6 +22,8 @@ suspense = ["dep:egui_suspense"]
 virtual_list = ["dep:egui_virtual_list"]
 infinite_scroll = ["dep:egui_infinite_scroll"]
 thumbhash = ["dep:egui_thumbhash"]
+async = ["egui_suspense/async", "egui_infinite_scroll/async"]
+tokio = ["egui_suspense/tokio", "egui_infinite_scroll/tokio"]
 
 [dependencies]
 egui_dnd = { workspace = true, optional = true }

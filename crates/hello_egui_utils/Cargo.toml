@@ -16,6 +16,9 @@ tokio = { version = "1", optional = true, features = ["rt"] }
 
 concat-idents = "1"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = { version = "0.4", optional = true }
+
 [features]
-async = []
+async = ["dep:wasm-bindgen-futures"]
 tokio = ["async", "dep:tokio"]

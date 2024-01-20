@@ -2184,6 +2184,7 @@ dependencies = [
  "concat-idents",
  "egui",
  "tokio",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

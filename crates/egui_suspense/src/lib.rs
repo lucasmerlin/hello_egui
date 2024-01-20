@@ -3,7 +3,6 @@
 #![warn(missing_docs)]
 
 use std::fmt::{Debug, Display};
-use std::future::Future;
 
 use egui::Ui;
 
@@ -55,62 +54,13 @@ impl<T: Debug, E: Display + Debug> Debug for EguiSuspense<T, E> {
 impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static>
     EguiSuspense<T, E>
 {
-    // async_callback! (
-    //     /// Create a new suspense that will only try to load the data once.
-    //     /// No retry button will be shown on error.
-    //     pub fn single_try single_try_async(
-    //         f: CallbackOnce<Result<T, E>>
-    //     ) -> Self {
-    //         let inbox = UiInbox::new();
-    //         let tx = inbox.sender();
-    //         f(Box::new(move |result| {
-    //             tx.send(result).ok();
-    //         }));
-    //         Self {
-    //             inbox,
-    //             data: None,
-    //
-    //             reload_fn: None,
-    //             error_ui: None,
-    //             loading_ui: Some(Box::new(|ui| {
-    //                 ui.spinner();
-    //             })),
-    //         }
-    //     }
-    // );
-
-    //
-    //
-    // async_callback!(
-    //     /// Create a new reloadable suspense.
-    //     /// A retry button will be shown on error.
-    //     pub fn reloadable reloadable_async(
-    //         mut f: CallbackMut<Result<T, E>>
-    //     ) -> Self {
-    //         let inbox = UiInbox::new();
-    //         let inbox_clone = inbox.sender();
-    //         f(Box::new(move |result| {
-    //             inbox_clone.send(result).ok();
-    //         }));
-    //         Self {
-    //             inbox,
-    //             data: None,
-    //
-    //             reload_fn: Some(Box::new(f)),
-    //             error_ui: None,
-    //             loading_ui: Some(Box::new(|ui| {
-    //                 ui.spinner();
-    //             })),
-    //         }
-    //     }
-    // );
-
     asyncify!(
+        /// Create a new suspense that can be reloaded.
         reloadable,
         callback_mut: (impl FnMut(CallbackType<Result<T, E>>, ) + Send + Sync + 'static),
         call_prefix: (Self::),
         generics: (),
-        async_generics: (<F: Future<Output = Result<T, E>> + Send + 'static>),
+        async_generics: (<F: std::future::Future<Output = Result<T, E>> + Send + 'static>),
         parameters: (),
         future: impl FnMut() -> F + Send + Sync + 'static,
         return_type: (Self),
@@ -135,16 +85,16 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
     );
 
     asyncify!(
+        /// Create a new suspense that will only try to load the data once.
         single_try,
         callback_once: (impl FnOnce(CallbackType<Result<T, E>>) + Send + Sync + 'static),
         call_prefix: (Self::),
         generics: (),
-        async_generics: (<F: Future<Output = Result<T, E>> + Send + Sync + 'static>),
+        async_generics: (<F: std::future::Future<Output = Result<T, E>> + Send + Sync + 'static>),
         parameters: (),
         future: F,
         return_type: (Self),
         body: |()| {
-            let mut callback_once = callback_once;
             let inbox = UiInbox::new();
             let inbox_clone = inbox.sender();
             callback_once(Box::new(move |result| {
@@ -162,46 +112,6 @@ impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'stati
             }
         },
     );
-
-    // fn reloadable(
-    //     callback: impl FnMut(CallbackType<Result<T, E>>) + Send + Sync + 'static,
-    // ) -> Self {
-    //     {
-    //         let inbox = UiInbox::new();
-    //         let inbox_clone = inbox.sender();
-    //         callback(Box::new(move |result| {
-    //             inbox_clone.send(result).ok();
-    //         }));
-    //         Self {
-    //             inbox,
-    //             data: None,
-    //
-    //             reload_fn: Some(Box::new(callback)),
-    //             error_ui: None,
-    //             loading_ui: Some(Box::new(|ui| {
-    //                 ui.spinner();
-    //             })),
-    //         }
-    //     }
-    // }
-    // async fn reloadable_async<F: Future<Output=Result<T, E>> + Send + 'static>(
-    //     mut future: impl FnMut() -> F + Send + Sync + 'static,
-    // ) -> Self {
-    //     let callback = {
-    //         Box::new(move |callback: CallbackType<Result<T, E>>| {
-    //             let fut = future();
-    //             ::hello_egui_utils::spawn(async move {
-    //                 let res = fut.await;
-    //                 callback(res);
-    //             })
-    //         })
-    //     };
-    //
-    //
-    //     Self::reloadable(
-    //         callback,
-    //     )
-    // }
 
     /// Create a new suspense that is already loaded.
     pub fn loaded(data: T) -> Self {

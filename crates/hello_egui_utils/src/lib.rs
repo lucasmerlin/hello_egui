@@ -3,9 +3,6 @@
 #![warn(missing_docs)]
 
 use egui::{Align, Label, Layout, Ui, Vec2, WidgetText};
-use std::future::Future;
-
-use egui::{Align, Label, Layout, Ui, Vec2, WidgetText};
 
 pub use concat_idents::concat_idents;
 
@@ -27,11 +24,19 @@ pub fn current_scroll_delta(ui: &Ui) -> Vec2 {
     -ui.min_rect().min.to_vec2()
 }
 
-#[cfg(feature = "tokio")]
-pub fn spawn(future: impl Future<Output = ()> + Send + 'static) {
+/// Spawns a tokio task
+#[cfg(all(feature = "tokio", not(target_arch = "wasm32")))]
+pub fn spawn(future: impl std::future::Future<Output = ()> + Send + 'static) {
     tokio::task::spawn(future);
 }
 
+/// Spawns a wasm_bindgen_futures task
+#[cfg(all(feature = "async", target_arch = "wasm32"))]
+pub fn spawn(future: impl std::future::Future<Output = ()> + 'static) {
+    wasm_bindgen_futures::spawn_local(future);
+}
+
+/// Matches the self reference of the callback fn
 #[macro_export]
 macro_rules! call_self_fn {
     ($path:path, &mut $self:expr, ($($arg:expr,)*)) => {
@@ -51,16 +56,11 @@ macro_rules! call_self_fn {
     };
 }
 
-struct T;
-
-impl T {
-    fn test() {}
-}
-
 /// This macro generates the async fn
 #[macro_export]
 macro_rules! async_fn_def {
     (
+        $(#[$docs:meta])*
         // Block that contains the async logic
         $body:block,
         // The name of the async fn
@@ -80,6 +80,9 @@ macro_rules! async_fn_def {
     ) => {
         // We use concat_idents to generate the name for the async fn
         $crate::concat_idents!(fn_name = $name, _async {
+            $(#[$docs])*
+            #[doc = concat!("This is the async version of `", stringify!($name), "`")]
+            #[allow(unused_mut)]
             pub fn fn_name$($gen)*(
                 $($callback_body_self)*
                 $($($mutt)? $arg: $typ,)*
@@ -87,13 +90,12 @@ macro_rules! async_fn_def {
                 let callback = $body;
 
                 // Construct the call to the callback fn
-                    $crate::call_self_fn!{
-                        $callback_fn_path,
-                        $($callback_body_self)*
-                        ($($call_args,)*
-                        callback,)
-                    }
-
+                $crate::call_self_fn!{
+                    $callback_fn_path,
+                    $($callback_body_self)*
+                    ($($call_args,)*
+                    callback,)
+                }
             }
         });
     };
@@ -103,6 +105,7 @@ macro_rules! async_fn_def {
 #[macro_export]
 macro_rules! fn_def {
     (
+        $(#[$docs:meta])*
         // Block that contains the callback function body
         $body:block,
         // The name of the callback fn
@@ -116,6 +119,7 @@ macro_rules! fn_def {
         // The self declaration
         ($($callback_body_self:tt)*),
     ) => {
+        $(#[$docs])*
         pub fn $name $($gen)*(
             $($callback_body_self)*
             $($arg: $typ,)*
@@ -129,6 +133,7 @@ macro_rules! fn_def {
 #[macro_export]
 macro_rules! fnify {
     (
+        $(#[$docs:meta])*
         $name:ident,
         body: $body:block,
         parameters: ($($arg:ident: $typ:ty,)*),
@@ -142,6 +147,7 @@ macro_rules! fnify {
         callback_body_self: ($($callback_body_self:tt)*),
     ) => {
         $crate::fn_def!(
+            $(#[$docs])*
             $body,
             $name,
             $($arg: $typ,)*
@@ -150,7 +156,9 @@ macro_rules! fnify {
             ($($callback_body_self)*),
         );
 
+        #[cfg(feature = "async")]
         $crate::async_fn_def!(
+            $(#[$docs])*
             $async_body,
             $name,
             $($call_prefix)*$name,
@@ -163,9 +171,11 @@ macro_rules! fnify {
     };
 }
 
+/// This macro generates a callback based and a async version of the function
 #[macro_export]
 macro_rules! asyncify {
     (
+        $(#[$docs:meta])*
         $name:ident,
         $callback_name:ident: (impl FnMut($callback_type:ty, $($closure_arg_name:ident: $closure_arg:ty,)*) $($bounds:tt)*),
         call_prefix: ($($call_prefix:tt)*),
@@ -177,6 +187,7 @@ macro_rules! asyncify {
         body: |($($callback_body_self:tt)*)| $body:block,
     ) => {
         $crate::fnify!{
+            $(#[$docs])*
             $name,
             body: $body,
             parameters: ($($arg: $typ,)* $callback_name: impl FnMut($($closure_arg,)* $callback_type) $($bounds)*,),
@@ -199,6 +210,7 @@ macro_rules! asyncify {
         }
     };
     (
+        $(#[$docs:meta])*
         $name:ident,
         $callback_name:ident: (impl FnOnce($callback_type:ty) $($bounds:tt)*),
         call_prefix: ($($call_prefix:tt)*),
@@ -210,6 +222,7 @@ macro_rules! asyncify {
         body: |($($callback_body_self:tt)*)| $body:block,
     ) => {
         $crate::fnify!{
+            $(#[$docs])*
             $name,
             body: $body,
             parameters: ($($arg: $typ,)* $callback_name: impl FnOnce($callback_type) $($bounds)*,),
@@ -233,112 +246,5 @@ macro_rules! asyncify {
     };
 }
 
+/// Type of the callback function
 pub type CallbackType<T> = Box<dyn FnOnce(T) + Send>;
-
-struct Test {}
-
-impl Test {
-    // asyncify! {
-    //     call_just_self,
-    //     FnMut,
-    //     callback_mut: (impl FnMut(CallbackType<Result<(), ()>>,)),
-    //     call_prefix: (Self::),
-    //     self_usage: (mut_self),
-    //     generics: (),
-    //     async_generics: (<F: Future<Output = Result<(), ()>> + Send + 'static>),
-    //     parameters: (),
-    //     future: (impl FnMut() -> F),
-    //     return_type: (Self),
-    //     body: |(self,)| {
-    //         println!("Hello world!");
-    //         Self {}
-    //     },
-    // }
-    // asyncify! {
-    //     call_ref_mut_self,
-    //     callback_mut: CallbackType<Result<(), ()>>,
-    //     future: impl FnMut() -> F,
-    //     body: {
-    //         println!("Hello world!");
-    //         "Hello world!".to_string()
-    //     },
-    //     parameters: (),
-    //     call_prefix: (Self::),
-    //     generics: (),
-    //     async_generics: (<F: Future<Output = Result<(), ()>> + Send + 'static>),
-    //     return_type: (String),
-    //     self_usage: (ref_mut_self),
-    // }
-    //
-    // asyncify! {
-    //     call_ref_self,
-    //     callback_mut: CallbackType<Result<(), ()>>,
-    //     future: impl FnMut() -> F,
-    //     body: {
-    //         println!("Hello world!");
-    //     },
-    //     parameters: (),
-    //     call_prefix: (Self::),
-    //     generics: (<>),
-    //     async_generics: (<F: Future<Output = Result<(), ()>> + Send + 'static>),
-    //     return_type: (()),
-    //     self_usage: (ref_self),
-    // }
-    //
-    //
-    // asyncify! {
-    //     call_no_self,
-    //     callback_mut: CallbackType<Result<(), ()>>,
-    //     future: impl FnMut() -> F,
-    //     body: {
-    //         println!("Hello world!");
-    //     },
-    //     parameters: (),
-    //     call_prefix: (Self::),
-    //     generics: (<>),
-    //     async_generics: (<F: Future<Output = Result<(), ()>> + Send + 'static>),
-    //     return_type: (()),
-    //     self_usage: (no_self),
-    // }
-}
-
-// asyncify! {
-//     test_fn,
-//     callback_mut: CallbackType<Result<(), ()>>,
-//     future: impl FnMut() -> F,
-//     body: {
-//         println!("Hello world!");
-//     },
-//     parameters: (),
-//     call_prefix: (),
-//     generics: (<>),
-//     async_generics: (<F: Future<Output = Result<(), ()>> + Send + 'static>),
-//     return_type: (()),
-//     self_usage: (no_self),
-// }
-
-struct Test2 {}
-
-impl Test2 {
-    fn call_ref_mut_self(&mut self, callback: impl FnMut(CallbackType<Result<(), ()>>)) {
-        {
-            println!("Hello world!");
-        };
-    }
-    async fn call_ref_mut_self_asc<F: Future<Output = Result<(), ()>> + Send + 'static>(
-        &mut self,
-        mut future: impl FnMut() -> F,
-    ) {
-        let callback = {
-            Box::new(|callback: CallbackType<Result<(), ()>>| {
-                let fut = future();
-                crate::spawn(async move {
-                    let res = fut.await;
-                    callback(res);
-                })
-            })
-        };
-
-        Self::call_ref_mut_self(self, callback)
-    }
-}
