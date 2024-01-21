@@ -2,9 +2,12 @@
 name = "egui_infinite_scroll"
 version = "0.1.0"
 edition = "2021"
-publish = false
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Lucas Meurer"]
+homepage = "https://lucasmerlin.github.io/hello_egui/"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_virtual_list"
+license = "MIT"
+description = "Infinite scroll widget for egui"
+keywords = ["egui", "ui", "infinite_scroll"]
 
 [features]
 egui_extras = ["dep:egui_extras"]

@@ -2,8 +2,12 @@
 name = "egui_thumbhash"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Lucas Meurer"]
+description = "Easily use thumbhashes in egui"
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_thumbhash"
+homepage = "https://lucasmerlin.github.io/hello_egui/"
+keywords = ["egui", "thumbhash", "image", "placeholder"]
 
 [dependencies]
 thumbhash = "0.1.0"

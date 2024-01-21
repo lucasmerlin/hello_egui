@@ -2,9 +2,12 @@
 name = "egui_virtual_list"
 version = "0.1.0"
 edition = "2021"
-publish = false
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Lucas Meurer"]
+homepage = "https://lucasmerlin.github.io/hello_egui/"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_virtual_list"
+license = "MIT"
+description = "A virtual list widget for egui, with support for variable height items."
+keywords = ["egui", "virtual_list", "list", "ui"]
 
 [dependencies]
 egui.workspace = true
