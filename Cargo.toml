@@ -41,7 +41,7 @@ members = ["fancy-example", "crates/*", "scripts"]
 resolver = "2"
 
 [workspace.dependencies]
-egui_dnd = { path = "./crates/egui_dnd", version = "0.5.1" }
+egui_dnd = { path = "./crates/egui_dnd", version = "0.6.0" }
 egui_animation = { path = "./crates/egui_animation", version = "0.2.0" }
 hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.2.0" }
 egui_inbox = { path = "./crates/egui_inbox", version = "0.2.0" }
