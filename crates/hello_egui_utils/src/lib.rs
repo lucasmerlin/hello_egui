@@ -36,6 +36,9 @@ pub fn spawn(future: impl std::future::Future<Output = ()> + 'static) {
     wasm_bindgen_futures::spawn_local(future);
 }
 
+#[cfg(all(feature = "async", not(feature = "tokio"), not(target_arch = "wasm32")))]
+compile_error!("You need to enable the `tokio` feature to use this crate on native. If you need a different async runtime, please open an issue (should be easy to add).");
+
 /// Matches the self reference of the callback fn
 #[macro_export]
 macro_rules! call_self_fn {
