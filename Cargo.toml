@@ -43,7 +43,7 @@ resolver = "2"
 [workspace.dependencies]
 egui_dnd = { path = "./crates/egui_dnd", version = "0.5.1" }
 egui_animation = { path = "./crates/egui_animation", version = "0.1.0" }
-hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.1.0" }
+hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.1.1" }
 egui_inbox = { path = "./crates/egui_inbox", version = "0.1.1" }
 egui_pull_to_refresh = { path = "./crates/egui_pull_to_refresh", version = "0.1.1" }
 egui_suspense = { path = "./crates/egui_suspense", version = "0.1.0" }
