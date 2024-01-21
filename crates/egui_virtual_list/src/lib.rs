@@ -38,7 +38,7 @@ pub struct VirtualList {
     average_items_per_row: Option<f32>,
 
     // We will recalculate every item's rect if the scroll area's width changes
-    last_width: f32,
+    last_width: Option<f32>,
 
     max_rows_calculated_per_frame: usize,
 
@@ -69,7 +69,7 @@ impl VirtualList {
         Self {
             previous_item_range: usize::MAX..usize::MAX,
             last_known_row_index: None,
-            last_width: 0.0,
+            last_width: None,
             average_row_size: None,
             rows: vec![],
             average_items_per_row: None,
@@ -126,16 +126,20 @@ impl VirtualList {
         mut layout: impl FnMut(&mut Ui, usize) -> usize,
     ) -> VirtualListResponse {
         let mut scroll_to_item_index_visibility = None;
-        if ui.available_width() != self.last_width {
-            self.last_width = ui.available_width();
-            if self.check_for_resize {
-                self.last_known_row_index = None;
-                self.rows.clear();
-                self.last_resize = SystemTime::now();
-                if self.scroll_position_sync_on_resize {
-                    scroll_to_item_index_visibility = self.last_top_most_item;
+        if let Some(last_width) = self.last_width {
+            if ui.available_width() != last_width {
+                self.last_width = Some(ui.available_width());
+                if self.check_for_resize {
+                    self.last_known_row_index = None;
+                    self.rows.clear();
+                    self.last_resize = SystemTime::now();
+                    if self.scroll_position_sync_on_resize {
+                        scroll_to_item_index_visibility = self.last_top_most_item;
+                    }
                 }
             }
+        } else {
+            self.last_width = Some(ui.available_width());
         }
 
         if let Some(hide_on_resize) = self.hide_on_resize {
@@ -346,7 +350,10 @@ impl VirtualList {
         if let Some(added_height) = scroll_items_top_step_2 {
             // We need to add the height at the bottom or else we might not be able to scroll
             ui.add_space(added_height);
-            self.reset();
+            self.rows.clear();
+            self.last_known_row_index = None;
+            self.average_items_per_row = None;
+            self.average_row_size = None;
         }
 
         VirtualListResponse {
@@ -360,7 +367,7 @@ impl VirtualList {
     /// The heights will be recalculated on the next frame.
     pub fn reset(&mut self) {
         self.last_known_row_index = None;
-        self.last_width = 0.0;
+        self.last_width = None;
         self.average_row_size = None;
         self.rows.clear();
         self.average_items_per_row = None;
