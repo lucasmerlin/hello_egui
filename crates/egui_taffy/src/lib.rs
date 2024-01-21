@@ -25,9 +25,6 @@ impl Clone for TaffyState {
     }
 }
 
-unsafe impl Send for TaffyState {}
-unsafe impl Sync for TaffyState {}
-
 impl TaffyState {
     pub fn new() -> Self {
         let mut taffy = TaffyTree::new();
