@@ -1,6 +1,6 @@
 [package]
 name = "hello_egui_utils"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "Utilities used by crates from https://github.com/lucasmerlin/hello_egui"
 license = "MIT"
