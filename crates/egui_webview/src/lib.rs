@@ -87,6 +87,7 @@ impl EguiWebView {
 
         builder = build(builder);
 
+        #[allow(clippy::arc_with_non_send_sync)]
         let view_ref = Arc::new(Mutex::new(None::<Arc<WebView>>));
         let view_ref_weak = view_ref.clone();
         let ctx_clone = ctx.clone();
@@ -98,7 +99,7 @@ impl EguiWebView {
             .with_on_page_load_handler(move |event, url| {
                 match event {
                     PageLoadEvent::Started => {
-                        let mut guard = view_ref_weak.lock();
+                        let guard = view_ref_weak.lock();
                         if let Some(view) = guard.as_ref() {
                             if let Err(err) = view.evaluate_script(include_str!("webview.js")) {
                                 println!("Error loading webview script: {}", err);
@@ -236,7 +237,7 @@ impl EguiWebView {
         let my_layer = ui.layer_id();
 
         let is_my_layer_top =
-            ui.memory(|mut mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
+            ui.memory(|mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
 
         if !is_my_layer_top {
             //response.surrender_focus();
@@ -253,13 +254,13 @@ impl EguiWebView {
 
         let should_display = ui.memory(|mem| (is_my_layer_top && !mem.any_popup_open()));
 
-        if (!should_display && self.displayed_last_frame) {
+        if !should_display && self.displayed_last_frame {
             self.current_image = None;
             self.take_screenshot();
         }
         self.displayed_last_frame = should_display;
 
-        if should_display || !self.current_image.is_some() {
+        if should_display || self.current_image.is_none() {
             ui.ctx().memory_mut(|mem| {
                 let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
                     Id::new(WEBVIEW_ID),
