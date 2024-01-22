@@ -4,10 +4,10 @@ use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
 use egui::mutex::Mutex;
-use egui::{ColorImage, Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
 use serde::{Deserialize, Serialize};
 use wry::raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
-use wry::{PageLoadEvent, ScreenshotRegion, WebView};
+use wry::{PageLoadEvent, WebView};
 
 use egui_inbox::UiInbox;
 
@@ -18,6 +18,7 @@ pub struct EguiWebView {
     id: Id,
     inbox: UiInbox<WebViewEvent>,
     current_image: Option<TextureHandle>,
+    #[allow(dead_code)]
     context: Context,
 
     displayed_last_frame: bool,
@@ -87,6 +88,7 @@ impl EguiWebView {
 
         builder = build(builder);
 
+        #[allow(clippy::arc_with_non_send_sync)]
         let view_ref = Arc::new(Mutex::new(None::<Arc<WebView>>));
         let view_ref_weak = view_ref.clone();
         let ctx_clone = ctx.clone();
@@ -98,7 +100,7 @@ impl EguiWebView {
             .with_on_page_load_handler(move |event, url| {
                 match event {
                     PageLoadEvent::Started => {
-                        let mut guard = view_ref_weak.lock();
+                        let guard = view_ref_weak.lock();
                         if let Some(view) = guard.as_ref() {
                             if let Err(err) = view.evaluate_script(include_str!("webview.js")) {
                                 println!("Error loading webview script: {}", err);
@@ -156,30 +158,31 @@ impl EguiWebView {
     }
 
     fn take_screenshot(&mut self) {
-        let ctx = self.context.clone();
-        let tx = self.inbox.sender();
+        // let ctx = self.context.clone();
+        // let tx = self.inbox.sender();
 
-        self.view
-            .screenshot(ScreenshotRegion::Visible, move |data| {
-                let ctx = ctx.clone();
-                let tx = tx.clone();
-                if let Ok(screenshot) = data {
-                    let image = image::load_from_memory(&screenshot).unwrap();
-
-                    let data = image.into_rgba8();
-
-                    let handle = ctx.load_texture(
-                        "browser_screenshot",
-                        ColorImage::from_rgba_unmultiplied(
-                            [data.width() as usize, data.height() as usize],
-                            &data,
-                        ),
-                        Default::default(),
-                    );
-                    tx.send(WebViewEvent::ScreenshotReceived(handle)).ok();
-                }
-            })
-            .ok();
+        // TODO: This requires a screenshot feature in wry, https://github.com/tauri-apps/wry/pull/266
+        // self.view
+        //     .screenshot(ScreenshotRegion::Visible, move |data| {
+        //         let ctx = ctx.clone();
+        //         let tx = tx.clone();
+        //         if let Ok(screenshot) = data {
+        //             let image = image::load_from_memory(&screenshot).unwrap();
+        //
+        //             let data = image.into_rgba8();
+        //
+        //             let handle = ctx.load_texture(
+        //                 "browser_screenshot",
+        //                 ColorImage::from_rgba_unmultiplied(
+        //                     [data.width() as usize, data.height() as usize],
+        //                     &data,
+        //                 ),
+        //                 Default::default(),
+        //             );
+        //             tx.send(WebViewEvent::ScreenshotReceived(handle)).ok();
+        //         }
+        //     })
+        //     .ok();
     }
 
     fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
@@ -236,7 +239,7 @@ impl EguiWebView {
         let my_layer = ui.layer_id();
 
         let is_my_layer_top =
-            ui.memory(|mut mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
+            ui.memory(|mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
 
         if !is_my_layer_top {
             //response.surrender_focus();
@@ -253,13 +256,13 @@ impl EguiWebView {
 
         let should_display = ui.memory(|mem| (is_my_layer_top && !mem.any_popup_open()));
 
-        if (!should_display && self.displayed_last_frame) {
+        if !should_display && self.displayed_last_frame {
             self.current_image = None;
             self.take_screenshot();
         }
         self.displayed_last_frame = should_display;
 
-        if should_display || !self.current_image.is_some() {
+        if should_display || self.current_image.is_none() {
             ui.ctx().memory_mut(|mem| {
                 let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
                     Id::new(WEBVIEW_ID),

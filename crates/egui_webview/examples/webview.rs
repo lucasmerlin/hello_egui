@@ -25,7 +25,7 @@ impl WebBrowser {
 
     pub fn ui(&mut self, ctx: &Context) -> bool {
         let mut open = true;
-        Window::new(format!("Browser"))
+        Window::new("Browser")
             .id(self.id)
             .open(&mut open)
             .show(ctx, |ui| {

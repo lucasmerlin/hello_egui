@@ -91,16 +91,16 @@ impl NativeTextField {
                         self.webview.view.set_visible(false);
                         self.webview.view.set_visible(true);
                         //response.egui_response.surrender_focus();
-                        let shift_key = ui.input(|i| i.modifiers.shift);
+                        // let shift_key = ui.input(|i| i.modifiers.shift);
                         //response.egui_response.surrender_focus();
-                        ui.ctx().memory_mut(|mem| {
-                            println!("Focus out 2");
-                            // if shift_key {
-                            //     mem.focus_item_in_direction(FocusDirection::Previous);
-                            // } else {
-                            //     mem.focus_item_in_direction(FocusDirection::Next);
-                            // }
-                        })
+                        // ui.ctx().memory_mut(|mem| {
+                        //     println!("Focus out 2");
+                        //     // if shift_key {
+                        //     //     mem.focus_item_in_direction(FocusDirection::Previous);
+                        //     // } else {
+                        //     //     mem.focus_item_in_direction(FocusDirection::Next);
+                        //     // }
+                        // })
                     }
                     Err(_) => {}
                 }
