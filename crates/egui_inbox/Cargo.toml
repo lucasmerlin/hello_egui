@@ -11,17 +11,21 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_in
 [features]
 async = ["dep:hello_egui_utils", "hello_egui_utils/async", "dep:futures-channel", "dep:futures"]
 tokio = ["async", "hello_egui_utils/tokio"]
+egui = ["dep:egui"]
+default = ["egui"]
 
 [[example]]
 name = "inbox_spawn"
 required-features = ["tokio"]
 
 [dependencies]
-egui.workspace = true
+egui = { workspace = true, optional = true }
 hello_egui_utils = { workspace = true, optional = true }
 futures-channel = { version = "0.3", optional = true }
 futures = { version = "0.3", optional = true }
+# Egui uses parking_lot so we should be fine with using it too (regarding compile times).
+parking_lot = "0.12"
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-tokio = { version = "1", features = ["full"]}
+tokio = { version = "1", features = ["full"] }

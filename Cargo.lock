@@ -1272,6 +1272,7 @@ dependencies = [
  "futures",
  "futures-channel",
  "hello_egui_utils",
+ "parking_lot",
  "tokio",
 ]
 
