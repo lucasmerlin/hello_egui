@@ -45,6 +45,8 @@ use egui::{Context, Ui};
 
 pub struct UiInbox<T> {
     state: Arc<Mutex<State<T>>>,
+    #[cfg(feature = "async")]
+    oneshot_channels: Vec<futures_channel::oneshot::Sender<()>>,
 }
 
 impl<T> Debug for UiInbox<T> {
@@ -97,6 +99,13 @@ impl<T> Default for UiInbox<T> {
 
 impl<T> Drop for UiInbox<T> {
     fn drop(&mut self) {
+        #[cfg(feature = "async")]
+        {
+            self.oneshot_channels.drain(..).for_each(|tx| {
+                tx.send(()).ok();
+            });
+        }
+
         let mut state = self.state.lock();
         state.dropped = true;
     }
@@ -118,7 +127,11 @@ impl<T> UiInbox<T> {
 
     fn _new(ctx: Option<Context>) -> Self {
         let state = Arc::new(Mutex::new(State::new(ctx)));
-        Self { state }
+        Self {
+            state,
+            #[cfg(feature = "async")]
+            oneshot_channels: Vec::new(),
+        }
     }
 
     /// Create a inbox and a sender for it.
@@ -204,6 +217,53 @@ impl<T> UiInbox<T> {
     pub fn sender(&self) -> UiInboxSender<T> {
         UiInboxSender {
             state: self.state.clone(),
+        }
+    }
+}
+
+#[cfg(feature = "async")]
+mod async_impl {
+    use std::pin::pin;
+
+    use futures::{select, FutureExt};
+
+    use hello_egui_utils::spawn;
+
+    use crate::{UiInbox, UiInboxSender};
+
+    impl<T> UiInbox<T> {
+        /// Spawns a future that will automatically be cancelled when the inbox is dropped.
+        /// Make sure your future is safe to cancel (It may stop at any await point).
+        ///
+        /// If you want to spawn a future that should definitely run to completion, use [UiInbox::spawn_detached] instead.
+        pub fn spawn<F>(&mut self, f: impl FnOnce(UiInboxSender<T>) -> F)
+        where
+            F: std::future::Future<Output = ()> + Send + 'static,
+        {
+            let (tx, mut rx) = futures_channel::oneshot::channel();
+            self.oneshot_channels.push(tx);
+
+            let sender = self.sender();
+            let future = f(sender).fuse();
+
+            spawn(async move {
+                let mut future = pin!(future);
+
+                select! {
+                    _ = future => {},
+                    _ = rx => {},
+                }
+            });
+        }
+
+        /// Spawns a future that will **not** be cancelled when the inbox is dropped.
+        pub fn spawn_detached<F>(&mut self, f: impl FnOnce(UiInboxSender<T>) -> F)
+        where
+            F: std::future::Future<Output = ()> + Send + 'static,
+        {
+            let sender = self.sender();
+            let future = f(sender);
+            spawn(future);
         }
     }
 }

@@ -1,5 +1,10 @@
 # egui_inbox changelog
 
+## Unreleased
+- Added `async` and `tokio` features that add the following:
+  - `UiInbox::spawn` to conveniently spawn a task that will be cancelled when the inbox is dropped.
+  - `UiInbox::spawn_detached` to spawn a task that will not be cancelled when the inbox is dropped.
+
 ## 0.3.0
 - update egui to 0.26
 

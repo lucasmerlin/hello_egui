@@ -8,8 +8,20 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_in
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+async = ["dep:hello_egui_utils", "hello_egui_utils/async", "dep:futures-channel", "dep:futures"]
+tokio = ["async", "hello_egui_utils/tokio"]
+
+[[example]]
+name = "inbox_spawn"
+required-features = ["tokio"]
+
 [dependencies]
 egui.workspace = true
+hello_egui_utils = { workspace = true, optional = true }
+futures-channel = { version = "0.3", optional = true }
+futures = { version = "0.3", optional = true }
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
+tokio = { version = "1", features = ["full"]}
