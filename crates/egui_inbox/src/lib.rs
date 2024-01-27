@@ -309,13 +309,14 @@ impl<T> UiInbox<T> {
 
 #[cfg(feature = "async")]
 mod async_impl {
-    use std::pin::pin;
+    use std::pin::{pin, Pin};
+    use std::task::{Context, Poll};
 
-    use futures::{select, FutureExt};
+    use futures::{select, FutureExt, Sink, SinkExt, StreamExt};
 
     use hello_egui_utils::spawn;
 
-    use crate::{UiInbox, UiInboxSender};
+    use crate::{SendError, UiInbox, UiInboxSender};
 
     impl<T> UiInbox<T> {
         /// Spawns a future that will automatically be cancelled when the inbox is dropped.
@@ -350,6 +351,47 @@ mod async_impl {
             let sender = self.sender();
             let future = f(sender);
             spawn(future);
+        }
+    }
+
+    impl<T> UiInboxSender<T> {
+        /// Send each item of a stream to the inbox, as they come in.
+        pub async fn send_stream(
+            &mut self,
+            stream: impl futures::Stream<Item = T> + Send + 'static,
+        ) -> Result<(), SendError<T>> {
+            let stream = stream.map(|i| Ok(i));
+            let mut stream = pin!(stream);
+            self.send_all(&mut stream).await
+        }
+    }
+
+    impl<T> Sink<T> for UiInboxSender<T> {
+        type Error = SendError<T>;
+
+        fn poll_ready(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn start_send(self: Pin<&mut Self>, item: T) -> Result<(), Self::Error> {
+            UiInboxSender::send(&self, item)
+        }
+
+        fn poll_flush(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn poll_close(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
         }
     }
 }
