@@ -4,6 +4,7 @@ use std::time::{Duration, SystemTime};
 
 use egui::{CursorIcon, Id, Pos2, Rect, Sense, Ui, Vec2};
 
+use crate::context::{CurrentlyDraggedItem, DndContext, DragDropMetaState};
 #[cfg(target_arch = "wasm32")]
 use web_time::{Duration, SystemTime};
 
@@ -420,6 +421,8 @@ impl DragDropUi {
     pub fn ui(
         &mut self,
         ui: &mut Ui,
+        id: Id,
+        ctx: Option<&mut DndContext>,
         callback: impl FnOnce(&mut Ui, &mut ItemIterator),
     ) -> DragDropResponse {
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
@@ -492,7 +495,14 @@ impl DragDropUi {
             None
         };
 
-        let mut item_iter = ItemIterator::new(self, dragged_item_rect, *ui.layout());
+        let check_rect = dragged_item_rect.or(ctx.as_ref().and_then(|c| {
+            c.should_i_evaluate_a_dragged_item_from_another_list(id)
+                .map(|i| i.rect)
+        }));
+
+        dbg!(id, check_rect);
+
+        let mut item_iter = ItemIterator::new(self, check_rect, *ui.layout());
         callback(ui, &mut item_iter);
 
         let ItemIterator {
@@ -631,6 +641,25 @@ impl DragDropUi {
         // Repaint continuously while we are evaluating the drag
         if self.detection_state.is_evaluating_drag() {
             ui.ctx().request_repaint();
+        }
+
+        if let Some(ctx) = ctx {
+            let dragged = if let DragDetectionState::Dragging {
+                id: item_id,
+                last_pointer_pos,
+                ..
+            } = &self.detection_state
+            {
+                Some(CurrentlyDraggedItem {
+                    id: *item_id,
+                    source_list: id,
+                    rect: Rect::from_min_size(*last_pointer_pos, Vec2::splat(50.0)),
+                })
+            } else {
+                None
+            };
+
+            ctx.set_meta_state(id, DragDropMetaState { rect: Rect::ZERO }, dragged);
         }
 
         response

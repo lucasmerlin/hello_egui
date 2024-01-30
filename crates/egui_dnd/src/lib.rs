@@ -5,10 +5,12 @@
 use egui::{Id, Ui};
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
 
+use crate::context::DndContext;
 use crate::item_iterator::ItemIterator;
 use crate::state::DragDropUi;
 use std::hash::Hash;
 
+pub mod context;
 mod item;
 mod item_iterator;
 mod state;
@@ -20,6 +22,7 @@ pub struct Dnd<'a> {
     id: Id,
     ui: &'a mut Ui,
     drag_drop_ui: DragDropUi,
+    ctx: Option<&'a mut DndContext>,
 }
 
 /// Main entry point for the drag and drop functionality.
@@ -63,6 +66,7 @@ pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd {
         id,
         ui,
         drag_drop_ui: dnd_ui,
+        ctx: None,
     }
 }
 
@@ -113,6 +117,12 @@ impl<'a> Dnd<'a> {
         self
     }
 
+    /// Sets the context for the drag and drop UI.
+    pub fn with_ctx(mut self, ctx: &'a mut DndContext) -> Self {
+        self.ctx = Some(ctx);
+        self
+    }
+
     /// Display the drag and drop UI.
     /// `items` should be an iterator over items that should be sorted.
     ///
@@ -127,8 +137,9 @@ impl<'a> Dnd<'a> {
         items: impl Iterator<Item = T>,
         mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner(|_id, ui, drag_drop_ui| {
-            drag_drop_ui.ui(ui, |ui, iter| {
+        let id = self.id;
+        self._show_with_inner(|_id, ui, ctx, drag_drop_ui| {
+            drag_drop_ui.ui(ui, id, ctx, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
                     iter.next(ui, item.id(), i, true, |ui, item_handle| {
                         item_handle.ui(ui, |ui, handle, state| item_ui(ui, item, handle, state))
@@ -149,8 +160,9 @@ impl<'a> Dnd<'a> {
         size: egui::Vec2,
         mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner(|_id, ui, drag_drop_ui| {
-            drag_drop_ui.ui(ui, |ui, iter| {
+        let id = self.id;
+        self._show_with_inner(|_id, ui, ctx, drag_drop_ui| {
+            drag_drop_ui.ui(ui, id, ctx, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
                     iter.next(ui, item.id(), i, true, |ui, item_handle| {
                         item_handle.ui_sized(ui, size, |ui, handle, state| {
@@ -188,7 +200,8 @@ impl<'a> Dnd<'a> {
     /// This will allow for very flexible UI. You can use it to e.g. render outlines around items
     /// or render items in complex layouts. This is **experimental**.
     pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
-        self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
+        let id = self.id;
+        self._show_with_inner(|_id, ui, ctx, drag_drop_ui| drag_drop_ui.ui(ui, id, ctx, f))
     }
 
     /// Same as [Dnd::show_custom], but automatically sorts the items.
@@ -204,15 +217,21 @@ impl<'a> Dnd<'a> {
 
     fn _show_with_inner(
         self,
-        inner_fn: impl FnOnce(Id, &mut Ui, &mut DragDropUi) -> DragDropResponse,
+        inner_fn: impl FnOnce(
+            Id,
+            &mut Ui,
+            Option<&'a mut DndContext>,
+            &mut DragDropUi,
+        ) -> DragDropResponse,
     ) -> DragDropResponse {
         let Dnd {
             id,
             ui,
             mut drag_drop_ui,
+            ctx,
         } = self;
 
-        let response = inner_fn(id, ui, &mut drag_drop_ui);
+        let response = inner_fn(id, ui, ctx, &mut drag_drop_ui);
 
         ui.ctx().data_mut(|data| data.insert_temp(id, drag_drop_ui));
 
