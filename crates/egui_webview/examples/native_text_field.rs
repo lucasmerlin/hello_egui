@@ -8,12 +8,12 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
         if view.is_none() {
-            init_webview(ctx, _frame);
+            init_webview(ctx);
 
             view = Some((
-                NativeTextField::new(ctx, "email", TextFieldType::Email),
-                NativeTextField::new(ctx, "password", TextFieldType::Password),
-                NativeTextField::new(ctx, "textarea", TextFieldType::Textarea),
+                NativeTextField::new(ctx, "email", TextFieldType::Email, _frame),
+                NativeTextField::new(ctx, "password", TextFieldType::Password, _frame),
+                NativeTextField::new(ctx, "textarea", TextFieldType::Textarea, _frame),
             ));
         }
 

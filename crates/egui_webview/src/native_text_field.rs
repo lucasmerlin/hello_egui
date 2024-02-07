@@ -1,5 +1,6 @@
 use egui::{Context, CursorIcon, Id, Ui, Vec2};
 use serde::{Deserialize, Serialize};
+use wry::raw_window_handle::HasWindowHandle;
 
 use crate::{EguiWebView, WebViewEvent};
 
@@ -53,8 +54,9 @@ impl NativeTextField {
         ctx: &Context,
         id: impl Into<Id>,
         text_field_type: TextFieldType,
+        window: &impl HasWindowHandle,
     ) -> NativeTextField {
-        let view = EguiWebView::new(ctx, id.into(), |b| {
+        let view = EguiWebView::new(ctx, id.into(), window, |b| {
             b.with_html(
                 include_str!("native_text_field.html")
                     .replace("_tag", text_field_type.tag())

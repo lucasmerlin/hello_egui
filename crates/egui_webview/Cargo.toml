@@ -2,17 +2,19 @@
 name = "egui_webview"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.release]
+release = false
 
 [dependencies]
-wry = "0.35.0"
+wry = "0.36.0"
 egui.workspace = true
-egui_inbox = { path = "../egui_inbox" }
+egui_inbox = { workspace = true }
 
 image = "0.24.8"
 base64 = "0.21.7"
-egui_extras = { version = "0.25.0", features = ["image",] }
+egui_extras = { workspace = true, features = ["image",] }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "1"
 log = "0.4.20"

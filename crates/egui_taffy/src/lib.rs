@@ -270,7 +270,9 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                             let result_rect = response.response.rect;
 
                             Size {
-                                width: result_rect.width().ceil() + 0.01,
+                                // Somehow we need to add at least 1.0, or we will get floating point errors causing random
+                                // text wraps.
+                                width: result_rect.width().ceil() + 1.0,
                                 height: result_rect.height(),
                             }
                         },

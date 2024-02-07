@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.0
+- Updated to egui 0.26.0
+- By default, egui_dnd will disable egui's new text selection within the drag handle, so it doesn't interfere 
+with dragging.
+- There is a new function on the handle, `enable_selectable_labels`, that will make egui_dnd not disable text selection.
+
 ## v0.6.0
 - Updated to egui 0.25.0, dropping support for older versions.
 

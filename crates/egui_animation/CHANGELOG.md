@@ -1,5 +1,8 @@
 # egui_animation changelog
 
+## 0.3.0
+- update egui to 0.26
+
 ## 0.2.0
 - added missing documentation
 - add animate_repeating and animate_continuous

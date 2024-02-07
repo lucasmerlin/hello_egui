@@ -1,5 +1,8 @@
 # egui_inbox changelog
 
+## 0.3.0
+- update egui to 0.26
+
 ## 0.2.0
 This update changes `UiInbox` to act more like a channel. I've removed the possibility to 
 send messages via the `UiInbox` itself, and instead added a `UiInboxSender` that can be used to send messages.

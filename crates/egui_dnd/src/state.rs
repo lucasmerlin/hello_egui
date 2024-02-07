@@ -130,6 +130,7 @@ pub struct Handle<'a> {
     // Configurable options
     sense: Option<Sense>,
     show_drag_cursor_on_hover: bool,
+    disable_selectable_labels: bool,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -224,6 +225,7 @@ impl<'a> Handle<'a> {
 
             sense: None,
             show_drag_cursor_on_hover: true,
+            disable_selectable_labels: true,
         }
     }
 
@@ -243,10 +245,37 @@ impl<'a> Handle<'a> {
         self
     }
 
+    /// By default, selectable labels are disabled in the handle, to not interfere with dragging.
+    /// You can use this to re-enable them.
+    /// Note that if you disable selectable labels globally, this won't have any effect.
+    pub fn enable_selectable_labels(mut self) -> Self {
+        self.disable_selectable_labels = false;
+        self
+    }
+
     /// Draw the drag handle. Use [Handle::sense] to add a click sense.
     /// You can also add buttons in the handle, but they won't be interactive if you pass Sense::click
     pub fn ui(mut self, ui: &mut Ui, contents: impl FnOnce(&mut Ui)) -> egui::Response {
+        let disabled = if self.disable_selectable_labels {
+            let interaction = &mut ui.style_mut().interaction;
+            let old_values = (
+                interaction.selectable_labels,
+                interaction.multi_widget_text_select,
+            );
+            interaction.selectable_labels = false;
+            interaction.multi_widget_text_select = false;
+            Some(old_values)
+        } else {
+            None
+        };
+
         let response = ui.scope(contents);
+
+        if let Some((selectable_labels, multi_widget_text_select)) = disabled {
+            ui.style_mut().interaction.selectable_labels = selectable_labels;
+            ui.style_mut().interaction.multi_widget_text_select = multi_widget_text_select;
+        }
+
         self.handle_response(response.response, ui)
     }
 
@@ -259,6 +288,10 @@ impl<'a> Handle<'a> {
         add_contents: impl FnOnce(&mut Ui),
     ) -> egui::Response {
         let response = ui.allocate_ui(size, |ui| {
+            if self.disable_selectable_labels {
+                ui.style_mut().interaction.selectable_labels = false;
+                ui.style_mut().interaction.multi_widget_text_select = false;
+            }
             // We somehow have to push a new id here or there will be an id clash at response.interact
             ui.push_id(self.id.with("handle"), add_contents)
         });
@@ -272,14 +305,18 @@ impl<'a> Handle<'a> {
             response
         };
 
-        if response.hovered() {
+        if response.contains_pointer() {
             if self.show_drag_cursor_on_hover {
                 ui.output_mut(|o| o.cursor_icon = CursorIcon::Grab);
             }
             *self.hovering_over_any_handle = true;
         }
 
-        let offset = self.item_pos.to_vec2() - response.hover_pos().unwrap_or_default().to_vec2();
+        let offset = self.item_pos.to_vec2()
+            - ui.ctx()
+                .input(|i| i.pointer.hover_pos())
+                .unwrap_or_default()
+                .to_vec2();
 
         let drag_distance = ui.input(|i| {
             (i.pointer.hover_pos().unwrap_or_default()
@@ -290,7 +327,7 @@ impl<'a> Handle<'a> {
         let click_threshold = 1.0;
         let is_above_click_threshold = drag_distance > click_threshold;
 
-        if response.hovered()
+        if response.contains_pointer()
             && response
                 .rect
                 .contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
@@ -310,7 +347,7 @@ impl<'a> Handle<'a> {
             }
         };
 
-        if response.hovered()
+        if response.contains_pointer()
             && matches!(
                 self.state.detection_state,
                 DragDetectionState::CouldBeValidDrag
@@ -324,7 +361,10 @@ impl<'a> Handle<'a> {
                 closest_item: (self.id, self.item_pos),
                 source_idx: self.idx,
                 hovering_idx: self.idx,
-                last_pointer_pos: response.hover_pos().unwrap_or_default(),
+                last_pointer_pos: ui
+                    .ctx()
+                    .input(|i| i.pointer.hover_pos())
+                    .unwrap_or_default(),
                 hovering_last_item: false,
             };
             ui.memory_mut(|mem| mem.set_dragged_id(self.id));

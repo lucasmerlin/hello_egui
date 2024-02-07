@@ -6,7 +6,7 @@ use std::sync::{Arc, Weak};
 use egui::mutex::Mutex;
 use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
 use serde::{Deserialize, Serialize};
-use wry::raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use wry::raw_window_handle::HasWindowHandle;
 use wry::{PageLoadEvent, WebView};
 
 use egui_inbox::UiInbox;
@@ -71,11 +71,12 @@ impl EguiWebView {
     pub fn new(
         ctx: &Context,
         id: impl Into<Id>,
+        window: &impl HasWindowHandle,
         build: impl FnOnce(wry::WebViewBuilder) -> wry::WebViewBuilder,
     ) -> Self {
         let (tx, inbox) = UiInbox::channel();
         let id = id.into();
-        let handle = ctx.memory_mut(|mem| {
+        ctx.memory_mut(|mem| {
             mem.data
                 .get_temp_mut_or_insert_with::<GlobalWebViewState>(
                     Id::new(WEBVIEW_ID),
@@ -84,7 +85,7 @@ impl EguiWebView {
                 .clone()
         });
 
-        let mut builder = wry::WebViewBuilder::new_as_child(&handle);
+        let mut builder = wry::WebViewBuilder::new_as_child(window);
 
         builder = build(builder);
 
@@ -299,15 +300,8 @@ impl EguiWebView {
 
 #[derive(Clone, Debug)]
 struct GlobalWebViewState {
-    handle: RawWindowHandle,
     views: HashMap<Id, Weak<WebView>>,
     rendered_this_frame: HashSet<Id>,
-}
-
-unsafe impl HasRawWindowHandle for GlobalWebViewState {
-    fn raw_window_handle(&self) -> RawWindowHandle {
-        self.handle
-    }
 }
 
 unsafe impl Send for GlobalWebViewState {}
@@ -315,8 +309,7 @@ unsafe impl Sync for GlobalWebViewState {}
 
 pub const WEBVIEW_ID: &str = "egui_webview";
 
-pub fn init_webview(ctx: &Context, handle: &impl HasRawWindowHandle) {
-    let handle = handle.raw_window_handle();
+pub fn init_webview(ctx: &Context) {
     ctx.memory_mut(|mem| {
         if mem
             .data
@@ -328,7 +321,6 @@ pub fn init_webview(ctx: &Context, handle: &impl HasRawWindowHandle) {
         mem.data.insert_temp(
             Id::new(WEBVIEW_ID),
             GlobalWebViewState {
-                handle,
                 rendered_this_frame: HashSet::new(),
                 views: HashMap::new(),
             },

@@ -17,6 +17,10 @@ pub fn main() -> eframe::Result<()> {
         Default::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
+                // Disable text selection, so it doesn't interfere with the drag gesture
+                ui.style_mut().interaction.selectable_labels = false;
+                ui.style_mut().interaction.multi_widget_text_select = false;
+
                 if let Some(j) = inbox.read(ui).last() {
                     joke = j;
                     loading = false;

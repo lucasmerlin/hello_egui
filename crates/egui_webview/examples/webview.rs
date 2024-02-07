@@ -3,6 +3,7 @@ use egui::{
     popup_above_or_below_widget, AboveOrBelow, CentralPanel, Context, Id, Layout, TextEdit, Widget,
     Window,
 };
+use wry::raw_window_handle::HasWindowHandle;
 
 use egui_webview::{init_webview, webview_end_frame, EguiWebView, WebViewEvent};
 
@@ -13,8 +14,8 @@ pub struct WebBrowser {
 }
 
 impl WebBrowser {
-    pub fn new(ctx: Context, id: Id, url: &str) -> Self {
-        let view = EguiWebView::new(&ctx, id, |b| b.with_url(url).unwrap());
+    pub fn new(ctx: Context, id: Id, url: &str, window: &impl HasWindowHandle) -> Self {
+        let view = EguiWebView::new(&ctx, id, window, |b| b.with_url(url).unwrap());
 
         Self {
             id,
@@ -114,7 +115,7 @@ pub fn main() -> eframe::Result<()> {
 
         CentralPanel::default().show(ctx, |ui| {
             if windows.is_empty() || ui.button("New Window").clicked() {
-                init_webview(ctx, _frame);
+                init_webview(ctx);
 
                 let url = default_urls[count % default_urls.len()];
 
@@ -122,6 +123,7 @@ pub fn main() -> eframe::Result<()> {
                     ctx.clone(),
                     Id::new(format!("Window {}", count)),
                     url,
+                    _frame,
                 ));
                 count += 1;
             }

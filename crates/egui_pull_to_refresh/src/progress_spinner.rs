@@ -4,8 +4,6 @@ use egui::{Response, Sense, Ui, Widget};
 
 /// A spinner widget used to indicate loading.
 /// This was taken from egui and modified slightly to allow passing a progress value
-///
-/// See also: [`crate::ProgressBar`].
 #[must_use = "You should put this widget in an ui with `ui.add(widget);`"]
 #[derive(Default)]
 pub struct ProgressSpinner {

@@ -40,6 +40,9 @@ pub fn main() -> eframe::Result<()> {
         Default::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
+                // Disable text selection, so it doesn't interfere with the drag gesture
+                ui.style_mut().interaction.selectable_labels = false;
+                ui.style_mut().interaction.multi_widget_text_select = false;
                 let current_state = state.lock().unwrap().clone();
 
                 let response = my_ui(ui, current_state.count as u64, current_state.loading);

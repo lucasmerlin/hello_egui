@@ -96,6 +96,8 @@ impl PullToRefresh {
 
     /// Shows the pull to refresh widget.
     /// Note: If you want to use the pull to refresh widget in a scroll area, use [`Self::scroll_area_ui`].
+    /// You might want to disable text selection via [`egui::style::Interaction`]
+    /// to avoid conflicts with the drag gesture.
     pub fn ui<T>(
         self,
         ui: &mut Ui,
@@ -163,7 +165,7 @@ impl PullToRefresh {
                     && !allow_dragged_id.map_or(false, |id| memory.is_being_dragged(id))
             });
 
-            if sense.hovered() && !is_something_blocking_drag {
+            if sense.contains_pointer() && !is_something_blocking_drag {
                 let (delta, any_released) = ui.input(|input| {
                     (
                         if input.pointer.is_decidedly_dragging() {
