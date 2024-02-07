@@ -1196,7 +1196,7 @@ dependencies = [
 
 [[package]]
 name = "egui_animation"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1218,7 +1218,7 @@ dependencies = [
 
 [[package]]
 name = "egui_dnd"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "color-hex",
  "eframe",
@@ -1265,7 +1265,7 @@ dependencies = [
 
 [[package]]
 name = "egui_inbox"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1273,7 +1273,7 @@ dependencies = [
 
 [[package]]
 name = "egui_infinite_scroll"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1288,7 +1288,7 @@ dependencies = [
 
 [[package]]
 name = "egui_pull_to_refresh"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1298,7 +1298,7 @@ dependencies = [
 
 [[package]]
 name = "egui_suspense"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1322,7 +1322,7 @@ dependencies = [
 
 [[package]]
 name = "egui_thumbhash"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "base64",
  "eframe",
@@ -1337,7 +1337,7 @@ dependencies = [
 
 [[package]]
 name = "egui_virtual_list"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -2362,7 +2362,7 @@ checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "hello_egui"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "egui_animation",
  "egui_dnd",
@@ -2376,7 +2376,7 @@ dependencies = [
 
 [[package]]
 name = "hello_egui_utils"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "concat-idents",
  "egui",

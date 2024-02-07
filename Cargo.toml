@@ -1,7 +1,7 @@
 
 [package]
 name = "hello_egui"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "A collection of useful crates for egui."
 authors = ["Lucas Meurer"]
@@ -44,16 +44,16 @@ members = ["fancy-example", "crates/*", "scripts"]
 resolver = "2"
 
 [workspace.dependencies]
-egui_dnd = { path = "./crates/egui_dnd", version = "0.6.0" }
-egui_animation = { path = "./crates/egui_animation", version = "0.2.0" }
-hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.2.0" }
-egui_inbox = { path = "./crates/egui_inbox", version = "0.2.0" }
-egui_pull_to_refresh = { path = "./crates/egui_pull_to_refresh", version = "0.2.0" }
-egui_suspense = { path = "./crates/egui_suspense", version = "0.2.0" }
-egui_virtual_list = { path = "./crates/egui_virtual_list", version = "0.1.0" }
-egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.1.0" }
-egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.1.0" }
-hello_egui = { path = ".", version = "0.2.0" }
+egui_dnd = { path = "./crates/egui_dnd", version = "0.7.0" }
+egui_animation = { path = "./crates/egui_animation", version = "0.3.0" }
+hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.3.0" }
+egui_inbox = { path = "./crates/egui_inbox", version = "0.3.0" }
+egui_pull_to_refresh = { path = "./crates/egui_pull_to_refresh", version = "0.3.0" }
+egui_suspense = { path = "./crates/egui_suspense", version = "0.3.0" }
+egui_virtual_list = { path = "./crates/egui_virtual_list", version = "0.2.0" }
+egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.2.0" }
+egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.2.0" }
+hello_egui = { path = ".", version = "0.3.0" }
 
 egui = { version = "0.26.0", default-features = false }
 eframe = { version = "0.26.0", default-features = false }
