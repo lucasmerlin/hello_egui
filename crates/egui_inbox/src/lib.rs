@@ -233,3 +233,9 @@ impl<T> UiInboxSender<T> {
 /// This can happen if the inbox was dropped.
 /// The message is returned in the error, so it can be recovered.
 pub struct SendError<T>(pub T);
+
+impl<T: Debug> Debug for SendError<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SendError").field("item", &self.0).finish()
+    }
+}
