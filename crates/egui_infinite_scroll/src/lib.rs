@@ -313,10 +313,9 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         if item_range.end + end_prefetch >= items.len()
             && matches!(self.bottom_loading_state, LoadingState::Idle { .. })
         {
-            self.bottom_loading_state = LoadingState::Loading;
-            let sender = self.bottom_inbox.sender();
-
             if let Some(end_loader) = &mut self.end_loader {
+                self.bottom_loading_state = LoadingState::Loading;
+                let sender = self.bottom_inbox.sender();
                 end_loader(
                     self.end_cursor.clone(),
                     Box::new(move |result| match result {
@@ -334,10 +333,9 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         if item_range.start < end_prefetch
             && matches!(self.top_loading_state, LoadingState::Idle { .. })
         {
-            self.top_loading_state = LoadingState::Loading;
-            let sender = self.top_inbox.sender();
-
             if let Some(start_loader) = &mut self.start_loader {
+                self.top_loading_state = LoadingState::Loading;
+                let sender = self.top_inbox.sender();
                 start_loader(
                     self.start_cursor.clone(),
                     Box::new(move |result| match result {

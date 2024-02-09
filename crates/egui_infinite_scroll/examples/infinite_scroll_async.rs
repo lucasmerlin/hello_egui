@@ -26,6 +26,10 @@ pub async fn main() -> eframe::Result<()> {
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
                         ui.label(format!("Item {}", item));
                     });
+
+                    if infinite_scroll.bottom_loading_state().loading() {
+                        ui.spinner();
+                    }
                 });
             });
         },
