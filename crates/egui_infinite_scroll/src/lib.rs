@@ -61,7 +61,8 @@ pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
 
     filter: Option<FilterType<T>>,
 
-    virtual_list: VirtualList,
+    /// The egui_virtual_list instance. You can use this to customize settings of the virtual list.
+    pub virtual_list: VirtualList,
 }
 
 impl<T, Cursor> Debug for InfiniteScroll<T, Cursor>
