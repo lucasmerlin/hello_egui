@@ -51,7 +51,7 @@ egui_inbox = { path = "./crates/egui_inbox", version = "0.3.0" }
 egui_pull_to_refresh = { path = "./crates/egui_pull_to_refresh", version = "0.3.0" }
 egui_suspense = { path = "./crates/egui_suspense", version = "0.3.0" }
 egui_virtual_list = { path = "./crates/egui_virtual_list", version = "0.2.0" }
-egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.2.0" }
+egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.2.1" }
 egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.2.0" }
 hello_egui = { path = ".", version = "0.3.0" }
 
