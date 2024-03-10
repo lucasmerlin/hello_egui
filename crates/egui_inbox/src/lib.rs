@@ -314,7 +314,7 @@ mod async_impl {
 
     use futures::{select, FutureExt, Sink, SinkExt, StreamExt};
 
-    use hello_egui_utils::spawn;
+    use hello_egui_utils::{spawn, MaybeSend};
 
     use crate::{SendError, UiInbox, UiInboxSender};
 
@@ -325,7 +325,7 @@ mod async_impl {
         /// If you want to spawn a future that should definitely run to completion, use [UiInbox::spawn_detached] instead.
         pub fn spawn<F>(&mut self, f: impl FnOnce(UiInboxSender<T>) -> F)
         where
-            F: std::future::Future<Output = ()> + Send + 'static,
+            F: std::future::Future<Output = ()> + MaybeSend + 'static,
         {
             let (tx, mut rx) = futures_channel::oneshot::channel();
             self.oneshot_channels.push(tx);
