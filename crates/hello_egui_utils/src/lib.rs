@@ -251,3 +251,20 @@ macro_rules! asyncify {
 
 /// Type of the callback function
 pub type CallbackType<T> = Box<dyn FnOnce(T) + Send>;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod sync {
+    pub use Send as MaybeSend;
+}
+#[cfg(target_arch = "wasm32")]
+mod unsync {
+    pub trait MaybeSend {}
+
+    impl<T> MaybeSend for T where T: ?Sized {}
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use sync::*;
+
+#[cfg(target_arch = "wasm32")]
+pub use unsync::*;

@@ -1269,6 +1269,11 @@ version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
+ "futures",
+ "futures-channel",
+ "hello_egui_utils",
+ "parking_lot",
+ "tokio",
 ]
 
 [[package]]

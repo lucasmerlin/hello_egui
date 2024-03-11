@@ -14,6 +14,10 @@
 Channel to send messages to egui views from async functions, callbacks, etc. without having to use interior mutability.
 Will automatically call `request_repaint()` on the `Ui` when a message is received.
 
+**The goal of this crate** is to make interfacing with egui from asynchronous code as easy as possible.
+Currently it is not optimized for performance, so if you expect to send 1000s of updates per frame you might want to use
+e.g. std::sync::mpsc instead. Performance might still be improved in the future though.
+
 Example:
     
 ```rust no_run

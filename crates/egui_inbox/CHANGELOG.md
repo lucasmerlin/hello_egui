@@ -1,5 +1,18 @@
 # egui_inbox changelog
 
+## Unreleased
+- egui_inbox now can be used without egui
+  - There is a new trait AsRequestRepaint, which can be implemented for anything that can request a repaint
+  - **Breaking**: new_with_ctx now takes a reference to the context
+  - **Breaking**: read_without_ui and replace_without_ui have been renamed to read_without_ctx and replace_without_ctx
+  - All other methods now take a impl AsRequestRepaint instead of a &Ui
+    but this should not break existing code. A benefit is that you can also
+    call the methods with a &Context instead of a &Ui now.
+
+- Added `async` and `tokio` features that add the following:
+  - `UiInbox::spawn` to conveniently spawn a task that will be cancelled when the inbox is dropped.
+  - `UiInbox::spawn_detached` to spawn a task that will not be cancelled when the inbox is dropped.
+
 ## 0.3.0
 - update egui to 0.26
 
