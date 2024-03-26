@@ -17,7 +17,7 @@ jobs:
           version: 'latest'
       - name: Trunk build
         working-directory: fancy-example
-        run: trunk build --release --public-url hello_egui
+        run: trunk build --release --public-url /hello_egui
       - name: Deploy pages
         uses: crazy-max/ghaction-github-pages@v2
         with:
