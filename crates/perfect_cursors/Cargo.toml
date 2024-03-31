@@ -9,4 +9,4 @@ edition = "2021"
 web-time = "1"
 
 [dev-dependencies]
-eframe = "0.26.2"
+eframe = {workspace = true, default-features = true}

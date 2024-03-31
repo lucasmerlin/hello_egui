@@ -1,5 +1,5 @@
 use eframe::egui;
-use egui::{Align2, Area, CentralPanel, Frame, Vec2};
+use egui::{Align2, Area, CentralPanel, Frame, Id, Vec2};
 use ehttp::Request;
 
 use egui_inbox::{UiInbox, UiInboxSender};
@@ -55,7 +55,7 @@ pub fn main() -> eframe::Result<()> {
                 }
             });
 
-            Area::new("attribution")
+            Area::new(Id::new("attribution"))
                 .anchor(Align2::LEFT_BOTTOM, Vec2::new(8.0, -8.0))
                 .show(ctx, |ui| {
                     ui.hyperlink_to(
