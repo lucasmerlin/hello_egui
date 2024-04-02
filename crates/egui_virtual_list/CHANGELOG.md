@@ -1,8 +1,14 @@
 # egui_virtual_list changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 - Updated egui to 0.27
+- **breaking**: if you use a items_inserted_at_start, with egui 0.27
+  you will need to disable animations for the ScrollArea, using `ScrollArea::animated`
+  (only available with egui 0.27.2).
+
+  This can be reverted once egui 0.28 is released, which will hopefully include a better
+  way to specify scroll animations
 
 ## 0.2.0
 

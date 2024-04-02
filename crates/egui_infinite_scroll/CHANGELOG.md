@@ -1,8 +1,13 @@
 # egui_infinite_scroll changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 - update egui to 0.27
+- **breaking**: if you use a start_loader, with egui 0.27
+  you will need to disable animations for the ScrollArea, using `ScrollArea::animated`.
+
+  This can be reverted once egui 0.28 is released, which will hopefully include a better
+  way to specify scroll animations
 
 ## 0.2.1
 

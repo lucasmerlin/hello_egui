@@ -28,7 +28,7 @@ pub fn main() -> eframe::Result<()> {
         Default::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
-                ScrollArea::vertical().show(ui, |ui| {
+                ScrollArea::vertical().animated(false).show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     if ui.button("Reset").clicked() {
                         infinite_scroll.reset();

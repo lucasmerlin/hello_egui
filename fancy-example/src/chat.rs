@@ -164,6 +164,7 @@ impl ChatExample {
         let title = self.name();
         demo_area(ui, title, 500.0, |ui| {
             ScrollArea::vertical()
+                .animated(false)
                 .max_height(400.0)
                 .auto_shrink([false, false])
                 .stick_to_bottom(true)

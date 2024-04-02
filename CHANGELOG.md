@@ -1,6 +1,6 @@
 # hello_egui changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0
 
 - update all crates for egui 0.27 support
 - changes to egui_inbox [(changelog)](./crates/egui_inbox/CHANGELOG.md)
