@@ -1,6 +1,6 @@
 # egui_inbox changelog
 
-## Unreleased
+## 0.4.0
 
 - egui_inbox now can be used without egui
     - There is a new trait AsRequestRepaint, which can be implemented for anything that can request a repaint
