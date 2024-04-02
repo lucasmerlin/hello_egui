@@ -249,7 +249,7 @@ impl<'a> Item<'a> {
         size: Option<Vec2>,
         body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> InnerResponse<Rect> {
-        egui::Area::new("draggable_item")
+        egui::Area::new(Id::new("draggable_item"))
             .interactable(false)
             .fixed_pos(pos)
             .show(ui.ctx(), |ui| {

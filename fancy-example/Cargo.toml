@@ -34,7 +34,7 @@ serde_json = "1"
 
 casey = "0.4.0"
 
-egui_commonmark = { version = "0.12.0", features = [] }
+egui_commonmark = { version = "0.14.0", features = [] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["time", "rt", "macros"] }

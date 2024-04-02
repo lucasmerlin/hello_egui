@@ -160,10 +160,8 @@ impl PullToRefresh {
         if can_refresh && !self.loading {
             let sense = ui.interact(content_rect, self.id, Sense::hover());
 
-            let is_something_blocking_drag = ui.memory(|memory| {
-                memory.is_anything_being_dragged()
-                    && !allow_dragged_id.map_or(false, |id| memory.is_being_dragged(id))
-            });
+            let is_something_blocking_drag = ui.ctx().dragged_id().is_some()
+                && !allow_dragged_id.map_or(false, |id| ui.ctx().is_being_dragged(id));
 
             if sense.contains_pointer() && !is_something_blocking_drag {
                 let (delta, any_released) = ui.input(|input| {
@@ -238,7 +236,7 @@ impl PullToRefresh {
         let offset_top = -spinner_size.y + spinner_size.y * anim_progress * 2.0;
 
         if anim_progress > 0.0 {
-            Area::new("Pull to refresh indicator")
+            Area::new(Id::new("Pull to refresh indicator"))
                 .fixed_pos(content_rect.center_top())
                 .pivot(Align2::CENTER_TOP)
                 .show(ui.ctx(), |ui| {

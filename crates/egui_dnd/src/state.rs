@@ -269,7 +269,7 @@ impl<'a> Handle<'a> {
             None
         };
 
-        let response = ui.scope(contents);
+        let response = ui.push_id(self.id.with("handle_ui"), |ui| contents(ui));
 
         if let Some((selectable_labels, multi_widget_text_select)) = disabled {
             ui.style_mut().interaction.selectable_labels = selectable_labels;
@@ -293,9 +293,9 @@ impl<'a> Handle<'a> {
                 ui.style_mut().interaction.multi_widget_text_select = false;
             }
             // We somehow have to push a new id here or there will be an id clash at response.interact
-            ui.push_id(self.id.with("handle"), add_contents)
+            ui.push_id(self.id.with("handle_ui"), add_contents)
         });
-        self.handle_response(response.response, ui)
+        self.handle_response(response.inner.response, ui)
     }
 
     fn handle_response(&mut self, response: egui::Response, ui: &mut Ui) -> egui::Response {
@@ -335,9 +335,9 @@ impl<'a> Handle<'a> {
             if let DragDetectionState::WaitingForClickThreshold { pressed_at } =
                 self.state.detection_state
             {
-                // It should be save to stop anything else being dragged here
+                // It should be safe to stop anything else being dragged here
                 // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
-                ui.memory_mut(|mem| mem.stop_dragging());
+                ui.ctx().stop_dragging();
                 if is_above_click_threshold
                     || pressed_at.elapsed().unwrap_or_default()
                         > self.state.config(ui).click_tolerance_timeout
@@ -367,7 +367,7 @@ impl<'a> Handle<'a> {
                     .unwrap_or_default(),
                 hovering_last_item: false,
             };
-            ui.memory_mut(|mem| mem.set_dragged_id(self.id));
+            ui.ctx().set_dragged_id(self.id);
         }
 
         response

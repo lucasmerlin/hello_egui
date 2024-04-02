@@ -55,12 +55,11 @@ egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.2.
 egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.2.0" }
 hello_egui = { path = ".", version = "0.3.0" }
 
-egui = { version = "0.26.0", default-features = false }
-eframe = { version = "0.26.0", default-features = false }
-egui_extras = { version = "0.26.0", default-features = false }
+egui = { version = "0.27.0", default-features = false }
+eframe = { version = "0.27.0", default-features = false }
+egui_extras = { version = "0.27.0", default-features = false }
 
 [patch.crates-io]
-taffy = { git = "https://github.com/DioxusLabs/taffy", branch = "main" }
 #wry = { path = "../../RustroverProjects/github/wry" }
 #
 #egui = { path = "../../IdeaProjects/egui/crates/egui" }
