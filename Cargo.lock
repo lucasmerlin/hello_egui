@@ -1193,7 +1193,7 @@ dependencies = [
 
 [[package]]
 name = "egui_animation"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1215,7 +1215,7 @@ dependencies = [
 
 [[package]]
 name = "egui_dnd"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "color-hex",
  "eframe",
@@ -1261,7 +1261,7 @@ dependencies = [
 
 [[package]]
 name = "egui_inbox"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1289,7 +1289,7 @@ dependencies = [
 
 [[package]]
 name = "egui_pull_to_refresh"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1299,7 +1299,7 @@ dependencies = [
 
 [[package]]
 name = "egui_suspense"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1323,7 +1323,7 @@ dependencies = [
 
 [[package]]
 name = "egui_thumbhash"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64",
  "eframe",
@@ -2404,7 +2404,7 @@ dependencies = [
 
 [[package]]
 name = "hello_egui_utils"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "concat-idents",
  "egui",
