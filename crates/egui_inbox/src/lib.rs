@@ -285,6 +285,20 @@ impl<T> UiInbox<T> {
         }
     }
 
+    /// Replaces the value of the options with [Some<T>] if there is an item in the inbox.
+    /// Otherwise, similar to [UiInbox::replace].
+    pub fn replace_option(&self, ui: &impl AsRequestRepaint, target: &mut Option<T>) {
+        let mut state = self.state.lock();
+        if state.ctx.is_none() {
+            state.ctx = Some(ui.as_request_repaint());
+        }
+
+        let item = mem::take(&mut state.queue).pop();
+        if let Some(item) = item {
+            *target = Some(item);
+        }
+    }
+
     /// Same as [UiInbox::replace], but you don't need to pass a reference to [Ui].
     /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
     /// [UiInbox::new_with_ctx] manually.
