@@ -160,7 +160,7 @@ mod auth {
 
     impl AuthDialog {
         pub fn dialog_ui(&mut self, ctx: &Context) {
-            self.app_state.inbox.read(ctx).for_each(|msg| match msg {
+            self.app_state.inbox.read().for_each(|msg| match msg {
                 AuthMessage::ShowLoginDialog {
                     message,
                     navigate_to_when_finished,
@@ -219,7 +219,7 @@ impl Router {
         // Read the router's inbox to see if we should open any new pages
         self.app_state
             .inbox
-            .read(ui)
+            .read()
             .for_each(|msg: RouterMessage| self.page = msg);
 
         // If we read a component's inbox only when it's rendered, it could cause a memory leak
@@ -245,23 +245,29 @@ impl Router {
 }
 
 fn main() -> eframe::Result<()> {
-    let state = AppState {
-        inbox: TypeInbox::new(),
-        auth: Arc::new(Mutex::new(None)),
-        broadcast: TypeBroadcast::new(),
-    };
-    let mut auth = auth::AuthDialog::new(state.clone());
-    let home = HomeUi::new(state.clone());
-    let dashboard = DashboardUi::new(state.clone());
-
-    let mut router = Router::new(state.clone(), home, dashboard);
-
-    let auth_rx = state.broadcast.subscribe::<AuthEvent>();
+    let mut state = None;
 
     eframe::run_simple_native(
         "DnD Simple Example",
         Default::default(),
         move |ctx, _frame| {
+            let (state, auth, router, auth_rx) = state.get_or_insert_with(|| {
+                let state = AppState {
+                    inbox: TypeInbox::new(ctx.clone()),
+                    auth: Arc::new(Mutex::new(None)),
+                    broadcast: TypeBroadcast::new(),
+                };
+                let auth = auth::AuthDialog::new(state.clone());
+                let home = HomeUi::new(state.clone());
+                let dashboard = DashboardUi::new(state.clone());
+
+                let router = Router::new(state.clone(), home, dashboard);
+
+                let auth_rx = state.broadcast.subscribe::<AuthEvent>();
+
+                (state, auth, router, auth_rx)
+            });
+
             // Update our global auth state, based on the auth events
             auth_rx.read(ctx).for_each(|event| match event {
                 AuthEvent::LoggedIn { user } => {
