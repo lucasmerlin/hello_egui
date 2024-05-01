@@ -2,6 +2,19 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+/// Broadcast channel for egui.
+#[cfg(feature = "broadcast")]
+pub mod broadcast;
+
+/// Broadcast based on [type_map], useful for sending events between different parts of the application.
+#[cfg(feature = "type_broadcast")]
+pub mod type_broadcast;
+
+/// Type-map based version of [UiInbox], useful for sending messages
+/// to specific components from different parts of the application.
+#[cfg(feature = "type_inbox")]
+pub mod type_inbox;
+
 use std::fmt::Debug;
 use std::mem;
 use std::sync::Arc;
@@ -20,6 +33,12 @@ where
 {
     fn request_repaint(&self) {
         self();
+    }
+}
+
+impl RequestRepaintTrait for &Box<dyn RequestRepaintTrait> {
+    fn request_repaint(&self) {
+        self.as_ref().request_repaint();
     }
 }
 

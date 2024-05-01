@@ -1,5 +1,12 @@
 # egui_inbox changelog
 
+## Unreleased
+
+- Add broadcast (mpmc) channel to egui_inbox.
+- Add [type-map](https://crates.io/crates/type-map) based versions of `UiInbox` and `Broadcast`.
+- Add a complex example showcasing a simple application with different independent components interacting with each
+  other.
+
 ## 0.4.0
 
 - egui_inbox now can be used without egui
