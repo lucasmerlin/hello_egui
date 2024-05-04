@@ -1,6 +1,7 @@
 use eframe::NativeOptions;
 use egui::CentralPanel;
-use egui_form::{field_path, Form, FormField};
+use egui_form::FormField;
+use egui_form::{field_path, Form};
 use validator::Validate;
 
 #[derive(Validate, Debug)]
