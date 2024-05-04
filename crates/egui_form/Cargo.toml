@@ -1,0 +1,39 @@
+[package]
+name = "egui_form"
+version = "0.1.0"
+edition = "2021"
+description = "Form validation for egui"
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui"
+homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_form"
+keywords = ["egui", "form", "validation"]
+
+[features]
+validator_garde = ["dep:garde"]
+validator_validator = ["dep:validator"]
+
+[[example]]
+name = "garde"
+required-features = ["validator_garde"]
+test = true
+
+[[example]]
+name = "validator"
+required-features = ["validator_validator"]
+test = true
+
+[[example]]
+name = "egui_form_minimal"
+required-features = ["validator_garde"]
+
+[dependencies]
+egui.workspace = true
+
+garde = { version = "0.18.0", optional = true }
+validator = { version = "0.18.1", optional = true }
+
+[dev-dependencies]
+eframe = { workspace = true, features = ["default"] }
+
+garde = { version = "0.18.0", features = ["email", "derive"] }
+validator = { version = "0.18.1", features = ["derive"] }

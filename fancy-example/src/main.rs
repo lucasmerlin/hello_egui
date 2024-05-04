@@ -22,6 +22,7 @@ mod futures;
 mod gallery;
 mod shared_state;
 mod sidebar;
+mod signup_form;
 mod stargazers;
 
 pub enum FancyMessage {
@@ -62,6 +63,10 @@ impl App {
                         Box::new(ChatExample::new()),
                         Box::new(gallery::Gallery::new()),
                     ],
+                },
+                Category {
+                    name: "Form Validation".to_string(),
+                    examples: vec![Box::new(signup_form::SignupForm::new())],
                 },
             ]),
             shared_state: SharedState::new(tx),
