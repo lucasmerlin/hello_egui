@@ -1680,6 +1680,7 @@ dependencies = [
  "egui_commonmark",
  "egui_dnd",
  "egui_extras",
+ "egui_form",
  "egui_inbox",
  "egui_infinite_scroll",
  "egui_pull_to_refresh",
@@ -1694,6 +1695,7 @@ dependencies = [
  "thumbhash",
  "tokio",
  "ureq",
+ "validator",
  "wasm-bindgen",
  "wasm-bindgen-futures",
 ]
@@ -2490,6 +2492,7 @@ version = "0.4.0"
 dependencies = [
  "egui_animation",
  "egui_dnd",
+ "egui_form",
  "egui_inbox",
  "egui_infinite_scroll",
  "egui_pull_to_refresh",

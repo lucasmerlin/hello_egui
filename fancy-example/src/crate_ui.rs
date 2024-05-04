@@ -15,6 +15,7 @@ pub const README_CONTENT_SEPARATOR: &str = "[content]:<>";
 pub enum Crate {
     EguiAnimation,
     EguiDnd,
+    EguiForm,
     EguiInbox,
     EguiInfiniteScroll,
     EguiPullToRefresh,
@@ -64,6 +65,7 @@ macro_rules! crate_impl {
 crate_impl!(
     EguiAnimation,
     EguiDnd,
+    EguiForm,
     EguiInbox,
     EguiInfiniteScroll,
     EguiPullToRefresh,
@@ -83,16 +85,17 @@ impl Crate {
 
     pub fn short_description(&self) -> &'static str {
         match self {
-            Self::EguiAnimation => "Animation utilities for egui",
-            Self::EguiDnd => "Drag and drop sorting for egui",
-            Self::EguiInbox => "Channel with ergonomics optimized for egui",
-            Self::EguiInfiniteScroll => "Infinite scroll widget for egui",
-            Self::EguiVirtualList => {
+            EguiAnimation => "Animation utilities for egui",
+            EguiDnd => "Drag and drop sorting for egui",
+            EguiForm => "Form validation for egui",
+            EguiInbox => "Channel with ergonomics optimized for egui",
+            EguiInfiniteScroll => "Infinite scroll widget for egui",
+            EguiVirtualList => {
                 "Virtual list widget for egui with support for varying heights and custom layouts"
             }
-            Self::EguiPullToRefresh => "Pull to refresh widget for egui",
-            Self::EguiSuspense => "Suspense widget for egui for ergonomic data fetching",
-            Self::EguiThumbhash => "Image loading and caching for egui",
+            EguiPullToRefresh => "Pull to refresh widget for egui",
+            EguiSuspense => "Suspense widget for egui for ergonomic data fetching",
+            EguiThumbhash => "Image loading and caching for egui",
         }
     }
 }

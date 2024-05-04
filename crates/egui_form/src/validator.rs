@@ -2,6 +2,7 @@ use crate::EguiValidationErrors;
 use std::borrow::Cow;
 
 use std::hash::Hash;
+pub use validator;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -115,6 +116,13 @@ impl EguiValidationErrors for ValidatorReport {
         } else {
             None
         };
+
+        if let Some(message) = error
+            .and_then(|errors| errors.first())
+            .and_then(|e| e.message.as_ref())
+        {
+            return Some(message.clone());
+        }
 
         error.and_then(|errors| errors.first()).map(|error| {
             if let Some(get_t) = &self.get_t {

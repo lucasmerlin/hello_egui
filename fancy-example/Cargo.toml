@@ -8,14 +8,15 @@ publish = false
 release = false
 
 [dependencies]
-egui_dnd.workspace = true
-egui_infinite_scroll.workspace = true
-hello_egui_utils.workspace = true
-egui_inbox.workspace = true
 egui_animation.workspace = true
-egui_thumbhash.workspace = true
+egui_dnd.workspace = true
+egui_form = { workspace = true, features = ["validator_validator"] }
+egui_inbox.workspace = true
+egui_infinite_scroll.workspace = true
 egui_pull_to_refresh.workspace = true
 egui_taffy = { path = "../crates/egui_taffy" }
+egui_thumbhash.workspace = true
+hello_egui_utils.workspace = true
 
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
@@ -35,6 +36,8 @@ serde_json = "1"
 casey = "0.4.0"
 
 egui_commonmark = { version = "0.14.0", features = [] }
+
+validator = { version = "0.18.1", features = ["derive"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["time", "rt", "macros"] }
