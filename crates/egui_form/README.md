@@ -22,6 +22,10 @@ to get started.
 You can also build a custom implementation by implementing the `EguiValidationReport` for the result of whatever
 form validation crate you use.
 
+## Showcase
+
+You can [try the Signup Form example](https://lucasmerlin.github.io/hello_egui/) in hello_egui showcase app.
+
 ## Should I use validator or garde?
 
 For small / prototype projects, I'd recommend garde, since it has built in error messages.
