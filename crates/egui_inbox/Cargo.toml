@@ -13,6 +13,9 @@ async = ["dep:hello_egui_utils", "hello_egui_utils/async", "dep:futures-channel"
 tokio = ["async", "hello_egui_utils/tokio"]
 egui = ["dep:egui"]
 default = ["egui"]
+broadcast = []
+type_inbox = ["dep:type-map"]
+type_broadcast = ["dep:type-map", "broadcast"]
 
 [[example]]
 name = "inbox_spawn"
@@ -26,8 +29,13 @@ futures = { version = "0.3", optional = true }
 # Egui uses parking_lot so we should be fine with using it too (regarding compile times).
 parking_lot = "0.12"
 
+# For TypeInbox and TypeBroadcast
+type-map = { version = "0.5.0", optional = true }
+
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 tokio = { version = "1", features = ["full"] }
 ehttp = { version = "0.5.0", features = ["json"] }
 serde_json = "1"
+rand = "0.8"
+derive-new = "0.6"

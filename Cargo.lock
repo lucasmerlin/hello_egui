@@ -1024,6 +1024,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-new"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d150dea618e920167e5973d70ae6ece4385b7164e0d799fe7c122dd0a5d912ad"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.57",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1263,6 +1274,7 @@ dependencies = [
 name = "egui_inbox"
 version = "0.4.0"
 dependencies = [
+ "derive-new",
  "eframe",
  "egui",
  "ehttp 0.5.0",
@@ -1270,8 +1282,10 @@ dependencies = [
  "futures-channel",
  "hello_egui_utils",
  "parking_lot",
+ "rand 0.8.5",
  "serde_json",
  "tokio",
+ "type-map",
 ]
 
 [[package]]
