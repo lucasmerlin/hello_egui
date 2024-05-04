@@ -1,6 +1,5 @@
 use eframe::NativeOptions;
 use egui::CentralPanel;
-use egui_form::validator::PathItem;
 use egui_form::{field_path, Form, FormField};
 use validator::Validate;
 
@@ -37,7 +36,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_simple_native(
         "Egui Validator Validation",
         NativeOptions::default(),
-        move |ctx, frame| {
+        move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 let mut form = Form::new().validate(
                     egui_form::validator::ValidatorReport::new(test.validate()).with_translation(
@@ -58,8 +57,6 @@ fn main() -> eframe::Result<()> {
                         },
                     ),
                 );
-
-                let a: Vec<PathItem>;
 
                 FormField::new(&mut form, field_path!("user_name"))
                     .label("User Name")
@@ -99,7 +96,7 @@ mod tests {
             vec: vec![Nested { test: 0 }],
         };
 
-        let report = egui_form::validator::ValidatorReport::validate(&test);
+        let report = egui_form::validator::ValidatorReport::validate(test);
 
         assert!(report.get_field_error(field_path!("user_name")).is_some());
         assert!(report.get_field_error(field_path!("email")).is_some());

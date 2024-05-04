@@ -13,6 +13,12 @@ pub struct Form<R: EguiValidationErrors> {
     pub(crate) validation_results: Vec<R>,
 }
 
+impl<R: EguiValidationErrors> Default for Form<R> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<R: EguiValidationErrors> Form<R> {
     pub fn new() -> Self {
         Self {

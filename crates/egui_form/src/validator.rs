@@ -1,6 +1,6 @@
 use crate::EguiValidationErrors;
-use std::borrow::{Borrow, Cow};
-use std::collections::HashMap;
+use std::borrow::Cow;
+
 use std::hash::Hash;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
@@ -41,24 +41,17 @@ macro_rules! field_path {
     };
 }
 
-type GetTranslationFn = Box<dyn Fn(&ValidationError) -> Cow<str>>;
+type GetTranslationFn = Box<dyn Fn(&ValidationError) -> Cow<'static, str>>;
 
 pub struct ValidatorReport {
     get_t: Option<GetTranslationFn>,
-    errors: HashMap<Vec<PathItem>, Vec<ValidationError>>,
+    errors: Option<ValidationErrors>,
 }
 
 impl ValidatorReport {
     pub fn new(result: Result<(), ValidationErrors>) -> Self {
-        let mut map = HashMap::default();
-        if let Err(errors) = result {
-            build_errors(errors, &[], &mut |path, error| {
-                map.insert(path.to_vec(), error);
-            });
-        }
-
         ValidatorReport {
-            errors: map,
+            errors: result.err(),
             get_t: None,
         }
     }
@@ -68,7 +61,7 @@ impl ValidatorReport {
         Self::new(result)
     }
 
-    pub fn with_translation<F: Fn(&ValidationError) -> Cow<str> + 'static>(
+    pub fn with_translation<F: Fn(&ValidationError) -> Cow<'static, str> + 'static>(
         mut self,
         get_t: F,
     ) -> Self {
@@ -77,64 +70,66 @@ impl ValidatorReport {
     }
 }
 
-fn build_errors(
-    errors: validator::ValidationErrors,
-    path: &[PathItem],
-    callback: &mut impl FnMut(Vec<PathItem>, Vec<ValidationError>),
-) {
-    for (field, error) in errors.into_errors() {
-        match error {
-            ValidationErrorsKind::Struct(errors) => {
-                let mut path = path.to_vec();
-                path.push(PathItem::Field(Cow::Borrowed(field)));
-                build_errors(*errors, &path, callback);
-            }
-            ValidationErrorsKind::List(list) => {
-                let mut path = path.to_vec();
-                path.push(PathItem::Field(Cow::Borrowed(field)));
-                path.push(PathItem::Indexed(0));
-                for (i, error) in list.into_iter() {
-                    *path.last_mut().unwrap() = PathItem::Indexed(i);
-                    build_errors(*error, &path, callback);
+fn get_error_recursively<'a>(
+    errors: &'a ValidationErrors,
+    fields: &[PathItem],
+) -> Option<&'a Vec<ValidationError>> {
+    if let Some((field, rest)) = fields.split_first() {
+        let field = match field {
+            PathItem::Field(field) => field,
+            _ => return None,
+        };
+        match errors.0.get(field.as_ref()) {
+            Some(ValidationErrorsKind::Struct(errors)) => get_error_recursively(errors, rest),
+            Some(ValidationErrorsKind::List(errors)) => {
+                if let Some((PathItem::Indexed(index), rest)) = rest.split_first() {
+                    if let Some(errors) = errors.get(index) {
+                        get_error_recursively(errors, rest)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
                 }
             }
-            ValidationErrorsKind::Field(errors) => {
-                let mut path = path.to_vec();
-                path.push(PathItem::Field(Cow::Borrowed(field)));
-                callback(path, errors);
+            Some(ValidationErrorsKind::Field(errors)) => {
+                if rest.is_empty() {
+                    Some(errors)
+                } else {
+                    None
+                }
             }
+            None => None,
         }
+    } else {
+        None
     }
 }
 
 impl EguiValidationErrors for ValidatorReport {
-    type Check = Vec<PathItem>;
+    type Check<'a> = &'a [PathItem];
 
-    fn get_field_error<B: Hash + Eq + ?Sized>(&self, field: &B) -> Option<String>
-    where
-        Self::Check: Borrow<B>,
-    {
-        self.errors
-            .get(field)
-            .and_then(|errors| errors.first())
-            .map(|error| {
-                if let Some(get_t) = &self.get_t {
-                    get_t(error).into_owned()
-                } else {
-                    error
-                        .message
-                        .clone()
-                        .unwrap_or_else(|| error.code.clone())
-                        .to_string()
-                }
-            })
+    fn get_field_error(&self, path: Self::Check<'_>) -> Option<Cow<'static, str>> {
+        let error = if let Some(errors) = &self.errors {
+            get_error_recursively(errors, path)
+        } else {
+            None
+        };
+
+        error.and_then(|errors| errors.first()).map(|error| {
+            if let Some(get_t) = &self.get_t {
+                get_t(error)
+            } else {
+                error.message.clone().unwrap_or_else(|| error.code.clone())
+            }
+        })
     }
 
     fn has_errors(&self) -> bool {
-        !self.errors.is_empty()
+        self.errors.is_some()
     }
 
     fn error_count(&self) -> usize {
-        self.errors.values().map(|v| v.len()).sum()
+        self.errors.as_ref().map_or(0, |errors| errors.0.len())
     }
 }

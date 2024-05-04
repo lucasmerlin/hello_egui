@@ -1,6 +1,6 @@
 use eframe::NativeOptions;
 use egui::CentralPanel;
-use egui::WidgetType::TextEdit;
+
 use egui_form::{Form, FormField};
 use garde::Validate;
 
@@ -30,18 +30,10 @@ fn main() -> eframe::Result<()> {
         vec: vec![Nested { test: 0 }],
     };
 
-    let result = test.validate(&());
-
-    if let Err(report) = result {
-        for (path, error) in report.iter() {
-            println!("{}: {}", path, error);
-        }
-    }
-
     eframe::run_simple_native(
         "Egui Garde Validation",
         NativeOptions::default(),
-        move |ctx, frame| {
+        move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 let mut form =
                     Form::new().validate(egui_form::garde::GardeReport::new(test.validate(&())));

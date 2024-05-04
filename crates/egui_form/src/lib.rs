@@ -1,6 +1,5 @@
 use egui::{Response, RichText, Widget};
-use std::borrow::{Borrow, Cow};
-use std::hash::Hash;
+use std::borrow::Cow;
 
 mod form;
 #[cfg(feature = "validator_garde")]
@@ -14,16 +13,13 @@ pub use form::Form;
 pub use validation_error::EguiValidationErrors;
 
 pub struct FormField<'a, 'f, Errors: EguiValidationErrors> {
-    error: Option<String>,
+    error: Option<Cow<'static, str>>,
     label: Option<Cow<'a, str>>,
     form: Option<&'f mut Form<Errors>>,
 }
 
 impl<'a, 'f, Errors: EguiValidationErrors> FormField<'a, 'f, Errors> {
-    pub fn new<B: Eq + Hash + Ord + ?Sized>(form: &'f mut form::Form<Errors>, field: &B) -> Self
-    where
-        Errors::Check: Borrow<B>,
-    {
+    pub fn new<'c>(form: &'f mut form::Form<Errors>, field: Errors::Check<'c>) -> Self {
         let error = form
             .validation_results
             .iter()
@@ -85,7 +81,7 @@ impl<'a, 'f, Errors: EguiValidationErrors> FormField<'a, 'f, Errors> {
                     form.controls.push(FormFieldState {
                         state_id: id,
                         widget_id: response.id,
-                        errors: vec![error.clone()],
+                        errors: vec![error.to_string()],
                     });
                 } else {
                     form.controls.push(FormFieldState {

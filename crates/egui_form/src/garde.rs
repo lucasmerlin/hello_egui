@@ -1,5 +1,5 @@
 use crate::EguiValidationErrors;
-use std::borrow::Borrow;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 pub struct GardeReport(BTreeMap<String, garde::Error>);
@@ -20,13 +20,10 @@ impl GardeReport {
 }
 
 impl EguiValidationErrors for GardeReport {
-    type Check = String;
+    type Check<'a> = &'a str;
 
-    fn get_field_error<B: Eq + Ord + ?Sized>(&self, field: &B) -> Option<String>
-    where
-        Self::Check: Borrow<B>,
-    {
-        self.0.get(field).map(|e| e.to_string())
+    fn get_field_error(&self, field: Self::Check<'_>) -> Option<Cow<'static, str>> {
+        self.0.get(field).map(|e| e.to_string().into())
     }
 
     fn has_errors(&self) -> bool {

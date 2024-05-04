@@ -1,11 +1,8 @@
-use std::borrow::Borrow;
-use std::hash::Hash;
+use std::borrow::Cow;
 
 pub trait EguiValidationErrors {
-    type Check: Ord + Eq + Hash;
-    fn get_field_error<B: Hash + Eq + Ord + ?Sized>(&self, field: &B) -> Option<String>
-    where
-        Self::Check: Borrow<B>;
+    type Check<'a>: Copy;
+    fn get_field_error(&self, field: Self::Check<'_>) -> Option<Cow<'static, str>>;
 
     fn has_errors(&self) -> bool;
     fn error_count(&self) -> usize;
