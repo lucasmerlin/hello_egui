@@ -19,6 +19,10 @@ name = "validator"
 required-features = ["validator_validator"]
 test = true
 
+[[example]]
+name = "egui_form_minimal"
+required-features = ["validator_garde"]
+
 [dependencies]
 egui.workspace = true
 

@@ -25,6 +25,47 @@ struct Nested {
     pub test: u64,
 }
 
+fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
+    let mut form = Form::new().add_report(
+        egui_form::validator::ValidatorReport::new(test.validate()).with_translation(|error| {
+            // Since validator doesn't have default messages, we have to provide our own
+            if let Some(msg) = &error.message {
+                return msg.clone();
+            }
+
+            match error.code.as_ref() {
+                "email" => "Invalid email".into(),
+                "length" => format!(
+                    "Must be between {} and {} characters long",
+                    error.params["min"], error.params["max"]
+                )
+                .into(),
+                _ => format!("Validation Failed: {}", error.code).into(),
+            }
+        }),
+    );
+
+    FormField::new(&mut form, field_path!("user_name"))
+        .label("User Name")
+        .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
+    FormField::new(&mut form, field_path!("email"))
+        .label("Email")
+        .ui(ui, egui::TextEdit::singleline(&mut test.email));
+    FormField::new(&mut form, field_path!("nested", "test"))
+        .label("Nested Test")
+        .ui(ui, egui::Slider::new(&mut test.nested.test, 0..=11));
+    FormField::new(&mut form, field_path!("vec", 0, "test"))
+        .label("Vec Test")
+        .ui(
+            ui,
+            egui::DragValue::new(&mut test.vec[0].test).clamp_range(0..=11),
+        );
+
+    if let Some(Ok(_)) = form.handle_submit(&ui.button("Submit"), ui) {
+        println!("Form submitted: {:?}", test);
+    }
+}
+
 fn main() -> eframe::Result<()> {
     let mut test = Test {
         user_name: "testfiwuehfwoi".to_string(),
@@ -38,45 +79,7 @@ fn main() -> eframe::Result<()> {
         NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
-                let mut form = Form::new().validate(
-                    egui_form::validator::ValidatorReport::new(test.validate()).with_translation(
-                        |error| {
-                            if let Some(msg) = &error.message {
-                                return msg.clone();
-                            }
-
-                            match error.code.as_ref() {
-                                "email" => "Invalid email".into(),
-                                "length" => format!(
-                                    "Must be between {} and {} characters long",
-                                    error.params["min"], error.params["max"]
-                                )
-                                .into(),
-                                _ => format!("Validation Failed: {}", error.code).into(),
-                            }
-                        },
-                    ),
-                );
-
-                FormField::new(&mut form, field_path!("user_name"))
-                    .label("User Name")
-                    .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
-                FormField::new(&mut form, field_path!("email"))
-                    .label("Email")
-                    .ui(ui, egui::TextEdit::singleline(&mut test.email));
-                FormField::new(&mut form, field_path!("nested", "test"))
-                    .label("Nested Test")
-                    .ui(ui, egui::Slider::new(&mut test.nested.test, 0..=11));
-                FormField::new(&mut form, field_path!("vec", 0, "test"))
-                    .label("Vec Test")
-                    .ui(
-                        ui,
-                        egui::DragValue::new(&mut test.vec[0].test).clamp_range(0..=11),
-                    );
-
-                if form.handle_submit(&ui.button("Submit"), ui) {
-                    println!("Form submitted: {:?}", test);
-                }
+                form_ui(ui, &mut test);
             });
         },
     )
@@ -85,7 +88,7 @@ fn main() -> eframe::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use egui_form::EguiValidationErrors;
+    use egui_form::EguiValidationReport;
 
     #[test]
     fn test_validate() {

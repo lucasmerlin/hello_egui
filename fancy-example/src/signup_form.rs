@@ -92,7 +92,7 @@ impl Example for SignupForm {
                 ui.style_mut().spacing.text_edit_width = 400.0;
 
                 if self.submitted {
-                    ui.heading("Thank you for signing up!");
+                    ui.strong("Thank you for signing up!");
                     ui.label("Here are the details you submitted:");
                     ui.code(format!("{:#?}", self.fields));
 
@@ -105,7 +105,7 @@ impl Example for SignupForm {
                     return;
                 }
 
-                let mut form = Form::new().validate(
+                let mut form = Form::new().add_report(
                     ValidatorReport::new(self.fields.validate_with_args(&ValidateContext {
                         password: &self.fields.password,
                     }))
@@ -239,7 +239,7 @@ Errors will show up after editing a field or after trying to submit.
                     Button::new("Submit").min_size(vec2(max_width, 40.0)).ui(ui)
                 });
 
-                if form.handle_submit(&response.inner, ui) {
+                if let Some(Ok(())) = form.handle_submit(&response.inner, ui) {
                     self.submitted = true;
                 }
 

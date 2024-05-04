@@ -22,6 +22,30 @@ struct Nested {
     pub test: u64,
 }
 
+fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
+    let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
+
+    FormField::new(&mut form, "user_name")
+        .label("User Name")
+        .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
+    FormField::new(&mut form, "email")
+        .label("Email")
+        .ui(ui, egui::TextEdit::singleline(&mut test.email));
+    FormField::new(&mut form, "nested.test")
+        .label("Nested Test")
+        .ui(ui, egui::Slider::new(&mut test.nested.test, 0..=11));
+    FormField::new(&mut form, "vec[0].test")
+        .label("Vec Test")
+        .ui(
+            ui,
+            egui::DragValue::new(&mut test.vec[0].test).clamp_range(0..=11),
+        );
+
+    if let Some(Ok(())) = form.handle_submit(&ui.button("Submit"), ui) {
+        println!("Form submitted: {:?}", test);
+    }
+}
+
 fn main() -> eframe::Result<()> {
     let mut test = Test {
         user_name: "testfiwuehfwoi".to_string(),
@@ -35,28 +59,7 @@ fn main() -> eframe::Result<()> {
         NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
-                let mut form =
-                    Form::new().validate(egui_form::garde::GardeReport::new(test.validate(&())));
-
-                FormField::new(&mut form, "user_name")
-                    .label("User Name")
-                    .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
-                FormField::new(&mut form, "email")
-                    .label("Email")
-                    .ui(ui, egui::TextEdit::singleline(&mut test.email));
-                FormField::new(&mut form, "nested.test")
-                    .label("Nested Test")
-                    .ui(ui, egui::Slider::new(&mut test.nested.test, 0..=11));
-                FormField::new(&mut form, "vec[0].test")
-                    .label("Vec Test")
-                    .ui(
-                        ui,
-                        egui::DragValue::new(&mut test.vec[0].test).clamp_range(0..=11),
-                    );
-
-                if form.handle_submit(&ui.button("Submit"), ui) {
-                    println!("Form submitted: {:?}", test);
-                }
+                form_ui(ui, &mut test);
             });
         },
     )
@@ -66,7 +69,7 @@ fn main() -> eframe::Result<()> {
 mod tests {
     use super::*;
     use egui_form::garde::GardeReport;
-    use egui_form::EguiValidationErrors;
+    use egui_form::EguiValidationReport;
 
     #[test]
     fn test() {
