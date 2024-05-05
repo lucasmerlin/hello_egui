@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use hello_egui_utils::MaybeSend;
 use parking_lot::Mutex;
 
 use crate::{UiInbox, UiInboxSender};
@@ -43,7 +44,7 @@ impl<T> Broadcast<T> {
     /// Send a message of type [T] to all subscribers.
     pub fn send(&self, message: T)
     where
-        T: Clone + Send + 'static,
+        T: Clone + MaybeSend + 'static,
     {
         let mut senders = self.senders.lock();
         senders.retain(|tx| tx.send(message.clone()).is_ok());

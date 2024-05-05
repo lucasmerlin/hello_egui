@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use hello_egui_utils::MaybeSend;
 use parking_lot::Mutex;
 use type_map::concurrent::TypeMap;
 
@@ -43,7 +44,7 @@ impl TypeInbox {
 
     /// Send a message of type [T].
     /// A repaint will be requested.
-    pub fn send<T: Send + 'static>(&self, message: T) {
+    pub fn send<T: MaybeSend + 'static>(&self, message: T) {
         let mut guard = self.0.lock();
         let entry = guard.map.entry().or_insert_with(TypeInboxEntry::<T>::new);
         entry.sender.send(message).ok();
@@ -51,7 +52,7 @@ impl TypeInbox {
     }
 
     /// Read the inbox, returning an iterator over all pending messages.
-    pub fn read<T: Send + 'static>(&self) -> impl Iterator<Item = T> {
+    pub fn read<T: MaybeSend + 'static>(&self) -> impl Iterator<Item = T> {
         let mut guard = self.0.lock();
 
         let iter = guard
