@@ -1,6 +1,6 @@
 use crate::form::FormFieldState;
 use crate::{EguiValidationReport, Form};
-use egui::{Response, RichText, Widget};
+use egui::{Response, RichText, TextStyle, Widget};
 use std::borrow::Cow;
 
 /// A form field that can be validated.
@@ -61,11 +61,20 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
             }
 
             if let Some(label) = self.label {
-                let mut rich_text = RichText::new(label.as_ref());
+                let mut rich_text = RichText::new(label);
                 if show_error {
                     rich_text = rich_text.color(error_color);
                 }
-                ui.label(rich_text);
+                ui.label(
+                    rich_text.size(
+                        ui.style()
+                            .text_styles
+                            .get(&TextStyle::Body)
+                            .map(|s| s.size)
+                            .unwrap_or(16.0)
+                            * 0.9,
+                    ),
+                );
             }
 
             let response = content.ui(ui);

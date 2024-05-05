@@ -79,6 +79,10 @@ impl SignupForm {
     }
 }
 
+fn text_edit_singleline(value: &mut String) -> TextEdit {
+    TextEdit::singleline(value).margin(8.0)
+}
+
 impl Example for SignupForm {
     fn name(&self) -> &'static str {
         "Signup Form"
@@ -191,18 +195,18 @@ Errors will show up after editing a field or after trying to submit.
                     &mut |ui, form_ref| {
                         FormField::new(form_ref, field_path!("first_name"))
                             .label("First Name")
-                            .ui(ui, TextEdit::singleline(first_name));
+                            .ui(ui, text_edit_singleline(first_name));
                     },
                     &mut |ui, form_ref| {
                         FormField::new(form_ref, field_path!("last_name"))
                             .label("Last Name")
-                            .ui(ui, TextEdit::singleline(last_name));
+                            .ui(ui, text_edit_singleline(last_name));
                     },
                 );
 
                 FormField::new(form_ref, field_path!("email"))
                     .label("Email")
-                    .ui(ui, TextEdit::singleline(email));
+                    .ui(ui, text_edit_singleline(email));
 
                 horizontal_fields(
                     ui,
@@ -210,12 +214,12 @@ Errors will show up after editing a field or after trying to submit.
                     &mut |ui, form_ref| {
                         FormField::new(form_ref, field_path!("password"))
                             .label("Password")
-                            .ui(ui, TextEdit::singleline(password).password(true));
+                            .ui(ui, text_edit_singleline(password).password(true));
                     },
                     &mut |ui, form_ref| {
                         FormField::new(form_ref, field_path!("repeat_password"))
                             .label("Repeat Password")
-                            .ui(ui, TextEdit::singleline(repeat_password).password(true));
+                            .ui(ui, text_edit_singleline(repeat_password).password(true));
                     },
                 );
 
