@@ -2,6 +2,8 @@ use crate::EguiValidationReport;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
+pub use garde;
+
 /// A wrapper around a [garde::Report] that implements [EguiValidationReport].
 pub struct GardeReport(BTreeMap<String, garde::Error>);
 
