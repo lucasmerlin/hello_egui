@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use hello_egui_utils::MaybeSend;
 use parking_lot::Mutex;
+#[cfg(not(target_arch = "wasm32"))]
 use type_map::concurrent::TypeMap;
+#[cfg(target_arch = "wasm32")]
+use type_map::TypeMap;
 
 use crate::broadcast::{Broadcast, BroadcastReceiver};
 

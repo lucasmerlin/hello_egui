@@ -14,12 +14,21 @@ tokio = ["async", "hello_egui_utils/tokio"]
 egui = ["dep:egui"]
 default = ["egui"]
 broadcast = []
-type_inbox = ["dep:type-map"]
-type_broadcast = ["dep:type-map", "broadcast"]
+type_inbox = ["dep:type-map", "dep:hello_egui_utils"]
+type_broadcast = ["dep:type-map", "broadcast", "dep:hello_egui_utils"]
 
 [[example]]
 name = "inbox_spawn"
 required-features = ["tokio"]
+
+[[example]]
+name = "broadcast"
+required-features = ["broadcast"]
+
+[[example]]
+name = "router_login"
+required-features = ["type_inbox", "type_broadcast", "broadcast"]
+
 
 [dependencies]
 egui = { workspace = true, optional = true }
