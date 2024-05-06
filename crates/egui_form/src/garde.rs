@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 pub use crate::_garde_field_path as field_path;
+use crate::validation_report::IntoFieldPath;
 pub use garde;
 use garde::Path;
 
@@ -11,7 +12,7 @@ use garde::Path;
 /// ```rust
 /// use garde::Path;
 /// use egui_form::garde::field_path;
-/// assert_eq!(field_path!("root", "vec", 0, "nested"), &Path::new("root")
+/// assert_eq!(field_path!("root", "vec", 0, "nested"), Path::new("root")
 ///     .join("vec").join(0).join("nested"))
 /// ```
 #[macro_export]
@@ -19,7 +20,7 @@ macro_rules! _garde_field_path {
     (
         $($field:expr $(,)?)+
     ) => {
-        &$crate::garde::garde::Path::empty()
+        $crate::garde::garde::Path::empty()
         $(
             .join($field)
         )+
@@ -36,7 +37,7 @@ impl GardeReport {
     /// # Example
     /// ```
     /// use garde::Validate;
-    /// use egui_form::EguiValidationReport;
+    /// use egui_form::{EguiValidationReport, IntoFieldPath};
     /// use egui_form::garde::{field_path, GardeReport};
     /// #[derive(Validate)]
     /// struct Test {
@@ -53,8 +54,8 @@ impl GardeReport {
     ///
     /// let report = GardeReport::new(test.validate(&()));
     ///
-    /// assert!(report.get_field_error(field_path!("user_name")).is_some());
-    /// assert!(report.get_field_error(field_path!("tags", 1)).is_some());
+    /// assert!(report.get_field_error(field_path!("user_name").into_field_path()).is_some());
+    /// assert!(report.get_field_error(field_path!("tags", 1).into_field_path()).is_some());
     /// ```
     pub fn new(result: Result<(), garde::Report>) -> Self {
         if let Err(errors) = result {
@@ -66,11 +67,11 @@ impl GardeReport {
 }
 
 impl EguiValidationReport for GardeReport {
-    type FieldPath<'a> = &'a Path;
+    type FieldPath<'a> = Path;
     type Errors = BTreeMap<Path, garde::Error>;
 
     fn get_field_error(&self, field: Self::FieldPath<'_>) -> Option<Cow<'static, str>> {
-        self.0.get(field).map(|e| e.to_string().into())
+        self.0.get(&field).map(|e| e.to_string().into())
     }
 
     fn has_errors(&self) -> bool {
@@ -87,5 +88,29 @@ impl EguiValidationReport for GardeReport {
         } else {
             None
         }
+    }
+}
+
+impl IntoFieldPath<Path> for Path {
+    fn into_field_path(self) -> Path {
+        self
+    }
+}
+
+impl IntoFieldPath<Path> for &str {
+    fn into_field_path(self) -> Path {
+        Path::new(self)
+    }
+}
+
+impl IntoFieldPath<Path> for String {
+    fn into_field_path(self) -> Path {
+        Path::new(self)
+    }
+}
+
+impl IntoFieldPath<Path> for usize {
+    fn into_field_path(self) -> Path {
+        Path::new(self)
     }
 }

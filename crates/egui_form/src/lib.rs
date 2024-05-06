@@ -149,4 +149,4 @@ pub mod validator;
 
 pub use form::Form;
 pub use form_field::*;
-pub use validation_report::EguiValidationReport;
+pub use validation_report::{EguiValidationReport, IntoFieldPath};

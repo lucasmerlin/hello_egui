@@ -47,10 +47,10 @@ fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
         }),
     );
 
-    FormField::new(&mut form, field_path!("user_name"))
+    FormField::new(&mut form, "user_name")
         .label("User Name")
         .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
-    FormField::new(&mut form, field_path!("email"))
+    FormField::new(&mut form, "email")
         .label("Email")
         .ui(ui, egui::TextEdit::singleline(&mut test.email));
     FormField::new(&mut form, field_path!("nested", "test"))
@@ -91,7 +91,7 @@ fn main() -> eframe::Result<()> {
 mod tests {
     use super::*;
     use egui_form::validator::field_path;
-    use egui_form::EguiValidationReport;
+    use egui_form::{EguiValidationReport, IntoFieldPath};
 
     #[test]
     fn test_validate() {
@@ -104,13 +104,17 @@ mod tests {
 
         let report = egui_form::validator::ValidatorReport::validate(test);
 
-        assert!(report.get_field_error(field_path!("user_name")).is_some());
-        assert!(report.get_field_error(field_path!("email")).is_some());
         assert!(report
-            .get_field_error(field_path!("nested", "test"))
+            .get_field_error(field_path!("user_name").into_field_path())
             .is_some());
         assert!(report
-            .get_field_error(field_path!("vec", 0, "test"))
+            .get_field_error(field_path!("email").into_field_path())
+            .is_some());
+        assert!(report
+            .get_field_error(field_path!("nested", "test").into_field_path())
+            .is_some());
+        assert!(report
+            .get_field_error(field_path!("vec", 0, "test").into_field_path())
             .is_some());
 
         assert_eq!(report.error_count(), 4);

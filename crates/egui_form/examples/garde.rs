@@ -26,10 +26,10 @@ struct Nested {
 fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
     let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
 
-    FormField::new(&mut form, field_path!("user_name"))
+    FormField::new(&mut form, "user_name")
         .label("User Name")
         .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
-    FormField::new(&mut form, field_path!("email"))
+    FormField::new(&mut form, "email")
         .label("Email")
         .ui(ui, egui::TextEdit::singleline(&mut test.email));
     FormField::new(&mut form, field_path!("nested", "test"))
@@ -70,7 +70,7 @@ fn main() -> eframe::Result<()> {
 mod tests {
     use super::*;
     use egui_form::garde::GardeReport;
-    use egui_form::EguiValidationReport;
+    use egui_form::{EguiValidationReport, IntoFieldPath};
 
     #[test]
     fn test() {
@@ -83,7 +83,9 @@ mod tests {
 
         let report = GardeReport::new(test.validate(&()));
 
-        assert!(report.get_field_error(field_path!("user_name")).is_some());
+        assert!(report
+            .get_field_error("user_name".into_field_path())
+            .is_some());
         assert!(report.get_field_error(field_path!("email")).is_some());
         assert!(report
             .get_field_error(field_path!("nested", "test"))

@@ -1,4 +1,5 @@
 use crate::form::FormFieldState;
+use crate::validation_report::IntoFieldPath;
 use crate::{EguiValidationReport, Form};
 use egui::{Response, RichText, TextStyle, Widget};
 use std::borrow::Cow;
@@ -17,11 +18,15 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
     /// Pass a [Form] and a reference to the field you want to validate.
     /// If you use [crate::garde], just pass the field name / path as a string.
     /// If you use [crate::validator], pass a field reference using the [crate::field_path] macro.
-    pub fn new<'c>(form: &'f mut Form<Errors>, field: Errors::FieldPath<'c>) -> Self {
+    pub fn new<'c, I: IntoFieldPath<Errors::FieldPath<'c>>>(
+        form: &'f mut Form<Errors>,
+        into_field_path: I,
+    ) -> Self {
+        let field_path = into_field_path.into_field_path();
         let error = form
             .validation_results
             .iter()
-            .find_map(|errors| errors.get_field_error(field));
+            .find_map(|errors| errors.get_field_error(field_path.clone()));
 
         FormField {
             error,

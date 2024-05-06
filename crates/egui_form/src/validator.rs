@@ -2,6 +2,8 @@ use crate::EguiValidationReport;
 use std::borrow::Cow;
 
 pub use crate::_validator_field_path as field_path;
+use crate::validation_report::IntoFieldPath;
+
 use std::hash::Hash;
 pub use validator;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
@@ -9,27 +11,27 @@ use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKin
 /// Represents either a field in a struct or a indexed field in a list.
 /// Usually created with the [crate::field_path] macro.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum PathItem {
+pub enum PathItem<'a> {
     /// Field in a struct.
-    Field(Cow<'static, str>),
+    Field(Cow<'a, str>),
     /// Indexed field in a list.
     Indexed(usize),
 }
 
-impl From<usize> for PathItem {
+impl From<usize> for PathItem<'_> {
     fn from(value: usize) -> Self {
         PathItem::Indexed(value)
     }
 }
 
-impl From<String> for PathItem {
+impl From<String> for PathItem<'_> {
     fn from(value: String) -> Self {
         PathItem::Field(Cow::Owned(value))
     }
 }
 
-impl From<&'static str> for PathItem {
-    fn from(value: &'static str) -> Self {
+impl<'a> From<&'a str> for PathItem<'a> {
+    fn from(value: &'a str) -> Self {
         PathItem::Field(Cow::Borrowed(value))
     }
 }
@@ -129,13 +131,26 @@ fn get_error_recursively<'a>(
     }
 }
 
+/// Helper enum to allow passing non nested field paths as a &str, without using the field_path!() macro
+#[doc(hidden)]
+#[derive(Clone)]
+pub enum ValidatorPathType<'a> {
+    Single(PathItem<'a>),
+    Borrowed(&'a [PathItem<'a>]),
+}
+
 impl EguiValidationReport for ValidatorReport {
-    type FieldPath<'a> = &'a [PathItem];
+    type FieldPath<'a> = ValidatorPathType<'a>;
     type Errors = ValidationErrors;
 
-    fn get_field_error(&self, path: Self::FieldPath<'_>) -> Option<Cow<'static, str>> {
+    fn get_field_error(&self, into_path: Self::FieldPath<'_>) -> Option<Cow<'static, str>> {
+        let path = into_path.into_field_path();
+
         let error = if let Some(errors) = &self.errors {
-            get_error_recursively(errors, path)
+            match path {
+                ValidatorPathType::Single(item) => get_error_recursively(errors, &[item]),
+                ValidatorPathType::Borrowed(path) => get_error_recursively(errors, path),
+            }
         } else {
             None
         };
@@ -166,5 +181,23 @@ impl EguiValidationReport for ValidatorReport {
 
     fn get_errors(&self) -> Option<&Self::Errors> {
         self.errors.as_ref()
+    }
+}
+
+impl<'a> IntoFieldPath<ValidatorPathType<'a>> for ValidatorPathType<'a> {
+    fn into_field_path(self) -> ValidatorPathType<'a> {
+        self
+    }
+}
+
+impl<'a> IntoFieldPath<ValidatorPathType<'a>> for &'a [PathItem<'a>] {
+    fn into_field_path(self) -> ValidatorPathType<'a> {
+        ValidatorPathType::Borrowed(self)
+    }
+}
+
+impl<'a> IntoFieldPath<ValidatorPathType<'a>> for &'a str {
+    fn into_field_path(self) -> ValidatorPathType<'a> {
+        ValidatorPathType::Single(PathItem::Field(Cow::Borrowed(self)))
     }
 }
