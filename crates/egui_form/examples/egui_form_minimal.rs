@@ -1,6 +1,6 @@
 use eframe::NativeOptions;
 use egui::{TextEdit, Ui};
-use egui_form::garde::GardeReport;
+use egui_form::garde::{field_path, GardeReport};
 use egui_form::{Form, FormField};
 use garde::Validate;
 
@@ -13,7 +13,7 @@ struct Fields {
 fn form_ui(ui: &mut Ui, fields: &mut Fields) {
     let mut form = Form::new().add_report(GardeReport::new(fields.validate(&())));
 
-    FormField::new(&mut form, "user_name")
+    FormField::new(&mut form, field_path!("user_name"))
         .label("User Name")
         .ui(ui, TextEdit::singleline(&mut fields.user_name));
 

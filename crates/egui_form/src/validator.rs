@@ -1,6 +1,7 @@
 use crate::EguiValidationReport;
 use std::borrow::Cow;
 
+pub use crate::_validator_field_path as field_path;
 use std::hash::Hash;
 pub use validator;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
@@ -33,12 +34,11 @@ impl From<&'static str> for PathItem {
     }
 }
 
-/// Create a field path to be submitted to a [crate::FormField].
+/// Create a field path to be submitted to a [crate::FormField::new].
 /// This macro takes a list of field names and indexes and returns a slice of [PathItem]s.
 /// # Example
 /// ```
-/// use egui_form::field_path;
-/// use egui_form::validator::PathItem;
+/// use egui_form::validator::{PathItem, field_path};
 /// assert_eq!(field_path!("nested", "array", 0, "field"), &[
 ///     PathItem::Field("nested".into()),
 ///     PathItem::Field("array".into()),
@@ -46,7 +46,7 @@ impl From<&'static str> for PathItem {
 ///     PathItem::Field("field".into()),
 /// ]);
 #[macro_export]
-macro_rules! field_path {
+macro_rules! _validator_field_path {
     (
         $($field:expr $(,)?)+
     ) => {

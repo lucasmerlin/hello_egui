@@ -17,6 +17,7 @@ mod form;
 /// #
 /// # use egui_form::{Form, FormField};
 /// # use garde::Validate;
+/// # use egui_form::garde::field_path;
 ///
 /// #[derive(Validate, Debug)]
 /// struct Test {
@@ -39,16 +40,16 @@ mod form;
 /// pub fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
 ///     let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
 ///
-///     FormField::new(&mut form, "user_name")
+///     FormField::new(&mut form, field_path!("user_name"))
 ///         .label("User Name")
 ///         .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
-///     FormField::new(&mut form, "email")
+///     FormField::new(&mut form, field_path!("email"))
 ///         .label("Email")
 ///         .ui(ui, egui::TextEdit::singleline(&mut test.email));
-///     FormField::new(&mut form, "nested.test")
+///     FormField::new(&mut form, field_path!("nested", "test"))
 ///         .label("Nested Test")
 ///         .ui(ui, egui::Slider::new(&mut test.nested.test, 0..=11));
-///     FormField::new(&mut form, "vec[0].test")
+///     FormField::new(&mut form, field_path!("vec", 0, "test"))
 ///         .label("Vec Test")
 ///         .ui(
 ///             ui,
@@ -77,8 +78,9 @@ mod form_field;
 /// # // Taken 1:1 from crates/egui_form/examples/validator.rs
 /// # use eframe::NativeOptions;
 /// # use egui::CentralPanel;
-/// # use egui_form::{field_path, Form, FormField};
+/// # use egui_form::{Form, FormField};
 /// # use validator::Validate;
+/// # use egui_form::validator::field_path;
 ///
 /// #[derive(Validate, Debug)]
 /// struct Test {

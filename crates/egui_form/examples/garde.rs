@@ -1,6 +1,7 @@
 use eframe::NativeOptions;
 use egui::CentralPanel;
 
+use egui_form::garde::field_path;
 use egui_form::{Form, FormField};
 use garde::Validate;
 
@@ -25,16 +26,16 @@ struct Nested {
 fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
     let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
 
-    FormField::new(&mut form, "user_name")
+    FormField::new(&mut form, field_path!("user_name"))
         .label("User Name")
         .ui(ui, egui::TextEdit::singleline(&mut test.user_name));
-    FormField::new(&mut form, "email")
+    FormField::new(&mut form, field_path!("email"))
         .label("Email")
         .ui(ui, egui::TextEdit::singleline(&mut test.email));
-    FormField::new(&mut form, "nested.test")
+    FormField::new(&mut form, field_path!("nested", "test"))
         .label("Nested Test")
         .ui(ui, egui::Slider::new(&mut test.nested.test, 0..=11));
-    FormField::new(&mut form, "vec[0].test")
+    FormField::new(&mut form, field_path!("vec", 0, "test"))
         .label("Vec Test")
         .ui(
             ui,
@@ -82,10 +83,14 @@ mod tests {
 
         let report = GardeReport::new(test.validate(&()));
 
-        assert!(report.get_field_error("user_name").is_some());
-        assert!(report.get_field_error("email").is_some());
-        assert!(report.get_field_error("nested.test").is_some());
-        assert!(report.get_field_error("vec[0].test").is_some());
+        assert!(report.get_field_error(field_path!("user_name")).is_some());
+        assert!(report.get_field_error(field_path!("email")).is_some());
+        assert!(report
+            .get_field_error(field_path!("nested", "test"))
+            .is_some());
+        assert!(report
+            .get_field_error(field_path!("vec", 0, "test"))
+            .is_some());
 
         assert_eq!(report.error_count(), 4);
     }

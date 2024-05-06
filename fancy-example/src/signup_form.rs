@@ -6,8 +6,8 @@ use crate::{crate_usage, demo_area};
 use egui::{vec2, Button, ScrollArea, TextEdit, Ui, Widget};
 use egui_extras::Size;
 use egui_form::validator::validator::Validate;
-use egui_form::validator::ValidatorReport;
-use egui_form::{field_path, Form, FormField};
+use egui_form::validator::{field_path, ValidatorReport};
+use egui_form::{Form, FormField};
 use validator::{ValidateArgs, ValidationError};
 
 fn validate_password(password: &str) -> Result<(), ValidationError> {

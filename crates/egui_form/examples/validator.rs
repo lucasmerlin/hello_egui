@@ -1,7 +1,8 @@
 use eframe::NativeOptions;
 use egui::CentralPanel;
+use egui_form::validator::field_path;
+use egui_form::Form;
 use egui_form::FormField;
-use egui_form::{field_path, Form};
 use validator::Validate;
 
 #[derive(Validate, Debug)]
@@ -89,6 +90,7 @@ fn main() -> eframe::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use egui_form::validator::field_path;
     use egui_form::EguiValidationReport;
 
     #[test]

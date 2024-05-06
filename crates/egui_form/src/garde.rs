@@ -2,10 +2,32 @@ use crate::EguiValidationReport;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
+pub use crate::_garde_field_path as field_path;
 pub use garde;
+use garde::Path;
+
+/// Create a [garde::Path] to be submitted to [crate::FormField::new]
+/// Example:
+/// ```rust
+/// use garde::Path;
+/// use egui_form::garde::field_path;
+/// assert_eq!(field_path!("root", "vec", 0, "nested"), &Path::new("root")
+///     .join("vec").join(0).join("nested"))
+/// ```
+#[macro_export]
+macro_rules! _garde_field_path {
+    (
+        $($field:expr $(,)?)+
+    ) => {
+        &$crate::garde::garde::Path::empty()
+        $(
+            .join($field)
+        )+
+    };
+}
 
 /// A wrapper around a [garde::Report] that implements [EguiValidationReport].
-pub struct GardeReport(BTreeMap<String, garde::Error>);
+pub struct GardeReport(BTreeMap<garde::Path, garde::Error>);
 
 impl GardeReport {
     /// Create a new [GardeReport] from a [garde::Report].
@@ -15,6 +37,7 @@ impl GardeReport {
     /// ```
     /// use garde::Validate;
     /// use egui_form::EguiValidationReport;
+    /// use egui_form::garde::{field_path, GardeReport};
     /// #[derive(Validate)]
     /// struct Test {
     ///    #[garde(length(min = 3, max = 10))]
@@ -28,19 +51,14 @@ impl GardeReport {
     ///    tags: vec!["tag1".to_string(), "waaaaytooooloooong".to_string()],
     /// };
     ///
-    /// let report = egui_form::garde::GardeReport::new(test.validate(&()));
+    /// let report = GardeReport::new(test.validate(&()));
     ///
-    /// assert!(report.get_field_error("user_name").is_some());
-    /// assert!(report.get_field_error("tags[1]").is_some());
+    /// assert!(report.get_field_error(field_path!("user_name")).is_some());
+    /// assert!(report.get_field_error(field_path!("tags", 1)).is_some());
     /// ```
     pub fn new(result: Result<(), garde::Report>) -> Self {
         if let Err(errors) = result {
-            GardeReport(
-                errors
-                    .iter()
-                    .map(|(path, error)| (path.to_string(), error.clone()))
-                    .collect(),
-            )
+            GardeReport(errors.iter().cloned().collect())
         } else {
             GardeReport(BTreeMap::new())
         }
@@ -48,8 +66,8 @@ impl GardeReport {
 }
 
 impl EguiValidationReport for GardeReport {
-    type FieldPath<'a> = &'a str;
-    type Errors = BTreeMap<String, garde::Error>;
+    type FieldPath<'a> = &'a Path;
+    type Errors = BTreeMap<Path, garde::Error>;
 
     fn get_field_error(&self, field: Self::FieldPath<'_>) -> Option<Cow<'static, str>> {
         self.0.get(field).map(|e| e.to_string().into())

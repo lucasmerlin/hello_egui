@@ -26,17 +26,17 @@ form validation crate you use.
 
 You can [try the Signup Form example](https://lucasmerlin.github.io/hello_egui/) in hello_egui showcase app.
 
+Also, here's a screenshot from HelloPaint's profile form:
+![img.png](screenshot.png)
+
 ## Should I use validator or garde?
 
 For small / prototype projects, I'd recommend garde, since it has built in error messages.
-For bigger projects that might require i18n, I'd recommend validator,
+For bigger projects that might require i18n, it might make sense to use validator,
 since it allows for custom error messages (garde as of now has no i18n support).
 
-Also, egui_form has a slightly different API for both, so it might make sense to look at both examples.
-For garde, you pass the field identifier as a string like this: `"array[0].nested.field"`.
-While for validator you pass the field identifier using a macro like this: `field_path!("array", 0, "nested", "field")`.
-
-(The difference stems from the way both crates provide the validation results.)
+In HelloPaint I'm using garde, since it seems a bit cleaner and more active, hoping
+that i18n will be solved before it becomes a problem for HelloPaint.
 
 ## Minimal example using garde
 
@@ -45,7 +45,7 @@ From [egui_form_minimal.rs](https://github.com/lucasmerlin/hello_egui/blob/main/
 ```rust
 use eframe::NativeOptions;
 use egui::{TextEdit, Ui};
-use egui_form::garde::GardeReport;
+use egui_form::garde::{GardeReport, field_path};
 use egui_form::{Form, FormField};
 use garde::Validate;
 
@@ -59,7 +59,7 @@ struct Fields {
 fn form_ui(ui: &mut Ui, fields: &mut Fields) {
     let mut form = Form::new().add_report(GardeReport::new(fields.validate(&())));
 
-    FormField::new(&mut form, "user_name")
+    FormField::new(&mut form, field_path!("user_name"))
         .label("User Name")
         .ui(ui, TextEdit::singleline(&mut fields.user_name));
 
