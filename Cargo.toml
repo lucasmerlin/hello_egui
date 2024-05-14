@@ -1,6 +1,6 @@
 [package]
 name = "hello_egui"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 description = "A collection of useful crates for egui."
 authors = ["Lucas Meurer"]
@@ -56,7 +56,7 @@ egui_suspense = { path = "./crates/egui_suspense", version = "0.4.0" }
 egui_virtual_list = { path = "./crates/egui_virtual_list", version = "0.3.0" }
 egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.3.0" }
 egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.3.0" }
-hello_egui = { path = ".", version = "0.4.0" }
+hello_egui = { path = ".", version = "0.4.1" }
 
 egui = { version = "0.27.0", default-features = false }
 eframe = { version = "0.27.0", default-features = false }
