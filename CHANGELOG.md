@@ -1,5 +1,9 @@
 # hello_egui changelog
 
+## 0.4.2
+
+- fix missing docs
+
 ## 0.4.1
 
 - add `egui_form` [crate](https://crates.io/crates/egui_form)

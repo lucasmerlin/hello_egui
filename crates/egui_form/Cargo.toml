@@ -8,6 +8,9 @@ repository = "https://github.com/lucasmerlin/hello_egui"
 homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_form"
 keywords = ["egui", "form", "validation"]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 validator_garde = ["dep:garde"]
 validator_validator = ["dep:validator"]
