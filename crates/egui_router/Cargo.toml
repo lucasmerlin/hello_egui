@@ -1,0 +1,16 @@
+[package]
+name = "egui_router"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui.workspace = true
+
+matchit = "0.8"
+
+[dev-dependencies]
+egui_inbox = { workspace = true, features = ["type_inbox"] }
+
+eframe = { workspace = true, default-features = true }
