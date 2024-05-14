@@ -1,5 +1,9 @@
 # hello_egui changelog
 
+## 0.4.1
+
+- add `egui_form` [crate](https://crates.io/crates/egui_form)
+
 ## 0.4.0
 
 - update all crates for egui 0.27 support
