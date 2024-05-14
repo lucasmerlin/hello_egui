@@ -27,7 +27,8 @@ form validation crate you use.
 You can [try the Signup Form example](https://lucasmerlin.github.io/hello_egui/) in hello_egui showcase app.
 
 Also, here's a screenshot from HelloPaint's profile form:
-![img.png](screenshot.png)
+
+![screenshot](https://github.com/lucasmerlin/hello_egui/blob/main/crates/egui_form/screenshot.png?raw=true)
 
 ## Should I use validator or garde?
 
