@@ -29,11 +29,11 @@ async fn main() -> eframe::Result<()> {
         )
         .with_default_duration(0.3);
 
-        router.route("/", home);
-        router.route("/edit", edit_message);
-        router.route("/post/{id}", post);
-
-        router.route("/async", async_route);
+        router = router
+            .route("/", home)
+            .route("/edit", edit_message)
+            .route("/post/{id}", post)
+            .route("/async", async_route);
 
         router.navigate_transition("/", TransitionConfig::none());
 
@@ -80,7 +80,7 @@ async fn main() -> eframe::Result<()> {
     )
 }
 
-fn home(request: &mut Request<AppState>) -> impl Route<AppState> {
+fn home(request: Request<AppState>) -> impl Route<AppState> {
     |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.faint_bg_color, |ui| {
             ui.heading("Home!");
@@ -122,7 +122,7 @@ fn home(request: &mut Request<AppState>) -> impl Route<AppState> {
     }
 }
 
-fn edit_message(request: &mut Request<AppState>) -> impl Route<AppState> {
+fn edit_message(request: Request<AppState>) -> impl Route<AppState> {
     |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.window_fill, |ui| {
             ui.heading("Edit Message");
@@ -135,7 +135,7 @@ fn edit_message(request: &mut Request<AppState>) -> impl Route<AppState> {
     }
 }
 
-fn post(request: &mut Request<AppState>) -> impl Route<AppState> {
+fn post(request: Request<AppState>) -> impl Route<AppState> {
     let id = request.params.get("id").map(ToOwned::to_owned);
 
     move |ui: &mut Ui, state: &mut AppState| {
@@ -157,7 +157,7 @@ fn post(request: &mut Request<AppState>) -> impl Route<AppState> {
     }
 }
 
-fn async_route(request: &mut Request<AppState>) -> impl Route<AppState> {
+fn async_route(request: Request<AppState>) -> impl Route<AppState> {
     let mut suspense =
         egui_suspense::EguiSuspense::<_, Infallible>::reloadable_async(|| async move {
             tokio::time::sleep(std::time::Duration::from_secs(2)).await;

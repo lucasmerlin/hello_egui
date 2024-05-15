@@ -5,7 +5,7 @@ use egui::emath::ease_in_ease_out;
 use egui::Ui;
 
 pub trait Handler<State> {
-    fn handle(&mut self, state: &mut Request<State>) -> Box<dyn Route<State>>;
+    fn handle(&mut self, state: Request<State>) -> Box<dyn Route<State>>;
 }
 
 pub trait Route<State> {
@@ -131,10 +131,15 @@ impl<State> EguiRouter<State> {
         self
     }
 
-    pub fn route(&mut self, route: impl Into<String>, handler: impl Handler<State> + 'static) {
+    pub fn route(
+        mut self,
+        route: impl Into<String>,
+        handler: impl Handler<State> + 'static,
+    ) -> Self {
         self.router
             .insert(route.into(), Box::new(handler))
             .expect("Invalid route");
+        self
     }
 
     pub fn navigate_transition(
@@ -146,7 +151,7 @@ impl<State> EguiRouter<State> {
         let mut handler = self.router.at_mut(&route);
 
         if let Ok(handler) = handler {
-            let route = handler.value.handle(&mut Request {
+            let route = handler.value.handle(Request {
                 state: &mut self.state,
                 params: handler.params,
             });
@@ -191,7 +196,7 @@ impl<State> EguiRouter<State> {
         let mut handler = self.router.at_mut(&route);
 
         if let Ok(handler) = handler {
-            let route = handler.value.handle(&mut Request {
+            let route = handler.value.handle(Request {
                 state: &mut self.state,
                 params: handler.params,
             });
@@ -240,9 +245,9 @@ impl<State> EguiRouter<State> {
 
 impl<F, State, R: Route<State> + 'static> Handler<State> for F
 where
-    F: Fn(&mut Request<State>) -> R,
+    F: Fn(Request<State>) -> R,
 {
-    fn handle(&mut self, request: &mut Request<State>) -> Box<dyn Route<State>> {
+    fn handle(&mut self, request: Request<State>) -> Box<dyn Route<State>> {
         Box::new(self(request))
     }
 }
