@@ -19,6 +19,7 @@ pub trait Route<State> {
 static ID: AtomicUsize = AtomicUsize::new(0);
 
 struct RouteState<State> {
+    path: String,
     route: Box<dyn Route<State>>,
     id: usize,
 }
@@ -148,6 +149,10 @@ impl<State> EguiRouter<State> {
         self
     }
 
+    pub fn active_route(&self) -> Option<&str> {
+        self.history.last().map(|r| r.path.as_str())
+    }
+
     pub fn route(
         mut self,
         route: impl Into<String>,
@@ -161,11 +166,11 @@ impl<State> EguiRouter<State> {
 
     pub fn navigate_transition(
         &mut self,
-        route: impl Into<String>,
+        path: impl Into<String>,
         transition_config: TransitionConfig,
     ) {
-        let route = route.into();
-        let mut handler = self.router.at_mut(&route);
+        let path = path.into();
+        let mut handler = self.router.at_mut(&path);
 
         if let Ok(handler) = handler {
             let route = handler.value.handle(Request {
@@ -173,6 +178,7 @@ impl<State> EguiRouter<State> {
                 params: handler.params,
             });
             self.history.push(RouteState {
+                path,
                 route,
                 id: ID.fetch_add(1, Ordering::SeqCst),
             });
@@ -183,7 +189,7 @@ impl<State> EguiRouter<State> {
                 leaving_route: None,
             });
         } else {
-            eprintln!("Failed to navigate to route: {}", route);
+            eprintln!("Failed to navigate to route");
         }
     }
 
@@ -208,11 +214,11 @@ impl<State> EguiRouter<State> {
 
     pub fn replace_transition(
         &mut self,
-        route: impl Into<String>,
+        path: impl Into<String>,
         transition_config: TransitionConfig,
     ) {
-        let route = route.into();
-        let handler = self.router.at_mut(&route);
+        let path = path.into();
+        let handler = self.router.at_mut(&path);
 
         if let Ok(handler) = handler {
             let leaving_route = self.history.pop();
@@ -221,6 +227,7 @@ impl<State> EguiRouter<State> {
                 params: handler.params,
             });
             self.history.push(RouteState {
+                path,
                 route,
                 id: ID.fetch_add(1, Ordering::SeqCst),
             });
@@ -231,7 +238,7 @@ impl<State> EguiRouter<State> {
                 leaving_route,
             });
         } else {
-            eprintln!("Failed to navigate to route: {}", route);
+            eprintln!("Failed to navigate to route");
         }
     }
 
