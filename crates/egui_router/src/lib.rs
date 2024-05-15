@@ -1,4 +1,4 @@
-mod transition;
+pub mod transition;
 
 use crate::transition::{
     ActiveTransition, ActiveTransitionResult, SlideFadeTransition, SlideTransition, Transition,
