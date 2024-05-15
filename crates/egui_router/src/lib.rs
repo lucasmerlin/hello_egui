@@ -1,8 +1,11 @@
 mod transition;
 
-use crate::transition::{ActiveTransition, ActiveTransitionResult, Transition, TransitionType};
+use crate::transition::{
+    ActiveTransition, ActiveTransitionResult, SlideFadeTransition, SlideTransition, Transition,
+    TransitionType,
+};
 use egui::emath::ease_in_ease_out;
-use egui::{Id, Ui};
+use egui::{Id, Ui, Vec2};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub trait Handler<State> {
@@ -17,7 +20,7 @@ static ID: AtomicUsize = AtomicUsize::new(0);
 
 struct RouteState<State> {
     route: Box<dyn Route<State>>,
-    id: Id,
+    id: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -33,8 +36,8 @@ impl Default for TransitionConfig {
         Self {
             duration: None,
             easing: ease_in_ease_out,
-            _in: transition::SlideTransition::new(1.0).into(),
-            out: transition::SlideTransition::new(-0.1).into(),
+            _in: transition::SlideTransition::new(Vec2::X).into(),
+            out: transition::SlideTransition::new(Vec2::X * -0.1).into(),
         }
     }
 }
@@ -50,6 +53,16 @@ impl TransitionConfig {
 
     pub fn slide() -> Self {
         Self::default()
+    }
+
+    pub fn fade_up() -> Self {
+        Self::new(
+            SlideFadeTransition(
+                SlideTransition::new(Vec2::Y * 0.3),
+                transition::FadeTransition,
+            ),
+            transition::NoTransition,
+        )
     }
 
     pub fn fade() -> Self {
@@ -161,7 +174,7 @@ impl<State> EguiRouter<State> {
             });
             self.history.push(RouteState {
                 route,
-                id: Id::new("route").with(ID.fetch_add(1, Ordering::SeqCst)),
+                id: ID.fetch_add(1, Ordering::SeqCst),
             });
 
             self.current_transition = Some(CurrentTransition {
@@ -209,7 +222,7 @@ impl<State> EguiRouter<State> {
             });
             self.history.push(RouteState {
                 route,
-                id: Id::new("route").with(ID.fetch_add(1, Ordering::SeqCst)),
+                id: ID.fetch_add(1, Ordering::SeqCst),
             });
 
             self.current_transition = Some(CurrentTransition {

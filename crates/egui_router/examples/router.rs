@@ -21,12 +21,7 @@ async fn main() -> eframe::Result<()> {
             message: "Hello, World!".to_string(),
             inbox: TypeInbox::new(ctx.clone()),
         })
-        .with_backward_transition(
-            TransitionConfig::slide().with_easing(egui_animation::easing::quad_in_out),
-        )
-        .with_forward_transition(
-            TransitionConfig::slide().with_easing(egui_animation::easing::quad_in_out),
-        )
+        .with_transition(TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out))
         .with_default_duration(0.2);
 
         router = router
@@ -87,6 +82,8 @@ fn home(request: Request<AppState>) -> impl Route<AppState> {
 
             ui.label(format!("Message: {}", state.message));
 
+            ui.label(format!("Id: {:?}", ui.next_auto_id()));
+
             if ui.link("Edit Message").clicked() {
                 state
                     .inbox
@@ -144,15 +141,18 @@ fn post(request: Request<AppState>) -> impl Route<AppState> {
                 if let Some(id) = &id {
                     ui.label(format!("Post: {}", id));
 
+                    ui.label(format!("Id: {:?}", ui.next_auto_id()));
+
+                    if ui.button("back").clicked() {
+                        state.inbox.send(RouterMessage::Back);
+                    }
+
                     ui.label(include_str!("../../../README.md"));
                 } else {
                     ui.label("Post not found");
-                }
-
-                ui.label(format!("Id: {:?}", ui.next_auto_id()));
-
-                if ui.button("back").clicked() {
-                    state.inbox.send(RouterMessage::Back);
+                    if ui.button("back").clicked() {
+                        state.inbox.send(RouterMessage::Back);
+                    }
                 }
             });
         });

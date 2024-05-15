@@ -1,9 +1,21 @@
 use crate::TransitionConfig;
 use egui::emath::ease_in_ease_out;
-use egui::{vec2, Id, Ui};
+use egui::{vec2, Id, Ui, Vec2};
 
 pub trait TransitionTrait {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui;
+}
+
+pub trait ComposableTransitionTrait {
+    fn apply(&self, ui: &mut Ui, t: f32);
+}
+
+impl<T: ComposableTransitionTrait> TransitionTrait for T {
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
+        let mut child = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id);
+        self.apply(&mut child, t);
+        child
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -11,6 +23,7 @@ pub enum Transition {
     Fade(FadeTransition),
     NoTransition(NoTransition),
     Slide(SlideTransition),
+    SlideFade(SlideFadeTransition),
 }
 
 impl TransitionTrait for Transition {
@@ -21,6 +34,7 @@ impl TransitionTrait for Transition {
                 no_transition.create_child_ui(ui, t, with_id)
             }
             Transition::Slide(slide) => slide.create_child_ui(ui, t, with_id),
+            Transition::SlideFade(slide_fade) => slide_fade.create_child_ui(ui, t, with_id),
         }
     }
 }
@@ -33,42 +47,49 @@ pub struct NoTransition;
 
 #[derive(Debug, Clone)]
 pub struct SlideTransition {
-    pub amount: f32,
+    pub amount: Vec2,
 }
+
+#[derive(Debug, Clone)]
+pub struct SlideFadeTransition(pub SlideTransition, pub FadeTransition);
 
 impl Default for SlideTransition {
     fn default() -> Self {
-        Self { amount: 1.0 }
+        Self { amount: Vec2::X }
     }
 }
 
 impl SlideTransition {
-    pub fn new(amount: f32) -> Self {
+    pub fn new(amount: Vec2) -> Self {
         Self { amount }
     }
 }
 
-impl TransitionTrait for FadeTransition {
-    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut ui = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id);
+impl ComposableTransitionTrait for FadeTransition {
+    fn apply(&self, ui: &mut Ui, t: f32) {
         ui.set_opacity(t);
-        ui
     }
 }
 
-impl TransitionTrait for NoTransition {
-    fn create_child_ui(&self, ui: &mut Ui, _t: f32, with_id: Id) -> Ui {
-        ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id)
-    }
+impl ComposableTransitionTrait for NoTransition {
+    fn apply(&self, _: &mut Ui, _: f32) {}
 }
 
 impl TransitionTrait for SlideTransition {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let width = ui.available_width();
-        let offset = width * (1.0 - t) * self.amount;
-        let child_rect = ui.max_rect().translate(vec2(offset, 0.0));
+        let available_size = ui.available_size();
+        let offset = available_size * (1.0 - t) * self.amount;
+        let child_rect = ui.max_rect().translate(offset);
 
         ui.child_ui_with_id_source(child_rect, *ui.layout(), with_id)
+    }
+}
+
+impl TransitionTrait for SlideFadeTransition {
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
+        let mut child = self.0.create_child_ui(ui, t, with_id);
+        self.1.apply(&mut child, t);
+        child
     }
 }
 
@@ -87,6 +108,12 @@ impl From<NoTransition> for Transition {
 impl From<SlideTransition> for Transition {
     fn from(slide: SlideTransition) -> Self {
         Transition::Slide(slide)
+    }
+}
+
+impl From<SlideFadeTransition> for Transition {
+    fn from(slide_fade: SlideFadeTransition) -> Self {
+        Transition::SlideFade(slide_fade)
     }
 }
 
@@ -143,31 +170,55 @@ impl ActiveTransition {
         &mut self,
         ui: &mut Ui,
         state: &mut State,
-        (in_id, content_in): (Id, impl FnOnce(&mut Ui, &mut State)),
-        content_out: Option<(Id, impl FnOnce(&mut Ui, &mut State))>,
+        (in_id, content_in): (usize, impl FnOnce(&mut Ui, &mut State)),
+        content_out: Option<(usize, impl FnOnce(&mut Ui, &mut State))>,
     ) -> ActiveTransitionResult {
         let dt = ui.input(|i| i.stable_dt);
 
         self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
 
-        let t = (self.easing)(self.progress);
+        let t = self.progress.min(1.0);
         ui.ctx().request_repaint();
 
         if !self.backward {
             if let Some((out_id, content_out)) = content_out {
-                let mut out_ui = self.out.create_child_ui(ui, 1.0 - t, out_id);
-                content_out(&mut out_ui, state);
+                with_temp_auto_id(ui, out_id, |ui| {
+                    let mut out_ui = self.out.create_child_ui(
+                        ui,
+                        (self.easing)(1.0 - t),
+                        Id::new("router_child").with(out_id),
+                    );
+                    content_out(&mut out_ui, state);
+                });
             }
 
-            let mut in_ui = self._in.create_child_ui(ui, t, in_id);
-            content_in(&mut in_ui, state);
+            with_temp_auto_id(ui, in_id, |ui| {
+                let mut in_ui = self._in.create_child_ui(
+                    ui,
+                    (self.easing)(t),
+                    Id::new("router_child").with(in_id),
+                );
+                content_in(&mut in_ui, state);
+            });
         } else {
-            let mut out_ui = self.out.create_child_ui(ui, t, in_id);
-            content_in(&mut out_ui, state);
+            with_temp_auto_id(ui, in_id, |ui| {
+                let mut out_ui = self.out.create_child_ui(
+                    ui,
+                    (self.easing)(t),
+                    Id::new("router_child").with(in_id),
+                );
+                content_in(&mut out_ui, state);
+            });
 
             if let Some((out_id, content_out)) = content_out {
-                let mut in_ui = self._in.create_child_ui(ui, 1.0 - t, out_id);
-                content_out(&mut in_ui, state);
+                with_temp_auto_id(ui, out_id, |ui| {
+                    let mut in_ui = self._in.create_child_ui(
+                        ui,
+                        (self.easing)(1.0 - t),
+                        Id::new("router_child").with(out_id),
+                    );
+                    content_out(&mut in_ui, state);
+                });
             }
         }
 
@@ -178,8 +229,20 @@ impl ActiveTransition {
         }
     }
 
-    pub fn show_default(ui: &mut Ui, with_id: Id, content: impl FnOnce(&mut Ui)) {
-        let mut ui = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id);
-        content(&mut ui);
+    pub fn show_default(ui: &mut Ui, with_id: usize, content: impl FnOnce(&mut Ui)) {
+        with_temp_auto_id(ui, with_id, |ui| {
+            let mut ui = ui.child_ui_with_id_source(
+                ui.max_rect(),
+                *ui.layout(),
+                Id::new("router_child").with(with_id),
+            );
+            content(&mut ui);
+        });
     }
+}
+
+fn with_temp_auto_id(ui: &mut Ui, id: usize, content: impl FnOnce(&mut Ui)) {
+    ui.skip_ahead_auto_ids(id);
+    content(ui);
+    ui.skip_ahead_auto_ids(usize::MAX - (id));
 }
