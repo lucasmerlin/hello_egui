@@ -14,3 +14,5 @@ matchit = "0.8"
 egui_inbox = { workspace = true, features = ["type_inbox"] }
 
 eframe = { workspace = true, default-features = true }
+
+egui_animation = { workspace = true }

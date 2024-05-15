@@ -1,7 +1,7 @@
 use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Context, Frame, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
-use egui_router::{EguiRouter, Request, Route};
+use egui_router::{EguiRouter, Request, Route, TransitionConfig};
 
 struct AppState {
     message: String,
@@ -18,13 +18,20 @@ fn main() -> eframe::Result<()> {
         let mut router = EguiRouter::new(AppState {
             message: "Hello, World!".to_string(),
             inbox: TypeInbox::new(ctx.clone()),
-        });
+        })
+        .with_backward_transition(
+            TransitionConfig::slide().with_easing(egui_animation::easing::quad_in_out),
+        )
+        .with_forward_transition(
+            TransitionConfig::slide().with_easing(egui_animation::easing::quad_in_out),
+        )
+        .with_default_duration(0.3);
 
         router.route("/", home);
         router.route("/edit", edit_message);
         router.route("/post/{id}", post);
 
-        router.navigate("/");
+        router.navigate_transition("/", TransitionConfig::none());
 
         router
     };
