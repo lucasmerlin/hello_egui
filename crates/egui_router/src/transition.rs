@@ -1,9 +1,9 @@
 use crate::TransitionConfig;
 use egui::emath::ease_in_ease_out;
-use egui::{vec2, Ui};
+use egui::{vec2, Id, Ui};
 
 pub trait TransitionTrait {
-    fn show(&self, ui: &mut Ui, t: f32, content: impl FnOnce(&mut Ui));
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui;
 }
 
 #[derive(Debug, Clone)]
@@ -14,11 +14,13 @@ pub enum Transition {
 }
 
 impl TransitionTrait for Transition {
-    fn show(&self, ui: &mut Ui, t: f32, content: impl FnOnce(&mut Ui)) {
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
         match self {
-            Transition::Fade(fade) => fade.show(ui, t, content),
-            Transition::NoTransition(no_transition) => no_transition.show(ui, t, content),
-            Transition::Slide(slide) => slide.show(ui, t, content),
+            Transition::Fade(fade) => fade.create_child_ui(ui, t, with_id),
+            Transition::NoTransition(no_transition) => {
+                no_transition.create_child_ui(ui, t, with_id)
+            }
+            Transition::Slide(slide) => slide.create_child_ui(ui, t, with_id),
         }
     }
 }
@@ -47,28 +49,26 @@ impl SlideTransition {
 }
 
 impl TransitionTrait for FadeTransition {
-    fn show(&self, ui: &mut Ui, t: f32, content: impl FnOnce(&mut Ui)) {
-        let _ = ui.scope(|ui| {
-            ui.set_opacity(t);
-            content(ui);
-        });
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
+        let mut ui = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id);
+        ui.set_opacity(t);
+        ui
     }
 }
 
 impl TransitionTrait for NoTransition {
-    fn show(&self, ui: &mut Ui, _t: f32, content: impl FnOnce(&mut Ui)) {
-        content(ui);
+    fn create_child_ui(&self, ui: &mut Ui, _t: f32, with_id: Id) -> Ui {
+        ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id)
     }
 }
 
 impl TransitionTrait for SlideTransition {
-    fn show(&self, ui: &mut Ui, t: f32, content: impl FnOnce(&mut Ui)) {
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
         let width = ui.available_width();
         let offset = width * (1.0 - t) * self.amount;
         let child_rect = ui.max_rect().translate(vec2(offset, 0.0));
 
-        let mut child_ui = ui.child_ui(child_rect, *ui.layout());
-        content(&mut child_ui);
+        ui.child_ui_with_id_source(child_rect, *ui.layout(), with_id)
     }
 }
 
@@ -143,8 +143,8 @@ impl ActiveTransition {
         &mut self,
         ui: &mut Ui,
         state: &mut State,
-        content_in: impl FnOnce(&mut Ui, &mut State),
-        content_out: Option<impl FnOnce(&mut Ui, &mut State)>,
+        (in_id, content_in): (Id, impl FnOnce(&mut Ui, &mut State)),
+        content_out: Option<(Id, impl FnOnce(&mut Ui, &mut State))>,
     ) -> ActiveTransitionResult {
         let dt = ui.input(|i| i.stable_dt);
 
@@ -154,22 +154,20 @@ impl ActiveTransition {
         ui.ctx().request_repaint();
 
         if !self.backward {
-            if let Some(content_out) = content_out {
-                let mut child_b = ui.child_ui(ui.max_rect(), *ui.layout());
-                self.out
-                    .show(&mut child_b, 1.0 - t, |ui| content_out(ui, state));
+            if let Some((out_id, content_out)) = content_out {
+                let mut out_ui = self.out.create_child_ui(ui, 1.0 - t, out_id);
+                content_out(&mut out_ui, state);
             }
 
-            let mut child_a = ui.child_ui(ui.max_rect(), *ui.layout());
-            self._in.show(&mut child_a, t, |ui| content_in(ui, state));
+            let mut in_ui = self._in.create_child_ui(ui, t, in_id);
+            content_in(&mut in_ui, state);
         } else {
-            let mut child_a = ui.child_ui(ui.max_rect(), *ui.layout());
-            self.out.show(&mut child_a, t, |ui| content_in(ui, state));
+            let mut out_ui = self.out.create_child_ui(ui, t, in_id);
+            content_in(&mut out_ui, state);
 
-            if let Some(content_out) = content_out {
-                let mut child_b = ui.child_ui(ui.max_rect(), *ui.layout());
-                self._in
-                    .show(&mut child_b, 1.0 - t, |ui| content_out(ui, state));
+            if let Some((out_id, content_out)) = content_out {
+                let mut in_ui = self._in.create_child_ui(ui, 1.0 - t, out_id);
+                content_out(&mut in_ui, state);
             }
         }
 
@@ -178,5 +176,10 @@ impl ActiveTransition {
         } else {
             ActiveTransitionResult::Continue
         }
+    }
+
+    pub fn show_default(ui: &mut Ui, with_id: Id, content: impl FnOnce(&mut Ui)) {
+        let mut ui = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id);
+        content(&mut ui);
     }
 }

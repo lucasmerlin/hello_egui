@@ -1,5 +1,5 @@
 use eframe::NativeOptions;
-use egui::{CentralPanel, Color32, Context, Frame, Ui, Window};
+use egui::{CentralPanel, Color32, Context, Frame, ScrollArea, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
 use std::convert::Infallible;
@@ -27,7 +27,7 @@ async fn main() -> eframe::Result<()> {
         .with_forward_transition(
             TransitionConfig::slide().with_easing(egui_animation::easing::quad_in_out),
         )
-        .with_default_duration(0.3);
+        .with_default_duration(1.0);
 
         router = router
             .route("/", home)
@@ -140,19 +140,21 @@ fn post(request: Request<AppState>) -> impl Route<AppState> {
 
     move |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
-            if let Some(id) = &id {
-                ui.label(format!("Post: {}", id));
+            ScrollArea::vertical().show(ui, |ui| {
+                if let Some(id) = &id {
+                    ui.label(format!("Post: {}", id));
 
-                ui.label(
-                    "Hello these are a couple words to get some text to pretend there is content",
-                );
-            } else {
-                ui.label("Post not found");
-            }
+                    ui.label(include_str!("../../../README.md"));
+                } else {
+                    ui.label("Post not found");
+                }
 
-            if ui.button("back").clicked() {
-                state.inbox.send(RouterMessage::Back);
-            }
+                ui.label(format!("Id: {:?}", ui.next_auto_id()));
+
+                if ui.button("back").clicked() {
+                    state.inbox.send(RouterMessage::Back);
+                }
+            });
         });
     }
 }

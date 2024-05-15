@@ -2,7 +2,8 @@ mod transition;
 
 use crate::transition::{ActiveTransition, ActiveTransitionResult, Transition, TransitionType};
 use egui::emath::ease_in_ease_out;
-use egui::Ui;
+use egui::{Id, Ui};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub trait Handler<State> {
     fn handle(&mut self, state: Request<State>) -> Box<dyn Route<State>>;
@@ -12,8 +13,11 @@ pub trait Route<State> {
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State);
 }
 
+static ID: AtomicUsize = AtomicUsize::new(0);
+
 struct RouteState<State> {
     route: Box<dyn Route<State>>,
+    id: Id,
 }
 
 #[derive(Debug, Clone)]
@@ -155,7 +159,10 @@ impl<State> EguiRouter<State> {
                 state: &mut self.state,
                 params: handler.params,
             });
-            self.history.push(RouteState { route });
+            self.history.push(RouteState {
+                route,
+                id: Id::new("route").with(ID.fetch_add(1, Ordering::SeqCst)),
+            });
 
             self.current_transition = Some(CurrentTransition {
                 active_transition: ActiveTransition::forward(transition_config)
@@ -200,7 +207,10 @@ impl<State> EguiRouter<State> {
                 state: &mut self.state,
                 params: handler.params,
             });
-            self.history.push(RouteState { route });
+            self.history.push(RouteState {
+                route,
+                id: Id::new("route").with(ID.fetch_add(1, Ordering::SeqCst)),
+            });
 
             self.current_transition = Some(CurrentTransition {
                 active_transition: ActiveTransition::forward(transition_config)
@@ -219,17 +229,19 @@ impl<State> EguiRouter<State> {
                 Some(transition.active_transition.show(
                     ui,
                     &mut self.state,
-                    |ui, state| {
+                    (last.id, |ui, state| {
                         last.route.ui(ui, state);
-                    },
+                    }),
                     leaving_route_state.map(|r| {
-                        |ui: &mut _, state: &mut _| {
+                        (r.id, |ui: &mut Ui, state: &mut _| {
                             r.route.ui(ui, state);
-                        }
+                        })
                     }),
                 ))
             } else {
-                last.route.ui(ui, &mut self.state);
+                ActiveTransition::show_default(ui, last.id, |ui| {
+                    last.route.ui(ui, &mut self.state);
+                });
                 None
             };
 
