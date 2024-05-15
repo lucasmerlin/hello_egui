@@ -67,6 +67,11 @@ impl TransitionConfig {
     }
 }
 
+struct CurrentTransition<State> {
+    active_transition: ActiveTransition,
+    leaving_route: Option<RouteState<State>>,
+}
+
 pub struct EguiRouter<State> {
     router: matchit::Router<Box<dyn Handler<State>>>,
     pub state: State,
@@ -74,8 +79,9 @@ pub struct EguiRouter<State> {
 
     forward_transition: TransitionConfig,
     backward_transition: TransitionConfig,
+    replace_transition: TransitionConfig,
 
-    current_transition: Option<ActiveTransition>,
+    current_transition: Option<CurrentTransition<State>>,
     default_duration: Option<f32>,
 }
 
@@ -94,6 +100,7 @@ impl<State> EguiRouter<State> {
             current_transition: None,
             forward_transition: TransitionConfig::default(),
             backward_transition: TransitionConfig::default(),
+            replace_transition: TransitionConfig::fade(),
             default_duration: None,
         }
     }
@@ -111,6 +118,11 @@ impl<State> EguiRouter<State> {
 
     pub fn with_backward_transition(mut self, transition: TransitionConfig) -> Self {
         self.backward_transition = transition;
+        self
+    }
+
+    pub fn with_replace_transition(mut self, transition: TransitionConfig) -> Self {
+        self.replace_transition = transition;
         self
     }
 
@@ -140,10 +152,11 @@ impl<State> EguiRouter<State> {
             });
             self.history.push(RouteState { route });
 
-            self.current_transition = Some(
-                ActiveTransition::forward(transition_config)
+            self.current_transition = Some(CurrentTransition {
+                active_transition: ActiveTransition::forward(transition_config)
                     .with_default_duration(self.default_duration),
-            );
+                leaving_route: None,
+            });
         } else {
             eprintln!("Failed to navigate to route: {}", route);
         }
@@ -151,10 +164,12 @@ impl<State> EguiRouter<State> {
 
     pub fn back_transition(&mut self, transition_config: TransitionConfig) {
         if self.history.len() > 1 {
-            self.current_transition = Some(
-                ActiveTransition::backward(transition_config)
+            let leaving_route = self.history.pop();
+            self.current_transition = Some(CurrentTransition {
+                active_transition: ActiveTransition::backward(transition_config)
                     .with_default_duration(self.default_duration),
-            );
+                leaving_route,
+            });
         }
     }
 
@@ -166,16 +181,43 @@ impl<State> EguiRouter<State> {
         self.back_transition(self.backward_transition.clone());
     }
 
+    pub fn replace_transition(
+        &mut self,
+        route: impl Into<String>,
+        transition_config: TransitionConfig,
+    ) {
+        let leaving_route = self.history.pop();
+        let route = route.into();
+        let mut handler = self.router.at_mut(&route);
+
+        if let Ok(handler) = handler {
+            let route = handler.value.handle(&mut Request {
+                state: &mut self.state,
+                params: handler.params,
+            });
+            self.history.push(RouteState { route });
+
+            self.current_transition = Some(CurrentTransition {
+                active_transition: ActiveTransition::forward(transition_config)
+                    .with_default_duration(self.default_duration),
+                leaving_route,
+            });
+        } else {
+            eprintln!("Failed to navigate to route: {}", route);
+        }
+    }
+
     pub fn ui(&mut self, ui: &mut Ui) {
         if let Some((last, previous)) = self.history.split_last_mut() {
             let result = if let Some(transition) = &mut self.current_transition {
-                Some(transition.show(
+                let leaving_route_state = transition.leaving_route.as_mut().or(previous.last_mut());
+                Some(transition.active_transition.show(
                     ui,
                     &mut self.state,
                     |ui, state| {
                         last.route.ui(ui, state);
                     },
-                    previous.last_mut().map(|r| {
+                    leaving_route_state.map(|r| {
                         |ui: &mut _, state: &mut _| {
                             r.route.ui(ui, state);
                         }
@@ -189,10 +231,6 @@ impl<State> EguiRouter<State> {
             match result {
                 Some(ActiveTransitionResult::Done) => {
                     self.current_transition = None;
-                }
-                Some(ActiveTransitionResult::DonePop) => {
-                    self.current_transition = None;
-                    self.history.pop();
                 }
                 Some(ActiveTransitionResult::Continue) | None => {}
             }

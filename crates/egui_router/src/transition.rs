@@ -99,34 +99,25 @@ pub struct ActiveTransition {
     duration: Option<f32>,
     progress: f32,
     easing: fn(f32) -> f32,
-    transition: TransitionType,
+    _in: Transition,
+    out: Transition,
+    backward: bool,
 }
 
 pub enum ActiveTransitionResult {
     Done,
-    DonePop,
     Continue,
 }
 
 impl ActiveTransition {
-    pub fn new(duration: Option<f32>, transition: TransitionType) -> Self {
-        Self {
-            duration,
-            easing: ease_in_ease_out,
-            progress: 0.0,
-            transition,
-        }
-    }
-
     pub fn forward(config: TransitionConfig) -> Self {
         Self {
             duration: config.duration,
             easing: config.easing,
             progress: 0.0,
-            transition: TransitionType::Forward {
-                _in: config._in,
-                out: config.out,
-            },
+            _in: config._in,
+            out: config.out,
+            backward: false,
         }
     }
 
@@ -135,10 +126,9 @@ impl ActiveTransition {
             duration: config.duration,
             easing: config.easing,
             progress: 0.0,
-            transition: TransitionType::Backward {
-                _in: config._in,
-                out: config.out,
-            },
+            _in: config._in,
+            out: config.out,
+            backward: true,
         }
     }
 
@@ -163,32 +153,28 @@ impl ActiveTransition {
         let t = (self.easing)(self.progress);
         ui.ctx().request_repaint();
 
-        match &self.transition {
-            TransitionType::Forward { _in, out, .. } => {
-                if let Some(content_out) = content_out {
-                    let mut child_b = ui.child_ui(ui.max_rect(), *ui.layout());
-                    out.show(&mut child_b, 1.0 - t, |ui| content_out(ui, state));
-                }
-
-                let mut child_a = ui.child_ui(ui.max_rect(), *ui.layout());
-                _in.show(&mut child_a, t, |ui| content_in(ui, state));
+        if !self.backward {
+            if let Some(content_out) = content_out {
+                let mut child_b = ui.child_ui(ui.max_rect(), *ui.layout());
+                self.out
+                    .show(&mut child_b, 1.0 - t, |ui| content_out(ui, state));
             }
-            TransitionType::Backward { _in, out, .. } => {
-                if let Some(content_out) = content_out {
-                    let mut child_b = ui.child_ui(ui.max_rect(), *ui.layout());
-                    out.show(&mut child_b, t, |ui| content_out(ui, state));
-                }
 
-                let mut child_a = ui.child_ui(ui.max_rect(), *ui.layout());
-                _in.show(&mut child_a, 1.0 - t, |ui| content_in(ui, state));
+            let mut child_a = ui.child_ui(ui.max_rect(), *ui.layout());
+            self._in.show(&mut child_a, t, |ui| content_in(ui, state));
+        } else {
+            let mut child_a = ui.child_ui(ui.max_rect(), *ui.layout());
+            self.out.show(&mut child_a, t, |ui| content_in(ui, state));
+
+            if let Some(content_out) = content_out {
+                let mut child_b = ui.child_ui(ui.max_rect(), *ui.layout());
+                self._in
+                    .show(&mut child_b, 1.0 - t, |ui| content_out(ui, state));
             }
         }
 
         if self.progress >= 1.0 {
-            match &self.transition {
-                TransitionType::Forward { .. } => ActiveTransitionResult::Done,
-                TransitionType::Backward { .. } => ActiveTransitionResult::DonePop,
-            }
+            ActiveTransitionResult::Done
         } else {
             ActiveTransitionResult::Continue
         }
