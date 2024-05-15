@@ -1,3 +1,6 @@
+mod transition;
+
+use crate::transition::{ActiveTransition, ActiveTransitionResult, Transition, TransitionType};
 use egui::Ui;
 
 pub trait Handler<State> {
@@ -12,10 +15,19 @@ struct RouteState<State> {
     route: Box<dyn Route<State>>,
 }
 
+struct TransitionConfig {
+    duration: f32,
+    easing: fn(f32) -> f32,
+    _in: Transition,
+    out: Transition,
+}
+
 pub struct EguiRouter<State> {
     router: matchit::Router<Box<dyn Handler<State>>>,
     pub state: State,
     history: Vec<RouteState<State>>,
+
+    current_transition: Option<ActiveTransition>,
 }
 
 pub struct Request<'a, State = ()> {
@@ -29,6 +41,8 @@ impl<State> EguiRouter<State> {
             router: matchit::Router::new(),
             state,
             history: Vec::new(),
+            // default_transition: transition::Transition::Fade(transition::FadeTransition),
+            current_transition: None,
         }
     }
 
@@ -48,18 +62,65 @@ impl<State> EguiRouter<State> {
                 params: handler.params,
             });
             self.history.push(RouteState { route });
+
+            self.current_transition = Some(ActiveTransition::new(
+                0.9,
+                TransitionType::Forward {
+                    _in: transition::Transition::Slide(transition::SlideTransition),
+                    out: transition::Transition::NoTransition(transition::NoTransition),
+                },
+            ));
         } else {
             eprintln!("Failed to navigate to route: {}", route);
         }
     }
 
     pub fn back(&mut self) {
-        self.history.pop();
+        if self.history.len() > 1 {
+            self.current_transition = Some(ActiveTransition::new(
+                0.9,
+                TransitionType::Backward {
+                    _in: transition::Transition::Slide(transition::SlideTransition),
+                    out: transition::Transition::NoTransition(transition::NoTransition),
+                },
+            ));
+        }
     }
 
     pub fn ui(&mut self, ui: &mut Ui) {
-        if let Some(route_state) = self.history.last_mut() {
-            route_state.route.ui(ui, &mut self.state);
+        if let Some((last, previous)) = self.history.split_last_mut() {
+            let result = if let Some(transition) = &mut self.current_transition {
+                let transition_result = transition.update(ui.input(|i| i.stable_dt));
+
+                transition.show(
+                    ui,
+                    &mut self.state,
+                    |ui, state| {
+                        last.route.ui(ui, state);
+                    },
+                    previous.last_mut().map(|r| {
+                        |ui: &mut _, state: &mut _| {
+                            r.route.ui(ui, state);
+                        }
+                    }),
+                );
+
+                Some(transition_result)
+            } else {
+                last.route.ui(ui, &mut self.state);
+                None
+            };
+
+            match result {
+                Some(ActiveTransitionResult::Done) => {
+                    self.current_transition = None;
+                }
+                Some(ActiveTransitionResult::DonePop) => {
+                    self.current_transition = None;
+                    self.history.pop();
+                }
+                Some(ActiveTransitionResult::Continue) | None => {}
+            }
         }
     }
 }
