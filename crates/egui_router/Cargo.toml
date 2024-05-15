@@ -10,9 +10,10 @@ egui.workspace = true
 
 matchit = "0.8"
 
+
 [dev-dependencies]
 egui_inbox = { workspace = true, features = ["type_inbox"] }
-
 eframe = { workspace = true, default-features = true }
-
 egui_animation = { workspace = true }
+tokio = { version = "1", features = ["full"] }
+egui_suspense = { workspace = true, features = ["async", "tokio"] }

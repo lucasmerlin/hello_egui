@@ -2,6 +2,7 @@ use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Context, Frame, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
+use std::convert::Infallible;
 
 struct AppState {
     message: String,
@@ -13,7 +14,8 @@ enum RouterMessage {
     Back,
 }
 
-fn main() -> eframe::Result<()> {
+#[tokio::main]
+async fn main() -> eframe::Result<()> {
     let init = |ctx: &Context| {
         let mut router = EguiRouter::new(AppState {
             message: "Hello, World!".to_string(),
@@ -30,6 +32,8 @@ fn main() -> eframe::Result<()> {
         router.route("/", home);
         router.route("/edit", edit_message);
         router.route("/post/{id}", post);
+
+        router.route("/async", async_route);
 
         router.navigate_transition("/", TransitionConfig::none());
 
@@ -108,6 +112,12 @@ fn home(request: &mut Request<AppState>) -> impl Route<AppState> {
                     .inbox
                     .send(RouterMessage::Navigate("/post/".to_string()));
             }
+
+            if ui.link("Async Route").clicked() {
+                state
+                    .inbox
+                    .send(RouterMessage::Navigate("/async".to_string()));
+            }
         });
     }
 }
@@ -139,6 +149,28 @@ fn post(request: &mut Request<AppState>) -> impl Route<AppState> {
             } else {
                 ui.label("Post not found");
             }
+
+            if ui.button("back").clicked() {
+                state.inbox.send(RouterMessage::Back);
+            }
+        });
+    }
+}
+
+fn async_route(request: &mut Request<AppState>) -> impl Route<AppState> {
+    let mut suspense =
+        egui_suspense::EguiSuspense::<_, Infallible>::reloadable_async(|| async move {
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            Ok("Async Route Loaded".to_string())
+        });
+
+    move |ui: &mut Ui, state: &mut AppState| {
+        background(ui, ui.style().visuals.faint_bg_color, |ui| {
+            ui.heading("Async Route");
+
+            suspense.ui(ui, |ui, data, state| {
+                ui.label(&*data);
+            });
 
             if ui.button("back").clicked() {
                 state.inbox.send(RouterMessage::Back);

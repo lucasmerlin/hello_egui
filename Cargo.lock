@@ -1388,7 +1388,9 @@ dependencies = [
  "egui",
  "egui_animation",
  "egui_inbox",
+ "egui_suspense",
  "matchit",
+ "tokio",
 ]
 
 [[package]]
