@@ -27,7 +27,7 @@ async fn main() -> eframe::Result<()> {
         .with_forward_transition(
             TransitionConfig::slide().with_easing(egui_animation::easing::quad_in_out),
         )
-        .with_default_duration(1.0);
+        .with_default_duration(0.2);
 
         router = router
             .route("/", home)
@@ -167,7 +167,7 @@ fn async_route(request: Request<AppState>) -> impl Route<AppState> {
         });
 
     move |ui: &mut Ui, state: &mut AppState| {
-        background(ui, ui.style().visuals.faint_bg_color, |ui| {
+        background(ui, ui.style().visuals.extreme_bg_color, |ui| {
             ui.heading("Async Route");
 
             suspense.ui(ui, |ui, data, state| {

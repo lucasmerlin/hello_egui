@@ -198,11 +198,11 @@ impl<State> EguiRouter<State> {
         route: impl Into<String>,
         transition_config: TransitionConfig,
     ) {
-        let leaving_route = self.history.pop();
         let route = route.into();
-        let mut handler = self.router.at_mut(&route);
+        let handler = self.router.at_mut(&route);
 
         if let Ok(handler) = handler {
+            let leaving_route = self.history.pop();
             let route = handler.value.handle(Request {
                 state: &mut self.state,
                 params: handler.params,
