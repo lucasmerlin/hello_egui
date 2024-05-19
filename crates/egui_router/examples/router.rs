@@ -1,4 +1,4 @@
-use eframe::NativeOptions;
+use eframe::{App, NativeOptions};
 use egui::{CentralPanel, Color32, Context, Frame, ScrollArea, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
@@ -17,12 +17,15 @@ enum RouterMessage {
 #[tokio::main]
 async fn main() -> eframe::Result<()> {
     let init = |ctx: &Context| {
-        let mut router = EguiRouter::new(AppState {
+        let mut app_state = AppState {
             message: "Hello, World!".to_string(),
             inbox: TypeInbox::new(ctx.clone()),
-        })
-        .with_transition(TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out))
-        .with_default_duration(0.2);
+        };
+        let mut router = EguiRouter::new()
+            .with_transition(
+                TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out),
+            )
+            .with_default_duration(0.2);
 
         router = router
             .route("/", home)
@@ -30,13 +33,13 @@ async fn main() -> eframe::Result<()> {
             .route("/post/{id}", post)
             .route("/async", async_route);
 
-        router.navigate_transition("/", TransitionConfig::none());
+        router.navigate_transition(&mut app_state, "/", TransitionConfig::none());
 
-        router
+        (router, app_state)
     };
 
-    let mut router: Option<EguiRouter<AppState>> = None;
-    let mut window_router: Option<EguiRouter<AppState>> = None;
+    let mut router: Option<(EguiRouter<AppState>, AppState)> = None;
+    let mut window_router: Option<(EguiRouter<AppState>, AppState)> = None;
 
     eframe::run_simple_native(
         "Router Example",
@@ -45,23 +48,23 @@ async fn main() -> eframe::Result<()> {
             let mut router = router.get_or_insert_with(|| init(ctx));
             let mut window_router = window_router.get_or_insert_with(|| init(ctx));
 
-            for router in [&mut router, &mut window_router].iter_mut() {
-                router
-                    .state
+            for state in [&mut router, &mut window_router].iter_mut() {
+                state
+                    .1
                     .inbox
                     .read()
                     .for_each(|msg: RouterMessage| match msg {
                         RouterMessage::Navigate(route) => {
-                            router.navigate(route);
+                            state.0.navigate(&mut state.1, route);
                         }
                         RouterMessage::Back => {
-                            router.back();
+                            state.0.back();
                         }
                     });
             }
 
             CentralPanel::default().show(ctx, |ui| {
-                router.ui(ui);
+                router.0.ui(ui, &mut router.1);
             });
 
             Window::new("Router Window")
@@ -69,7 +72,7 @@ async fn main() -> eframe::Result<()> {
                 .show(ctx, |ui| {
                     ui.set_width(ui.available_width());
                     ui.set_height(ui.available_height());
-                    window_router.ui(ui);
+                    window_router.0.ui(ui, &mut window_router.1);
                 });
         },
     )

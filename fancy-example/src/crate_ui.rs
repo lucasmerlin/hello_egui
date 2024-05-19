@@ -5,7 +5,6 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use Crate::*;
 
 use crate::shared_state::SharedState;
-use crate::sidebar::ActiveElement;
 use crate::{demo_area, FancyMessage};
 
 pub const README_CONTENT_SEPARATOR: &str = "[content]:<>";
@@ -143,8 +142,9 @@ pub fn crate_usage_ui(ui: &mut Ui, crates: &[CrateUsage], shared_state: &SharedS
             if response.clicked() {
                 shared_state
                     .tx
-                    .send(FancyMessage::SelectPage(ActiveElement::select_crate(
-                        crate_used,
+                    .send(FancyMessage::Navigate(format!(
+                        "/crate/{}",
+                        crate_used.name()
                     )))
                     .ok();
             }

@@ -5,28 +5,29 @@ use eframe::emath::lerp;
 use eframe::{egui, Frame};
 use egui::{Align2, Area, Context, Id, SidePanel, Ui, Vec2};
 
-use color_sort::ColorSort;
 use egui_inbox::UiInbox;
+use egui_router::EguiRouter;
+use hello_egui_utils::center::Center;
 use shared_state::SharedState;
-use sidebar::{Category, SideBar};
+use sidebar::SideBar;
 
-use crate::chat::ChatExample;
 use crate::crate_ui::CrateUi;
-use crate::sidebar::ActiveElement;
-use crate::stargazers::Stargazers;
+use crate::routes::router;
 
 mod chat;
 mod color_sort;
 mod crate_ui;
+mod example;
 mod futures;
 mod gallery;
+mod routes;
 mod shared_state;
 mod sidebar;
 mod signup_form;
 mod stargazers;
 
 pub enum FancyMessage {
-    SelectPage(ActiveElement),
+    Navigate(String),
 }
 
 pub struct App {
@@ -35,6 +36,7 @@ pub struct App {
     shared_state: SharedState,
     crate_ui: CrateUi,
     inbox: UiInbox<FancyMessage>,
+    router: EguiRouter<SharedState>,
 }
 
 impl Default for App {
@@ -46,32 +48,16 @@ impl Default for App {
 impl App {
     pub fn new() -> Self {
         let (tx, inbox) = UiInbox::channel();
+        let mut state = SharedState::new(tx);
+
+        let router = router(&mut state);
         Self {
             inbox,
-            sidebar: SideBar::new(vec![
-                Category {
-                    name: "Drag and Drop".to_string(),
-                    examples: vec![
-                        Box::new(ColorSort::vertical()),
-                        Box::new(ColorSort::wrapped()),
-                        Box::new(Stargazers::new()),
-                    ],
-                },
-                Category {
-                    name: "Infinite Scroll".to_string(),
-                    examples: vec![
-                        Box::new(ChatExample::new()),
-                        Box::new(gallery::Gallery::new()),
-                    ],
-                },
-                Category {
-                    name: "Form Validation".to_string(),
-                    examples: vec![Box::new(signup_form::SignupForm::new())],
-                },
-            ]),
-            shared_state: SharedState::new(tx),
+            sidebar: SideBar::new(),
+            shared_state: state,
             sidebar_expanded: false,
             crate_ui: CrateUi::new(),
+            router: router,
         }
     }
 }
@@ -80,8 +66,8 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         self.inbox.set_ctx(ctx);
         self.inbox.read_without_ctx().for_each(|msg| match msg {
-            FancyMessage::SelectPage(active) => {
-                self.sidebar.active = active;
+            FancyMessage::Navigate(route) => {
+                self.router.navigate(&mut self.shared_state, route);
             }
         });
 
@@ -93,7 +79,7 @@ impl eframe::App for App {
             .resizable(false)
             .exact_width(170.0)
             .show_animated(ctx, is_expanded, |ui| {
-                if self.sidebar.ui(ui) {
+                if self.sidebar.ui(ui, &mut self.shared_state) {
                     self.sidebar_expanded = false;
                 }
             });
@@ -123,37 +109,29 @@ impl eframe::App for App {
                 }
 
                 if !(collapsible_sidebar && is_expanded) {
-                    if let Some(example) = self.sidebar.active_example_mut() {
-                        example.ui(ui, &mut self.shared_state);
-                    }
-
-                    if let Some(crate_usage) = self.sidebar.active_crate() {
-                        self.crate_ui.ui(ui, crate_usage);
-                    }
+                    self.router.ui(ui, &mut self.shared_state);
                 }
             });
     }
 }
 
-pub fn demo_area(ui: &mut Ui, title: &str, width: f32, content: impl FnOnce(&mut Ui)) {
-    Area::new(Id::new(title))
-        .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
-        .show(ui.ctx(), |ui| {
-            let width = f32::min(ui.available_width() - 20.0, width);
-            ui.set_max_width(width);
-            ui.set_max_height(ui.available_height() - 20.0);
+pub fn demo_area(ui: &mut Ui, title: &'static str, width: f32, content: impl FnOnce(&mut Ui)) {
+    Center::new(title).ui(ui, |ui| {
+        let width = f32::min(ui.available_width() - 20.0, width);
+        ui.set_max_width(width);
+        ui.set_max_height(ui.available_height() - 20.0);
 
-            egui::Frame::none()
-                .fill(ui.style().visuals.panel_fill)
-                .rounding(4.0)
-                .inner_margin(20.0)
-                .show(ui, |ui| {
-                    ui.heading(title);
-                    ui.add_space(5.0);
+        egui::Frame::none()
+            .fill(ui.style().visuals.panel_fill)
+            .rounding(4.0)
+            .inner_margin(20.0)
+            .show(ui, |ui| {
+                ui.heading(title);
+                ui.add_space(5.0);
 
-                    content(ui);
-                });
-        });
+                content(ui);
+            });
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]

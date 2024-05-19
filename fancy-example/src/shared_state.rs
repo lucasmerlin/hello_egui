@@ -5,6 +5,7 @@ use egui_inbox::UiInboxSender;
 pub struct SharedState {
     pub background_colors: Vec<Color>,
     pub tx: UiInboxSender<FancyMessage>,
+    pub active_route: String,
 }
 
 impl SharedState {
@@ -12,6 +13,7 @@ impl SharedState {
         Self {
             background_colors: colors(),
             tx,
+            active_route: "/example/color_sort".to_string(),
         }
     }
 }

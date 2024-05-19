@@ -1,50 +1,21 @@
-use crate::crate_ui::{crate_button_ui, Crate, CrateUsage, ALL_CRATES};
+use crate::crate_ui::{crate_button_ui, Crate, ALL_CRATES};
+use crate::example::{Category, ExampleTrait, EXAMPLES};
 use crate::shared_state::SharedState;
+use crate::FancyMessage;
 use egui::{Align, Direction, Layout, RichText, Ui};
 use egui_dnd::DragDropItem;
 use egui_taffy::taffy;
 use egui_taffy::taffy::{Display, FlexDirection, FlexWrap, Style};
 use std::cell::RefCell;
 
-pub trait Example {
-    fn name(&self) -> &'static str;
-
-    fn crates(&self) -> &'static [CrateUsage];
-
-    fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState);
-}
-
-pub struct Category {
-    pub name: String,
-    pub examples: Vec<Box<dyn Example>>,
-}
-
-pub struct SideBar {
-    pub categories: Vec<Category>,
-    pub active: ActiveElement,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ActiveElement {
-    Crate(usize),
-    Example(usize, usize),
-}
-
-impl ActiveElement {
-    pub fn select_crate(c: &Crate) -> Self {
-        Self::Crate(ALL_CRATES.iter().position(|x| x == c).unwrap())
-    }
-}
+pub struct SideBar {}
 
 impl SideBar {
-    pub fn new(categories: Vec<Category>) -> Self {
-        Self {
-            categories,
-            active: ActiveElement::Example(0, 0),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 
-    pub fn ui(&mut self, ui: &mut Ui) -> bool {
+    pub fn ui(&mut self, ui: &mut Ui, shared: &mut SharedState) -> bool {
         let mut clicked = false;
         ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
             ui.add_space(4.0);
@@ -56,24 +27,20 @@ impl SideBar {
 
             ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
 
-            for (category_idx, category) in &mut self.categories.iter_mut().enumerate() {
-                ui.small(&category.name);
-                for (example_idx, example) in category.examples.iter_mut().enumerate() {
-                    // if ui
-                    //     .button(RichText::new(example.name()).size(14.0))
-                    //     .clicked()
-                    // {
-                    //     self.active = ActiveElement::Example(category_idx, example_idx);
-                    //     clicked = true;
-                    // }
-
-                    clicked |= ui
-                        .selectable_value(
-                            &mut self.active,
-                            ActiveElement::Example(category_idx, example_idx),
-                            RichText::new(example.name()).size(14.0),
+            for category in EXAMPLES.iter() {
+                ui.small(category.name);
+                for example in category.examples.iter() {
+                    let route = format!("/example/{}", example.slug);
+                    if ui
+                        .selectable_label(
+                            shared.active_route == route,
+                            RichText::new(example.name).size(14.0),
                         )
-                        .clicked();
+                        .clicked()
+                    {
+                        clicked = true;
+                        shared.tx.send(FancyMessage::Navigate(route)).ok();
+                    };
                 }
             }
         });
@@ -98,8 +65,9 @@ impl SideBar {
             },
         );
 
-        for (idx, item) in ALL_CRATES.iter().enumerate() {
-            let selected = matches!(self.active, ActiveElement::Crate(i) if i == idx);
+        for item in ALL_CRATES.iter() {
+            let route = format!("/crate/{}", item.name());
+            let selected = shared.active_route == route;
             taffy.add(
                 item.short_name().id(),
                 Style {
@@ -109,9 +77,7 @@ impl SideBar {
                 Layout::centered_and_justified(Direction::LeftToRight),
                 move |ui| {
                     if crate_button_ui(ui, item.short_name(), selected).clicked() {
-                        response_ref.borrow_mut().replace(idx);
-                        //self.active = ActiveElement::Crate(idx);
-                        //clicked = true;
+                        response_ref.borrow_mut().replace(route.clone());
                     }
                 },
             );
@@ -119,8 +85,8 @@ impl SideBar {
 
         taffy.show();
 
-        if let Some(idx) = taffy_response.borrow_mut().take() {
-            self.active = ActiveElement::Crate(idx);
+        if let Some(route) = taffy_response.borrow_mut().take() {
+            shared.tx.send(FancyMessage::Navigate(route)).ok();
             clicked = true;
         }
 
@@ -133,21 +99,5 @@ impl SideBar {
         });
 
         clicked
-    }
-
-    pub fn active_example_mut(&mut self) -> Option<&mut dyn Example> {
-        match self.active {
-            ActiveElement::Crate(_) => None,
-            ActiveElement::Example(category_idx, example_idx) => {
-                Some(&mut *self.categories[category_idx].examples[example_idx])
-            }
-        }
-    }
-
-    pub fn active_crate(&self) -> Option<&Crate> {
-        match self.active {
-            ActiveElement::Crate(idx) => Some(&ALL_CRATES[idx]),
-            ActiveElement::Example(_, _) => None,
-        }
     }
 }

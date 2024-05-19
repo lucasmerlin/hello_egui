@@ -1,12 +1,26 @@
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
-use crate::sidebar::Example;
 use crate::{crate_usage, demo_area};
 use eframe::emath::Vec2;
 use eframe::epaint::{Color32, Hsva, Rounding};
 use egui::{Id, Sense, Ui};
 use egui_dnd::{dnd, DragDropItem};
 use std::hash::{Hash, Hasher};
+
+pub const COLOR_SORT_EXAMPLE: Example = Example {
+    name: "Color Sort",
+    slug: "color_sort_vertical",
+    crates: &[CrateUsage::simple(Crate::EguiDnd)],
+    get: || Box::new(ColorSort::vertical()),
+};
+
+pub const COLOR_SORT_WRAPPED_EXAMPLE: Example = Example {
+    name: "Color Sort (wrapped)",
+    slug: "color_sort_wrapped",
+    crates: &[CrateUsage::simple(Crate::EguiDnd)],
+    get: || Box::new(ColorSort::wrapped()),
+};
 
 #[derive(Clone)]
 pub struct Color {
@@ -33,6 +47,13 @@ pub struct ColorSort {
 }
 
 impl ColorSort {
+    fn name(&self) -> &'static str {
+        match self.kind {
+            ColorSortKind::Vertical => "Color Sort",
+            ColorSortKind::Wrapped { .. } => "Color Sort (wrapped)",
+        }
+    }
+
     pub fn wrapped() -> Self {
         Self {
             kind: ColorSortKind::Wrapped {
@@ -99,16 +120,7 @@ impl ColorSort {
     }
 }
 
-impl Example for ColorSort {
-    fn name(&self) -> &'static str {
-        match self.kind {
-            ColorSortKind::Vertical => "Color Sort",
-            ColorSortKind::Wrapped { .. } => "Color Sort (wrapped)",
-        }
-    }
-
-    crate_usage!(CrateUsage::simple(Crate::EguiDnd));
-
+impl ExampleTrait for ColorSort {
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         demo_area(ui, self.name(), 286.0, |ui| {
             ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
@@ -126,7 +138,7 @@ impl Example for ColorSort {
                 }
             }
 
-            crate_usage_ui(ui, self.crates(), shared_state);
+            crate_usage_ui(ui, COLOR_SORT_EXAMPLE.crates, shared_state);
         });
     }
 }

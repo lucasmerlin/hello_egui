@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod center;
+
 use egui::{Align, Label, Layout, Ui, Vec2, WidgetText};
 
 pub use concat_idents::concat_idents;

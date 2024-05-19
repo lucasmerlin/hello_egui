@@ -92,7 +92,6 @@ struct CurrentTransition<State> {
 
 pub struct EguiRouter<State> {
     router: matchit::Router<Box<dyn Handler<State>>>,
-    pub state: State,
     history: Vec<RouteState<State>>,
 
     forward_transition: TransitionConfig,
@@ -109,10 +108,9 @@ pub struct Request<'a, State = ()> {
 }
 
 impl<State> EguiRouter<State> {
-    pub fn new(state: State) -> Self {
+    pub fn new() -> Self {
         Self {
             router: matchit::Router::new(),
-            state,
             history: Vec::new(),
             // default_transition: transition::Transition::Fade(transition::FadeTransition),
             current_transition: None,
@@ -166,6 +164,7 @@ impl<State> EguiRouter<State> {
 
     pub fn navigate_transition(
         &mut self,
+        state: &mut State,
         path: impl Into<String>,
         transition_config: TransitionConfig,
     ) {
@@ -174,7 +173,7 @@ impl<State> EguiRouter<State> {
 
         if let Ok(handler) = handler {
             let route = handler.value.handle(Request {
-                state: &mut self.state,
+                state,
                 params: handler.params,
             });
             self.history.push(RouteState {
@@ -204,8 +203,8 @@ impl<State> EguiRouter<State> {
         }
     }
 
-    pub fn navigate(&mut self, route: impl Into<String>) {
-        self.navigate_transition(route, self.forward_transition.clone());
+    pub fn navigate(&mut self, state: &mut State, route: impl Into<String>) {
+        self.navigate_transition(state, route, self.forward_transition.clone());
     }
 
     pub fn back(&mut self) {
@@ -214,6 +213,7 @@ impl<State> EguiRouter<State> {
 
     pub fn replace_transition(
         &mut self,
+        state: &mut State,
         path: impl Into<String>,
         transition_config: TransitionConfig,
     ) {
@@ -223,7 +223,7 @@ impl<State> EguiRouter<State> {
         if let Ok(handler) = handler {
             let leaving_route = self.history.pop();
             let route = handler.value.handle(Request {
-                state: &mut self.state,
+                state,
                 params: handler.params,
             });
             self.history.push(RouteState {
@@ -242,13 +242,13 @@ impl<State> EguiRouter<State> {
         }
     }
 
-    pub fn ui(&mut self, ui: &mut Ui) {
+    pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
         if let Some((last, previous)) = self.history.split_last_mut() {
             let result = if let Some(transition) = &mut self.current_transition {
                 let leaving_route_state = transition.leaving_route.as_mut().or(previous.last_mut());
                 Some(transition.active_transition.show(
                     ui,
-                    &mut self.state,
+                    state,
                     (last.id, |ui, state| {
                         last.route.ui(ui, state);
                     }),
@@ -260,7 +260,7 @@ impl<State> EguiRouter<State> {
                 ))
             } else {
                 ActiveTransition::show_default(ui, last.id, |ui| {
-                    last.route.ui(ui, &mut self.state);
+                    last.route.ui(ui, state);
                 });
                 None
             };
