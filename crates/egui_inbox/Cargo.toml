@@ -13,7 +13,7 @@ async = ["dep:hello_egui_utils", "hello_egui_utils/async", "dep:futures-channel"
 tokio = ["async", "hello_egui_utils/tokio"]
 egui = ["dep:egui"]
 default = ["egui"]
-broadcast = []
+broadcast = ["dep:hello_egui_utils"]
 type_inbox = ["dep:type-map", "dep:hello_egui_utils"]
 type_broadcast = ["dep:type-map", "broadcast", "dep:hello_egui_utils"]
 

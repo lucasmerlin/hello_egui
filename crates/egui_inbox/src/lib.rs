@@ -36,20 +36,15 @@ where
     }
 }
 
-impl RequestRepaintTrait for &Box<dyn RequestRepaintTrait> {
-    fn request_repaint(&self) {
-        self.as_ref().request_repaint();
-    }
-}
-
+#[derive(Clone)]
 enum RequestRepaintInner {
     #[cfg(feature = "egui")]
     Ctx(egui::Context),
-    Box(Box<dyn RequestRepaintTrait + Send + Sync>),
+    Arc(Arc<dyn RequestRepaintTrait + Send + Sync>),
 }
 
 /// Usually holds a reference to [egui::Context], but can also hold a boxed callback.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RequestRepaintContext(RequestRepaintInner);
 
 impl RequestRepaintContext {
@@ -58,7 +53,7 @@ impl RequestRepaintContext {
     where
         F: Fn() + Send + Sync + 'static,
     {
-        Self(RequestRepaintInner::Box(Box::new(f)))
+        Self(RequestRepaintInner::Arc(Arc::new(f)))
     }
 
     /// Create a new [RequestRepaintContext] from something that implements [RequestRepaintTrait].
@@ -66,7 +61,7 @@ impl RequestRepaintContext {
     where
         T: RequestRepaintTrait + Send + Sync + 'static,
     {
-        Self(RequestRepaintInner::Box(Box::new(t)))
+        Self(RequestRepaintInner::Arc(Arc::new(t)))
     }
 
     /// Create a new [RequestRepaintContext] from an [egui::Context].
@@ -77,10 +72,11 @@ impl RequestRepaintContext {
 }
 
 impl RequestRepaintContext {
-    fn request_repaint(&self) {
+    /// Request a repaint.
+    pub fn request_repaint(&self) {
         match &self.0 {
             RequestRepaintInner::Ctx(ctx) => ctx.request_repaint(),
-            RequestRepaintInner::Box(boxed) => boxed.request_repaint(),
+            RequestRepaintInner::Arc(boxed) => boxed.request_repaint(),
         }
     }
 }
@@ -95,6 +91,12 @@ impl Debug for RequestRepaintInner {
 pub trait AsRequestRepaint {
     /// Should return a [RequestRepaintContext] that can be used to request a repaint.
     fn as_request_repaint(&self) -> RequestRepaintContext;
+}
+
+impl AsRequestRepaint for RequestRepaintContext {
+    fn as_request_repaint(&self) -> RequestRepaintContext {
+        self.clone()
+    }
 }
 
 #[cfg(feature = "egui")]
