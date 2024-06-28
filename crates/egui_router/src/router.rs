@@ -221,7 +221,9 @@ impl<State, H: History + Default> EguiRouter<State, H> {
                 self.history
                     .retain(|r| r.state <= route_state || r.state == active_state);
 
-                self.back_impl(self.backward_transition.clone()).ok();
+                if route_state < active_state {
+                    self.back_impl(self.backward_transition.clone()).ok();
+                }
             } else {
                 self.navigate_impl(state, path, self.forward_transition.clone(), state_index)
                     .ok();
