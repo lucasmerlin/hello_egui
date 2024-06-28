@@ -21,11 +21,10 @@ async fn main() -> eframe::Result<()> {
             message: "Hello, World!".to_string(),
             inbox: TypeInbox::new(ctx.clone()),
         };
-        let mut router = EguiRouter::new()
-            .with_transition(
-                TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out),
-            )
-            .with_default_duration(0.2);
+        let mut router = EguiRouter::builder()
+            .transition(TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out))
+            .default_duration(0.2)
+            .default_route("/");
 
         router = router
             .route("/", home)
@@ -33,9 +32,7 @@ async fn main() -> eframe::Result<()> {
             .route("/post/{id}", post)
             .route("/async", async_route);
 
-        router.navigate_transition(&mut app_state, "/", TransitionConfig::none());
-
-        (router, app_state)
+        (router.build(&mut app_state), app_state)
     };
 
     let mut router: Option<(EguiRouter<AppState>, AppState)> = None;

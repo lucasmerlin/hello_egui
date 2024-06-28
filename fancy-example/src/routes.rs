@@ -35,11 +35,11 @@ pub fn crate_route(req: Request<SharedState>) -> impl Route<SharedState> {
 }
 
 pub fn router(state: &mut SharedState) -> EguiRouter<SharedState> {
-    let mut router = EguiRouter::new()
-        .with_transition(TransitionConfig::fade())
-        .with_default_duration(0.3)
+    EguiRouter::builder()
+        .transition(TransitionConfig::fade())
+        .default_duration(0.3)
+        .default_route(format!("/example/{}", EXAMPLES[0].examples[0].slug))
         .route("/example/{slug}", example_route)
-        .route("/crate/{slug}", crate_route);
-    router.navigate(state, format!("/example/{}", EXAMPLES[0].examples[0].slug));
-    router
+        .route("/crate/{slug}", crate_route)
+        .build(state)
 }

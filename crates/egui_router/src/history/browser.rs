@@ -62,14 +62,21 @@ impl History for BrowserHistory {
         self.inbox.read(ctx)
     }
 
-    fn active_route(&self) -> Option<String> {
+    fn active_route(&self) -> Option<(String, Option<u32>)> {
         let location = window().unwrap().location();
         let path = format!(
             "{}{}",
             location.pathname().unwrap(),
             location.search().unwrap()
         );
-        Some(path)
+        let state = self
+            .history
+            .state()
+            .ok()
+            .map(|s| s.as_f64())
+            .flatten()
+            .map(|n| n as u32);
+        Some((path, state))
     }
 
     fn push(&mut self, url: &str, state: u32) -> HistoryResult {

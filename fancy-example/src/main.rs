@@ -6,7 +6,6 @@ use eframe::{egui, Frame};
 use egui::{Align2, Area, Context, Id, SidePanel, Ui, Vec2};
 
 use egui_inbox::UiInbox;
-use egui_router::history::BrowserHistory;
 use egui_router::EguiRouter;
 use hello_egui_utils::center::Center;
 use shared_state::SharedState;
@@ -37,7 +36,7 @@ pub struct App {
     shared_state: SharedState,
     crate_ui: CrateUi,
     inbox: UiInbox<FancyMessage>,
-    router: EguiRouter<SharedState, BrowserHistory>,
+    router: EguiRouter<SharedState>,
 }
 
 impl Default for App {
