@@ -1389,8 +1389,11 @@ dependencies = [
  "egui_animation",
  "egui_inbox",
  "egui_suspense",
+ "js-sys",
  "matchit",
  "tokio",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

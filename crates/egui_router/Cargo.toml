@@ -7,9 +7,14 @@ edition = "2021"
 
 [dependencies]
 egui.workspace = true
+egui_inbox.workspace = true
 
 matchit = "0.8"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["History", "PopStateEvent"] }
+js-sys = "0.3"
+wasm-bindgen = "0.2"
 
 [dev-dependencies]
 egui_inbox = { workspace = true, features = ["type_inbox"] }
