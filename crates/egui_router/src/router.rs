@@ -1,4 +1,5 @@
 use crate::history::{DefaultHistory, History};
+use crate::route_kind::RouteKind;
 use crate::router_builder::RouterBuilder;
 use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
@@ -10,7 +11,7 @@ use matchit::MatchError;
 use std::sync::atomic::Ordering;
 
 pub struct EguiRouter<State, History = DefaultHistory> {
-    router: matchit::Router<Box<dyn Handler<State>>>,
+    router: matchit::Router<RouteKind<State>>,
     history: Vec<RouteState<State>>,
 
     history_kind: History,
@@ -56,45 +57,8 @@ impl<State, H: History + Default> EguiRouter<State, H> {
         router
     }
 
-    pub fn with_transition(mut self, transition: TransitionConfig) -> Self {
-        self.forward_transition = transition.clone();
-        self.backward_transition = transition;
-        self
-    }
-
-    pub fn with_forward_transition(mut self, transition: TransitionConfig) -> Self {
-        self.forward_transition = transition;
-        self
-    }
-
-    pub fn with_backward_transition(mut self, transition: TransitionConfig) -> Self {
-        self.backward_transition = transition;
-        self
-    }
-
-    pub fn with_replace_transition(mut self, transition: TransitionConfig) -> Self {
-        self.replace_transition = transition;
-        self
-    }
-
-    pub fn with_default_duration(mut self, duration: f32) -> Self {
-        self.default_duration = Some(duration);
-        self
-    }
-
     pub fn active_route(&self) -> Option<&str> {
         self.history.last().map(|r| r.path.as_str())
-    }
-
-    pub fn route(
-        mut self,
-        route: impl Into<String>,
-        handler: impl Handler<State> + 'static,
-    ) -> Self {
-        self.router
-            .insert(route.into(), Box::new(handler))
-            .expect("Invalid route");
-        self
     }
 
     fn navigate_impl(
@@ -104,33 +68,47 @@ impl<State, H: History + Default> EguiRouter<State, H> {
         transition_config: TransitionConfig,
         new_state: u32,
     ) -> RouterResult {
-        let mut handler = self.router.at_mut(&path);
+        let mut redirect = None;
+        let mut result = self.router.at_mut(&path);
 
-        match handler {
-            Ok(handler) => {
-                let route = handler.value.handle(Request {
-                    state,
-                    params: handler.params,
-                });
-                self.history.push(RouteState {
-                    path,
-                    route,
-                    id: ID.fetch_add(1, Ordering::SeqCst),
-                    state: new_state,
-                });
+        let result = match result {
+            Ok(match_) => {
+                match match_.value {
+                    RouteKind::Route(handler) => {
+                        let route = handler.handle(Request {
+                            state,
+                            params: match_.params,
+                        });
+                        self.history.push(RouteState {
+                            path,
+                            route,
+                            id: ID.fetch_add(1, Ordering::SeqCst),
+                            state: new_state,
+                        });
 
-                self.current_transition = Some(CurrentTransition {
-                    active_transition: ActiveTransition::forward(transition_config)
-                        .with_default_duration(self.default_duration),
-                    leaving_route: None,
-                });
-
+                        self.current_transition = Some(CurrentTransition {
+                            active_transition: ActiveTransition::forward(transition_config.clone())
+                                .with_default_duration(self.default_duration),
+                            leaving_route: None,
+                        });
+                    }
+                    RouteKind::Redirect(r) => {
+                        redirect = Some(r.clone());
+                    }
+                }
                 Ok(())
             }
             Err(e) => match e {
                 MatchError::NotFound => Err(RouterError::NotFound),
             },
+        };
+
+        if let Some(redirect) = redirect {
+            self.history_kind.replace(&redirect, new_state)?;
+            self.navigate_impl(state, redirect, transition_config, new_state)?;
         }
+
+        result
     }
 
     pub fn navigate_transition(
@@ -142,8 +120,8 @@ impl<State, H: History + Default> EguiRouter<State, H> {
         let path = path.into();
         let current_state = self.history.last().map(|r| r.state).unwrap_or(0);
         let new_state = current_state + 1;
-        self.navigate_impl(state, path.clone(), transition_config, new_state)?;
         self.history_kind.push(&path, new_state)?;
+        self.navigate_impl(state, path.clone(), transition_config, new_state)?;
         Ok(())
     }
 
@@ -178,37 +156,52 @@ impl<State, H: History + Default> EguiRouter<State, H> {
         path: impl Into<String>,
         transition_config: TransitionConfig,
     ) -> RouterResult {
+        let mut redirect = None;
+
         let path = path.into();
-        let handler = self.router.at_mut(&path);
+        let result = self.router.at_mut(&path);
 
         let current_state = self.history.last().map(|r| r.state).unwrap_or(0);
         let new_state = current_state;
 
-        match handler {
-            Ok(handler) => {
-                self.history_kind.replace(&path, new_state)?;
-                let leaving_route = self.history.pop();
-                let route = handler.value.handle(Request {
-                    state,
-                    params: handler.params,
-                });
-                self.history.push(RouteState {
-                    path,
-                    route,
-                    id: ID.fetch_add(1, Ordering::SeqCst),
-                    state: new_state,
-                });
+        let result = match result {
+            Ok(match_) => match match_.value {
+                RouteKind::Route(handler) => {
+                    self.history_kind.replace(&path, new_state)?;
+                    let leaving_route = self.history.pop();
+                    let route = handler.handle(Request {
+                        state,
+                        params: match_.params,
+                    });
+                    self.history.push(RouteState {
+                        path,
+                        route,
+                        id: ID.fetch_add(1, Ordering::SeqCst),
+                        state: new_state,
+                    });
 
-                self.current_transition = Some(CurrentTransition {
-                    active_transition: ActiveTransition::forward(transition_config)
-                        .with_default_duration(self.default_duration),
-                    leaving_route,
-                });
+                    self.current_transition = Some(CurrentTransition {
+                        active_transition: ActiveTransition::forward(transition_config.clone())
+                            .with_default_duration(self.default_duration),
+                        leaving_route,
+                    });
 
-                Ok(())
-            }
+                    Ok(())
+                }
+                RouteKind::Redirect(r) => {
+                    redirect = Some(r.clone());
+                    Ok(())
+                }
+            },
             Err(MatchError::NotFound) => Err(RouterError::NotFound),
+        };
+
+        if let Some(redirect) = redirect {
+            self.history_kind.replace(&redirect, new_state)?;
+            self.replace_transition(state, redirect, transition_config)?;
         }
+
+        result
     }
 
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {

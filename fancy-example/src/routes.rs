@@ -38,8 +38,9 @@ pub fn router(state: &mut SharedState) -> EguiRouter<SharedState> {
     EguiRouter::builder()
         .transition(TransitionConfig::fade())
         .default_duration(0.3)
-        .default_route(format!("/example/{}", EXAMPLES[0].examples[0].slug))
+        .default_route("/")
         .route("/example/{slug}", example_route)
         .route("/crate/{slug}", crate_route)
+        .route_redirect("/", format!("/example/{}", EXAMPLES[0].examples[0].slug))
         .build(state)
 }

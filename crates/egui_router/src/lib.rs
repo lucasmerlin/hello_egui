@@ -1,4 +1,5 @@
 pub mod history;
+mod route_kind;
 mod router;
 mod router_builder;
 pub mod transition;

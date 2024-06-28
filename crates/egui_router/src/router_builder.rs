@@ -1,8 +1,9 @@
 use crate::history::History;
+use crate::route_kind::RouteKind;
 use crate::{EguiRouter, Handler, TransitionConfig};
 
 pub struct RouterBuilder<State, H> {
-    pub(crate) router: matchit::Router<Box<dyn Handler<State>>>,
+    pub(crate) router: matchit::Router<RouteKind<State>>,
     pub(crate) default_route: Option<String>,
 
     pub(crate) forward_transition: TransitionConfig,
@@ -64,7 +65,16 @@ impl<State, H: History + Default> RouterBuilder<State, H> {
     }
 
     pub fn route<Han: Handler<State> + 'static>(mut self, route: &str, handler: Han) -> Self {
-        self.router.insert(route, Box::new(handler)).unwrap();
+        self.router
+            .insert(route, RouteKind::Route(Box::new(handler)))
+            .unwrap();
+        self
+    }
+
+    pub fn route_redirect(mut self, route: &str, redirect: impl Into<String>) -> Self {
+        self.router
+            .insert(route, RouteKind::Redirect(redirect.into()))
+            .unwrap();
         self
     }
 
