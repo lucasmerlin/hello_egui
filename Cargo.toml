@@ -19,7 +19,7 @@ all = ["animation", "dnd", "form", "inbox", "infinite_scroll", "pull_to_refresh"
 full = ["all", "async", "tokio"]
 
 animation = ["dep:egui_animation"]
-async = ["egui_suspense/async", "egui_infinite_scroll/async"]
+async = ["egui_suspense/async", "egui_infinite_scroll/async", "egui_router/async", "egui_inbox/async"]
 dnd = ["dep:egui_dnd"]
 form = ["dep:egui_form"]
 inbox = ["dep:egui_inbox"]
