@@ -13,6 +13,7 @@ use egui::emath::ease_in_ease_out;
 use egui::{Ui, Vec2};
 use std::sync::atomic::AtomicUsize;
 
+pub use handler::{HandlerError, HandlerResult};
 pub use router::EguiRouter;
 
 #[cfg(feature = "async")]
@@ -26,7 +27,7 @@ static ID: AtomicUsize = AtomicUsize::new(0);
 
 struct RouteState<State> {
     path: String,
-    route: Box<dyn Route<State>>,
+    route: HandlerResult<Box<dyn Route<State>>>,
     id: usize,
     state: u32,
 }

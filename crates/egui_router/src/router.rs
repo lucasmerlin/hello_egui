@@ -1,6 +1,7 @@
+use crate::handler::{HandlerError, HandlerResult};
 use crate::history::{DefaultHistory, History};
 use crate::route_kind::RouteKind;
-use crate::router_builder::RouterBuilder;
+use crate::router_builder::{ErrorUi, LoadingUi, RouterBuilder};
 use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
     CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
@@ -23,6 +24,9 @@ pub struct EguiRouter<State, History = DefaultHistory> {
 
     current_transition: Option<CurrentTransition<State>>,
     default_duration: Option<f32>,
+
+    error_ui: ErrorUi<State>,
+    loading_ui: LoadingUi<State>,
 }
 
 impl<State: 'static, H: History + Default> EguiRouter<State, H> {
@@ -41,6 +45,8 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             backward_transition: builder.backward_transition,
             replace_transition: builder.replace_transition,
             default_duration: builder.default_duration,
+            error_ui: builder.error_ui,
+            loading_ui: builder.loading_ui,
         };
 
         if let Some((r, state_index)) = router
@@ -77,8 +83,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         let route = handler(Request {
                             state,
                             params: match_.params,
-                        })
-                        .unwrap();
+                        });
                         self.history.push(RouteState {
                             path,
                             route,
@@ -172,8 +177,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     let route = handler(Request {
                         state,
                         params: match_.params,
-                    })
-                    .unwrap();
+                    });
                     self.history.push(RouteState {
                         path,
                         route,
@@ -237,18 +241,33 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                 Some(transition.active_transition.show(
                     ui,
                     state,
-                    (last.id, |ui, state| {
-                        last.route.ui(ui, state);
+                    (last.id, |ui, state| match &mut last.route {
+                        Ok(route) => {
+                            route.ui(ui, state);
+                        }
+                        Err(err) => {
+                            (self.error_ui)(ui, state, err);
+                        }
                     }),
                     leaving_route_state.map(|r| {
-                        (r.id, |ui: &mut Ui, state: &mut _| {
-                            r.route.ui(ui, state);
+                        (r.id, |ui: &mut Ui, state: &mut _| match &mut r.route {
+                            Ok(route) => {
+                                route.ui(ui, state);
+                            }
+                            Err(err) => {
+                                (self.error_ui)(ui, state, err);
+                            }
                         })
                     }),
                 ))
             } else {
-                ActiveTransition::show_default(ui, last.id, |ui| {
-                    last.route.ui(ui, state);
+                ActiveTransition::show_default(ui, last.id, |ui| match &mut last.route {
+                    Ok(route) => {
+                        route.ui(ui, state);
+                    }
+                    Err(err) => {
+                        (self.error_ui)(ui, state, err);
+                    }
                 });
                 None
             };

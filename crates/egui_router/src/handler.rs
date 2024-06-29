@@ -4,12 +4,14 @@ use std::fmt::Display;
 #[derive(Debug)]
 pub enum HandlerError {
     NotFound,
+    Message(String),
     Error(Box<dyn std::error::Error + Send + Sync>),
 }
 
 impl Display for HandlerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Message(msg) => write!(f, "{}", msg),
             Self::NotFound => write!(f, "Handler not found"),
             Self::Error(err) => write!(f, "Handler error: {}", err),
         }
@@ -109,9 +111,10 @@ pub mod async_impl {
         }
     }
 
-    impl<F, State, R> AsyncMakeHandler<State, ((), ())> for F
+    impl<F, Fut, State, R> AsyncMakeHandler<State, ((), ())> for F
     where
-        F: Fn() -> R + Send + Sync,
+        F: Fn() -> Fut + Send + Sync,
+        Fut: Future<Output = R> + Send + Sync,
         R: Route<State> + 'static + Send + Sync,
         State: Send + Sync,
     {
@@ -119,13 +122,14 @@ pub mod async_impl {
             &self,
             request: OwnedRequest<State>,
         ) -> HandlerResult<Box<dyn Route<State> + Send + Sync>> {
-            Ok(Box::new(self()))
+            Ok(Box::new(self().await))
         }
     }
 
-    impl<F, State, R> AsyncMakeHandler<State, (Request<'static, State>, HandlerResult)> for F
+    impl<F, Fut, State, R> AsyncMakeHandler<State, (Request<'static, State>, HandlerResult)> for F
     where
-        F: Fn(OwnedRequest<State>) -> HandlerResult<R> + Send + Sync,
+        F: Fn(OwnedRequest<State>) -> Fut + Send + Sync,
+        Fut: Future<Output = HandlerResult<R>> + Send + Sync,
         R: Route<State> + 'static + Send + Sync,
         State: Send + Sync,
     {
@@ -133,13 +137,14 @@ pub mod async_impl {
             &self,
             request: OwnedRequest<State>,
         ) -> HandlerResult<Box<dyn Route<State> + Send + Sync>> {
-            Ok(Box::new(self(request)?))
+            Ok(Box::new(self(request).await?))
         }
     }
 
-    impl<F, State, R> AsyncMakeHandler<State, ((), HandlerResult)> for F
+    impl<F, Fut, State, R> AsyncMakeHandler<State, ((), HandlerResult)> for F
     where
-        F: Fn() -> HandlerResult<R> + Send + Sync,
+        F: Fn() -> Fut + Send + Sync,
+        Fut: Future<Output = HandlerResult<R>> + Send + Sync,
         R: Route<State> + 'static + Send + Sync,
         State: Send + Sync,
     {
@@ -147,7 +152,7 @@ pub mod async_impl {
             &self,
             request: OwnedRequest<State>,
         ) -> HandlerResult<Box<dyn Route<State> + Send + Sync>> {
-            Ok(Box::new(self()?))
+            Ok(Box::new(self().await?))
         }
     }
 }

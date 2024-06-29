@@ -1,7 +1,7 @@
 use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Frame, ScrollArea, Ui};
 use egui_inbox::{UiInbox, UiInboxSender};
-use egui_router::{EguiRouter, OwnedRequest, Route};
+use egui_router::{EguiRouter, HandlerError, HandlerResult, OwnedRequest, Route};
 
 type AppState = UiInboxSender<RouterMessage>;
 
@@ -23,6 +23,16 @@ async fn main() -> eframe::Result<()> {
         move |ctx, frame| {
             let router = router.get_or_insert_with(|| {
                 EguiRouter::builder()
+                    .error_ui(|ui, state: &AppState, error| {
+                        ui.label(format!("Error: {}", error));
+                        if ui.button("back").clicked() {
+                            state.clone().send(RouterMessage::Back).ok();
+                        }
+                    })
+                    .loading_ui(|ui, _| {
+                        ui.label("Loading...");
+                        ui.spinner();
+                    })
                     .route("/", home)
                     .async_route("/post/{id}", post)
                     .default_path("/")
@@ -64,21 +74,25 @@ fn home() -> impl Route<AppState> {
                     .ok();
             }
 
-            if ui.link("Invalid Post").clicked() {
+            if ui.link("Error Post").clicked() {
                 inbox
-                    .send(RouterMessage::Navigate("/post/".to_string()))
+                    .send(RouterMessage::Navigate("/post/error".to_string()))
                     .ok();
             }
         });
     }
 }
 
-async fn post(request: OwnedRequest<AppState>) -> impl Route<AppState> {
+async fn post(request: OwnedRequest<AppState>) -> HandlerResult<impl Route<AppState>> {
     let id = request.params.get("id").map(ToOwned::to_owned);
 
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 
-    move |ui: &mut Ui, sender: &mut AppState| {
+    if id.as_deref() == Some("error") {
+        Err(HandlerError::Message("Error Loading Post!".to_string()))?;
+    }
+
+    Ok(move |ui: &mut Ui, sender: &mut AppState| {
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 if let Some(id) = &id {
@@ -97,7 +111,7 @@ async fn post(request: OwnedRequest<AppState>) -> impl Route<AppState> {
                 }
             });
         });
-    }
+    })
 }
 
 fn background(ui: &mut Ui, color: Color32, content: impl FnOnce(&mut Ui)) {

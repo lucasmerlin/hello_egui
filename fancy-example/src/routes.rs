@@ -2,7 +2,7 @@ use crate::crate_ui::{CrateUi, CrateUsage, ALL_CRATES};
 use crate::example::EXAMPLES;
 use crate::shared_state::SharedState;
 use egui::Ui;
-use egui_router::history::BrowserHistory;
+use egui_router::history::DefaultHistory;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
 
 pub fn example_route(req: Request<SharedState>) -> impl Route<SharedState> {
@@ -37,7 +37,14 @@ pub fn crate_route(req: Request<SharedState>) -> impl Route<SharedState> {
 
 pub fn router(state: &mut SharedState) -> EguiRouter<SharedState> {
     EguiRouter::builder()
-        .history(BrowserHistory::new(Some("/test/#".to_string())))
+        .history({
+            #[cfg(target_arch = "wasm32")]
+            let history =
+                egui_router::history::BrowserHistory::new(Some("/hello_egui/#".to_string()));
+            #[cfg(not(target_arch = "wasm32"))]
+            let history = DefaultHistory::default();
+            history
+        })
         .transition(TransitionConfig::fade())
         .default_duration(0.3)
         .default_path("/")
