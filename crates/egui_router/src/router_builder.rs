@@ -1,6 +1,7 @@
+use crate::handler::MakeHandler;
 use crate::history::History;
 use crate::route_kind::RouteKind;
-use crate::{EguiRouter, Handler, TransitionConfig};
+use crate::{EguiRouter, TransitionConfig};
 
 pub struct RouterBuilder<State, H> {
     pub(crate) router: matchit::Router<RouteKind<State>>,
@@ -15,7 +16,13 @@ pub struct RouterBuilder<State, H> {
     pub(crate) history_kind: Option<H>,
 }
 
-impl<State, H: History + Default> RouterBuilder<State, H> {
+impl<State: 'static, H: History + Default> Default for RouterBuilder<State, H> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     pub fn new() -> Self {
         Self {
             router: matchit::Router::new(),
@@ -64,9 +71,54 @@ impl<State, H: History + Default> RouterBuilder<State, H> {
         self
     }
 
-    pub fn route<Han: Handler<State> + 'static>(mut self, route: &str, handler: Han) -> Self {
+    pub fn route<HandlerArgs, Han: MakeHandler<State, HandlerArgs> + 'static>(
+        mut self,
+        route: &str,
+        mut handler: Han,
+    ) -> Self {
         self.router
-            .insert(route, RouteKind::Route(Box::new(handler)))
+            .insert(
+                route,
+                RouteKind::Route(Box::new(move |req| handler.handle(req))),
+            )
+            .unwrap();
+        self
+    }
+
+    #[cfg(feature = "async")]
+    pub fn async_route<HandlerArgs, Han>(mut self, route: &str, mut handler: Han) -> Self
+    where
+        Han: crate::handler::async_impl::AsyncMakeHandler<State, HandlerArgs>
+            + 'static
+            + Clone
+            + Send
+            + Sync,
+        State: Clone + 'static + Send + Sync,
+    {
+        self.router
+            .insert(
+                route,
+                RouteKind::Route(Box::new(move |req| {
+                    let owned = crate::OwnedRequest {
+                        params: req
+                            .params
+                            .iter()
+                            .map(|(k, v)| (k.to_string(), v.to_string()))
+                            .collect(),
+                        state: req.state.clone(),
+                    };
+
+                    let handler = handler.clone();
+
+                    let route = crate::async_route::AsyncRoute {
+                        suspense: egui_suspense::EguiSuspense::single_try_async(async move {
+                            handler.handle(owned).await
+                        }),
+                    };
+
+                    Ok(Box::new(route))
+                })),
+            )
             .unwrap();
         self
     }

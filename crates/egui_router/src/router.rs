@@ -3,13 +3,11 @@ use crate::route_kind::RouteKind;
 use crate::router_builder::RouterBuilder;
 use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
-    CurrentTransition, Handler, Request, RouteState, RouterError, RouterResult, TransitionConfig,
-    ID,
+    CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
 };
 use egui::Ui;
 use matchit::MatchError;
 use std::sync::atomic::Ordering;
-use web_sys::console;
 
 pub struct EguiRouter<State, History = DefaultHistory> {
     router: matchit::Router<RouteKind<State>>,
@@ -27,7 +25,7 @@ pub struct EguiRouter<State, History = DefaultHistory> {
     default_duration: Option<f32>,
 }
 
-impl<State, H: History + Default> EguiRouter<State, H> {
+impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     pub fn builder() -> RouterBuilder<State, H> {
         RouterBuilder::new()
     }
@@ -50,7 +48,6 @@ impl<State, H: History + Default> EguiRouter<State, H> {
             .active_route()
             .or(builder.default_route.map(|d| (d, None)))
         {
-            console::log_1(&format!("Initial route: {}", r).into());
             router
                 .navigate_impl(state, r, TransitionConfig::none(), state_index.unwrap_or(0))
                 .ok();
@@ -77,10 +74,11 @@ impl<State, H: History + Default> EguiRouter<State, H> {
             Ok(match_) => {
                 match match_.value {
                     RouteKind::Route(handler) => {
-                        let route = handler.handle(Request {
+                        let route = handler(Request {
                             state,
                             params: match_.params,
-                        });
+                        })
+                        .unwrap();
                         self.history.push(RouteState {
                             path,
                             route,
@@ -171,10 +169,11 @@ impl<State, H: History + Default> EguiRouter<State, H> {
                 RouteKind::Route(handler) => {
                     self.history_kind.replace(&path, new_state)?;
                     let leaving_route = self.history.pop();
-                    let route = handler.handle(Request {
+                    let route = handler(Request {
                         state,
                         params: match_.params,
-                    });
+                    })
+                    .unwrap();
                     self.history.push(RouteState {
                         path,
                         route,

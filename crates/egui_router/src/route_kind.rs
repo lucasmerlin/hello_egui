@@ -1,6 +1,6 @@
-use crate::{Handler, Route};
+use crate::handler::Handler;
 
 pub enum RouteKind<State> {
-    Route(Box<dyn Handler<State>>),
+    Route(Handler<State>),
     Redirect(String),
 }

@@ -1,10 +1,13 @@
+#[cfg(feature = "async")]
+mod async_route;
+mod handler;
 pub mod history;
 mod route_kind;
 mod router;
 mod router_builder;
 pub mod transition;
 
-use crate::history::{History, HistoryError, HistoryEvent};
+use crate::history::{History, HistoryError};
 use crate::transition::{ActiveTransition, SlideFadeTransition, SlideTransition, Transition};
 use egui::emath::ease_in_ease_out;
 use egui::{Ui, Vec2};
@@ -12,9 +15,8 @@ use std::sync::atomic::AtomicUsize;
 
 pub use router::EguiRouter;
 
-pub trait Handler<State> {
-    fn handle(&mut self, state: Request<State>) -> Box<dyn Route<State>>;
-}
+#[cfg(feature = "async")]
+pub use handler::async_impl::OwnedRequest;
 
 pub trait Route<State> {
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State);
@@ -112,15 +114,6 @@ struct CurrentTransition<State> {
 pub struct Request<'a, State = ()> {
     pub params: matchit::Params<'a, 'a>,
     pub state: &'a mut State,
-}
-
-impl<F, State, R: Route<State> + 'static> Handler<State> for F
-where
-    F: Fn(Request<State>) -> R,
-{
-    fn handle(&mut self, request: Request<State>) -> Box<dyn Route<State>> {
-        Box::new(self(request))
-    }
 }
 
 // impl<F, Fut, State, R: 'static> Handler<State> for F
