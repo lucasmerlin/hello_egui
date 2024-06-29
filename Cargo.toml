@@ -69,5 +69,8 @@ egui_extras = { version = "0.27.0", default-features = false }
 [patch.crates-io]
 #wry = { path = "../../RustroverProjects/github/wry" }
 #
-#egui = { path = "../../IdeaProjects/egui/crates/egui" }
-#egui-wgpu = { path = "../../IdeaProjects/egui/crates/egui-wgpu" }
+egui = { path = "../../IdeaProjects/egui/crates/egui" }
+eframe = { path = "../../IdeaProjects/egui/crates/eframe" }
+egui-wgpu = { path = "../../IdeaProjects/egui/crates/egui-wgpu" }
+egui_extras = { path = "../../IdeaProjects/egui/crates/egui_extras" }
+winit = { path = "../../IdeaProjects/github/winit" }

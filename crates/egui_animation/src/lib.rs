@@ -115,7 +115,7 @@ pub fn animate_ui_translation(
 
     let current_pos = animate_position(ui, id, target_pos, 1.0, easing, prevent_scroll_animation);
 
-    let mut child = ui.child_ui(rect, *ui.layout());
+    let mut child = ui.child_ui(rect, *ui.layout(), None);
 
     let _response = child
         .allocate_ui_at_rect(Rect::from_min_size(current_pos, rect.size()), |ui| {

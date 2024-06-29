@@ -171,7 +171,7 @@ impl<'a> Item<'a> {
                 rect.min
             };
 
-            let mut child = ui.child_ui(rect, *ui.layout());
+            let mut child = ui.child_ui(rect, *ui.layout(), None);
 
             child.allocate_ui_at_rect(Rect::from_min_size(position, rect.size()), |ui| {
                 drag_body(
@@ -207,7 +207,7 @@ impl<'a> Item<'a> {
 
             let size = ui.available_size();
 
-            let mut child = ui.child_ui(ui.max_rect(), *ui.layout());
+            let mut child = ui.child_ui(ui.max_rect(), *ui.layout(), None);
             let response = child.allocate_ui_at_rect(Rect::from_min_size(position, size), |ui| {
                 drag_body(
                     ui,

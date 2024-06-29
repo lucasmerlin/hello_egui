@@ -103,7 +103,7 @@ impl PullToRefresh {
         ui: &mut Ui,
         content: impl FnOnce(&mut Ui) -> T,
     ) -> PullToRefreshResponse<T> {
-        let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout());
+        let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
 
         let output = content(&mut child);
 

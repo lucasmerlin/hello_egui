@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use egui::util::IdTypeMap;
-use egui::{Context, Id, LayerId, Order, Pos2, Ui};
+use egui::{Context, Id, LayerId, Order, Pos2, Ui, UiStackInfo};
 use taffy::prelude::*;
 
 pub use taffy;
@@ -255,6 +255,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                                 Id::new("measure"),
                                 rect,
                                 egui::Rect::from_min_size(Default::default(), Default::default()),
+                                UiStackInfo::default(),
                             );
                             let response = ui.with_layout(
                                 egui::Layout {
@@ -346,7 +347,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                         return;
                     }
 
-                    let mut child = self.ui.child_ui(rect, *egui_layout);
+                    let mut child = self.ui.child_ui(rect, *egui_layout, None);
 
                     content(&mut child);
                 }

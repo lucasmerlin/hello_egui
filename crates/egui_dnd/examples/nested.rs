@@ -3,11 +3,11 @@ use eframe::egui::{CollapsingHeader, Id, Ui};
 
 use egui_dnd::{dnd, DragDropItem, Handle};
 
-pub fn main() {
+pub fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         ..Default::default()
     };
-    eframe::run_native("DnD", options, Box::new(|_cc| Box::<MyApp>::default())).unwrap();
+    eframe::run_native("DnD", options, Box::new(|_cc| Ok(Box::<MyApp>::default())))
 }
 
 #[derive(Default)]

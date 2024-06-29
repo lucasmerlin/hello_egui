@@ -11,7 +11,7 @@ pub trait ComposableTransitionTrait {
 
 impl<T: ComposableTransitionTrait> TransitionTrait for T {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut child = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id);
+        let mut child = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id, None);
         self.apply(&mut child, t);
         child
     }
@@ -80,7 +80,7 @@ impl TransitionTrait for SlideTransition {
         let offset = available_size * (1.0 - t) * self.amount;
         let child_rect = ui.max_rect().translate(offset);
 
-        ui.child_ui_with_id_source(child_rect, *ui.layout(), with_id)
+        ui.child_ui_with_id_source(child_rect, *ui.layout(), with_id, None)
     }
 }
 
@@ -234,6 +234,7 @@ impl ActiveTransition {
                 ui.max_rect(),
                 *ui.layout(),
                 Id::new("router_child").with(with_id),
+                None,
             );
             content(&mut ui);
         });

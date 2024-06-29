@@ -15,6 +15,7 @@ pub fn measure_text(ui: &mut Ui, text: impl Into<WidgetText>) -> Vec2 {
     let res = Label::new(text).layout_in_ui(&mut ui.child_ui(
         ui.available_rect_before_wrap(),
         Layout::left_to_right(Align::Center),
+        None,
     ));
 
     // There seem to be rounding errors in egui's text rendering
