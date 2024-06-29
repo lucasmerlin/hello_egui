@@ -3,7 +3,7 @@ use std::hash::Hash;
 use eframe::egui::Color32;
 use eframe::emath::lerp;
 use eframe::{egui, Frame};
-use egui::{Align2, Area, Context, Id, SidePanel, Ui, Vec2};
+use egui::{Context, Id, SidePanel, Ui};
 
 use egui_inbox::UiInbox;
 use egui_router::EguiRouter;
@@ -11,7 +11,6 @@ use hello_egui_utils::center::Center;
 use shared_state::SharedState;
 use sidebar::SideBar;
 
-use crate::crate_ui::CrateUi;
 use crate::routes::router;
 
 mod chat;
@@ -34,7 +33,6 @@ pub struct App {
     sidebar: SideBar,
     sidebar_expanded: bool,
     shared_state: SharedState,
-    crate_ui: CrateUi,
     inbox: UiInbox<FancyMessage>,
     router: EguiRouter<SharedState>,
 }
@@ -56,8 +54,7 @@ impl App {
             sidebar: SideBar::new(),
             shared_state: state,
             sidebar_expanded: false,
-            crate_ui: CrateUi::new(),
-            router: router,
+            router,
         }
     }
 }
@@ -67,7 +64,7 @@ impl eframe::App for App {
         self.inbox.set_ctx(ctx);
         self.inbox.read_without_ctx().for_each(|msg| match msg {
             FancyMessage::Navigate(route) => {
-                self.router.navigate(&mut self.shared_state, route);
+                self.router.navigate(&mut self.shared_state, route).unwrap();
             }
         });
 

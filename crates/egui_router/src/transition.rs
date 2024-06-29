@@ -1,6 +1,5 @@
 use crate::TransitionConfig;
-use egui::emath::ease_in_ease_out;
-use egui::{vec2, Id, Ui, Vec2};
+use egui::{Id, Ui, Vec2};
 
 pub trait TransitionTrait {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui;

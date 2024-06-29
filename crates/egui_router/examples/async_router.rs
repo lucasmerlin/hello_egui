@@ -14,13 +14,13 @@ enum RouterMessage {
 async fn main() -> eframe::Result<()> {
     let mut router: Option<EguiRouter<AppState>> = None;
 
-    let mut inbox = UiInbox::new();
+    let inbox = UiInbox::new();
     let mut sender = inbox.sender();
 
     eframe::run_simple_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, frame| {
+        move |ctx, _frame| {
             let router = router.get_or_insert_with(|| {
                 EguiRouter::builder()
                     .error_ui(|ui, state: &AppState, error| {

@@ -49,7 +49,7 @@ where
     F: Fn() -> R,
     R: Route<State> + 'static,
 {
-    fn handle(&mut self, request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
+    fn handle(&mut self, _request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
         Ok(Box::new(self()))
     }
 }
@@ -69,7 +69,7 @@ where
     F: Fn() -> HandlerResult<R>,
     R: Route<State> + 'static,
 {
-    fn handle(&mut self, request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
+    fn handle(&mut self, _request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
         Ok(Box::new(self()?))
     }
 }
@@ -92,9 +92,6 @@ pub mod async_impl {
             state: OwnedRequest<State>,
         ) -> impl Future<Output = HandlerResult<Box<dyn Route<State> + Send + Sync>>> + Send + Sync;
     }
-
-    pub type AsyncHandler<State> =
-        Box<dyn FnMut(Request<State>) -> HandlerResult<Box<dyn Route<State>>>>;
 
     impl<F, Fut, State, R> AsyncMakeHandler<State, (Request<'static, State>, ())> for F
     where
@@ -120,7 +117,7 @@ pub mod async_impl {
     {
         async fn handle(
             &self,
-            request: OwnedRequest<State>,
+            _request: OwnedRequest<State>,
         ) -> HandlerResult<Box<dyn Route<State> + Send + Sync>> {
             Ok(Box::new(self().await))
         }
@@ -150,7 +147,7 @@ pub mod async_impl {
     {
         async fn handle(
             &self,
-            request: OwnedRequest<State>,
+            _request: OwnedRequest<State>,
         ) -> HandlerResult<Box<dyn Route<State> + Send + Sync>> {
             Ok(Box::new(self().await?))
         }

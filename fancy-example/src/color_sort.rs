@@ -1,7 +1,7 @@
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
 use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
-use crate::{crate_usage, demo_area};
 use eframe::emath::Vec2;
 use eframe::epaint::{Color32, Hsva, Rounding};
 use egui::{Id, Sense, Ui};

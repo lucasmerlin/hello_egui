@@ -1,7 +1,6 @@
 use std::iter::repeat;
 use std::sync::Arc;
 use std::time::Duration;
-use std::usize;
 
 use eframe::emath::Vec2;
 use egui::{
@@ -13,10 +12,10 @@ use egui_inbox::UiInbox;
 use egui_infinite_scroll::InfiniteScroll;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
 use crate::example::{Example, ExampleTrait};
 use crate::futures::{sleep, spawn};
 use crate::shared_state::SharedState;
-use crate::{crate_usage, demo_area};
 
 pub const CHAT_EXAMPLE: Example = Example {
     name: "Chat",

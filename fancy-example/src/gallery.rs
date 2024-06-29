@@ -6,9 +6,9 @@ use egui_pull_to_refresh::PullToRefresh;
 use egui_thumbhash::ThumbhashImage;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
 use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
-use crate::{crate_usage, demo_area};
 
 pub const GALLERY_EXAMPLE: Example = Example {
     name: "Gallery",

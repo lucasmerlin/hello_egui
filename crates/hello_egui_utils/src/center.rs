@@ -1,5 +1,6 @@
 use egui::{Align2, Id, Rect, Ui, Vec2};
 
+/// A widget that measures its content and centers it within the available space.
 pub struct Center {
     id: Id,
     rect: Option<Rect>,
@@ -8,6 +9,7 @@ pub struct Center {
 }
 
 impl Center {
+    /// Create a new center widget with the given id.
     pub fn new(id: impl Into<Id>) -> Self {
         Self {
             id: id.into(),
@@ -17,11 +19,13 @@ impl Center {
         }
     }
 
+    /// Set the alignment
     pub fn align2(mut self, align2: Align2) -> Self {
         self.align2 = align2;
         self
     }
 
+    /// Show the widget
     pub fn ui<T>(self, ui: &mut Ui, content: impl FnOnce(&mut Ui) -> T) -> T {
         let id = ui.id().with(self.id);
         let data_id = id.with("center");

@@ -12,6 +12,10 @@ async = ["egui_suspense/async"]
 name = "async_router"
 required-features = ["async"]
 
+[[example]]
+name = "router"
+required-features = ["async"]
+
 [dependencies]
 egui.workspace = true
 egui_inbox.workspace = true

@@ -19,7 +19,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_simple_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, frame| {
+        move |ctx, _frame| {
             let router = router.get_or_insert_with(|| {
                 EguiRouter::builder()
                     .route("/", home)

@@ -1,4 +1,4 @@
-use crate::crate_ui::{CrateUi, CrateUsage, ALL_CRATES};
+use crate::crate_ui::{CrateUi, ALL_CRATES};
 use crate::example::EXAMPLES;
 use crate::shared_state::SharedState;
 use egui::Ui;
@@ -30,7 +30,7 @@ pub fn crate_route(req: Request<SharedState>) -> impl Route<SharedState> {
         .unwrap();
 
     let mut crate_ui = CrateUi::new();
-    move |ui: &mut Ui, state: &mut SharedState| {
+    move |ui: &mut Ui, _state: &mut SharedState| {
         crate_ui.ui(ui, item);
     }
 }

@@ -6,7 +6,7 @@ use std::iter;
 pub struct MemoryHistory {}
 
 impl History for MemoryHistory {
-    fn update(&mut self, ctx: &Context) -> impl Iterator<Item = HistoryEvent> + 'static {
+    fn update(&mut self, _ctx: &Context) -> impl Iterator<Item = HistoryEvent> + 'static {
         iter::empty()
     }
 
@@ -14,11 +14,11 @@ impl History for MemoryHistory {
         None
     }
 
-    fn push(&mut self, url: &str, state: u32) -> HistoryResult {
+    fn push(&mut self, _url: &str, _state: u32) -> HistoryResult {
         Ok(())
     }
 
-    fn replace(&mut self, url: &str, state: u32) -> HistoryResult {
+    fn replace(&mut self, _url: &str, _state: u32) -> HistoryResult {
         Ok(())
     }
 

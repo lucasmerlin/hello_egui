@@ -7,7 +7,7 @@ mod router;
 mod router_builder;
 pub mod transition;
 
-use crate::history::{History, HistoryError};
+use crate::history::HistoryError;
 use crate::transition::{ActiveTransition, SlideFadeTransition, SlideTransition, Transition};
 use egui::emath::ease_in_ease_out;
 use egui::{Ui, Vec2};

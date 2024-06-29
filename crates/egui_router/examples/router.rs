@@ -1,9 +1,9 @@
-use eframe::{App, NativeOptions};
+use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Context, Frame, ScrollArea, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
-use std::convert::Infallible;
 
+#[derive(Debug, Clone)]
 struct AppState {
     message: String,
     inbox: TypeInbox,
@@ -30,7 +30,7 @@ async fn main() -> eframe::Result<()> {
             .route("/", home)
             .route("/edit", edit_message)
             .route("/post/{id}", post)
-            .route("/async", async_route);
+            .async_route("/async", async_route);
 
         (router.build(&mut app_state), app_state)
     };
@@ -41,7 +41,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_simple_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, frame| {
+        move |ctx, _frame| {
             let mut router = router.get_or_insert_with(|| init(ctx));
             let mut window_router = window_router.get_or_insert_with(|| init(ctx));
 
@@ -52,10 +52,10 @@ async fn main() -> eframe::Result<()> {
                     .read()
                     .for_each(|msg: RouterMessage| match msg {
                         RouterMessage::Navigate(route) => {
-                            state.0.navigate(&mut state.1, route);
+                            state.0.navigate(&mut state.1, route).unwrap();
                         }
                         RouterMessage::Back => {
-                            state.0.back();
+                            state.0.back().unwrap();
                         }
                     });
             }
@@ -75,7 +75,7 @@ async fn main() -> eframe::Result<()> {
     )
 }
 
-fn home(request: Request<AppState>) -> impl Route<AppState> {
+fn home() -> impl Route<AppState> {
     |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.faint_bg_color, |ui| {
             ui.heading("Home!");
@@ -119,7 +119,7 @@ fn home(request: Request<AppState>) -> impl Route<AppState> {
     }
 }
 
-fn edit_message(request: Request<AppState>) -> impl Route<AppState> {
+fn edit_message() -> impl Route<AppState> {
     |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.window_fill, |ui| {
             ui.heading("Edit Message");
@@ -159,20 +159,12 @@ fn post(request: Request<AppState>) -> impl Route<AppState> {
     }
 }
 
-fn async_route(request: Request<AppState>) -> impl Route<AppState> {
-    let mut suspense =
-        egui_suspense::EguiSuspense::<_, Infallible>::reloadable_async(|| async move {
-            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-            Ok("Async Route Loaded".to_string())
-        });
+async fn async_route() -> impl Route<AppState> {
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
 
     move |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
-            ui.heading("Async Route");
-
-            suspense.ui(ui, |ui, data, state| {
-                ui.label(&*data);
-            });
+            ui.heading("Async Route Loaded");
 
             if ui.button("back").clicked() {
                 state.inbox.send(RouterMessage::Back);

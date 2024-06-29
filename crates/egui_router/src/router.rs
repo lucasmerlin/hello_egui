@@ -1,7 +1,6 @@
-use crate::handler::{HandlerError, HandlerResult};
 use crate::history::{DefaultHistory, History};
 use crate::route_kind::RouteKind;
-use crate::router_builder::{ErrorUi, LoadingUi, RouterBuilder};
+use crate::router_builder::{ErrorUi, RouterBuilder};
 use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
     CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
@@ -16,8 +15,6 @@ pub struct EguiRouter<State, History = DefaultHistory> {
 
     history_kind: History,
 
-    state: usize,
-
     forward_transition: TransitionConfig,
     backward_transition: TransitionConfig,
     replace_transition: TransitionConfig,
@@ -26,7 +23,6 @@ pub struct EguiRouter<State, History = DefaultHistory> {
     default_duration: Option<f32>,
 
     error_ui: ErrorUi<State>,
-    loading_ui: LoadingUi<State>,
 }
 
 impl<State: 'static, H: History + Default> EguiRouter<State, H> {
@@ -39,14 +35,12 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             router: builder.router,
             history: Vec::new(),
             history_kind: builder.history_kind.unwrap_or_default(),
-            state: 0,
             current_transition: None,
             forward_transition: builder.forward_transition,
             backward_transition: builder.backward_transition,
             replace_transition: builder.replace_transition,
             default_duration: builder.default_duration,
             error_ui: builder.error_ui,
-            loading_ui: builder.loading_ui,
         };
 
         if let Some((r, state_index)) = router
@@ -74,7 +68,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         new_state: u32,
     ) -> RouterResult {
         let mut redirect = None;
-        let mut result = self.router.at_mut(&path);
+        let result = self.router.at_mut(&path);
 
         let result = match result {
             Ok(match_) => {
@@ -207,6 +201,10 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         }
 
         result
+    }
+
+    pub fn replace(&mut self, state: &mut State, path: impl Into<String>) -> RouterResult {
+        self.replace_transition(state, path, self.replace_transition.clone())
     }
 
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {

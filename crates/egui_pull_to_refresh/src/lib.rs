@@ -32,7 +32,7 @@ impl PullToRefreshState {
         match self {
             PullToRefreshState::Idle => Some(0.0),
             PullToRefreshState::Dragging { distance, .. } => {
-                Some((distance / min_distance).min(1.0).max(0.0) as f64)
+                Some((distance / min_distance).clamp(0.0, 1.0) as f64)
             }
             PullToRefreshState::DoRefresh => Some(1.0),
             PullToRefreshState::Refreshing => None,

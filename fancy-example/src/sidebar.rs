@@ -1,5 +1,5 @@
-use crate::crate_ui::{crate_button_ui, Crate, ALL_CRATES};
-use crate::example::{Category, ExampleTrait, EXAMPLES};
+use crate::crate_ui::{crate_button_ui, ALL_CRATES};
+use crate::example::EXAMPLES;
 use crate::shared_state::SharedState;
 use crate::FancyMessage;
 use egui::{Align, Direction, Layout, RichText, Ui};

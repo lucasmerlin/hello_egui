@@ -115,7 +115,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     }
 
     #[cfg(feature = "async")]
-    pub fn async_route<HandlerArgs, Han>(mut self, route: &str, mut handler: Han) -> Self
+    pub fn async_route<HandlerArgs, Han>(mut self, route: &str, handler: Han) -> Self
     where
         Han: crate::handler::async_impl::AsyncMakeHandler<State, HandlerArgs>
             + 'static
@@ -129,7 +129,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
         self.router
             .insert(
                 route,
-                RouteKind::Route(Box::new(move |mut req| {
+                RouteKind::Route(Box::new(move |req| {
                     let loading_ui = loading_ui.clone();
                     let error_ui = error_ui.clone();
 

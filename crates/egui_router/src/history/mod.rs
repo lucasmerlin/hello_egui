@@ -22,9 +22,9 @@ pub type DefaultHistory = history::BrowserHistory;
 pub type DefaultHistory = history::MemoryHistory;
 
 #[derive(Debug, Clone)]
-pub(crate) struct HistoryEvent {
-    pub(crate) location: String,
-    pub(crate) state: Option<u32>,
+pub struct HistoryEvent {
+    pub location: String,
+    pub state: Option<u32>,
 }
 
 type HistoryResult<T = ()> = Result<T, HistoryError>;
