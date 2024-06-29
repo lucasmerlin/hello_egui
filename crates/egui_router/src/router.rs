@@ -9,6 +9,7 @@ use crate::{
 use egui::Ui;
 use matchit::MatchError;
 use std::sync::atomic::Ordering;
+use web_sys::console;
 
 pub struct EguiRouter<State, History = DefaultHistory> {
     router: matchit::Router<RouteKind<State>>,
@@ -35,7 +36,7 @@ impl<State, H: History + Default> EguiRouter<State, H> {
         let mut router = Self {
             router: builder.router,
             history: Vec::new(),
-            history_kind: H::default(),
+            history_kind: builder.history_kind.unwrap_or_default(),
             state: 0,
             current_transition: None,
             forward_transition: builder.forward_transition,
@@ -49,6 +50,7 @@ impl<State, H: History + Default> EguiRouter<State, H> {
             .active_route()
             .or(builder.default_route.map(|d| (d, None)))
         {
+            console::log_1(&format!("Initial route: {}", r).into());
             router
                 .navigate_impl(state, r, TransitionConfig::none(), state_index.unwrap_or(0))
                 .ok();

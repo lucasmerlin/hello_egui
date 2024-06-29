@@ -54,7 +54,7 @@ impl<State, H: History + Default> RouterBuilder<State, H> {
         self
     }
 
-    pub fn default_route(mut self, route: impl Into<String>) -> Self {
+    pub fn default_path(mut self, route: impl Into<String>) -> Self {
         self.default_route = Some(route.into());
         self
     }

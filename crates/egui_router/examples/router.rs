@@ -24,7 +24,7 @@ async fn main() -> eframe::Result<()> {
         let mut router = EguiRouter::builder()
             .transition(TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out))
             .default_duration(0.2)
-            .default_route("/");
+            .default_path("/");
 
         router = router
             .route("/", home)
