@@ -6,11 +6,21 @@ use ehttp::Request;
 use serde::Deserialize;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
+use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
-use crate::sidebar::Example;
-use crate::{crate_usage, demo_area};
 use egui_dnd::{dnd, DragDropConfig};
 use egui_infinite_scroll::InfiniteScroll;
+
+pub const STARGAZERS_EXAMPLE: Example = Example {
+    name: "Stargazers",
+    slug: "stargazers",
+    crates: &[
+        CrateUsage::simple(Crate::EguiDnd),
+        CrateUsage::simple(Crate::EguiInfiniteScroll),
+    ],
+    get: || Box::new(Stargazers::new()),
+};
 
 #[derive(Deserialize, Debug)]
 pub struct Stargazer {
@@ -29,16 +39,7 @@ pub struct Stargazers {
     infinite_scroll: InfiniteScroll<Stargazer, usize>,
 }
 
-impl Example for Stargazers {
-    fn name(&self) -> &'static str {
-        "Stargazers"
-    }
-
-    crate_usage!(
-        CrateUsage::simple(Crate::EguiDnd),
-        CrateUsage::simple(Crate::EguiInfiniteScroll),
-    );
-
+impl ExampleTrait for Stargazers {
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         self.stargazers_ui(ui, shared_state);
     }
@@ -67,7 +68,7 @@ impl Stargazers {
     }
 
     pub fn stargazers_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        demo_area(ui, self.name(), 300.0, |ui| {
+        demo_area(ui, STARGAZERS_EXAMPLE.name, 300.0, |ui| {
             ScrollArea::vertical()
                 .max_height(250.0)
                 .auto_shrink([false, false])
@@ -87,7 +88,7 @@ impl Stargazers {
                     self.stargazers_dnd_ui(ui);
                 });
 
-            crate_usage_ui(ui, self.crates(), shared_state);
+            crate_usage_ui(ui, STARGAZERS_EXAMPLE.crates, shared_state);
         });
     }
 

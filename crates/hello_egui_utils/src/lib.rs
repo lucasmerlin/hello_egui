@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+/// Helper struct to easily align things with unknown sizes
+pub mod center;
+
 use egui::{Align, Label, Layout, Ui, Vec2, WidgetText};
 
 pub use concat_idents::concat_idents;

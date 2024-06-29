@@ -33,7 +33,7 @@ impl<'a> State<'a> {
 
 /// A widget that shows a spinner while data is loading and shows
 /// an error message and retry button if the data failed to load.
-pub struct EguiSuspense<T: Debug, E: Display + Debug = String> {
+pub struct EguiSuspense<T, E: Display + Debug = String> {
     inbox: UiInbox<Result<T, E>>,
     data: Option<Result<T, E>>,
 
@@ -45,15 +45,11 @@ pub struct EguiSuspense<T: Debug, E: Display + Debug = String> {
 
 impl<T: Debug, E: Display + Debug> Debug for EguiSuspense<T, E> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("EguiSuspense")
-            .field("data", &self.data)
-            .finish()
+        f.debug_struct("EguiSuspense").finish()
     }
 }
 
-impl<T: Debug + Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static>
-    EguiSuspense<T, E>
-{
+impl<T: Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static> EguiSuspense<T, E> {
     asyncify!(
         /// Create a new suspense that can be reloaded.
         reloadable,

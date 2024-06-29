@@ -1,7 +1,7 @@
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
+use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
-use crate::sidebar::Example;
-use crate::{crate_usage, demo_area};
 
 use egui::{vec2, Button, ScrollArea, TextEdit, Ui, Widget};
 use egui_extras::Size;
@@ -9,6 +9,13 @@ use egui_form::validator::validator::Validate;
 use egui_form::validator::{field_path, ValidatorReport};
 use egui_form::{Form, FormField};
 use validator::{ValidateArgs, ValidationError};
+
+pub const SIGNUP_FORM_EXAMPLE: Example = Example {
+    name: "Signup Form",
+    slug: "signup_form",
+    crates: &[CrateUsage::simple(Crate::EguiForm)],
+    get: || Box::new(SignupForm::new()),
+};
 
 fn validate_password(password: &str) -> Result<(), ValidationError> {
     if password.chars().all(|c| c.is_alphanumeric()) {
@@ -83,15 +90,9 @@ fn text_edit_singleline(value: &mut String) -> TextEdit {
     TextEdit::singleline(value).margin(8.0)
 }
 
-impl Example for SignupForm {
-    fn name(&self) -> &'static str {
-        "Signup Form"
-    }
-
-    crate_usage!(CrateUsage::simple(Crate::EguiForm));
-
+impl ExampleTrait for SignupForm {
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        demo_area(ui, self.name(), 400.0, |ui| {
+        demo_area(ui, SIGNUP_FORM_EXAMPLE.name, 400.0, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 ui.style_mut().spacing.text_edit_width = 400.0;
 
@@ -249,7 +250,7 @@ Errors will show up after editing a field or after trying to submit.
 
                 ui.add_space(8.0);
 
-                crate_usage_ui(ui, self.crates(), shared_state);
+                crate_usage_ui(ui, SIGNUP_FORM_EXAMPLE.crates, shared_state);
             });
         });
     }

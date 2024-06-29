@@ -14,6 +14,8 @@ pub use egui_inbox as inbox;
 pub use egui_infinite_scroll as infinite_scroll;
 #[cfg(feature = "pull_to_refresh")]
 pub use egui_pull_to_refresh as pull_to_refresh;
+#[cfg(feature = "router")]
+pub use egui_router as router;
 #[cfg(feature = "suspense")]
 pub use egui_suspense as suspense;
 #[cfg(feature = "thumbhash")]

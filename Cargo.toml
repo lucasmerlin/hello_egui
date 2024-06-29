@@ -15,7 +15,7 @@ tag-prefix = "hello_egui-"
 all-features = true
 
 [features]
-all = ["animation", "dnd", "form", "inbox", "infinite_scroll", "pull_to_refresh", "suspense", "thumbhash", "virtual_list"]
+all = ["animation", "dnd", "form", "inbox", "infinite_scroll", "pull_to_refresh", "router", "suspense", "thumbhash", "virtual_list"]
 full = ["all", "async", "tokio"]
 
 animation = ["dep:egui_animation"]
@@ -25,6 +25,7 @@ form = ["dep:egui_form"]
 inbox = ["dep:egui_inbox"]
 infinite_scroll = ["dep:egui_infinite_scroll"]
 pull_to_refresh = ["dep:egui_pull_to_refresh"]
+router = ["dep:egui_router"]
 suspense = ["dep:egui_suspense"]
 thumbhash = ["dep:egui_thumbhash"]
 tokio = ["egui_suspense/tokio", "egui_infinite_scroll/tokio"]
@@ -37,6 +38,7 @@ egui_inbox = { workspace = true, optional = true }
 egui_form = { workspace = true, optional = true }
 egui_infinite_scroll = { workspace = true, optional = true }
 egui_pull_to_refresh = { workspace = true, optional = true }
+egui_router = { workspace = true, optional = true }
 egui_suspense = { workspace = true, optional = true }
 egui_thumbhash = { workspace = true, optional = true }
 egui_virtual_list = { workspace = true, optional = true }
@@ -53,6 +55,7 @@ hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.4.0" }
 egui_form = { path = "./crates/egui_form", version = "0.1.1" }
 egui_inbox = { path = "./crates/egui_inbox", version = "0.4.1" }
 egui_pull_to_refresh = { path = "./crates/egui_pull_to_refresh", version = "0.4.0" }
+egui_router = { path = "./crates/egui_router", version = "0.1.0" }
 egui_suspense = { path = "./crates/egui_suspense", version = "0.4.0" }
 egui_virtual_list = { path = "./crates/egui_virtual_list", version = "0.3.0" }
 egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.3.0" }

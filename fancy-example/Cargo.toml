@@ -16,6 +16,7 @@ egui_infinite_scroll.workspace = true
 egui_pull_to_refresh.workspace = true
 egui_taffy = { path = "../crates/egui_taffy" }
 egui_thumbhash.workspace = true
+egui_router.workspace = true
 hello_egui_utils.workspace = true
 
 egui = { workspace = true, features = ["color-hex"] }

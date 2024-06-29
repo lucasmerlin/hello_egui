@@ -6,9 +6,20 @@ use egui_pull_to_refresh::PullToRefresh;
 use egui_thumbhash::ThumbhashImage;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
+use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
-use crate::sidebar::Example;
-use crate::{crate_usage, demo_area};
+
+pub const GALLERY_EXAMPLE: Example = Example {
+    name: "Gallery",
+    slug: "gallery",
+    crates: &[
+        CrateUsage::simple(Crate::EguiThumbhash),
+        CrateUsage::simple(Crate::EguiInfiniteScroll),
+        CrateUsage::simple(Crate::EguiPullToRefresh),
+    ],
+    get: || Box::new(Gallery::new()),
+};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
@@ -45,19 +56,9 @@ impl Gallery {
     }
 }
 
-impl Example for Gallery {
-    fn name(&self) -> &'static str {
-        "Gallery"
-    }
-
-    crate_usage!(
-        CrateUsage::simple(Crate::EguiThumbhash),
-        CrateUsage::simple(Crate::EguiInfiniteScroll),
-        CrateUsage::simple(Crate::EguiPullToRefresh),
-    );
-
+impl ExampleTrait for Gallery {
     fn ui(&mut self, ui: &mut Ui, _shared_state: &mut SharedState) {
-        demo_area(ui, self.name(), 1000.0, |ui| {
+        demo_area(ui, "Gallery", 1000.0, |ui| {
             let height = 300.0;
 
             let refresh_response =
@@ -144,7 +145,7 @@ impl Example for Gallery {
 
             ui.add_space(8.0);
 
-            crate_usage_ui(ui, self.crates(), _shared_state);
+            crate_usage_ui(ui, GALLERY_EXAMPLE.crates, _shared_state);
         });
     }
 }

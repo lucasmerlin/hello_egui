@@ -5,7 +5,6 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use Crate::*;
 
 use crate::shared_state::SharedState;
-use crate::sidebar::ActiveElement;
 use crate::{demo_area, FancyMessage};
 
 pub const README_CONTENT_SEPARATOR: &str = "[content]:<>";
@@ -19,6 +18,7 @@ pub enum Crate {
     EguiInbox,
     EguiInfiniteScroll,
     EguiPullToRefresh,
+    EguiRouter,
     EguiSuspense,
     EguiThumbhash,
     EguiVirtualList,
@@ -69,6 +69,7 @@ crate_impl!(
     EguiInbox,
     EguiInfiniteScroll,
     EguiPullToRefresh,
+    EguiRouter,
     EguiSuspense,
     EguiThumbhash,
     EguiVirtualList
@@ -90,12 +91,13 @@ impl Crate {
             EguiForm => "Form validation for egui",
             EguiInbox => "Channel with ergonomics optimized for egui",
             EguiInfiniteScroll => "Infinite scroll widget for egui",
+            EguiPullToRefresh => "Pull to refresh widget for egui",
+            EguiRouter => "SPA-like router for egui",
+            EguiSuspense => "Suspense widget for egui for ergonomic data fetching",
+            EguiThumbhash => "Image loading and caching for egui",
             EguiVirtualList => {
                 "Virtual list widget for egui with support for varying heights and custom layouts"
             }
-            EguiPullToRefresh => "Pull to refresh widget for egui",
-            EguiSuspense => "Suspense widget for egui for ergonomic data fetching",
-            EguiThumbhash => "Image loading and caching for egui",
         }
     }
 }
@@ -143,8 +145,9 @@ pub fn crate_usage_ui(ui: &mut Ui, crates: &[CrateUsage], shared_state: &SharedS
             if response.clicked() {
                 shared_state
                     .tx
-                    .send(FancyMessage::SelectPage(ActiveElement::select_crate(
-                        crate_used,
+                    .send(FancyMessage::Navigate(format!(
+                        "/crate/{}",
+                        crate_used.name()
                     )))
                     .ok();
             }

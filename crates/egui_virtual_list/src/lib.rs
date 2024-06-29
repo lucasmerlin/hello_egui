@@ -126,20 +126,23 @@ impl VirtualList {
         mut layout: impl FnMut(&mut Ui, usize) -> usize,
     ) -> VirtualListResponse {
         let mut scroll_to_item_index_visibility = None;
-        if let Some(last_width) = self.last_width {
-            if ui.available_width() != last_width {
-                self.last_width = Some(ui.available_width());
-                if self.check_for_resize {
-                    self.last_known_row_index = None;
-                    self.rows.clear();
-                    self.last_resize = SystemTime::now();
-                    if self.scroll_position_sync_on_resize {
-                        scroll_to_item_index_visibility = self.last_top_most_item;
+        {
+            let available_width_rounded = (ui.available_width() * 10.0).round() / 10.0;
+            if let Some(last_width) = self.last_width {
+                if available_width_rounded != last_width {
+                    self.last_width = Some(available_width_rounded);
+                    if self.check_for_resize {
+                        self.last_known_row_index = None;
+                        self.rows.clear();
+                        self.last_resize = SystemTime::now();
+                        if self.scroll_position_sync_on_resize {
+                            scroll_to_item_index_visibility = self.last_top_most_item;
+                        }
                     }
                 }
+            } else {
+                self.last_width = Some(available_width_rounded);
             }
-        } else {
-            self.last_width = Some(ui.available_width());
         }
 
         if let Some(hide_on_resize) = self.hide_on_resize {

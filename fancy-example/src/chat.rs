@@ -1,7 +1,6 @@
 use std::iter::repeat;
 use std::sync::Arc;
 use std::time::Duration;
-use std::usize;
 
 use eframe::emath::Vec2;
 use egui::{
@@ -13,10 +12,21 @@ use egui_inbox::UiInbox;
 use egui_infinite_scroll::InfiniteScroll;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
+use crate::demo_area;
+use crate::example::{Example, ExampleTrait};
 use crate::futures::{sleep, spawn};
 use crate::shared_state::SharedState;
-use crate::sidebar::Example;
-use crate::{crate_usage, demo_area};
+
+pub const CHAT_EXAMPLE: Example = Example {
+    name: "Chat",
+    slug: "chat",
+    crates: &[
+        CrateUsage::simple(Crate::EguiInfiniteScroll),
+        CrateUsage::new(Crate::EguiInbox, "For \"receiving\" messages"),
+        CrateUsage::new(Crate::EguiAnimation, "For animating the loading dots"),
+    ],
+    get: || Box::new(ChatExample::new()),
+};
 
 pub const CHAT_HISTORY: &str = include_str!("chat_history.txt");
 
@@ -161,7 +171,7 @@ impl ChatExample {
             self.msgs_received += 1;
         });
 
-        let title = self.name();
+        let title = "Chat";
         demo_area(ui, title, 500.0, |ui| {
             ScrollArea::vertical()
                 .animated(false)
@@ -326,22 +336,12 @@ impl ChatExample {
                 });
 
             ui.add_space(8.0);
-            crate_usage_ui(ui, self.crates(), shared_state);
+            crate_usage_ui(ui, CHAT_EXAMPLE.crates, shared_state);
         });
     }
 }
 
-impl Example for ChatExample {
-    fn name(&self) -> &'static str {
-        "Chat"
-    }
-
-    crate_usage!(
-        CrateUsage::simple(Crate::EguiInfiniteScroll),
-        CrateUsage::new(Crate::EguiInbox, "For \"receiving\" messages"),
-        CrateUsage::new(Crate::EguiAnimation, "For animating the loading dots"),
-    );
-
+impl ExampleTrait for ChatExample {
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         self.ui(ui, shared_state)
     }

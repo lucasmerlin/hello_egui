@@ -1381,6 +1381,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_router"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_animation",
+ "egui_inbox",
+ "egui_suspense",
+ "js-sys",
+ "matchit",
+ "tokio",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "egui_suspense"
 version = "0.4.0"
 dependencies = [
@@ -1698,6 +1714,7 @@ dependencies = [
  "egui_inbox",
  "egui_infinite_scroll",
  "egui_pull_to_refresh",
+ "egui_router",
  "egui_taffy",
  "egui_thumbhash",
  "ehttp 0.4.0",
@@ -2510,6 +2527,7 @@ dependencies = [
  "egui_inbox",
  "egui_infinite_scroll",
  "egui_pull_to_refresh",
+ "egui_router",
  "egui_suspense",
  "egui_thumbhash",
  "egui_virtual_list",
@@ -2959,6 +2977,12 @@ name = "matches"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
+
+[[package]]
+name = "matchit"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "540f1c43aed89909c0cc0cc604e3bb2f7e7a341a3728a9e6cfe760e733cd11ed"
 
 [[package]]
 name = "memchr"
