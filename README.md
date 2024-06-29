@@ -52,10 +52,14 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
 
 - [egui_thumbhash](crates/egui_thumbhash)
     - Easily use [thumbhashes](https://evanw.github.io/thumbhash/) in egui.
-    - For a showcase, check the [gallery example](https://lucasmerlin.github.io/hello_egui/).
+    - For a showcase, check the [gallery example](https://lucasmerlin.github.io/hello_egui/#/example/gallery).
     - released on [crates.io](https://crates.io/crates/egui_thumbhash)
 
 ## **Experimental** Crates
+
+- [egui_router](crates/egui_router)
+    - A SPA router for egui with support for transitions
+    - Experimental, unreleased
 
 - [egui_animation](crates/egui_animation)
     - Animation utilities for egui

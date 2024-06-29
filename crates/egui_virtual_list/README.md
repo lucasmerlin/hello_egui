@@ -7,7 +7,6 @@
 [![License](https://img.shields.io/crates/l/egui_virtual_list.svg)](https://crates.io/crates/egui_virtual_list)
 
 
-
 [content]:<>
 
 
@@ -19,9 +18,9 @@ This crate has some extra features though:
 - Supports items with varying heights
     - Heights are calculated lazily and cached, as you scroll further down the list
 - Supports custom layouts, so you could place multiple items in a single row
-    - Check the [Gallery Example](https://lucasmerlin.github.io/hello_egui/)
+    - Check the [Gallery Example](https://lucasmerlin.github.io/hello_egui/#/example/gallery)
 - Allows for adding items at the top without the scroll position changing
-    - Check the [Chat Example](https://lucasmerlin.github.io/hello_egui/)
+    - Check the [Chat Example](https://lucasmerlin.github.io/hello_egui/#/example/chat)
 
 There are some limitations though:
 

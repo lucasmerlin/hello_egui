@@ -24,7 +24,8 @@ form validation crate you use.
 
 ## Showcase
 
-You can [try the Signup Form example](https://lucasmerlin.github.io/hello_egui/) in hello_egui showcase app.
+You can [try the Signup Form example](https://lucasmerlin.github.io/hello_egui/#/example/signup_form) in hello_egui
+showcase app.
 
 Also, here's a screenshot from HelloPaint's profile form:
 
