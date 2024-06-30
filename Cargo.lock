@@ -1715,6 +1715,7 @@ dependencies = [
  "egui_infinite_scroll",
  "egui_pull_to_refresh",
  "egui_router",
+ "egui_suspense",
  "egui_taffy",
  "egui_thumbhash",
  "ehttp 0.4.0",

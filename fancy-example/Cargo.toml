@@ -11,6 +11,7 @@ release = false
 egui_animation.workspace = true
 egui_dnd.workspace = true
 egui_form = { workspace = true, features = ["validator_validator"] }
+egui_suspense = { workspace = true, features = ["tokio", "async"] }
 egui_inbox.workspace = true
 egui_infinite_scroll.workspace = true
 egui_pull_to_refresh.workspace = true

@@ -7,21 +7,37 @@ use std::fmt::{Debug, Display};
 use egui::Ui;
 
 use egui_inbox::UiInbox;
-use hello_egui_utils::{asyncify, CallbackType};
+use hello_egui_utils::{asyncify, CallbackType, MaybeSend, MaybeSync};
+#[cfg(target_arch = "wasm32")]
+mod types {
+    use crate::State;
+    use egui::Ui;
 
-type CallbackFn<T> = dyn FnOnce(T) + Send;
+    pub type CallbackFn<T> = dyn FnOnce(T);
+    pub type ReloadFn<T, E> = dyn FnMut(Box<CallbackFn<Result<T, E>>>);
+    pub type ErrorUiFn<E> = dyn Fn(&mut Ui, &E, &mut State<'_>);
+    pub type LoadingUiFn = dyn Fn(&mut Ui);
+    pub type ReloadFnRef<'a> = &'a mut (dyn FnMut());
+}
+#[cfg(not(target_arch = "wasm32"))]
+mod types {
+    use crate::State;
+    use egui::Ui;
 
-type ReloadFn<T, E> = dyn FnMut(Box<CallbackFn<Result<T, E>>>) + Send + Sync;
+    pub type CallbackFn<T> = dyn FnOnce(T) + Send + Sync;
+    pub type ReloadFn<T, E> = dyn FnMut(Box<CallbackFn<Result<T, E>>>) + Send + Sync;
+    pub type ErrorUiFn<E> = dyn Fn(&mut Ui, &E, &mut State<'_>) + Send + Sync;
+    pub type LoadingUiFn = dyn Fn(&mut Ui) + Send + Sync;
+    pub type ReloadFnRef<'a> = &'a mut (dyn FnMut() + Send + Sync);
+}
 
-type ErrorUiFn<E> = dyn Fn(&mut Ui, &E, &mut State<'_>) + Send + Sync;
-
-type LoadingUiFn = dyn Fn(&mut Ui) + Send + Sync;
+use types::*;
 
 /// Helper struct to call the reload function.
 pub struct State<'a> {
     /// True if this is a reloadable suspense.
     pub reloadable: bool,
-    reload_fn: &'a mut (dyn FnMut() + Send + Sync),
+    reload_fn: ReloadFnRef<'a>,
 }
 
 impl<'a> State<'a> {
@@ -49,16 +65,18 @@ impl<T: Debug, E: Display + Debug> Debug for EguiSuspense<T, E> {
     }
 }
 
-impl<T: Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static> EguiSuspense<T, E> {
+impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeSync + 'static>
+    EguiSuspense<T, E>
+{
     asyncify!(
         /// Create a new suspense that can be reloaded.
         reloadable,
-        callback_mut: (impl FnMut(CallbackType<Result<T, E>>, ) + Send + Sync + 'static),
+        callback_mut: (impl FnMut(CallbackType<Result<T, E>>, ) + MaybeSend + MaybeSync + 'static),
         call_prefix: (Self::),
         generics: (),
-        async_generics: (<F: std::future::Future<Output = Result<T, E>> + Send + 'static>),
+        async_generics: (<F: std::future::Future<Output = Result<T, E>> + MaybeSend + 'static>),
         parameters: (),
-        future: impl FnMut() -> F + Send + Sync + 'static,
+        future: impl FnMut() -> F + MaybeSend + MaybeSync + 'static,
         return_type: (Self),
         body: |()| {
             let mut callback_mut = callback_mut;
@@ -83,10 +101,10 @@ impl<T: Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static> EguiS
     asyncify!(
         /// Create a new suspense that will only try to load the data once.
         single_try,
-        callback_once: (impl FnOnce(CallbackType<Result<T, E>>) + Send + Sync + 'static),
+        callback_once: (impl FnOnce(CallbackType<Result<T, E>>) + MaybeSend + MaybeSync + 'static),
         call_prefix: (Self::),
         generics: (),
-        async_generics: (<F: std::future::Future<Output = Result<T, E>> + Send + Sync + 'static>),
+        async_generics: (<F: std::future::Future<Output = Result<T, E>> + MaybeSend + MaybeSync + 'static>),
         parameters: (),
         future: F,
         return_type: (Self),
@@ -122,7 +140,7 @@ impl<T: Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static> EguiS
     }
 
     /// Use this to customize the loading ui.
-    pub fn loading_ui(mut self, f: impl Fn(&mut Ui) + 'static + Send + Sync) -> Self {
+    pub fn loading_ui(mut self, f: impl Fn(&mut Ui) + 'static + MaybeSend + MaybeSync) -> Self {
         self.loading_ui = Some(Box::new(f));
         self
     }
@@ -140,7 +158,7 @@ impl<T: Send + Sync + 'static, E: Display + Debug + Send + Sync + 'static> EguiS
     /// The closure will be called with the error and a [State] struct.
     pub fn error_ui(
         mut self,
-        f: impl Fn(&mut Ui, &E, &mut State<'_>) + 'static + Send + Sync,
+        f: impl Fn(&mut Ui, &E, &mut State<'_>) + 'static + MaybeSend + MaybeSync,
     ) -> Self {
         self.error_ui = Some(Box::new(f));
         self

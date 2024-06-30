@@ -1,5 +1,9 @@
 # egui_suspense changelog
 
+## Unreleased
+
+- Made egui_suspense !Send and !Sync on wasm
+
 ## 0.4.0
 
 - Updated egui to 0.27
