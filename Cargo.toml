@@ -62,15 +62,15 @@ egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.3.
 egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.3.0" }
 hello_egui = { path = ".", version = "0.4.2" }
 
-egui = { version = "0.27.0", default-features = false }
-eframe = { version = "0.27.0", default-features = false }
-egui_extras = { version = "0.27.0", default-features = false }
+egui = { version = "0.28.0", default-features = false }
+eframe = { version = "0.28.0", default-features = false }
+egui_extras = { version = "0.28.0", default-features = false }
 
 [patch.crates-io]
 #wry = { path = "../../RustroverProjects/github/wry" }
 #
-egui = { path = "../../IdeaProjects/egui/crates/egui" }
-eframe = { path = "../../IdeaProjects/egui/crates/eframe" }
-egui-wgpu = { path = "../../IdeaProjects/egui/crates/egui-wgpu" }
-egui_extras = { path = "../../IdeaProjects/egui/crates/egui_extras" }
-winit = { path = "../../IdeaProjects/github/winit" }
+#egui = { path = "../../IdeaProjects/egui/crates/egui" }
+#eframe = { path = "../../IdeaProjects/egui/crates/eframe" }
+#egui-wgpu = { path = "../../IdeaProjects/egui/crates/egui-wgpu" }
+#egui_extras = { path = "../../IdeaProjects/egui/crates/egui_extras" }
+#winit = { path = "../../IdeaProjects/github/winit" }

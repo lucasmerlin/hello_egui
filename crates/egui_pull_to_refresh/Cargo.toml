@@ -14,4 +14,4 @@ egui.workspace = true
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 egui_inbox.workspace = true
-ehttp = "0.3.1"
+ehttp = "0.5.0"

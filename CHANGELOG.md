@@ -1,5 +1,11 @@
 # hello_egui changelog
 
+## 0.5.0
+
+- update all crates for egui 0.28 support
+- introduce [egui_router](https://crates.io/crates/egui_router), a spa router for egui
+- some smaller changes, view individual crate changelogs for more details
+
 ## 0.4.2
 
 - fix missing docs

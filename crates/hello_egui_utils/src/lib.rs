@@ -256,6 +256,7 @@ macro_rules! asyncify {
 /// Type of the callback function
 #[cfg(target_arch = "wasm32")]
 pub type CallbackType<T> = Box<dyn FnOnce(T)>;
+/// Type of the callback function
 #[cfg(not(target_arch = "wasm32"))]
 pub type CallbackType<T> = Box<dyn FnOnce(T) + Send + Sync>;
 

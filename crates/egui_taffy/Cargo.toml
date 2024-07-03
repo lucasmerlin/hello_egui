@@ -10,10 +10,10 @@ release = false
 [dependencies]
 egui.workspace = true
 
-taffy = "0.4.0"
+taffy = "0.5.1"
 
 [dev-dependencies]
-eframe = {workspace = true, default-features = true}
+eframe = { workspace = true, default-features = true }
 
 rand = "0.8.5"
 

@@ -1,7 +1,7 @@
 use eframe::emath::Align;
 use egui::{
-    popup_above_or_below_widget, AboveOrBelow, CentralPanel, Context, Id, Layout, TextEdit, Widget,
-    Window,
+    popup_above_or_below_widget, AboveOrBelow, CentralPanel, Context, Id, Layout,
+    PopupCloseBehavior, TextEdit, Widget, Window,
 };
 use wry::raw_window_handle::HasWindowHandle;
 
@@ -58,6 +58,7 @@ impl WebBrowser {
                             popup_id,
                             &menu_button,
                             AboveOrBelow::Below,
+                            PopupCloseBehavior::CloseOnClickOutside,
                             |ui| {
                                 ui.set_width(ui.min_size().x + 200.0);
                                 let _ = ui.button("I have no function");

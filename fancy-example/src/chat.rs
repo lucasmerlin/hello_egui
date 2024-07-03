@@ -182,7 +182,9 @@ impl ChatExample {
                     ui.set_width(ui.available_width());
 
                     ui.vertical_centered(|ui| {
-                        ui.set_visible(self.messages.top_loading_state().loading());
+                        if self.messages.top_loading_state().loading() {
+                            ui.set_invisible();
+                        }
                         ui.spinner();
                     });
 
@@ -208,8 +210,9 @@ impl ChatExample {
                                 // We need to calculate the text width here to enable the typical
                                 // chat bubble layout where the own bubbles are right-aligned and
                                 // the text within is left-aligned.
-                                let (_pos, galley, _response) = label
-                                    .layout_in_ui(&mut ui.child_ui(ui.max_rect(), *ui.layout()));
+                                let (_pos, galley, _response) = label.layout_in_ui(
+                                    &mut ui.child_ui(ui.max_rect(), *ui.layout(), None),
+                                );
                                 let rect = galley.rect;
                                 // Calculate the width of the frame based on the width of
                                 // the text and add 0.1 to account for floating point errors.
