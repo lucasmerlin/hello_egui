@@ -2,6 +2,12 @@
 name = "egui_router"
 version = "0.1.0"
 edition = "2021"
+authors = ["Lucas Meurer"]
+description = "A SPA router for egui"
+keywords = ["egui", "router", "single-page", "gui", "ui"]
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_router"
+homepage = "https://lucasmerlin.github.io/hello_egui/"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
