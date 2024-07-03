@@ -147,7 +147,7 @@ impl VirtualList {
 
         if let Some(hide_on_resize) = self.hide_on_resize {
             if self.last_resize.elapsed().unwrap_or_default() < hide_on_resize {
-                ui.set_visible(false);
+                ui.set_invisible();
                 ui.ctx().request_repaint();
             }
         }
@@ -169,8 +169,8 @@ impl VirtualList {
         // to maintain the scroll position
         let scroll_items_top_step_2 =
             if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
-                let mut measure_ui = ui.child_ui(ui.max_rect(), *ui.layout());
-                measure_ui.set_visible(false);
+                let mut measure_ui = ui.child_ui(ui.max_rect(), *ui.layout(), None);
+                measure_ui.set_invisible();
 
                 let start_height = measure_ui.next_widget_position();
                 for i in 0..scroll_top_items {

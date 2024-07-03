@@ -39,7 +39,7 @@ fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
         .label("Vec Test")
         .ui(
             ui,
-            egui::DragValue::new(&mut test.vec[0].test).clamp_range(0..=11),
+            egui::DragValue::new(&mut test.vec[0].test).range(0..=11),
         );
 
     if let Some(Ok(())) = form.handle_submit(&ui.button("Submit"), ui) {

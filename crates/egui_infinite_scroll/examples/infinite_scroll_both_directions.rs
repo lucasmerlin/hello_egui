@@ -1,5 +1,5 @@
 use eframe::egui;
-use egui::{CentralPanel, ScrollArea};
+use egui::{CentralPanel, ScrollArea, Spinner};
 use std::thread::{sleep, spawn};
 
 use egui_infinite_scroll::InfiniteScroll;
@@ -34,8 +34,7 @@ pub fn main() -> eframe::Result<()> {
                         infinite_scroll.reset();
                     };
                     ui.vertical_centered(|ui| {
-                        ui.set_visible(infinite_scroll.top_loading_state().loading());
-                        ui.spinner();
+                        ui.add_visible(false, Spinner::new());
                     });
 
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
@@ -43,8 +42,10 @@ pub fn main() -> eframe::Result<()> {
                     });
 
                     ui.vertical_centered(|ui| {
-                        ui.set_visible(infinite_scroll.bottom_loading_state().loading());
-                        ui.spinner();
+                        ui.add_visible(
+                            infinite_scroll.bottom_loading_state().loading(),
+                            Spinner::new(),
+                        );
                     });
                 });
             });

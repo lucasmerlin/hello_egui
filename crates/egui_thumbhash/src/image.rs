@@ -104,6 +104,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
                     fill: Color32::from_rgba_premultiplied(i, i, i, i),
                     stroke: Default::default(),
                     uv: Rect::from_min_size(Default::default(), egui::Vec2::new(1.0, 1.0)),
+                    blur_width: 0.0,
                 });
             }
         }

@@ -48,10 +48,10 @@ impl Center {
             rect
         };
 
-        let mut ui = ui.child_ui(content_rect, *ui.layout());
+        let mut ui = ui.child_ui(content_rect, *ui.layout(), None);
 
         if last_size.is_none() {
-            ui.set_visible(false);
+            ui.set_invisible();
         }
 
         let result = content(&mut ui);

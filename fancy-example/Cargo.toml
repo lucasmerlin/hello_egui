@@ -23,10 +23,10 @@ hello_egui_utils.workspace = true
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
 egui_extras = { workspace = true, features = ["http", "image"] }
-ehttp = { version = "0.4.0" }
+ehttp = { version = "0.5.0" }
 thumbhash = "0.1.0"
 
-image = { version = "0.24", features = ["jpeg", "png", "webp"] }
+image = { version = "0.25.1", features = ["jpeg", "png", "webp"] }
 color-hex = "0.2.0"
 
 wasm-bindgen = "0.2.83"
@@ -37,7 +37,7 @@ serde_json = "1"
 
 casey = "0.4.0"
 
-egui_commonmark = { version = "0.14.0", features = [] }
+egui_commonmark = { version = "0.17.0", features = [] }
 
 validator = { version = "0.18.1", features = ["derive"] }
 

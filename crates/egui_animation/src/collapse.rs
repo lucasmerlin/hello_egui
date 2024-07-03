@@ -52,6 +52,7 @@ impl Collapse {
         let mut child = ui.child_ui(
             Rect::from_min_size(ui.next_widget_position(), ui.available_size()),
             *ui.layout(),
+            None,
         );
 
         let current_size = last_size * x;

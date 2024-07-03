@@ -157,7 +157,7 @@ fn main() -> eframe::Result<()> {
         Box::new(move |ctx| {
             egui_extras::install_image_loaders(&ctx.egui_ctx);
             egui_thumbhash::register(&ctx.egui_ctx);
-            Box::new(App::new()) as Box<dyn eframe::App>
+            Ok(Box::new(App::new()) as Box<dyn eframe::App>)
         }),
     )
 }

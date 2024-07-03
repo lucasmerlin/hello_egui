@@ -99,7 +99,7 @@ impl<'a> ItemIterator<'a> {
         );
         let rect = if is_dragged_item {
             if let Some((_id, pos)) = self.hovering_item {
-                let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout());
+                let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
                 let start = ui.next_widget_position();
                 let rect = child
                     .allocate_ui_at_rect(Rect::from_min_size(pos, child.available_size()), |ui| {

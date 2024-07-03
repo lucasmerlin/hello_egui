@@ -1,8 +1,9 @@
 # egui_virtual_list changelog
 
-## Unreleased
+## 0.4.0
 
 - round `last_width` to prevent flickering due to rounding errors when shown in a moving container
+- Updated egui to 0.28
 
 ## 0.3.0
 

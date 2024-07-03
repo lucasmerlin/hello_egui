@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use egui::util::IdTypeMap;
-use egui::{Context, Id, LayerId, Order, Pos2, Ui};
+use egui::{Context, Id, LayerId, Order, Pos2, Ui, UiStackInfo};
 use taffy::prelude::*;
 
 pub use taffy;
@@ -224,7 +224,8 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                         |known_size: Size<Option<f32>>,
                          available_space: Size<AvailableSpace>,
                          _id,
-                         context|
+                         context,
+                         _style|
                          -> Size<f32> {
                             let (content_idx, layout) = context.unwrap();
                             let f = self.content_fns.get_mut(*content_idx).unwrap();
@@ -255,6 +256,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                                 Id::new("measure"),
                                 rect,
                                 egui::Rect::from_min_size(Default::default(), Default::default()),
+                                UiStackInfo::default(),
                             );
                             let response = ui.with_layout(
                                 egui::Layout {
@@ -272,7 +274,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                             Size {
                                 // Somehow we need to add at least 1.0, or we will get floating point errors causing random
                                 // text wraps.
-                                width: result_rect.width().ceil() + 1.0,
+                                width: result_rect.width().ceil() + 2.0,
                                 height: result_rect.height(),
                             }
                         },
@@ -346,7 +348,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                         return;
                     }
 
-                    let mut child = self.ui.child_ui(rect, *egui_layout);
+                    let mut child = self.ui.child_ui(rect, *egui_layout, None);
 
                     content(&mut child);
                 }

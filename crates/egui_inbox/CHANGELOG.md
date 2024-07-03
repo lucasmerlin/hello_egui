@@ -1,5 +1,9 @@
 # egui_inbox changelog
 
+## 0.5.0
+
+- update egui to 0.28
+
 ## 0.4.1
 
 - Add broadcast (mpmc) channel to egui_inbox.
