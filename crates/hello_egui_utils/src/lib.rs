@@ -262,15 +262,19 @@ pub type CallbackType<T> = Box<dyn FnOnce(T) + Send + Sync>;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod sync {
+    /// Marker trait for types that can be sent between threads (this will be not be Send on wasm)
     pub use Send as MaybeSend;
+    /// Marker trait for types that can be shared between threads (this will be not be Sync on wasm)
     pub use Sync as MaybeSync;
 }
 #[cfg(target_arch = "wasm32")]
 mod unsync {
+    /// Marker trait for types that can be sent between threads (this will not be Send on wasm)
     pub trait MaybeSend {}
 
     impl<T> MaybeSend for T where T: ?Sized {}
 
+    /// Marker trait for types that can be shared between threads (this will not be Sync on wasm)
     pub trait MaybeSync {}
 
     impl<T> MaybeSync for T where T: ?Sized {}

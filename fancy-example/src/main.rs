@@ -174,7 +174,7 @@ fn main() {
                 Box::new(|a| {
                     egui_extras::install_image_loaders(&a.egui_ctx);
                     egui_thumbhash::register(&a.egui_ctx);
-                    Box::new(App::new()) as Box<dyn eframe::App>
+                    Ok(Box::new(App::new()) as Box<dyn eframe::App>)
                 }),
             )
             .await

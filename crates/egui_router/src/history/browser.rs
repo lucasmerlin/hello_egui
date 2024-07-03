@@ -2,7 +2,7 @@ use crate::history::{History, HistoryEvent, HistoryResult};
 use egui_inbox::UiInbox;
 use js_sys::Number;
 use wasm_bindgen::closure::Closure;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsCast;
 use web_sys::window;
 
 pub struct BrowserHistory {
