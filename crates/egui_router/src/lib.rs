@@ -21,6 +21,7 @@ use std::sync::atomic::AtomicUsize;
 
 pub use handler::{HandlerError, HandlerResult};
 pub use router::EguiRouter;
+pub use router_builder::RouterBuilder;
 
 /// A route instance created by a [handler::Handler]
 pub trait Route<State = ()> {
