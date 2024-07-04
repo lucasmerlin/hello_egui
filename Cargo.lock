@@ -1482,6 +1482,7 @@ dependencies = [
  "egui_suspense",
  "js-sys",
  "matchit",
+ "thiserror",
  "tokio",
  "wasm-bindgen",
  "web-sys",

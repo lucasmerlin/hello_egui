@@ -1,38 +1,31 @@
 use crate::{Request, Route};
-use std::fmt::Display;
 
-#[derive(Debug)]
+/// Error returned from a [Handler]
+#[derive(Debug, thiserror::Error)]
 pub enum HandlerError {
+    /// Not found error
+    #[error("Page not found")]
     NotFound,
+    /// Custom error message
+    #[error("{0}")]
     Message(String),
-    Error(Box<dyn std::error::Error + Send + Sync>),
+    /// Boxed error
+    #[error("Handler error: {0}")]
+    Boxed(Box<dyn std::error::Error + Send + Sync>),
 }
 
-impl Display for HandlerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Message(msg) => write!(f, "{}", msg),
-            Self::NotFound => write!(f, "Handler not found"),
-            Self::Error(err) => write!(f, "Handler error: {}", err),
-        }
-    }
-}
-
+/// Handler Result type
 pub type HandlerResult<T = ()> = Result<T, HandlerError>;
 
-impl<T: std::error::Error + Send + Sync + 'static> From<T> for HandlerError {
-    fn from(err: T) -> Self {
-        Self::Error(Box::new(err))
-    }
-}
-
+/// Trait for a route handler.
 // The args argument is just so we can implement multiple specializations, like explained here:
 // https://geo-ant.github.io/blog/2021/rust-traits-and-variadic-functions/
 pub trait MakeHandler<State, Args> {
     fn handle(&mut self, state: Request<State>) -> HandlerResult<Box<dyn Route<State>>>;
 }
 
-pub type Handler<State> = Box<dyn FnMut(Request<State>) -> HandlerResult<Box<dyn Route<State>>>>;
+pub(crate) type Handler<State> =
+    Box<dyn FnMut(Request<State>) -> HandlerResult<Box<dyn Route<State>>>>;
 
 impl<F, State, R> MakeHandler<State, (Request<'static, State>, ())> for F
 where
@@ -75,16 +68,10 @@ where
 }
 
 #[cfg(feature = "async")]
-pub mod async_impl {
+mod async_impl {
     use crate::handler::HandlerResult;
-    use crate::{Request, Route};
-    use std::collections::BTreeMap;
+    use crate::{OwnedRequest, Request, Route};
     use std::future::Future;
-
-    pub struct OwnedRequest<State> {
-        pub params: BTreeMap<String, String>,
-        pub state: State,
-    }
 
     pub trait AsyncMakeHandler<State, Args> {
         fn handle(
@@ -153,3 +140,6 @@ pub mod async_impl {
         }
     }
 }
+
+#[cfg(feature = "async")]
+pub use async_impl::*;

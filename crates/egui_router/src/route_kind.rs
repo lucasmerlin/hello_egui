@@ -1,6 +1,6 @@
 use crate::handler::Handler;
 
-pub enum RouteKind<State> {
+pub(crate) enum RouteKind<State> {
     Route(Handler<State>),
     Redirect(String),
 }
