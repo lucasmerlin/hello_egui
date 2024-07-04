@@ -3,7 +3,7 @@ use crate::Route;
 use egui::Ui;
 use egui_suspense::EguiSuspense;
 
-pub struct AsyncRoute<State> {
+pub(crate) struct AsyncRoute<State> {
     pub suspense: EguiSuspense<Box<dyn Route<State> + Send + Sync>, HandlerError>,
 }
 

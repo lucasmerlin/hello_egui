@@ -9,6 +9,7 @@ use egui::Ui;
 use matchit::MatchError;
 use std::sync::atomic::Ordering;
 
+/// A router instance
 pub struct EguiRouter<State, History = DefaultHistory> {
     router: matchit::Router<RouteKind<State>>,
     history: Vec<RouteState<State>>,
@@ -26,6 +27,7 @@ pub struct EguiRouter<State, History = DefaultHistory> {
 }
 
 impl<State: 'static, H: History + Default> EguiRouter<State, H> {
+    /// Create a new [RouterBuilder]
     pub fn builder() -> RouterBuilder<State, H> {
         RouterBuilder::new()
     }
@@ -56,6 +58,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         router
     }
 
+    /// Get the active route
     pub fn active_route(&self) -> Option<&str> {
         self.history.last().map(|r| r.path.as_str())
     }
@@ -110,6 +113,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         result
     }
 
+    /// Navigate with a custom transition
     pub fn navigate_transition(
         &mut self,
         state: &mut State,
@@ -124,6 +128,11 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         Ok(())
     }
 
+    /// Navigate with the default transition
+    pub fn navigate(&mut self, state: &mut State, route: impl Into<String>) -> RouterResult {
+        self.navigate_transition(state, route, self.forward_transition.clone())
+    }
+
     fn back_impl(&mut self, transition_config: TransitionConfig) -> RouterResult {
         if self.history.len() > 1 {
             let leaving_route = self.history.pop();
@@ -136,19 +145,18 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         Ok(())
     }
 
+    /// Go back with a custom transition
     pub fn back_transition(&mut self, transition_config: TransitionConfig) -> RouterResult {
         self.history_kind.back()?;
         self.back_impl(transition_config)
     }
 
-    pub fn navigate(&mut self, state: &mut State, route: impl Into<String>) -> RouterResult {
-        self.navigate_transition(state, route, self.forward_transition.clone())
-    }
-
+    /// Go back with the default transition
     pub fn back(&mut self) -> RouterResult {
         self.back_transition(self.backward_transition.clone())
     }
 
+    /// Replace the current route with a custom transition
     pub fn replace_transition(
         &mut self,
         state: &mut State,
@@ -203,10 +211,12 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         result
     }
 
+    /// Replace the current route with the default transition
     pub fn replace(&mut self, state: &mut State, path: impl Into<String>) -> RouterResult {
         self.replace_transition(state, path, self.replace_transition.clone())
     }
 
+    /// Render the router
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
         for e in self.history_kind.update(ui.ctx()) {
             let state_index = e.state.unwrap_or(0);

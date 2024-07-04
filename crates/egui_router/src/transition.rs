@@ -1,11 +1,16 @@
 use crate::TransitionConfig;
 use egui::{Id, Ui, Vec2};
 
+/// Trait for declaring a transition.
+/// Prefer [ComposableTransitionTrait] unless you need to create a new ui to apply the transition.
 pub trait TransitionTrait {
+    /// Create a child ui with the transition applied
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui;
 }
 
+/// Trait for declaring a composable transition.
 pub trait ComposableTransitionTrait {
+    /// Apply the transition to the ui
     fn apply(&self, ui: &mut Ui, t: f32);
 }
 
@@ -17,11 +22,16 @@ impl<T: ComposableTransitionTrait> TransitionTrait for T {
     }
 }
 
+/// Enum containing all possible transitions
 #[derive(Debug, Clone)]
 pub enum Transition {
+    /// Simple fade transition
     Fade(FadeTransition),
+    /// No transition
     NoTransition(NoTransition),
+    /// Slide transition
     Slide(SlideTransition),
+    /// Combined slide and fade transitions
     SlideFade(SlideFadeTransition),
 }
 
@@ -38,17 +48,22 @@ impl TransitionTrait for Transition {
     }
 }
 
+/// Simple fade transition
 #[derive(Debug, Clone)]
 pub struct FadeTransition;
 
+/// No transition
 #[derive(Debug, Clone)]
 pub struct NoTransition;
 
+/// Slide transition
 #[derive(Debug, Clone)]
 pub struct SlideTransition {
+    /// Amount and direction to slide. Default is [Vec2::X] (so it will slide in from the right)
     pub amount: Vec2,
 }
 
+/// Combining slide and fade transitions
 #[derive(Debug, Clone)]
 pub struct SlideFadeTransition(pub SlideTransition, pub FadeTransition);
 
@@ -59,6 +74,7 @@ impl Default for SlideTransition {
 }
 
 impl SlideTransition {
+    /// Create a new slide transition. Default is [Vec2::X] (so it will slide in from the right)
     pub fn new(amount: Vec2) -> Self {
         Self { amount }
     }
@@ -116,12 +132,27 @@ impl From<SlideFadeTransition> for Transition {
     }
 }
 
+/// Configuration for a transition, containing the in and out transitions
+/// The in transition is the transition that will be applied to the page that is being navigated to
+/// The out transition is the transition that will be applied to the page that is being navigated from
 pub enum TransitionType {
-    Forward { _in: Transition, out: Transition },
-    Backward { _in: Transition, out: Transition },
+    /// Forward transition
+    Forward {
+        /// Will be applied to the page that is being navigated to
+        _in: Transition,
+        /// Will be applied to the page that is being navigated from
+        out: Transition,
+    },
+    /// Backward transition (will play the out transition in reverse)
+    Backward {
+        /// Will be applied to the page that is being navigated to
+        _in: Transition,
+        /// Will be applied to the page that is being navigated from
+        out: Transition,
+    },
 }
 
-pub struct ActiveTransition {
+pub(crate) struct ActiveTransition {
     duration: Option<f32>,
     progress: f32,
     easing: fn(f32) -> f32,
@@ -130,7 +161,7 @@ pub struct ActiveTransition {
     backward: bool,
 }
 
-pub enum ActiveTransitionResult {
+pub(crate) enum ActiveTransitionResult {
     Done,
     Continue,
 }

@@ -45,28 +45,28 @@ async fn main() -> eframe::Result<()> {
 }
 
 fn home(_request: Request<AppState>) -> impl Route<AppState> {
-    |ui: &mut Ui, inbox: &mut UiInbox<RouterMessage>| {
+    |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.faint_bg_color, |ui| {
             ui.heading("Home!");
 
             ui.label("Navigate to post:");
 
             if ui.link("Post 1").clicked() {
-                inbox
+                state
                     .sender()
                     .send(RouterMessage::Navigate("/post/1".to_string()))
                     .ok();
             }
 
             if ui.link("Post 2").clicked() {
-                inbox
+                state
                     .sender()
                     .send(RouterMessage::Navigate("/post/2".to_string()))
                     .ok();
             }
 
             if ui.link("Invalid Post").clicked() {
-                inbox
+                state
                     .sender()
                     .send(RouterMessage::Navigate("/post/".to_string()))
                     .ok();

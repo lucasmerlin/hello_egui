@@ -5,6 +5,7 @@ use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::window;
 
+/// Browser history implementation
 pub struct BrowserHistory {
     base_href: String,
     inbox: UiInbox<HistoryEvent>,
@@ -19,6 +20,11 @@ impl Default for BrowserHistory {
 }
 
 impl BrowserHistory {
+    /// Create a new [BrowserHistory] instance. Optionally pass a base href.
+    /// If no base href is passed, it will be read from the base tag in the document or default to ""
+    /// If you are deploying to github pages you could e.g. use `Some("/my-repo/#")` as base href
+    /// so that navigation only happens in the fragment and any route will load the index.html
+    /// (otherwise there might be a 404 error when refreshing the page).
     pub fn new(base_href: Option<String>) -> Self {
         let window = window().unwrap();
 

@@ -1,10 +1,16 @@
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
 #[cfg(feature = "async")]
 mod async_route;
 mod handler;
+/// History types
 pub mod history;
 mod route_kind;
 mod router;
 mod router_builder;
+/// Transition types
 pub mod transition;
 
 use crate::history::HistoryError;
@@ -16,11 +22,16 @@ use std::sync::atomic::AtomicUsize;
 pub use handler::{HandlerError, HandlerResult};
 pub use router::EguiRouter;
 
-#[cfg(feature = "async")]
-pub use handler::async_impl::OwnedRequest;
-
-pub trait Route<State> {
+/// A route instance created by a [handler::Handler]
+pub trait Route<State = ()> {
+    /// Render the route ui
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State);
+}
+
+impl<F: FnMut(&mut Ui, &mut State), State> Route<State> for F {
+    fn ui(&mut self, ui: &mut egui::Ui, state: &mut State) {
+        self(ui, state)
+    }
 }
 
 static ID: AtomicUsize = AtomicUsize::new(0);
@@ -32,11 +43,17 @@ struct RouteState<State> {
     state: u32,
 }
 
+/// Router Result type
 pub type RouterResult<T = ()> = Result<T, RouterError>;
 
-#[derive(Debug)]
+/// Router error
+#[derive(Debug, thiserror::Error)]
 pub enum RouterError {
+    /// Error when updating history
+    #[error("History error: {0}")]
     HistoryError(HistoryError),
+    /// Not found error
+    #[error("Route not found")]
     NotFound,
 }
 
@@ -46,6 +63,7 @@ impl From<HistoryError> for RouterError {
     }
 }
 
+/// Page transition configuration
 #[derive(Debug, Clone)]
 pub struct TransitionConfig {
     duration: Option<f32>,
@@ -66,6 +84,7 @@ impl Default for TransitionConfig {
 }
 
 impl TransitionConfig {
+    /// Create a new transition
     pub fn new(_in: impl Into<Transition>, out: impl Into<Transition>) -> Self {
         Self {
             _in: _in.into(),
@@ -74,10 +93,12 @@ impl TransitionConfig {
         }
     }
 
+    /// A iOS-like slide transition (Same as [TransitionConfig::default])
     pub fn slide() -> Self {
         Self::default()
     }
 
+    /// A android-like fade up transition
     pub fn fade_up() -> Self {
         Self::new(
             SlideFadeTransition(
@@ -88,19 +109,23 @@ impl TransitionConfig {
         )
     }
 
+    /// A basic fade transition
     pub fn fade() -> Self {
         Self::new(transition::FadeTransition, transition::FadeTransition)
     }
 
+    /// No transition
     pub fn none() -> Self {
         Self::new(transition::NoTransition, transition::NoTransition)
     }
 
+    /// Customise the easing function
     pub fn with_easing(mut self, easing: fn(f32) -> f32) -> Self {
         self.easing = easing;
         self
     }
 
+    /// Customise the duration
     pub fn with_duration(mut self, duration: f32) -> Self {
         self.duration = Some(duration);
         self
@@ -112,23 +137,19 @@ struct CurrentTransition<State> {
     leaving_route: Option<RouteState<State>>,
 }
 
+/// Request passed to a [handler::MakeHandler]
 pub struct Request<'a, State = ()> {
+    /// The parsed path params
     pub params: matchit::Params<'a, 'a>,
+    /// The custom state
     pub state: &'a mut State,
 }
 
-// impl<F, Fut, State, R: 'static> Handler<State> for F
-// where
-//     F: Fn(&mut State) -> Fut,
-//     Fut: std::future::Future<Output = R>,
-// {
-//     async fn handle(&mut self, state: &mut State) -> Box<dyn Route<State>> {
-//         Box::new((self(state)).await)
-//     }
-// }
-
-impl<F: FnMut(&mut Ui, &mut State), State> Route<State> for F {
-    fn ui(&mut self, ui: &mut egui::Ui, state: &mut State) {
-        self(ui, state)
-    }
+#[cfg(feature = "async")]
+/// Owned request, passed to [handler::AsyncMakeHandler]
+pub struct OwnedRequest<State = ()> {
+    /// The parsed path params
+    pub params: std::collections::BTreeMap<String, String>,
+    /// The custom state
+    pub state: State,
 }
