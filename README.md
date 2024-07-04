@@ -38,6 +38,10 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
     - Infinite scroll based on [egui_virtual_list](crates/egui_virtual_list)
     - released on [crates.io](https://crates.io/crates/egui_infinite_scroll)
 
+- [egui_router](crates/egui_router)
+    - A SPA router for egui with support for transitions
+    - released on [crates.io](https://crates.io/crates/egui_router)
+
 - [egui_form](crates/egui_form)
     - Form validation for egui
     - released on [crates.io](https://crates.io/crates/egui_form)
@@ -56,10 +60,6 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
     - released on [crates.io](https://crates.io/crates/egui_thumbhash)
 
 ## **Experimental** Crates
-
-- [egui_router](crates/egui_router)
-    - A SPA router for egui with support for transitions
-    - Experimental, unreleased
 
 - [egui_animation](crates/egui_animation)
     - Animation utilities for egui
