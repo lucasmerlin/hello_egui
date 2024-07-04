@@ -1,6 +1,6 @@
 [package]
 name = "egui_router"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Lucas Meurer"]
 description = "A SPA router for egui"
