@@ -114,10 +114,10 @@ impl<'a> Dnd<'a> {
     }
 
     /// Display the drag and drop UI.
-    /// `items` should be an iterator over items that should be sorted.
+    /// `items` should be an iterator over items that should be sortable.
     ///
-    /// The items won't be sorted automatically, but you can use [Dnd::show_vec] or [DragDropResponse::update_vec] to do so.
-    /// If your items aren't in a vec, you have to sort them yourself.
+    /// The items won't be updated automatically, but you can use [Dnd::show_vec] or [DragDropResponse::update_vec] to do so.
+    /// If your items aren't in a vec, you have to update the order yourself.
     ///
     /// `item_ui` is called for each item. Display your item there.
     /// `item_ui` gets a [Handle] that can be used to display the drag handle.
