@@ -1,4 +1,4 @@
-use egui::{CursorIcon, Id, InnerResponse, LayerId, Order, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{CursorIcon, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Sense, Ui, Vec2};
 use egui_animation::animate_position;
 
 use crate::state::DragDetectionState;
@@ -92,6 +92,7 @@ impl<'a> Item<'a> {
                     position,
                     hovering_over_any_handle,
                     size,
+                    *ui.layout(),
                     drag_body,
                 );
 
@@ -130,6 +131,7 @@ impl<'a> Item<'a> {
                     position,
                     hovering_over_any_handle,
                     size,
+                    *ui.layout(),
                     drag_body,
                 );
 
@@ -189,7 +191,8 @@ impl<'a> Item<'a> {
 
             rect
         } else {
-            let position = ui.next_widget_position();
+            let position = ui.cursor().min;
+
             let animated_position = animate_position(
                 ui,
                 id,
@@ -247,6 +250,7 @@ impl<'a> Item<'a> {
         pos: Pos2,
         hovering_over_any_handle: &mut bool,
         size: Option<Vec2>,
+        layout: Layout,
         body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> InnerResponse<Rect> {
         egui::Area::new(Id::new("draggable_item"))
@@ -254,7 +258,7 @@ impl<'a> Item<'a> {
             .fixed_pos(pos)
             .order(Order::Tooltip)
             .show(ui.ctx(), |ui| {
-                ui.scope(|ui| {
+                ui.with_layout(layout, |ui| {
                     if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {
                         ui.set_max_size(size);
                     }
