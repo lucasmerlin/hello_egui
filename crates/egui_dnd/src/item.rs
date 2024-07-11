@@ -252,6 +252,7 @@ impl<'a> Item<'a> {
         egui::Area::new(Id::new("draggable_item"))
             .interactable(false)
             .fixed_pos(pos)
+            .order(Order::Tooltip)
             .show(ui.ctx(), |ui| {
                 ui.scope(|ui| {
                     if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- change area order of dragged item to be `Order::Tooltip`, so it will be shown above any other areas
+
 ## 0.9.0
 
 - update egui to 0.28
