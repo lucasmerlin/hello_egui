@@ -18,17 +18,20 @@ pub fn main() -> eframe::Result<()> {
                 ScrollArea::vertical().show(ui, |ui| {
                     let response = dnd(ui, "dnd").show_custom(|ui, iter| {
                         virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {
+                            let item = &items[start_index];
+
                             iter.next(
                                 ui,
-                                Id::new(items[start_index]), // assumes that each integer is unique
+                                Id::new(*item), // assumes that each item is a unique hash
                                 start_index,
                                 true,
-                                |ui, item| {
-                                    item.ui(ui, |ui, handle, _item_state| {
-                                        draw_item(ui, handle, &items[start_index]);
+                                |ui, dnd_item| {
+                                    dnd_item.ui(ui, |ui, handle, _item_state| {
+                                        draw_item(ui, handle, item);
                                     })
                                 },
                             );
+
                             1
                         });
                     });
