@@ -115,6 +115,11 @@ impl<'a> Dnd<'a> {
 
     /// Display the drag and drop UI.
     /// `items` should be an iterator over items that should be sortable.
+    /// Each item needs to implement [DragDropItem]. This is automatically implement for every type that implements [Hash].
+    ///
+    /// It can also be implemented manually. **Each item needs to have a unique id.**
+    /// If you need to allow duplicate items in your list and cannot add a id field for some reason,
+    /// you can use the index as a id, but there are some limitations. Check the [index_as_id](https://github.com/lucasmerlin/hello_egui/blob/main/crates/egui_dnd/examples/index_as_id.rs) example.
     ///
     /// The items won't be updated automatically, but you can use [Dnd::show_vec] or [DragDropResponse::update_vec] to do so.
     /// If your items aren't in a vec, you have to update the order yourself.
