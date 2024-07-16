@@ -1381,7 +1381,9 @@ dependencies = [
  "egui_animation",
  "egui_extras",
  "egui_infinite_scroll",
+ "egui_virtual_list",
  "hello_egui_utils",
+ "rand 0.8.5",
  "simple-easing",
  "web-time 1.1.0",
 ]
