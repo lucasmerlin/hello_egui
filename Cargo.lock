@@ -1373,7 +1373,7 @@ dependencies = [
 
 [[package]]
 name = "egui_dnd"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "color-hex",
  "eframe",
