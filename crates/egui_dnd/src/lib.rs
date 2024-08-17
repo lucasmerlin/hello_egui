@@ -5,7 +5,7 @@
 use egui::{Id, Ui};
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
 
-use crate::item_iterator::ItemIterator;
+pub use crate::item_iterator::ItemIterator;
 use crate::state::DragDropUi;
 use std::hash::Hash;
 
