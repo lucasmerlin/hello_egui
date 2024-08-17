@@ -15,7 +15,7 @@ pub struct WebBrowser {
 
 impl WebBrowser {
     pub fn new(ctx: Context, id: Id, url: &str, window: &impl HasWindowHandle) -> Self {
-        let view = EguiWebView::new(&ctx, id, window, |b| b.with_url(url).unwrap());
+        let view = EguiWebView::new(&ctx, id, window, |b| b.with_url(url));
 
         Self {
             id,
@@ -67,6 +67,7 @@ impl WebBrowser {
                                     self.view
                                         .view
                                         .load_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+                                        .unwrap();
                                 }
                             },
                         );

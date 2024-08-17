@@ -4,12 +4,14 @@ use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
 use egui::mutex::Mutex;
-use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui::{ColorImage, Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui_inbox::UiInbox;
 use serde::{Deserialize, Serialize};
+use wry::dpi::Size::Logical;
+use wry::dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, Position, Size};
+use wry::http::Request;
 use wry::raw_window_handle::HasWindowHandle;
 use wry::{PageLoadEvent, WebView};
-
-use egui_inbox::UiInbox;
 
 pub mod native_text_field;
 
@@ -114,7 +116,7 @@ impl EguiWebView {
                 tx_clone.send(WebViewEvent::Loaded(url)).ok();
             })
             .with_ipc_handler(move |msg| {
-                let result = Self::handle_js_event(msg, &ctx_clone);
+                let result = Self::handle_js_event(msg.into_body(), &ctx_clone);
                 match result {
                     Ok(event) => {
                         tx.send(event).ok();
@@ -159,12 +161,12 @@ impl EguiWebView {
     }
 
     fn take_screenshot(&mut self) {
-        // let ctx = self.context.clone();
-        // let tx = self.inbox.sender();
+        let ctx = self.context.clone();
+        let tx = self.inbox.sender();
 
-        // TODO: This requires a screenshot feature in wry, https://github.com/tauri-apps/wry/pull/266
+        // // TODO: This requires a screenshot feature in wry, https://github.com/tauri-apps/wry/pull/266
         // self.view
-        //     .screenshot(ScreenshotRegion::Visible, move |data| {
+        //     .screenshot(wry::ScreenshotRegion::Visible, move |data| {
         //         let ctx = ctx.clone();
         //         let tx = tx.clone();
         //         if let Ok(screenshot) = data {
@@ -257,6 +259,8 @@ impl EguiWebView {
 
         let should_display = ui.memory(|mem| (is_my_layer_top && !mem.any_popup_open()));
 
+        dbg!(should_display);
+
         if !should_display && self.displayed_last_frame {
             self.current_image = None;
             self.take_screenshot();
@@ -275,12 +279,18 @@ impl EguiWebView {
 
         let wv_rect = response.rect * ui.ctx().zoom_factor();
 
-        self.view.set_bounds(wry::Rect {
-            x: wv_rect.min.x as i32,
-            y: wv_rect.min.y as i32,
-            width: wv_rect.width() as u32,
-            height: wv_rect.height() as u32,
-        });
+        self.view
+            .set_bounds(wry::Rect {
+                position: Position::Logical(LogicalPosition::new(
+                    wv_rect.min.x as f64,
+                    wv_rect.min.y as f64,
+                )),
+                size: Size::Logical(LogicalSize::new(
+                    wv_rect.width() as f64,
+                    wv_rect.height() as f64,
+                )),
+            })
+            .unwrap();
 
         WebViewResponse {
             events,
@@ -337,8 +347,10 @@ pub fn webview_end_frame(ctx: &Context) {
         state.views.retain(|id, view| {
             if let Some(view) = view.upgrade() {
                 if !state.rendered_this_frame.contains(id) {
+                    println!("Set visible false");
                     view.set_visible(false);
                 } else {
+                    println!("Set visible true");
                     view.set_visible(true);
                 }
 

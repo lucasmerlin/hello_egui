@@ -62,7 +62,6 @@ impl NativeTextField {
                     .replace("_tag", text_field_type.tag())
                     .replace("_parameters", text_field_type.parameters()),
             )
-            .unwrap()
             .with_devtools(true)
         });
         NativeTextField {

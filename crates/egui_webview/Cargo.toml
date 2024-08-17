@@ -8,7 +8,7 @@ publish = false
 release = false
 
 [dependencies]
-wry = "0.36.0"
+wry = "0.41.0"
 egui.workspace = true
 egui_inbox = { workspace = true }
 
