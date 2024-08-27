@@ -65,11 +65,10 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.last().map(|r| r.path.as_str())
     }
 
-    fn parse_query(path: &str) -> BTreeMap<Cow<str>, Cow<str>> {
-        let query = path.split_once('?').map(|(_, q)| q);
-        query
-            .map(|q| form_urlencoded::parse(q.as_bytes()).collect())
-            .unwrap_or(BTreeMap::new())
+    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<str>, Cow<str>>) {
+        path.split_once('?')
+            .map(|(path, q)| (path, form_urlencoded::parse(q.as_bytes()).collect()))
+            .unwrap_or((path, BTreeMap::new()))
     }
 
     fn navigate_impl(
@@ -79,7 +78,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         transition_config: TransitionConfig,
         new_state: u32,
     ) -> RouterResult {
-        let query = Self::parse_query(&path);
+        let (path, query) = Self::parse_path(&path);
 
         let mut redirect = None;
         let result = self.router.at_mut(&path);
@@ -94,7 +93,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             query,
                         });
                         self.history.push(RouteState {
-                            path,
+                            path: path.to_string(),
                             route,
                             id: ID.fetch_add(1, Ordering::SeqCst),
                             state: new_state,
@@ -183,7 +182,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let current_state = self.history.last().map(|r| r.state).unwrap_or(0);
         let new_state = current_state;
 
-        let query = Self::parse_query(&path);
+        let (path, query) = Self::parse_path(&path);
 
         let result = match result {
             Ok(match_) => match match_.value {
@@ -196,7 +195,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         query,
                     });
                     self.history.push(RouteState {
-                        path,
+                        path: path.to_string(),
                         route,
                         id: ID.fetch_add(1, Ordering::SeqCst),
                         state: new_state,
