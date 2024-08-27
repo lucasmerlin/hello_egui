@@ -10,7 +10,7 @@ use egui_dnd::utils::shift_vec;
 /// There are two ways to filter the list:
 ///
 /// 1. Just skip rendering items
-/// You will have to set the item spacing to 0 so the hidden items don't cause additional padding.
+///    You will have to set the item spacing to 0 so the hidden items don't cause additional padding.
 #[allow(clippy::ptr_arg)]
 fn filter_by_skipping_items(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>) {
     let spacing = mem::replace(&mut ui.spacing_mut().item_spacing.y, 0.0);
@@ -21,14 +21,14 @@ fn filter_by_skipping_items(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>
         }
         ui.spacing_mut().item_spacing.y = spacing;
         handle.ui(ui, |ui| {
-            ui.label(&item.number.to_string());
+            ui.label(item.number.to_string());
         });
     });
 }
 
 /// 2. Filter the source list
-/// This is a bit more complex but will work better if you e.g.
-/// use a virtual list to improve performance with a lot of items
+///    This is a bit more complex but will work better if you e.g.
+///    use a virtual list to improve performance with a lot of items
 #[allow(clippy::ptr_arg)]
 fn filter_by_filtering_source_list(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>) {
     let mut filtered = items
@@ -41,7 +41,7 @@ fn filter_by_filtering_source_list(ui: &mut Ui, filter: &str, items: &mut Vec<It
     let response = dnd(ui, "dnd").show(filtered.iter_mut(), |ui, (_, item), handle, _dragging| {
         ui.horizontal(|ui| {
             handle.ui(ui, |ui| {
-                ui.label(&item.number.to_string());
+                ui.label(item.number.to_string());
             });
         });
     });

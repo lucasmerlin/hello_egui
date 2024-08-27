@@ -81,7 +81,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let (path, query) = Self::parse_path(&path);
 
         let mut redirect = None;
-        let result = self.router.at_mut(&path);
+        let result = self.router.at_mut(path);
 
         let result = match result {
             Ok(match_) => {
@@ -187,7 +187,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let result = match result {
             Ok(match_) => match match_.value {
                 RouteKind::Route(handler) => {
-                    self.history_kind.replace(&path, new_state)?;
+                    self.history_kind.replace(path, new_state)?;
                     let leaving_route = self.history.pop();
                     let route = handler(Request {
                         state,

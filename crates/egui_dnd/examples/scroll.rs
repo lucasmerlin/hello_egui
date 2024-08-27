@@ -34,7 +34,7 @@ fn main() -> eframe::Result<()> {
                             if clicked {
                                 println!("clicked {}", item.number);
                             }
-                            ui.label(&item.number.to_string());
+                            ui.label(item.number.to_string());
                         });
                     });
                 })
