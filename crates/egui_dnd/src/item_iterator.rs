@@ -3,6 +3,8 @@ use crate::state::DragDetectionState;
 use crate::{DragDropUi, ItemState};
 use egui::{Id, Layout, Pos2, Rect, Ui, Vec2};
 
+/// Calculates some information that is later used to detect in which index the dragged item should be placed.
+/// [ItemIterator::next] should be called for each item in the list.
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
     dragged_item_rect: Option<Rect>,
@@ -24,7 +26,11 @@ pub struct ItemIterator<'a> {
 }
 
 impl<'a> ItemIterator<'a> {
-    pub fn new(state: &'a mut DragDropUi, dragged_item_rect: Option<Rect>, layout: Layout) -> Self {
+    pub(crate) fn new(
+        state: &'a mut DragDropUi,
+        dragged_item_rect: Option<Rect>,
+        layout: Layout,
+    ) -> Self {
         let hovering_item = match state.detection_state {
             DragDetectionState::Dragging {
                 closest_item: item, ..
@@ -57,6 +63,11 @@ impl<'a> ItemIterator<'a> {
         }
     }
 
+    /// Draw a dnd item. This should be called for each item in the list.
+    ///
+    /// If `add_surrounding_space_automatically` is false, you need to call
+    /// [ItemIterator::space_before] and [ItemIterator::space_after] manually.
+    /// This is useful, e.g. to add a divider between items. Check the custom ui example.
     pub fn next(
         &mut self,
         ui: &mut Ui,
@@ -164,12 +175,14 @@ impl<'a> ItemIterator<'a> {
         (distance, mark_next)
     }
 
+    /// Add some custom ui before the item.
     pub fn space_before(&mut self, ui: &mut Ui, id: Id, content: impl FnOnce(&mut Ui, Vec2)) {
         if !self.hovering_last_item {
             self.add_space_and_check_closest(ui, id, content);
         }
     }
 
+    /// Add some custom ui after the item.
     pub fn space_after(&mut self, ui: &mut Ui, id: Id, content: impl FnOnce(&mut Ui, Vec2)) {
         if self.hovering_last_item {
             self.add_space_and_check_closest(ui, id, content);
