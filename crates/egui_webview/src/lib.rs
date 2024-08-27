@@ -4,12 +4,10 @@ use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
 use egui::mutex::Mutex;
-use egui::{ColorImage, Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
 use egui_inbox::UiInbox;
 use serde::{Deserialize, Serialize};
-use wry::dpi::Size::Logical;
-use wry::dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, Position, Size};
-use wry::http::Request;
+use wry::dpi::{LogicalPosition, LogicalSize, Position, Size};
 use wry::raw_window_handle::HasWindowHandle;
 use wry::{PageLoadEvent, WebView};
 
@@ -161,8 +159,8 @@ impl EguiWebView {
     }
 
     fn take_screenshot(&mut self) {
-        let ctx = self.context.clone();
-        let tx = self.inbox.sender();
+        // let ctx = self.context.clone();
+        // let tx = self.inbox.sender();
 
         // // TODO: This requires a screenshot feature in wry, https://github.com/tauri-apps/wry/pull/266
         // self.view
@@ -250,7 +248,7 @@ impl EguiWebView {
 
         if response.gained_focus() {
             println!("Gained focus");
-            self.view.focus();
+            self.view.focus().ok();
         }
 
         if let Some(image) = &self.current_image {
@@ -348,10 +346,10 @@ pub fn webview_end_frame(ctx: &Context) {
             if let Some(view) = view.upgrade() {
                 if !state.rendered_this_frame.contains(id) {
                     println!("Set visible false");
-                    view.set_visible(false);
+                    view.set_visible(false).ok();
                 } else {
                     println!("Set visible true");
-                    view.set_visible(true);
+                    view.set_visible(true).ok();
                 }
 
                 true

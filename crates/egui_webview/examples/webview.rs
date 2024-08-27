@@ -80,7 +80,7 @@ impl WebBrowser {
                         if text_resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))
                             || btn_resp.clicked()
                         {
-                            self.view.view.load_url(&self.url_bar);
+                            self.view.view.load_url(&self.url_bar).unwrap();
                         };
                     });
                 });

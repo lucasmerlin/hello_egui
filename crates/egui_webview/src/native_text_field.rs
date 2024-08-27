@@ -89,8 +89,8 @@ impl NativeTextField {
                     }
                     Ok(Event::FocusOut) => {
                         println!("Focus out");
-                        self.webview.view.set_visible(false);
-                        self.webview.view.set_visible(true);
+                        self.webview.view.set_visible(false).ok();
+                        self.webview.view.set_visible(true).ok();
                         //response.egui_response.surrender_focus();
                         // let shift_key = ui.input(|i| i.modifiers.shift);
                         //response.egui_response.surrender_focus();
