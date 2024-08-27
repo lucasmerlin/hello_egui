@@ -7,6 +7,8 @@ use crate::{
 };
 use egui::Ui;
 use matchit::MatchError;
+use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::sync::atomic::Ordering;
 
 /// A router instance
@@ -52,7 +54,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         {
             router
                 .navigate_impl(state, r, TransitionConfig::none(), state_index.unwrap_or(0))
-                .ok();
+                .unwrap();
         }
 
         router
@@ -63,6 +65,13 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.last().map(|r| r.path.as_str())
     }
 
+    fn parse_query(path: &str) -> BTreeMap<Cow<str>, Cow<str>> {
+        let query = path.split_once('?').map(|(_, q)| q);
+        query
+            .map(|q| form_urlencoded::parse(q.as_bytes()).collect())
+            .unwrap_or(BTreeMap::new())
+    }
+
     fn navigate_impl(
         &mut self,
         state: &mut State,
@@ -70,6 +79,8 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         transition_config: TransitionConfig,
         new_state: u32,
     ) -> RouterResult {
+        let query = Self::parse_query(&path);
+
         let mut redirect = None;
         let result = self.router.at_mut(&path);
 
@@ -80,6 +91,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         let route = handler(Request {
                             state,
                             params: match_.params,
+                            query,
                         });
                         self.history.push(RouteState {
                             path,
@@ -171,6 +183,8 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let current_state = self.history.last().map(|r| r.state).unwrap_or(0);
         let new_state = current_state;
 
+        let query = Self::parse_query(&path);
+
         let result = match result {
             Ok(match_) => match match_.value {
                 RouteKind::Route(handler) => {
@@ -179,6 +193,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     let route = handler(Request {
                         state,
                         params: match_.params,
+                        query,
                     });
                     self.history.push(RouteState {
                         path,

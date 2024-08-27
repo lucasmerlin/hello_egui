@@ -29,6 +29,7 @@ egui_suspense = { workspace = true, optional = true }
 
 matchit = "0.8"
 thiserror = "1"
+form_urlencoded = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3", features = ["History", "PopStateEvent", "HtmlCollection"] }

@@ -200,6 +200,11 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
                             .iter()
                             .map(|(k, v)| (k.to_string(), v.to_string()))
                             .collect(),
+                        query: req
+                            .query
+                            .into_iter()
+                            .map(|(k, v)| (k.into_owned(), v.into_owned()))
+                            .collect(),
                         state: req.state.clone(),
                     };
 

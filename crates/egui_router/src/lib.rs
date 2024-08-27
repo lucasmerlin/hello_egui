@@ -17,6 +17,8 @@ use crate::history::HistoryError;
 use crate::transition::{ActiveTransition, SlideFadeTransition, SlideTransition, Transition};
 use egui::emath::ease_in_ease_out;
 use egui::{Ui, Vec2};
+use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::sync::atomic::AtomicUsize;
 
 pub use handler::{HandlerError, HandlerResult};
@@ -142,6 +144,8 @@ struct CurrentTransition<State> {
 pub struct Request<'a, State = ()> {
     /// The parsed path params
     pub params: matchit::Params<'a, 'a>,
+    /// The parsed query params
+    pub query: BTreeMap<Cow<'a, str>, Cow<'a, str>>,
     /// The custom state
     pub state: &'a mut State,
 }
@@ -150,7 +154,9 @@ pub struct Request<'a, State = ()> {
 /// Owned request, passed to [handler::AsyncMakeHandler]
 pub struct OwnedRequest<State = ()> {
     /// The parsed path params
-    pub params: std::collections::BTreeMap<String, String>,
+    pub params: BTreeMap<String, String>,
+    /// The parsed query params
+    pub query: BTreeMap<String, String>,
     /// The custom state
     pub state: State,
 }

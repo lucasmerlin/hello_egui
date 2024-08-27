@@ -1482,6 +1482,7 @@ dependencies = [
  "egui_animation",
  "egui_inbox",
  "egui_suspense",
+ "form_urlencoded",
  "js-sys",
  "matchit",
  "thiserror",

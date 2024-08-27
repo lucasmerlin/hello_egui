@@ -2,6 +2,7 @@ use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Context, Frame, ScrollArea, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
+use std::borrow::Cow;
 
 #[derive(Debug, Clone)]
 struct AppState {
@@ -104,6 +105,12 @@ fn home() -> impl Route<AppState> {
                     .send(RouterMessage::Navigate("/post/2".to_string()));
             }
 
+            if ui.link("Post With Query").clicked() {
+                state
+                    .inbox
+                    .send(RouterMessage::Navigate("/post/3?search=test".to_string()));
+            }
+
             if ui.link("Invalid Post").clicked() {
                 state
                     .inbox
@@ -132,8 +139,10 @@ fn edit_message() -> impl Route<AppState> {
     }
 }
 
-fn post(request: Request<AppState>) -> impl Route<AppState> {
+fn post(mut request: Request<AppState>) -> impl Route<AppState> {
     let id = request.params.get("id").map(ToOwned::to_owned);
+
+    let search: Option<String> = request.query.remove("search").map(Cow::into_owned);
 
     move |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
@@ -142,6 +151,10 @@ fn post(request: Request<AppState>) -> impl Route<AppState> {
                     ui.label(format!("Post: {}", id));
 
                     ui.label(format!("Id: {:?}", ui.next_auto_id()));
+
+                    if let Some(search) = &search {
+                        ui.label(format!("Search: {}", search));
+                    }
 
                     if ui.button("back").clicked() {
                         state.inbox.send(RouterMessage::Back);
