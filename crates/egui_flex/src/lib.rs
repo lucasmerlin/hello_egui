@@ -1,3 +1,7 @@
+pub mod flex_button;
+pub mod flex_widget;
+
+use crate::flex_widget::FlexWidget;
 use egui::{Align2, Id, InnerResponse, Margin, Rect, Sense, Ui, Vec2};
 use std::mem;
 
@@ -347,6 +351,10 @@ impl<'a> FlexInstance<'a> {
         content: impl FnOnce(&mut Ui) -> R,
     ) -> InnerResponse<R> {
         self.add_container(item, |ui, container| container.content(ui, content))
+    }
+
+    pub fn add<W: FlexWidget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<W::Response> {
+        self.add_container(item, |ui, container| widget.ui(ui, container))
     }
 }
 
