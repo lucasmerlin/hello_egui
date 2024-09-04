@@ -1,5 +1,5 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Label, TextEdit, Widget};
+use egui::{Button, CentralPanel, Checkbox, Label, Slider, TextEdit, Widget};
 use egui_flex::flex_button::FlexButton;
 use egui_flex::{Flex, FlexItem};
 
@@ -75,6 +75,10 @@ fn main() -> eframe::Result {
                                     .inner
                                 },
                             );
+                            flex.add_simple(FlexItem::new().grow(1.0).basis(100.0), |ui| {
+                                ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
+                                Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
+                            });
 
                             flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
                             flex.add(
@@ -83,6 +87,8 @@ fn main() -> eframe::Result {
                             );
                             flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
                             flex.add_widget(FlexItem::new(), Button::new("Simple Button"));
+
+                            flex.add_widget(FlexItem::new(), Checkbox::new(&mut false, "Checkbox"));
 
                             // flex.add_container(
                             //     FlexItem::default().grow(1.0).basis(100.0),
