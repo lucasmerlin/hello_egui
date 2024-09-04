@@ -1,0 +1,10 @@
+[package]
+name = "egui_flex"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+egui.workspace = true
+
+[dev-dependencies]
+eframe = { workspace = true, default-features = true }
