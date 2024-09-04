@@ -26,86 +26,95 @@ fn main() -> eframe::Result {
                         "items",
                     ];
 
-                    Flex::new().show(ui, |flex| {
-                        flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
-                            ui.group(|ui| {
-                                content.content(ui, |ui| {
-                                    ui.label("Hello");
-                                })
-                            })
-                            .inner
-                        });
-
-                        for item in items {
+                    Flex::new()
+                        .align_items(egui_flex::FlexAlign::Stretch)
+                        .align_item_content(egui::Align2::CENTER_CENTER)
+                        .show(ui, |flex| {
                             flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
                                 ui.group(|ui| {
                                     content.content(ui, |ui| {
-                                        Label::new(item).wrap().ui(ui);
+                                        ui.label("Hello");
                                     })
                                 })
                                 .inner
                             });
-                        }
 
-                        flex.add_container(
-                            FlexItem::default().grow(1.0).basis(100.0),
-                            |ui, content| {
-                                ui.group(|ui| {
-                                    content.content(ui, |ui| {
-                                        TextEdit::singleline(&mut text)
-                                            // .desired_width(ui.available_width())
-                                            .ui(ui);
+                            for item in items {
+                                flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
+                                    ui.group(|ui| {
+                                        content.content(ui, |ui| {
+                                            Label::new(item).wrap().ui(ui);
+                                        })
                                     })
-                                })
-                                .inner
-                            },
-                        );
+                                    .inner
+                                });
+                            }
 
-                        flex.add_container(
-                            FlexItem::default().grow(1.0).basis(100.0),
-                            |ui, content| {
-                                ui.group(|ui| {
-                                    content.content(ui, |ui| {
-                                        ui.add(Label::new("I have flex basis 100").wrap());
+                            flex.add_container(
+                                FlexItem::default().grow(1.0).basis(400.0),
+                                |ui, content| {
+                                    ui.group(|ui| {
+                                        content.content(ui, |ui| {
+                                            TextEdit::singleline(&mut text)
+                                                .desired_width(ui.available_width())
+                                                .ui(ui);
+                                        })
                                     })
-                                })
-                                .inner
-                            },
-                        );
+                                    .inner
+                                },
+                            );
 
-                        flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
-                        flex.add(
-                            FlexItem::new().grow(1.0),
-                            FlexButton::new("Button wefoijfgiweopjg"),
-                        );
-                        flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
+                            flex.add_container(
+                                FlexItem::default().grow(1.0).basis(100.0),
+                                |ui, content| {
+                                    ui.group(|ui| {
+                                        content.content(ui, |ui| {
+                                            ui.add(Label::new("I have flex basis 100").wrap());
+                                        })
+                                    })
+                                    .inner
+                                },
+                            );
 
-                        // flex.add_container(
-                        //     FlexItem::default().grow(1.0).basis(100.0),
-                        //     |ui, content| {
-                        //         ui.group(|ui| {
-                        //             content.content(ui, |ui| {
-                        //                 ui.vertical(|ui| {
-                        //                     Flex::new().show(ui, |flex| {
-                        //                         flex.add_simple(FlexItem::default(), |ui| {
-                        //                             ui.label("Hello World");
-                        //                         });
-                        //
-                        //                         flex.add_simple(FlexItem::default(), |ui| {
-                        //                             ui.label("Drop");
-                        //                         });
-                        //
-                        //                         flex.add_simple(FlexItem::default(), |ui| {
-                        //                             ui.label("Two \nLines");
-                        //                         });
-                        //                     });
-                        //                 });
-                        //             })
-                        //         })
-                        //         .inner
-                        //     },
-                        // );
-                    });
+                            flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
+                            flex.add(
+                                FlexItem::new().grow(1.0),
+                                FlexButton::new("Button wefoijfgiweopjg"),
+                            );
+                            flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
+                            flex.add_widget(FlexItem::new(), Button::new("Simple Button"));
+
+                            // flex.add_container(
+                            //     FlexItem::default().grow(1.0).basis(100.0),
+                            //     |ui, content| {
+                            //         ui.group(|ui| {
+                            //             content.content(ui, |ui| {
+                            //                 ui.vertical(|ui| {
+                            //                     Flex::new().show(ui, |flex| {
+                            //                         flex.add(
+                            //                             FlexItem::new(),
+                            //                             FlexButton::new("Button"),
+                            //                         );
+                            //
+                            //                         flex.add(
+                            //                             FlexItem::new(),
+                            //                             FlexButton::new("Longer Button"),
+                            //                         );
+                            //
+                            //                         flex.add(
+                            //                             FlexItem::new(),
+                            //                             FlexButton::new(
+                            //                                 "Button\nwith\nmultiple\nlines",
+                            //                             ),
+                            //                         );
+                            //                     });
+                            //                 });
+                            //             })
+                            //         })
+                            //         .inner
+                            //     },
+                            // );
+                        });
                 });
 
                 // ui.horizontal_top(|ui| {

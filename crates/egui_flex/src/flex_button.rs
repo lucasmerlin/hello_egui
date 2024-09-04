@@ -55,6 +55,7 @@ impl FlexWidget for FlexButton {
                 Label::new(self.text.color(style.fg_stroke.color))
                     .selectable(false)
                     .sense(Sense::hover())
+                    .wrap()
                     .ui(ui);
             })
         });
