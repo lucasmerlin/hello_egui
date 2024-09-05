@@ -31,6 +31,7 @@ fn main() -> eframe::Result {
                         .align_item_content(egui::Align2::CENTER_CENTER)
                         .show(ui, |flex| {
                             flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
+                                ui.label("Im part of the container");
                                 ui.group(|ui| {
                                     content.content(ui, |ui| {
                                         ui.label("Hello");
@@ -79,6 +80,42 @@ fn main() -> eframe::Result {
                             //     ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
                             //     Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
                             // });
+
+                            flex.add_flex_frame(
+                                FlexItem::default().grow(1.0),
+                                Flex::vertical()
+                                    .align_content(egui_flex::FlexAlignContent::Stretch)
+                                    .grow_items(),
+                                egui::Frame::group(flex.ui().style()),
+                                |flex| {
+                                    flex.add(FlexItem::default().grow(1.0), FlexButton::new("btn"));
+                                    flex.add(
+                                        FlexItem::default(),
+                                        FlexButton::new("Very long button"),
+                                    );
+                                    flex.add_flex(
+                                        FlexItem::default().grow(1.0),
+                                        Flex::horizontal()
+                                            .align_content(egui_flex::FlexAlignContent::Stretch)
+                                            .grow_items(),
+                                        |flex| {
+                                            flex.add(
+                                                FlexItem::default().grow(1.0),
+                                                FlexButton::new("btn"),
+                                            );
+                                            flex.add(
+                                                FlexItem::default(),
+                                                FlexButton::new("Very long button"),
+                                            );
+                                        },
+                                    );
+                                },
+                            );
+
+                            flex.add(
+                                FlexItem::new().grow(1.0),
+                                FlexButton::new("Very long button"),
+                            );
 
                             flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
                             flex.add(

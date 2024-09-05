@@ -40,12 +40,55 @@ fn main() -> eframe::Result {
                             .align_content(FlexAlignContent::Stretch)
                             .grow_items(),
                         |flex| {
+                            flex.add_flex(
+                                FlexItem::new().grow(1.0),
+                                Flex::horizontal()
+                                    .align_content(FlexAlignContent::Stretch)
+                                    .grow_items(),
+                                |flex| {
+                                    flex.add(FlexItem::new().grow(1.0), FlexButton::new("btn"));
+                                    flex.add(FlexItem::new(), FlexButton::new("Very long button"));
+
+                                    flex.add_flex_frame(
+                                        FlexItem::new().grow(1.0),
+                                        Flex::vertical()
+                                            .align_content(FlexAlignContent::Stretch)
+                                            .grow_items(),
+                                        Frame::group(flex.ui().style()),
+                                        |flex| {
+                                            flex.add(
+                                                FlexItem::new().grow(1.0),
+                                                FlexButton::new("btn"),
+                                            );
+                                            flex.add(
+                                                FlexItem::new(),
+                                                FlexButton::new("Very long button"),
+                                            );
+                                        },
+                                    );
+                                },
+                            );
+
                             flex.add(FlexItem::new().grow(1.0), FlexButton::new("btn"));
                             flex.add(FlexItem::new(), FlexButton::new("Very long button"));
                             flex.add(FlexItem::new(), FlexButton::new("btn"));
                         },
                     );
                 });
+
+            Flex::vertical().grow_items().show(ui, |flex| {
+                flex.add_flex_frame(
+                    FlexItem::new(),
+                    Flex::horizontal()
+                        .align_content(FlexAlignContent::Normal)
+                        .grow_items(),
+                    Frame::group(flex.ui().style()),
+                    |flex| {
+                        flex.add(FlexItem::new().grow(1.0), FlexButton::new("btn"));
+                        flex.add(FlexItem::new(), FlexButton::new("Very long button"));
+                    },
+                );
+            })
         });
     })
 }

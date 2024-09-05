@@ -227,13 +227,15 @@ impl Flex {
                     let mut row_size = Vec2::ZERO;
                     row_size[direction] = available_length;
                     row_size[cross_direction] = row.cross_size + extra_cross_space_per_row;
+                    row_size[cross_direction] =
+                        f32::min(row_size[cross_direction], available_size[cross_direction]);
 
                     row.cross_size_with_extra_space = row_size[cross_direction];
                     row.rect = Some(Rect::from_min_size(row_position, row_size));
 
                     // ui.ctx().debug_painter().debug_rect(
                     //     row.rect.unwrap(),
-                    //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
+                    //     egui::Color32::from_rgba_unmultiplied(255, 255, 0, 128),
                     //     format!("row {}", i),
                     // );
 
@@ -394,9 +396,13 @@ impl<'a> FlexInstance<'a> {
                     total_size[self.direction] = basis + item_state.margin.sum()[self.direction];
                 }
                 total_size[self.direction] += extra_length;
-                total_size[self.direction] = f32::min(
-                    total_size[self.direction],
-                    ui.available_rect_before_wrap().size()[self.direction],
+
+                let available_size = ui.available_rect_before_wrap().size();
+                total_size[self.direction] =
+                    f32::min(total_size[self.direction], available_size[self.direction]);
+                total_size[1 - self.direction] = f32::min(
+                    total_size[1 - self.direction],
+                    available_size[1 - self.direction],
                 );
 
                 let align = item.align_self.unwrap_or_default();
@@ -426,8 +432,7 @@ impl<'a> FlexInstance<'a> {
                 }
                 inner_size[self.direction] = f32::min(
                     inner_size[self.direction],
-                    ui.available_rect_before_wrap().size()[self.direction]
-                        - item_state.margin.sum()[self.direction],
+                    available_size[self.direction] - item_state.margin.sum()[self.direction],
                 );
 
                 let content_align = item.align_content.unwrap_or(Align2::CENTER_CENTER);
@@ -675,7 +680,10 @@ impl FlexContainerUi {
         //
         // ui.allocate_exact_size(extended_size, Sense::hover());
 
-        ui.allocate_exact_size(frame_rect.size() - margin.sum(), Sense::hover());
+        ui.allocate_exact_size(
+            Vec2::max(frame_rect.size() - margin.sum(), Vec2::ZERO),
+            Sense::hover(),
+        );
 
         let container_min_rect = ui.min_rect();
 
@@ -699,11 +707,24 @@ impl FlexContainerUi {
         //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 128),
         //     format!("frame_rect"),
         // );
+        let Self {
+            direction,
+            basis,
+            extra_length,
+            content_rect,
+            frame_rect,
+            margin,
+            parent_min_rect,
+            max_item_size,
+        } = self;
+
+        // We will assume that the margin is symmetrical
+        let margin_top_left = ui.min_rect().min - frame_rect.min;
 
         let (min_size, res) = flex.show_inside(
             ui,
-            Some(self.frame_rect.size()),
-            Some(self.max_item_size),
+            Some(frame_rect.size() - margin.sum()),
+            Some(max_item_size),
             |instance| {
                 let res = content(instance);
 
@@ -711,12 +732,14 @@ impl FlexContainerUi {
             },
         );
 
+        let container_min_rect = ui.min_rect();
+
         FlexContainerResponse {
             inner: res,
-            child_rect: Rect::from_min_size(self.frame_rect.min, min_size),
+            child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
-            margin_top_left: Vec2::ZERO,
-            container_min_rect: ui.min_rect(),
+            margin_top_left,
+            container_min_rect,
         }
     }
 }
