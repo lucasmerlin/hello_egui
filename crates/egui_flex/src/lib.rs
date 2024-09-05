@@ -2,8 +2,18 @@ pub mod flex_button;
 pub mod flex_widget;
 
 use crate::flex_widget::FlexWidget;
-use egui::{Align, Align2, Id, InnerResponse, Margin, Rect, Response, Sense, Ui, Vec2, Widget};
+use egui::{
+    Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Rect, Response, Sense, Ui,
+    Vec2, Widget,
+};
 use std::mem;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub enum FlexDirection {
+    #[default]
+    Horizontal,
+    Vertical,
+}
 
 #[derive(Debug, Clone, Copy, Default)]
 pub enum FlexJustify {
@@ -39,6 +49,7 @@ pub enum FlexAlignContent {
 
 #[derive(Debug, Clone, Default)]
 pub struct Flex {
+    direction: FlexDirection,
     justify: FlexJustify,
     align_items: FlexAlign,
     /// If align_items is stretch, how do we align the content?
@@ -87,6 +98,19 @@ impl Flex {
         Self::default()
     }
 
+    pub fn horizontal() -> Self {
+        Self::default().direction(FlexDirection::Horizontal)
+    }
+
+    pub fn vertical() -> Self {
+        Self::default().direction(FlexDirection::Vertical)
+    }
+
+    pub fn direction(mut self, direction: FlexDirection) -> Self {
+        self.direction = direction;
+        self
+    }
+
     pub fn justify(mut self, justify: FlexJustify) -> Self {
         self.justify = justify;
         self
@@ -113,87 +137,98 @@ impl Flex {
             .ctx()
             .memory(|mem| mem.data.get_temp(id).clone().unwrap_or_default());
 
-        let available_size = ui.available_size();
-        let direction = if ui.layout().main_dir().is_horizontal() {
-            0
-        } else {
-            1
-        };
-        let cross_direction = 1 - direction;
-
-        let available_length = available_size[direction];
-        let item_spacing_direction = ui.spacing().item_spacing[direction];
-
-        let mut rows = vec![];
-        let mut current_row = RowData::default();
-        for item in &state.items {
-            let item_length = item
-                .config
-                .basis
-                .map(|basis| basis + item.margin.sum()[direction])
-                .unwrap_or(item.size_with_margin[direction]);
-
-            if item_length + item_spacing_direction + current_row.total_size > available_length
-                && !current_row.items.is_empty()
-            {
-                rows.push(mem::take(&mut current_row));
-            }
-
-            current_row.total_size += item_length;
-            if !current_row.items.is_empty() {
-                current_row.total_size += item_spacing_direction;
-            }
-            current_row.total_grow += item.config.grow;
-            current_row.items.push(item.clone());
-            if item.size_with_margin[cross_direction] > current_row.cross_size {
-                current_row.cross_size = item.size_with_margin[cross_direction];
-            }
-        }
-
-        if !current_row.items.is_empty() {
-            rows.push(current_row);
-        }
-
-        let available_cross_size = available_size[cross_direction];
-        let total_row_cross_size = rows.iter().map(|row| row.cross_size).sum::<f32>();
-
-        let mut row_position = ui.min_rect().min;
-
-        for (i, row) in rows.iter_mut().enumerate() {
-            let mut row_size = Vec2::ZERO;
-            row_size[direction] = available_length;
-            row_size[cross_direction] = row.cross_size;
-
-            row.rect = Some(Rect::from_min_size(row_position, row_size));
-            row_position[cross_direction] +=
-                row_size[cross_direction] + ui.spacing().item_spacing[cross_direction];
-
-            row.extra_space = available_length - row.total_size;
-        }
-
-        let mut instance = FlexInstance {
-            current_index: 0,
-            current_row: 0,
-            current_row_index: 0,
-            flex: &self,
-            state: FlexState::default(),
-            direction,
-            row_ui: FlexInstance::row_ui(ui, rows.first()),
-            ui,
-            rows,
+        let layout = match self.direction {
+            FlexDirection::Horizontal => Layout::left_to_right(Align::Min),
+            FlexDirection::Vertical => Layout::top_down(Align::Min),
         };
 
-        let r = f(&mut instance);
+        let r = ui
+            .with_layout(layout, |ui| {
+                let available_size = ui.available_size();
+                let direction = if ui.layout().main_dir().is_horizontal() {
+                    0
+                } else {
+                    1
+                };
+                let cross_direction = 1 - direction;
 
-        dbg!(&instance.rows);
+                let available_length = available_size[direction];
+                let item_spacing_direction = ui.spacing().item_spacing[direction];
 
-        instance.ui.ctx().memory_mut(|mem| {
-            mem.data.insert_temp(id, instance.state);
-        });
+                let mut rows = vec![];
+                let mut current_row = RowData::default();
+                for item in &state.items {
+                    let item_length = item
+                        .config
+                        .basis
+                        .map(|basis| basis + item.margin.sum()[direction])
+                        .unwrap_or(item.size_with_margin[direction]);
 
-        instance.rows.iter().for_each(|row| {
-            instance.ui.allocate_rect(row.rect.unwrap(), Sense::hover());
-        });
+                    if item_length + item_spacing_direction + current_row.total_size
+                        > available_length
+                        && !current_row.items.is_empty()
+                    {
+                        rows.push(mem::take(&mut current_row));
+                    }
+
+                    current_row.total_size += item_length;
+                    if !current_row.items.is_empty() {
+                        current_row.total_size += item_spacing_direction;
+                    }
+                    current_row.total_grow += item.config.grow;
+                    current_row.items.push(item.clone());
+                    if item.size_with_margin[cross_direction] > current_row.cross_size {
+                        current_row.cross_size = item.size_with_margin[cross_direction];
+                    }
+                }
+
+                if !current_row.items.is_empty() {
+                    rows.push(current_row);
+                }
+
+                let available_cross_size = available_size[cross_direction];
+                let total_row_cross_size = rows.iter().map(|row| row.cross_size).sum::<f32>();
+
+                let mut row_position = ui.min_rect().min;
+
+                for (i, row) in rows.iter_mut().enumerate() {
+                    let mut row_size = Vec2::ZERO;
+                    row_size[direction] = available_length;
+                    row_size[cross_direction] = row.cross_size;
+
+                    row.rect = Some(Rect::from_min_size(row_position, row_size));
+                    row_position[cross_direction] +=
+                        row_size[cross_direction] + ui.spacing().item_spacing[cross_direction];
+
+                    row.extra_space = available_length - row.total_size;
+                }
+
+                let mut instance = FlexInstance {
+                    current_index: 0,
+                    current_row: 0,
+                    current_row_index: 0,
+                    flex: &self,
+                    state: FlexState::default(),
+                    direction,
+                    row_ui: FlexInstance::row_ui(ui, rows.first()),
+                    ui,
+                    rows,
+                };
+
+                let r = f(&mut instance);
+
+                instance.ui.ctx().memory_mut(|mem| {
+                    mem.data.insert_temp(id, instance.state);
+                });
+
+                instance.rows.iter().for_each(|row| {
+                    instance
+                        .ui
+                        .allocate_rect(row.final_rect.unwrap(), Sense::hover());
+                });
+                r
+            })
+            .inner;
 
         r
     }
@@ -207,6 +242,7 @@ struct RowData {
     extra_space: f32,
     cross_size: f32,
     rect: Option<Rect>,
+    final_rect: Option<Rect>,
 }
 
 #[derive(Debug, Clone)]
@@ -241,9 +277,13 @@ impl<'a> FlexInstance<'a> {
             .map(|row| row.rect.unwrap())
             .unwrap_or(parent.max_rect());
         let mut child = parent.child_ui(rect, *parent.layout(), None);
-        child.set_width(child.available_width());
-        child.set_height(child.available_height());
+        // child.set_width(child.available_width());
+        // child.set_height(child.available_height());
         child
+    }
+
+    pub fn ui(&self) -> &Ui {
+        self.ui
     }
 
     pub fn add_container<R>(
@@ -252,9 +292,14 @@ impl<'a> FlexInstance<'a> {
         container_ui: impl FnOnce(&mut Ui, FlexContainerUi) -> FlexContainerResponse<R>,
     ) -> InnerResponse<R> {
         let row = self.rows.get_mut(self.current_row);
+        //
+        // self.row_ui.ctx().debug_painter().debug_rect(
+        //     self.row_ui.min_rect(),
+        //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
+        //     format!("row {}", self.current_row),
+        // );
 
         let res = self.row_ui.scope(|ui| {
-            ui.set_height(ui.available_height());
             let res = if let Some(row) = row {
                 let item_state = row.items.get_mut(self.current_row_index).unwrap();
 
@@ -274,6 +319,10 @@ impl<'a> FlexInstance<'a> {
                     total_size[self.direction] = basis + item_state.margin.sum()[self.direction];
                 }
                 total_size[self.direction] += extra_length;
+                total_size[self.direction] = f32::min(
+                    total_size[self.direction],
+                    ui.available_rect_before_wrap().size()[self.direction],
+                );
 
                 let align = item.align_self.unwrap_or(self.flex.align_items);
 
@@ -300,6 +349,11 @@ impl<'a> FlexInstance<'a> {
                 if let Some(basis) = item.basis {
                     inner_size[self.direction] = basis + extra_length;
                 }
+                inner_size[self.direction] = f32::min(
+                    inner_size[self.direction],
+                    ui.available_rect_before_wrap().size()[self.direction]
+                        - item_state.margin.sum()[self.direction],
+                );
 
                 let content_align = item
                     .align_content
@@ -336,11 +390,13 @@ impl<'a> FlexInstance<'a> {
                 //     format!("frame_rect {}", self.current_index),
                 // );
                 //
-                // ui.ctx().debug_painter().debug_rect(
-                //     content_rect,
-                //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 10),
-                //     format!("{}", self.current_index),
-                // );
+                // if item.basis.is_some() {
+                //     ui.ctx().debug_painter().debug_rect(
+                //         content_rect,
+                //         egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
+                //         format!("{}", self.current_index),
+                //     );
+                // }
 
                 let mut child_ui = ui.child_ui(frame_rect, *ui.layout(), None);
                 let res = container_ui(
@@ -355,7 +411,12 @@ impl<'a> FlexInstance<'a> {
                         parent_min_rect,
                     },
                 );
-                ui.allocate_space(child_ui.min_rect().size());
+                let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
+                // ui.ctx().debug_painter().debug_rect(
+                //     ui.min_rect(),
+                //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 128),
+                //     format!("allocated {}", self.current_index),
+                // );
 
                 (res, row.items.len(), frame_rect)
             } else {
@@ -400,6 +461,10 @@ impl<'a> FlexInstance<'a> {
             (res.inner, item, row_len)
         });
 
+        if let Some(row) = self.rows.get_mut(self.current_row) {
+            row.final_rect = Some(self.row_ui.min_rect());
+        }
+
         let (inner, item, row_len) = res.inner;
 
         self.state.items.push(item);
@@ -428,6 +493,17 @@ impl<'a> FlexInstance<'a> {
 
     pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {
         self.add_simple(item, |ui| widget.ui(ui))
+    }
+
+    pub fn add_frame<R>(
+        &mut self,
+        item: FlexItem,
+        frame: Frame,
+        content: impl FnOnce(&mut Ui) -> R,
+    ) -> InnerResponse<R> {
+        self.add_container(item, |ui, container| {
+            frame.show(ui, |ui| container.content(ui, content)).inner
+        })
     }
 }
 

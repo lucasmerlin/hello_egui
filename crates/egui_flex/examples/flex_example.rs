@@ -75,10 +75,10 @@ fn main() -> eframe::Result {
                                     .inner
                                 },
                             );
-                            flex.add_simple(FlexItem::new().grow(1.0).basis(100.0), |ui| {
-                                ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
-                                Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
-                            });
+                            // flex.add_simple(FlexItem::new().grow(1.0).basis(100.0), |ui| {
+                            //     ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
+                            //     Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
+                            // });
 
                             flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
                             flex.add(
@@ -133,6 +133,14 @@ fn main() -> eframe::Result {
                 //         flex.add_simple(FlexItem::default().grow(1000000.0), |ui| {});
                 //     });
                 // });
+
+                ui.horizontal_wrapped(|ui| {
+                    ui.button("Normal Button");
+                    Flex::horizontal().show(ui, |flex| {
+                        flex.add(FlexItem::new(), FlexButton::new("Hello"));
+                    });
+                    ui.button("Normal Button");
+                });
 
                 ui.button("Button");
             });
