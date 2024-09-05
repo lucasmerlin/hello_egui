@@ -51,16 +51,14 @@ pub enum FlexAlignContent {
 pub struct Flex {
     direction: FlexDirection,
     justify: FlexJustify,
-    align_items: FlexAlign,
-    /// If align_items is stretch, how do we align the content?
-    align_item_content: Option<Align2>,
     align_content: FlexAlignContent,
-    gap: Vec2,
+    gap: Option<Vec2>,
+    default_item: FlexItem,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct FlexItem {
-    grow: f32,
+    grow: Option<f32>,
     basis: Option<f32>,
     align_self: Option<FlexAlign>,
     align_content: Option<Align2>,
@@ -72,7 +70,7 @@ impl FlexItem {
     }
 
     pub fn grow(mut self, grow: f32) -> Self {
-        self.grow = grow;
+        self.grow = Some(grow);
         self
     }
 
@@ -117,17 +115,27 @@ impl Flex {
     }
 
     pub fn align_items(mut self, align_items: FlexAlign) -> Self {
-        self.align_items = align_items;
+        self.default_item.align_self = Some(align_items);
         self
     }
 
     pub fn align_item_content(mut self, align_item_content: Align2) -> Self {
-        self.align_item_content = Some(align_item_content);
+        self.default_item.align_content = Some(align_item_content);
         self
     }
 
     pub fn align_content(mut self, align_content: FlexAlignContent) -> Self {
         self.align_content = align_content;
+        self
+    }
+
+    pub fn grow_items(mut self) -> Self {
+        self.default_item.grow = Some(1.0);
+        self
+    }
+
+    pub fn gap(mut self, gap: Vec2) -> Self {
+        self.gap = Some(gap);
         self
     }
 
@@ -150,6 +158,9 @@ impl Flex {
 
         let r = ui
             .with_layout(layout, |ui| {
+                let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
+                let item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
+
                 let available_size = target_size.unwrap_or(ui.available_size());
                 let direction = if ui.layout().main_dir().is_horizontal() {
                     0
@@ -181,7 +192,7 @@ impl Flex {
                     if !current_row.items.is_empty() {
                         current_row.total_size += item_spacing_direction;
                     }
-                    current_row.total_grow += item.config.grow;
+                    current_row.total_grow += item.config.grow.unwrap_or(0.0);
                     current_row.items.push(item.clone());
                     if item.size_with_margin[cross_direction] > current_row.cross_size {
                         current_row.cross_size = item.size_with_margin[cross_direction];
@@ -220,11 +231,11 @@ impl Flex {
                     row.cross_size_with_extra_space = row_size[cross_direction];
                     row.rect = Some(Rect::from_min_size(row_position, row_size));
 
-                    ui.ctx().debug_painter().debug_rect(
-                        row.rect.unwrap(),
-                        egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
-                        format!("row {}", i),
-                    );
+                    // ui.ctx().debug_painter().debug_rect(
+                    //     row.rect.unwrap(),
+                    //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
+                    //     format!("row {}", i),
+                    // );
 
                     row_position[cross_direction] +=
                         row_size[cross_direction] + ui.spacing().item_spacing[cross_direction];
@@ -243,6 +254,7 @@ impl Flex {
                     ui,
                     rows,
                     max_item_size,
+                    item_spacing,
                 };
 
                 let r = f(&mut instance);
@@ -321,6 +333,8 @@ pub struct FlexInstance<'a> {
     direction: usize,
     row_ui: Ui,
     max_item_size: Option<Vec2>,
+    // Original item spacing to store when showing children
+    item_spacing: Vec2,
 }
 
 impl<'a> FlexInstance<'a> {
@@ -343,6 +357,13 @@ impl<'a> FlexInstance<'a> {
         item: FlexItem,
         container_ui: impl FnOnce(&mut Ui, FlexContainerUi) -> FlexContainerResponse<R>,
     ) -> InnerResponse<R> {
+        let item = FlexItem {
+            grow: item.grow.or(self.flex.default_item.grow),
+            basis: item.basis.or(self.flex.default_item.basis),
+            align_self: item.align_self.or(self.flex.default_item.align_self),
+            align_content: item.align_content.or(self.flex.default_item.align_content),
+        };
+
         let row = self.rows.get_mut(self.current_row);
         //
         // self.row_ui.ctx().debug_painter().debug_rect(
@@ -355,9 +376,11 @@ impl<'a> FlexInstance<'a> {
             let res = if let Some(row) = row {
                 let item_state = row.items.get_mut(self.current_row_index).unwrap();
 
-                let extra_length = if item_state.config.grow > 0.0 && row.total_grow > 0.0 {
+                let extra_length = if item_state.config.grow.unwrap_or(0.0) > 0.0
+                    && row.total_grow > 0.0
+                {
                     f32::max(
-                        row.extra_space * item_state.config.grow / row.total_grow,
+                        row.extra_space * item_state.config.grow.unwrap_or(0.0) / row.total_grow,
                         0.0,
                     )
                 } else {
@@ -376,7 +399,7 @@ impl<'a> FlexInstance<'a> {
                     ui.available_rect_before_wrap().size()[self.direction],
                 );
 
-                let align = item.align_self.unwrap_or(self.flex.align_items);
+                let align = item.align_self.unwrap_or_default();
 
                 let frame_align = match align {
                     FlexAlign::Start => Some(Align::Min),
@@ -407,10 +430,7 @@ impl<'a> FlexInstance<'a> {
                         - item_state.margin.sum()[self.direction],
                 );
 
-                let content_align = item
-                    .align_content
-                    .or(self.flex.align_item_content)
-                    .unwrap_or(Align2::CENTER_CENTER);
+                let content_align = item.align_content.unwrap_or(Align2::CENTER_CENTER);
 
                 let frame_without_margin = Rect {
                     min: frame_rect.min + item_state.margin.left_top(),
@@ -445,14 +465,16 @@ impl<'a> FlexInstance<'a> {
                 // );
                 //
                 // if item.basis.is_some() {
-                ui.ctx().debug_painter().debug_rect(
-                    content_rect,
-                    egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
-                    format!("{}", self.current_index),
-                );
+                // ui.ctx().debug_painter().debug_rect(
+                //     content_rect,
+                //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
+                //     format!("{}", self.current_index),
+                // );
                 // }
 
                 let mut child_ui = ui.child_ui(frame_rect, *ui.layout(), None);
+                child_ui.spacing_mut().item_spacing = self.item_spacing;
+
                 let res = container_ui(
                     &mut child_ui,
                     FlexContainerUi {
@@ -672,11 +694,11 @@ impl FlexContainerUi {
         flex: Flex,
         content: impl FnOnce(&mut FlexInstance) -> R,
     ) -> FlexContainerResponse<R> {
-        ui.ctx().debug_painter().debug_rect(
-            self.frame_rect,
-            egui::Color32::from_rgba_unmultiplied(0, 0, 255, 128),
-            format!("frame_rect"),
-        );
+        // ui.ctx().debug_painter().debug_rect(
+        //     self.frame_rect,
+        //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 128),
+        //     format!("frame_rect"),
+        // );
 
         let (min_size, res) = flex.show_inside(
             ui,
