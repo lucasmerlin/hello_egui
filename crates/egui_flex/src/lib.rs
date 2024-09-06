@@ -704,7 +704,9 @@ impl FlexContainerUi {
         // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
 
-        let mut child = ui.child_ui(content_rect, *ui.layout(), None);
+        let child_rect = content_rect.intersect(ui.max_rect());
+
+        let mut child = ui.child_ui(child_rect, *ui.layout(), None);
 
         let r = content(&mut child);
 
