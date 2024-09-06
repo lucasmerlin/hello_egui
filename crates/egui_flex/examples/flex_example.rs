@@ -1,7 +1,7 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Checkbox, Label, Slider, TextEdit, Widget};
+use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
 use egui_flex::flex_button::FlexButton;
-use egui_flex::{Flex, FlexItem};
+use egui_flex::{Flex, FlexAlign, FlexItem};
 
 fn main() -> eframe::Result {
     let mut text = "Hello, world!".to_owned();
@@ -31,7 +31,6 @@ fn main() -> eframe::Result {
                         .align_item_content(egui::Align2::CENTER_CENTER)
                         .show(ui, |flex| {
                             flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
-                                ui.label("Im part of the container");
                                 ui.group(|ui| {
                                     content.content(ui, |ui| {
                                         ui.label("Hello");
@@ -52,7 +51,7 @@ fn main() -> eframe::Result {
                             }
 
                             flex.add_container(
-                                FlexItem::default().grow(1.0).basis(400.0),
+                                FlexItem::default().grow(1.0).basis(200.0),
                                 |ui, content| {
                                     ui.group(|ui| {
                                         content.content(ui, |ui| {
@@ -66,20 +65,27 @@ fn main() -> eframe::Result {
                             );
 
                             flex.add_container(
-                                FlexItem::default().grow(1.0).basis(100.0),
+                                FlexItem::default().grow(1.0).basis(80.0),
                                 |ui, content| {
                                     ui.group(|ui| {
                                         content.content(ui, |ui| {
-                                            ui.add(Label::new("I have flex basis 100").wrap());
+                                            ui.add(Label::new("I have flex basis 80").wrap());
                                         })
                                     })
                                     .inner
                                 },
                             );
-                            // flex.add_simple(FlexItem::new().grow(1.0).basis(100.0), |ui| {
-                            //     ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
-                            //     Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
-                            // });
+                            flex.add_frame(
+                                FlexItem::default().grow(1.0).align_self(FlexAlign::End),
+                                Frame::group(flex.ui().style()),
+                                |ui| {
+                                    ui.label("I have align-self: end");
+                                },
+                            );
+                            flex.add_simple(FlexItem::new().grow(1.0).basis(150.0), |ui| {
+                                ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
+                                Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
+                            });
 
                             flex.add_flex_frame(
                                 FlexItem::default().grow(1.0),
