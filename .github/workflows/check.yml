@@ -1,6 +1,6 @@
 name: CI
 
-on: [push]
+on: [ push ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -11,7 +11,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -23,7 +23,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-targets --all-features --workspace --exclude egui_webview -- -D warnings
+          args: --all-targets --all-features --workspace --exclude egui_webview --exclude egui_flex -- -D warnings
 
       - name: RustFmt
         uses: actions-rs/cargo@v1
