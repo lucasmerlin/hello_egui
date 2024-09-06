@@ -18,7 +18,7 @@ fn main() -> eframe::Result {
                     let frame = Frame::group(ui.style()).inner_margin(5.0).outer_margin(5.0);
                     Flex::horizontal()
                         .align_items(egui_flex::FlexAlign::Stretch)
-                        .align_item_content(Align2::RIGHT_CENTER)
+                        .align_items_content(Align2::RIGHT_CENTER)
                         .show(ui, |flex| {
                             flex.add_flex(
                                 FlexItem::default().grow(1.0),

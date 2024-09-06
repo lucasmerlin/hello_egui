@@ -9,13 +9,13 @@ fn main() -> eframe::Result {
             let frame = Frame::group(ui.style());
             Flex::horizontal()
                 .align_content(FlexAlignContent::Normal)
-                .grow_items()
+                .grow_items(1.0)
                 .show(ui, |flex| {
                     flex.add_flex_frame(
                         FlexItem::new(),
                         Flex::vertical()
                             .align_content(FlexAlignContent::Stretch)
-                            .grow_items(),
+                            .grow_items(1.0),
                         Frame::group(flex.ui().style()),
                         |flex| {
                             flex.add(FlexItem::new(), FlexButton::new("btn"));
@@ -29,7 +29,7 @@ fn main() -> eframe::Result {
                         FlexItem::new().grow(1.0),
                         Flex::vertical()
                             .align_content(FlexAlignContent::Stretch)
-                            .grow_items(),
+                            .grow_items(1.0),
                         frame,
                         |flex| {
                             flex.add(FlexItem::new().grow(1.0), FlexButton::new("btn"));
@@ -41,14 +41,14 @@ fn main() -> eframe::Result {
                         FlexItem::new().grow(1.0),
                         Flex::vertical()
                             .align_content(FlexAlignContent::Stretch)
-                            .grow_items(),
+                            .grow_items(1.0),
                         frame,
                         |flex| {
                             flex.add_flex_frame(
                                 FlexItem::new().grow(1.0),
                                 Flex::horizontal()
                                     .align_content(FlexAlignContent::Stretch)
-                                    .grow_items(),
+                                    .grow_items(1.0),
                                 frame,
                                 |flex| {
                                     flex.add(FlexItem::new().grow(1.0), FlexButton::new("btn"));
@@ -58,7 +58,7 @@ fn main() -> eframe::Result {
                                         FlexItem::new().grow(1.0),
                                         Flex::vertical()
                                             .align_content(FlexAlignContent::Stretch)
-                                            .grow_items(),
+                                            .grow_items(1.0),
                                         Frame::group(flex.ui().style()),
                                         |flex| {
                                             flex.add(
@@ -81,12 +81,12 @@ fn main() -> eframe::Result {
                     );
                 });
 
-            Flex::vertical().grow_items().show(ui, |flex| {
+            Flex::vertical().show(ui, |flex| {
                 flex.add_flex_frame(
                     FlexItem::new(),
                     Flex::horizontal()
                         .align_content(FlexAlignContent::Normal)
-                        .grow_items(),
+                        .grow_items(1.0),
                     Frame::group(flex.ui().style()),
                     |flex| {
                         flex.add(FlexItem::new().grow(1.0), FlexButton::new("btn"));

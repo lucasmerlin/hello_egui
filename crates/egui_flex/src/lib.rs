@@ -8,14 +8,14 @@ use egui::{
 };
 use std::mem;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexDirection {
     #[default]
     Horizontal,
     Vertical,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexJustify {
     #[default]
     Start,
@@ -26,7 +26,7 @@ pub enum FlexJustify {
     SpaceEvenly,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexAlign {
     Start,
     End,
@@ -35,7 +35,7 @@ pub enum FlexAlign {
     Stretch,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexAlignContent {
     #[default]
     Normal,
@@ -47,7 +47,7 @@ pub enum FlexAlignContent {
     SpaceAround,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Flex {
     direction: FlexDirection,
     justify: FlexJustify,
@@ -56,7 +56,7 @@ pub struct Flex {
     default_item: FlexItem,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct FlexItem {
     grow: Option<f32>,
     basis: Option<f32>,
@@ -119,7 +119,7 @@ impl Flex {
         self
     }
 
-    pub fn align_item_content(mut self, align_item_content: Align2) -> Self {
+    pub fn align_items_content(mut self, align_item_content: Align2) -> Self {
         self.default_item.align_content = Some(align_item_content);
         self
     }
@@ -129,8 +129,8 @@ impl Flex {
         self
     }
 
-    pub fn grow_items(mut self) -> Self {
-        self.default_item.grow = Some(1.0);
+    pub fn grow_items(mut self, grow: f32) -> Self {
+        self.default_item.grow = Some(grow);
         self
     }
 
@@ -450,7 +450,7 @@ impl<'a> FlexInstance<'a> {
                     Some(align) => {
                         let mut align2 = Align2::LEFT_TOP;
                         align2[1 - self.direction] = align;
-                        align2.align_size_within_rect(total_size, parent_min_rect)
+                        align2.align_size_within_rect(total_size, ui.max_rect())
                     }
                 };
 
@@ -631,10 +631,20 @@ impl<'a> FlexInstance<'a> {
     pub fn add_flex_frame<R>(
         &mut self,
         item: FlexItem,
-        flex: Flex,
+        mut flex: Flex,
         frame: Frame,
         content: impl FnOnce(&mut FlexInstance) -> R,
     ) -> InnerResponse<R> {
+        // TODO: Is this correct behavior?
+        if item
+            .grow
+            .or(self.flex.default_item.grow)
+            .is_some_and(|g| g > 0.0)
+            && self.flex.direction != flex.direction
+        {
+            flex.align_content = FlexAlignContent::Stretch;
+        }
+
         self.add_container(item, |ui, container| {
             frame
                 .show(ui, |ui| container.content_flex(ui, flex, content))
@@ -748,6 +758,9 @@ impl FlexContainerUi {
 
         // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
+
+        ui.set_width(ui.available_width());
+        ui.set_height(ui.available_height());
 
         let (min_size, res) = flex.show_inside(
             ui,

@@ -28,7 +28,7 @@ fn main() -> eframe::Result {
 
                     Flex::new()
                         .align_items(egui_flex::FlexAlign::Stretch)
-                        .align_item_content(egui::Align2::CENTER_CENTER)
+                        .align_items_content(egui::Align2::CENTER_CENTER)
                         .show(ui, |flex| {
                             flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
                                 ui.group(|ui| {
@@ -75,13 +75,24 @@ fn main() -> eframe::Result {
                                     .inner
                                 },
                             );
-                            flex.add_frame(
-                                FlexItem::default().grow(1.0).align_self(FlexAlign::End),
-                                Frame::group(flex.ui().style()),
-                                |ui| {
-                                    ui.label("I have align-self: end");
-                                },
-                            );
+
+                            [
+                                FlexAlign::Start,
+                                FlexAlign::End,
+                                FlexAlign::Center,
+                                FlexAlign::Stretch,
+                            ]
+                            .iter()
+                            .for_each(|align| {
+                                flex.add_frame(
+                                    FlexItem::default().grow(1.0).align_self(*align),
+                                    Frame::group(flex.ui().style()),
+                                    |ui| {
+                                        ui.label(format!("I have align-self: {:?}", align));
+                                    },
+                                );
+                            });
+
                             flex.add_simple(FlexItem::new().grow(1.0).basis(150.0), |ui| {
                                 ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
                                 Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
@@ -91,7 +102,7 @@ fn main() -> eframe::Result {
                                 FlexItem::default().grow(1.0),
                                 Flex::vertical()
                                     .align_content(egui_flex::FlexAlignContent::Stretch)
-                                    .grow_items(),
+                                    .grow_items(1.0),
                                 egui::Frame::group(flex.ui().style()),
                                 |flex| {
                                     flex.add(FlexItem::default().grow(1.0), FlexButton::new("btn"));
@@ -103,7 +114,7 @@ fn main() -> eframe::Result {
                                         FlexItem::default().grow(1.0),
                                         Flex::horizontal()
                                             .align_content(egui_flex::FlexAlignContent::Stretch)
-                                            .grow_items(),
+                                            .grow_items(1.0),
                                         |flex| {
                                             flex.add(
                                                 FlexItem::default().grow(1.0),
