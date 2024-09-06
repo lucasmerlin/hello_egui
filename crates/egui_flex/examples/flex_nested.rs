@@ -4,7 +4,7 @@ use egui_flex::{Flex, FlexAlignContent, FlexItem};
 
 fn main() -> eframe::Result {
     eframe::run_simple_native("flex nested", Default::default(), |ctx, _frame| {
-        CentralPanel::default().show(&ctx, |ui| {
+        CentralPanel::default().show(ctx, |ui| {
             ui.spacing_mut().item_spacing = Vec2::splat(10.0);
             let frame = Frame::group(ui.style());
             Flex::horizontal()

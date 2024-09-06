@@ -3,8 +3,8 @@ pub mod flex_widget;
 
 use crate::flex_widget::FlexWidget;
 use egui::{
-    Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response,
-    Sense, Ui, Vec2, Widget,
+    Align, Align2, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense, Ui, Vec2,
+    Widget,
 };
 use std::mem;
 
@@ -290,8 +290,8 @@ impl Flex {
                         - (rows.len().max(1) - 1) as f32 * gap[cross_direction],
                     0.0,
                 );
-                let extra_cross_space_per_row = extra_cross_space / rows.len() as f32;
-                extra_cross_space_per_row
+
+                extra_cross_space / rows.len() as f32
             }
             _ => unimplemented!(),
         };
@@ -372,7 +372,7 @@ impl<'a> FlexInstance<'a> {
         let rect = row
             .map(|row| row.rect.unwrap())
             .unwrap_or(parent.max_rect());
-        let mut child = parent.child_ui(rect, *parent.layout(), None);
+        let child = parent.child_ui(rect, *parent.layout(), None);
         // child.set_width(child.available_width());
         // child.set_height(child.available_height());
         child
@@ -445,7 +445,7 @@ impl<'a> FlexInstance<'a> {
                     }
                 };
 
-                let mut frame_rect = match frame_align {
+                let frame_rect = match frame_align {
                     None => Rect::from_min_size(parent_min_rect.min, total_size),
                     Some(align) => {
                         let mut align2 = Align2::LEFT_TOP;
@@ -766,11 +766,7 @@ impl FlexContainerUi {
             ui,
             Some(frame_rect.size() - margin.sum()),
             Some(max_item_size),
-            |instance| {
-                let res = content(instance);
-
-                res
-            },
+            |instance| content(instance),
         );
 
         let container_min_rect = ui.min_rect();
