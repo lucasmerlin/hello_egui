@@ -1,5 +1,4 @@
-use egui::{Align2, CentralPanel, ComboBox, Frame};
-use egui_flex::flex_button::FlexButton;
+use egui::{Align2, Button, CentralPanel, ComboBox, Frame};
 use egui_flex::{Flex, FlexAlign, FlexAlignContent, FlexDirection, FlexInstance, FlexItem};
 
 fn main() -> eframe::Result {
@@ -20,8 +19,7 @@ fn main() -> eframe::Result {
                 if flex
                     .add(
                         FlexItem::new(),
-                        FlexButton::new("Horizontal")
-                            .selected(demo_dir == FlexDirection::Horizontal),
+                        Button::new("Horizontal").selected(demo_dir == FlexDirection::Horizontal),
                     )
                     .inner
                     .clicked()
@@ -31,7 +29,7 @@ fn main() -> eframe::Result {
                 if flex
                     .add(
                         FlexItem::new(),
-                        FlexButton::new("Vertical").selected(demo_dir == FlexDirection::Vertical),
+                        Button::new("Vertical").selected(demo_dir == FlexDirection::Vertical),
                     )
                     .inner
                     .clicked()

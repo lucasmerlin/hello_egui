@@ -1,4 +1,3 @@
-pub mod flex_button;
 pub mod flex_widget;
 
 use crate::flex_widget::FlexWidget;
@@ -602,10 +601,6 @@ impl<'a> FlexInstance<'a> {
         self.add_container(item, |ui, container| widget.ui(ui, container))
     }
 
-    pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {
-        self.add_simple(item, |ui| widget.ui(ui))
-    }
-
     pub fn add_frame<R>(
         &mut self,
         item: FlexItem,
@@ -777,6 +772,33 @@ impl FlexContainerUi {
             max_size: ui.available_size(),
             margin_top_left,
             container_min_rect,
+        }
+    }
+
+    pub fn content_widget(
+        self,
+        ui: &mut Ui,
+        widget: impl Widget,
+    ) -> FlexContainerResponse<Response> {
+        let margin_top_left = ui.min_rect().min - self.frame_rect.min;
+        ui.set_width(ui.available_width());
+        ui.set_height(ui.available_height());
+
+        let response = ui.centered_and_justified(|ui| widget.ui(ui)).inner;
+
+        let intrinsic_size = response.intrinsic_size.unwrap_or(Vec2::new(
+            ui.spacing().interact_size.x,
+            ui.spacing().interact_size.y,
+        ));
+        dbg!(intrinsic_size);
+
+        // let intrinsic_size = response.rect.size();
+        FlexContainerResponse {
+            child_rect: Rect::from_min_size(self.frame_rect.min, intrinsic_size),
+            inner: response,
+            max_size: ui.available_size(),
+            margin_top_left,
+            container_min_rect: ui.min_rect(),
         }
     }
 }
