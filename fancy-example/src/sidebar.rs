@@ -1,12 +1,11 @@
-use crate::crate_ui::{crate_button_ui, ALL_CRATES};
+use crate::crate_ui::ALL_CRATES;
 use crate::example::EXAMPLES;
 use crate::shared_state::SharedState;
 use crate::FancyMessage;
-use egui::{Align, Direction, Layout, RichText, Ui};
-use egui_dnd::DragDropItem;
-use egui_taffy::taffy;
-use egui_taffy::taffy::{Display, FlexDirection, FlexWrap, Style};
-use std::cell::RefCell;
+use egui::style::WidgetVisuals;
+use egui::{Align, Layout, RichText, Ui, Vec2};
+use egui_flex::flex_button::FlexButton;
+use egui_flex::{Flex, FlexItem};
 
 pub struct SideBar {}
 
@@ -50,45 +49,39 @@ impl SideBar {
 
         ui.label("Crates in hello_egui");
 
-        let taffy_response = RefCell::new(None);
-        let response_ref = &taffy_response;
+        ui.scope(|ui| {
+            let set = |visuals: &mut WidgetVisuals| {
+                visuals.rounding = 16.0.into();
+            };
+            let visuals = ui.visuals_mut();
+            set(&mut visuals.widgets.inactive);
+            set(&mut visuals.widgets.hovered);
+            set(&mut visuals.widgets.active);
+            set(&mut visuals.widgets.noninteractive);
+            set(&mut visuals.widgets.open);
 
-        let mut taffy = egui_taffy::TaffyPass::new(
-            ui,
-            "crate_list".into(),
-            Style {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Row,
-                flex_wrap: FlexWrap::Wrap,
-                gap: taffy::Size::length(8.0),
-                ..Default::default()
-            },
-        );
+            ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
+            ui.spacing_mut().item_spacing = Vec2::splat(8.0);
 
-        for item in ALL_CRATES.iter() {
-            let route = format!("/crate/{}", item.name());
-            let selected = shared.active_route == route;
-            taffy.add(
-                item.short_name().id(),
-                Style {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                Layout::centered_and_justified(Direction::LeftToRight),
-                move |ui| {
-                    if crate_button_ui(ui, item.short_name(), selected).clicked() {
-                        response_ref.borrow_mut().replace(route.clone());
-                    }
-                },
-            );
-        }
+            Flex::horizontal().grow_items(1.0).show(ui, |flex| {
+                for item in ALL_CRATES.iter() {
+                    let route = format!("/crate/{}", item.name());
+                    let selected = shared.active_route == route;
 
-        taffy.show();
-
-        if let Some(route) = taffy_response.borrow_mut().take() {
-            shared.tx.send(FancyMessage::Navigate(route)).ok();
-            clicked = true;
-        }
+                    if flex
+                        .add(
+                            FlexItem::new(),
+                            FlexButton::new(item.short_name()).selected(selected),
+                        )
+                        .inner
+                        .clicked()
+                    {
+                        shared.tx.send(FancyMessage::Navigate(route)).ok();
+                        clicked = true;
+                    };
+                }
+            });
+        });
 
         ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
             ui.add_space(8.0);
