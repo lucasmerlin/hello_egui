@@ -1,5 +1,7 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
+use egui::{
+    Area, Button, CentralPanel, Checkbox, Frame, Id, Label, Slider, TextEdit, Widget, Window,
+};
 use egui_flex::flex_button::FlexButton;
 use egui_flex::{Flex, FlexAlign, FlexItem};
 
@@ -197,6 +199,22 @@ fn main() -> eframe::Result {
                 });
 
                 ui.button("Button");
+
+                Window::new("Window").show(ui.ctx(), |ui| {
+                    Flex::horizontal().show(ui, |flex| {
+                        flex.add(FlexItem::new(), FlexButton::new("Button"));
+                        flex.add(FlexItem::new(), FlexButton::new("Button"));
+                        flex.add(FlexItem::new(), FlexButton::new("Button"));
+                    });
+                });
+
+                // Area::new(Id::new("area")).show(ui.ctx(), |ui| {
+                //     Flex::horizontal().wrap(false).show(ui, |flex| {
+                //         flex.add(FlexItem::new(), FlexButton::new("Button"));
+                //         flex.add(FlexItem::new(), FlexButton::new("Button"));
+                //         flex.add(FlexItem::new(), FlexButton::new("Button"));
+                //     });
+                // });
             });
         },
     )

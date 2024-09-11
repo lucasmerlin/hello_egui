@@ -47,13 +47,29 @@ pub enum FlexAlignContent {
     SpaceAround,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Flex {
+    id_salt: Option<Id>,
     direction: FlexDirection,
     justify: FlexJustify,
     align_content: FlexAlignContent,
     gap: Option<Vec2>,
     default_item: FlexItem,
+    wrap: bool,
+}
+
+impl Default for Flex {
+    fn default() -> Self {
+        Self {
+            id_salt: None,
+            direction: FlexDirection::default(),
+            justify: FlexJustify::default(),
+            align_content: FlexAlignContent::default(),
+            gap: None,
+            default_item: FlexItem::default(),
+            wrap: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -139,14 +155,28 @@ impl Flex {
         self
     }
 
+    pub fn wrap(mut self, wrap: bool) -> Self {
+        self.wrap = wrap;
+        self
+    }
+
+    pub fn id_salt(mut self, id_salt: impl Into<Id>) -> Self {
+        self.id_salt = Some(id_salt.into());
+        self
+    }
+
     fn show_inside<R>(
         self,
         ui: &mut Ui,
         target_size: Option<Vec2>,
         max_item_size: Option<Vec2>,
         f: impl FnOnce(&mut FlexInstance) -> R,
-    ) -> (Vec2, R) {
-        let id = ui.auto_id_with("flex");
+    ) -> (Vec2, InnerResponse<R>) {
+        let id = if let Some(id_salt) = self.id_salt {
+            ui.id().with(id_salt)
+        } else {
+            ui.auto_id_with("flex")
+        };
         let state: FlexState = ui
             .ctx()
             .memory(|mem| mem.data.get_temp(id).clone().unwrap_or_default());
@@ -156,84 +186,81 @@ impl Flex {
             FlexDirection::Vertical => Layout::top_down(Align::Min),
         };
 
-        let r = ui
-            .with_layout(layout, |ui| {
-                let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
-                let original_item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
+        let r = ui.with_layout(layout, |ui| {
+            let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
+            let original_item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
 
-                let available_size = target_size.unwrap_or(ui.available_size());
-                let direction = if ui.layout().main_dir().is_horizontal() {
-                    0
-                } else {
-                    1
-                };
-                let cross_direction = 1 - direction;
+            // We ceil in order to prevent rounding errors to wrap the layout unexpectedly
+            let available_size = target_size.unwrap_or(ui.available_size()).ceil();
+            let direction = if ui.layout().main_dir().is_horizontal() {
+                0
+            } else {
+                1
+            };
+            let cross_direction = 1 - direction;
 
-                let rows =
-                    self.layout_rows(&state, available_size, gap, direction, ui.min_rect().min);
+            let rows = self.layout_rows(&state, available_size, gap, direction, ui.min_rect().min);
 
-                let min_size_rows = self.layout_rows(
-                    &state,
-                    max_item_size.unwrap_or(ui.available_size()),
-                    gap,
-                    direction,
-                    ui.min_rect().min,
-                );
+            let min_size_rows = self.layout_rows(
+                &state,
+                max_item_size.unwrap_or(ui.available_size()),
+                gap,
+                direction,
+                ui.min_rect().min,
+            );
 
-                let mut instance = FlexInstance {
-                    current_index: 0,
-                    current_row: 0,
-                    current_row_index: 0,
-                    flex: &self,
-                    state: FlexState::default(),
-                    direction,
-                    row_ui: FlexInstance::row_ui(ui, rows.first()),
-                    ui,
-                    rows,
-                    max_item_size,
-                    item_spacing: original_item_spacing,
-                };
+            let mut instance = FlexInstance {
+                current_index: 0,
+                current_row: 0,
+                current_row_index: 0,
+                flex: &self,
+                state: FlexState::default(),
+                direction,
+                row_ui: FlexInstance::row_ui(ui, rows.first()),
+                ui,
+                rows,
+                max_item_size,
+                item_spacing: original_item_spacing,
+            };
 
-                let r = f(&mut instance);
+            let r = f(&mut instance);
 
-                let mut min_size =
-                    instance
-                        .state
-                        .items
-                        .iter()
-                        .fold(Vec2::ZERO, |mut current, item| {
-                            current[direction] += item.size_with_margin[direction];
-                            current[cross_direction] = f32::max(
-                                current[cross_direction],
-                                item.size_with_margin[cross_direction],
-                            );
-                            current
-                        });
-                min_size[direction] += gap[direction] * (instance.state.items.len() as f32 - 1.0);
-
-                // TODO: We should be able to calculate the min_size by looking at the rows at the
-                // max item size, but form some reason this doesn't work correctly
-                // This would fix wrapping in nested flexes
-                // let min_size = min_size_rows.iter().fold(Vec2::ZERO, |mut current, row| {
-                //     current[direction] = f32::max(current[direction], row.total_size);
-                //     current[cross_direction] += row.cross_size;
-                //     current
-                // });
-
-                instance.ui.ctx().memory_mut(|mem| {
-                    mem.data.insert_temp(id, instance.state);
+            let mut min_size = instance
+                .state
+                .items
+                .iter()
+                .fold(Vec2::ZERO, |mut current, item| {
+                    current[direction] += item.size_with_margin[direction];
+                    current[cross_direction] = f32::max(
+                        current[cross_direction],
+                        item.size_with_margin[cross_direction],
+                    );
+                    current
                 });
+            min_size[direction] += gap[direction] * (instance.state.items.len() as f32 - 1.0);
 
-                instance.rows.iter().for_each(|row| {
-                    if let Some(final_rect) = row.final_rect {
-                        instance.ui.allocate_rect(final_rect, Sense::hover());
-                    }
-                });
-                (min_size, r)
-            })
-            .inner;
+            // TODO: We should be able to calculate the min_size by looking at the rows at the
+            // max item size, but form some reason this doesn't work correctly
+            // This would fix wrapping in nested flexes
+            // let min_size = min_size_rows.iter().fold(Vec2::ZERO, |mut current, row| {
+            //     current[direction] = f32::max(current[direction], row.total_size);
+            //     current[cross_direction] += row.cross_size;
+            //     current
+            // });
 
-        r
+            instance.ui.ctx().memory_mut(|mem| {
+                mem.data.insert_temp(id, instance.state);
+            });
+
+            instance.rows.iter().for_each(|row| {
+                if let Some(final_rect) = row.final_rect {
+                    instance.ui.allocate_rect(final_rect, Sense::hover());
+                }
+            });
+            (min_size, r)
+        });
+
+        (r.inner.0, InnerResponse::new(r.inner.1, r.response))
     }
 
     fn layout_rows(
@@ -260,6 +287,7 @@ impl Flex {
 
             if item_length + gap_direction + current_row.total_size > available_length
                 && !current_row.items.is_empty()
+                && self.wrap
             {
                 rows.push(mem::take(&mut current_row));
             }
@@ -321,7 +349,11 @@ impl Flex {
         rows
     }
 
-    pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> R {
+    /// Show the flex ui. It will try to stay within Ui::max_rect.
+    ///
+    /// Note: You will likely get weird results when showing this within a Ui::horizontal layout,
+    /// since it limits the max_rect to some small value. Use Ui::horizontal_top instead.
+    pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> InnerResponse<R> {
         self.show_inside(ui, None, None, f).1
     }
 }
@@ -376,6 +408,18 @@ impl<'a> FlexInstance<'a> {
         // child.set_width(child.available_width());
         // child.set_height(child.available_height());
         child
+    }
+
+    pub fn direction(&self) -> FlexDirection {
+        self.flex.direction
+    }
+
+    pub fn is_horizontal(&self) -> bool {
+        self.flex.direction == FlexDirection::Horizontal
+    }
+
+    pub fn is_vertical(&self) -> bool {
+        self.flex.direction == FlexDirection::Vertical
     }
 
     pub fn ui(&self) -> &Ui {
@@ -498,11 +542,11 @@ impl<'a> FlexInstance<'a> {
                 // );
                 //
                 // if item.basis.is_some() {
-                // ui.ctx().debug_painter().debug_rect(
-                //     content_rect,
-                //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
-                //     format!("{}", self.current_index),
-                // );
+                //     ui.ctx().debug_painter().debug_rect(
+                //         content_rect,
+                //         egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
+                //         format!("{}", self.current_index),
+                //     );
                 // }
 
                 let mut child_ui = ui.child_ui(frame_rect, *ui.layout(), None);
@@ -651,6 +695,11 @@ impl<'a> FlexInstance<'a> {
                 .inner
         })
     }
+
+    /// Adds an empty item with flex-grow 1.0
+    pub fn grow(&mut self) -> Response {
+        self.add_simple(FlexItem::new().grow(1.0), |_| {}).response
+    }
 }
 
 pub struct FlexContainerUi {
@@ -774,7 +823,7 @@ impl FlexContainerUi {
         let container_min_rect = ui.min_rect();
 
         FlexContainerResponse {
-            inner: res,
+            inner: res.inner,
             child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
             margin_top_left,
