@@ -15,12 +15,13 @@ tag-prefix = "hello_egui-"
 all-features = true
 
 [features]
-all = ["animation", "dnd", "form", "inbox", "infinite_scroll", "pull_to_refresh", "router", "suspense", "thumbhash", "virtual_list"]
+all = ["animation", "dnd", "flex", "form", "inbox", "infinite_scroll", "pull_to_refresh", "router", "suspense", "thumbhash", "virtual_list"]
 full = ["all", "async", "tokio"]
 
 animation = ["dep:egui_animation"]
 async = ["egui_suspense/async", "egui_infinite_scroll/async", "egui_router/async", "egui_inbox/async"]
 dnd = ["dep:egui_dnd"]
+flex = ["dep:egui_flex"]
 form = ["dep:egui_form"]
 inbox = ["dep:egui_inbox"]
 infinite_scroll = ["dep:egui_infinite_scroll"]
@@ -35,6 +36,7 @@ virtual_list = ["dep:egui_virtual_list"]
 egui_animation = { workspace = true, optional = true }
 egui_dnd = { workspace = true, optional = true }
 egui_inbox = { workspace = true, optional = true }
+egui_flex = { workspace = true, optional = true }
 egui_form = { workspace = true, optional = true }
 egui_infinite_scroll = { workspace = true, optional = true }
 egui_pull_to_refresh = { workspace = true, optional = true }

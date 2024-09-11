@@ -6,6 +6,8 @@
 pub use egui_animation as animation;
 #[cfg(feature = "dnd")]
 pub use egui_dnd as dnd;
+#[cfg(feature = "flex")]
+pub use egui_flex as flex;
 #[cfg(feature = "form")]
 pub use egui_form as form;
 #[cfg(feature = "inbox")]

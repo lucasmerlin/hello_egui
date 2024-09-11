@@ -2565,6 +2565,7 @@ version = "0.5.0"
 dependencies = [
  "egui_animation",
  "egui_dnd",
+ "egui_flex",
  "egui_form",
  "egui_inbox",
  "egui_infinite_scroll",
