@@ -177,7 +177,7 @@ impl Flex {
         } else {
             ui.auto_id_with("flex")
         };
-        let state: FlexState = ui
+        let previous_state: FlexState = ui
             .ctx()
             .memory(|mem| mem.data.get_temp(id).clone().unwrap_or_default());
 
@@ -199,10 +199,16 @@ impl Flex {
             };
             let cross_direction = 1 - direction;
 
-            let rows = self.layout_rows(&state, available_size, gap, direction, ui.min_rect().min);
+            let rows = self.layout_rows(
+                &previous_state,
+                available_size,
+                gap,
+                direction,
+                ui.min_rect().min,
+            );
 
             let min_size_rows = self.layout_rows(
-                &state,
+                &previous_state,
                 max_item_size.unwrap_or(ui.available_size()),
                 gap,
                 direction,
@@ -247,6 +253,11 @@ impl Flex {
             //     current[cross_direction] += row.cross_size;
             //     current
             // });
+
+            if previous_state != instance.state {
+                instance.ui.ctx().request_discard();
+                instance.ui.ctx().request_repaint();
+            }
 
             instance.ui.ctx().memory_mut(|mem| {
                 mem.data.insert_temp(id, instance.state);
@@ -370,7 +381,7 @@ struct RowData {
     final_rect: Option<Rect>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct ItemState {
     id: Id,
     config: FlexItem,
@@ -379,7 +390,7 @@ struct ItemState {
     margin: Margin,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 struct FlexState {
     items: Vec<ItemState>,
 }
@@ -448,6 +459,7 @@ impl<'a> FlexInstance<'a> {
 
         let res = self.row_ui.scope(|ui| {
             let res = if let Some(row) = row {
+                // TODO: Handle when this is not set (Why doesn't this fail?)
                 let item_state = row.items.get_mut(self.current_row_index).unwrap();
 
                 let extra_length = if item_state.config.grow.unwrap_or(0.0) > 0.0
@@ -517,8 +529,8 @@ impl<'a> FlexInstance<'a> {
                 let mut content_rect =
                     content_align.align_size_within_rect(inner_size, frame_without_margin);
 
-                let max_content_size =
-                    self.max_item_size.unwrap_or(ui.available_size()) - item_state.margin.sum();
+                let max_content_size = self.max_item_size.unwrap_or(self.ui.available_size())
+                    - item_state.margin.sum();
                 // Because we want to allow the content to grow (e.g. in case the text gets longer),
                 // we set the content_rect's size to match the flex ui's available size.
                 content_rect.set_width(max_content_size.x);
@@ -542,11 +554,11 @@ impl<'a> FlexInstance<'a> {
                 // );
                 //
                 // if item.basis.is_some() {
-                //     ui.ctx().debug_painter().debug_rect(
-                //         content_rect,
-                //         egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
-                //         format!("{}", self.current_index),
-                //     );
+                // ui.ctx().debug_painter().debug_rect(
+                //     content_rect,
+                //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
+                //     format!("{}", self.current_index),
+                // );
                 // }
 
                 let mut child_ui = ui.child_ui(frame_rect, *ui.layout(), None);
@@ -607,9 +619,9 @@ impl<'a> FlexInstance<'a> {
 
             let item = ItemState {
                 margin,
-                inner_size: res.child_rect.size(),
+                inner_size: res.child_rect.size().round(),
                 id: ui.id(),
-                size_with_margin: res.child_rect.size() + margin.sum(),
+                size_with_margin: (res.child_rect.size() + margin.sum()).round(),
                 config: item,
             };
 
@@ -753,7 +765,9 @@ impl FlexContainerUi {
         // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
 
-        let child_rect = content_rect.intersect(ui.max_rect());
+        // TODO: Limiting based on parent max rect doesn't seem to work correctly
+        // let child_rect = content_rect.intersect(ui.max_rect());
+        let child_rect = content_rect;
 
         let mut child = ui.child_ui(child_rect, *ui.layout(), None);
 

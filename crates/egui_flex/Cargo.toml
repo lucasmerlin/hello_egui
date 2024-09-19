@@ -8,3 +8,4 @@ egui.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
+egui_inbox.workspace = true
