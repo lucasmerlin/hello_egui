@@ -2,7 +2,6 @@ use eframe::NativeOptions;
 use egui::{
     Area, Button, CentralPanel, Checkbox, Frame, Id, Label, Slider, TextEdit, Widget, Window,
 };
-use egui_flex::flex_button::FlexButton;
 use egui_flex::{Flex, FlexAlign, FlexItem};
 
 fn main() -> eframe::Result {
@@ -107,11 +106,8 @@ fn main() -> eframe::Result {
                                     .grow_items(1.0),
                                 egui::Frame::group(flex.ui().style()),
                                 |flex| {
-                                    flex.add(FlexItem::default().grow(1.0), FlexButton::new("btn"));
-                                    flex.add(
-                                        FlexItem::default(),
-                                        FlexButton::new("Very long button"),
-                                    );
+                                    flex.add(FlexItem::default().grow(1.0), Button::new("btn"));
+                                    flex.add(FlexItem::default(), Button::new("Very long button"));
                                     flex.add_flex(
                                         FlexItem::default().grow(1.0),
                                         Flex::horizontal()
@@ -120,31 +116,28 @@ fn main() -> eframe::Result {
                                         |flex| {
                                             flex.add(
                                                 FlexItem::default().grow(1.0),
-                                                FlexButton::new("btn"),
+                                                Button::new("btn"),
                                             );
                                             flex.add(
                                                 FlexItem::default(),
-                                                FlexButton::new("Very long button"),
+                                                Button::new("Very long button"),
                                             );
                                         },
                                     );
                                 },
                             );
 
+                            flex.add(FlexItem::new().grow(1.0), Button::new("Very long button"));
+
+                            flex.add(FlexItem::new().grow(1.0), Button::new("Button"));
                             flex.add(
                                 FlexItem::new().grow(1.0),
-                                FlexButton::new("Very long button"),
+                                Button::new("Button wefoijfgiweopjg"),
                             );
+                            flex.add(FlexItem::new().grow(1.0), Button::new("Button"));
+                            flex.add(FlexItem::new(), Button::new("Simple Button"));
 
-                            flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
-                            flex.add(
-                                FlexItem::new().grow(1.0),
-                                FlexButton::new("Button wefoijfgiweopjg"),
-                            );
-                            flex.add(FlexItem::new().grow(1.0), FlexButton::new("Button"));
-                            flex.add_widget(FlexItem::new(), Button::new("Simple Button"));
-
-                            flex.add_widget(FlexItem::new(), Checkbox::new(&mut false, "Checkbox"));
+                            flex.add(FlexItem::new(), Checkbox::new(&mut false, "Checkbox"));
 
                             // flex.add_container(
                             //     FlexItem::default().grow(1.0).basis(100.0),
@@ -155,17 +148,17 @@ fn main() -> eframe::Result {
                             //                     Flex::new().show(ui, |flex| {
                             //                         flex.add(
                             //                             FlexItem::new(),
-                            //                             FlexButton::new("Button"),
+                            //                             Button::new("Button"),
                             //                         );
                             //
                             //                         flex.add(
                             //                             FlexItem::new(),
-                            //                             FlexButton::new("Longer Button"),
+                            //                             Button::new("Longer Button"),
                             //                         );
                             //
                             //                         flex.add(
                             //                             FlexItem::new(),
-                            //                             FlexButton::new(
+                            //                             Button::new(
                             //                                 "Button\nwith\nmultiple\nlines",
                             //                             ),
                             //                         );
@@ -193,20 +186,20 @@ fn main() -> eframe::Result {
                 ui.horizontal_wrapped(|ui| {
                     ui.button("Normal Button");
                     Flex::horizontal().show(ui, |flex| {
-                        flex.add(FlexItem::new(), FlexButton::new("Hello"));
+                        flex.add(FlexItem::new(), Button::new("Hello"));
                     });
                     ui.button("Normal Button");
                 });
 
                 ui.button("Button");
 
-                Window::new("Window").show(ui.ctx(), |ui| {
-                    Flex::horizontal().show(ui, |flex| {
-                        flex.add(FlexItem::new(), FlexButton::new("Button"));
-                        flex.add(FlexItem::new(), FlexButton::new("Button"));
-                        flex.add(FlexItem::new(), FlexButton::new("Button"));
-                    });
-                });
+                // Window::new("Window").show(ui.ctx(), |ui| {
+                //     Flex::horizontal().show(ui, |flex| {
+                //         flex.add(FlexItem::new(), Button::new("Button"));
+                //         flex.add(FlexItem::new(), Button::new("Button"));
+                //         flex.add(FlexItem::new(), Button::new("Button"));
+                //     });
+                // });
 
                 // Area::new(Id::new("area")).show(ui.ctx(), |ui| {
                 //     Flex::horizontal().wrap(false).show(ui, |flex| {

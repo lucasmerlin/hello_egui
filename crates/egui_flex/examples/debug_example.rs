@@ -24,13 +24,13 @@ fn main() -> eframe::Result {
                                 FlexItem::default().grow(1.0),
                                 Flex::vertical()
                                     .align_content(egui_flex::FlexAlignContent::Stretch)
-                                    .grow_items(),
+                                    .grow_items(1.0),
                                 |flex| {
-                                    flex.add_widget(
+                                    flex.add(
                                         FlexItem::default().grow(1.0),
                                         egui::Label::new("Hello"),
                                     );
-                                    flex.add_widget(
+                                    flex.add(
                                         FlexItem::default().grow(1.0),
                                         egui::Label::new("World"),
                                     );
@@ -41,14 +41,14 @@ fn main() -> eframe::Result {
                                 FlexItem::default().grow(1.0),
                                 Flex::vertical()
                                     .align_content(egui_flex::FlexAlignContent::Stretch)
-                                    .grow_items(),
+                                    .grow_items(1.0),
                                 frame,
                                 |flex| {
-                                    flex.add_widget(
+                                    flex.add(
                                         FlexItem::default().grow(1.0),
                                         egui::Label::new("Hello"),
                                     );
-                                    flex.add_widget(
+                                    flex.add(
                                         FlexItem::default().grow(1.0),
                                         egui::Label::new("World"),
                                     );
@@ -57,13 +57,13 @@ fn main() -> eframe::Result {
                                         FlexItem::default().grow(1.0),
                                         Flex::horizontal()
                                             .align_content(egui_flex::FlexAlignContent::Stretch)
-                                            .grow_items(),
+                                            .grow_items(1.0),
                                         |flex| {
-                                            flex.add_widget(
+                                            flex.add(
                                                 FlexItem::default().grow(1.0),
                                                 egui::Label::new("Hello"),
                                             );
-                                            flex.add_widget(
+                                            flex.add(
                                                 FlexItem::default().grow(1.0),
                                                 egui::Label::new("World"),
                                             );
@@ -76,13 +76,13 @@ fn main() -> eframe::Result {
                                 FlexItem::default().grow(1.0),
                                 Flex::vertical()
                                     .align_content(egui_flex::FlexAlignContent::Stretch)
-                                    .grow_items(),
+                                    .grow_items(1.0),
                                 |flex| {
-                                    flex.add_widget(
+                                    flex.add(
                                         FlexItem::default().grow(1.0),
                                         egui::Label::new("Hello"),
                                     );
-                                    flex.add_widget(
+                                    flex.add(
                                         FlexItem::default().grow(1.0),
                                         egui::Label::new("World"),
                                     );

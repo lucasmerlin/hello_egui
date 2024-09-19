@@ -1,6 +1,5 @@
 use eframe::NativeOptions;
-use egui::{Ui, Window};
-use egui_flex::flex_button::FlexButton;
+use egui::{Button, Ui, Window};
 use egui_flex::{Flex, FlexDirection, FlexInstance, FlexItem};
 
 #[derive(Clone, Debug)]
@@ -24,7 +23,7 @@ struct Item {
 impl Item {
     pub fn show(&mut self, ui: &mut FlexInstance) {
         let response = match &self.kind {
-            ItemKind::Button(text) => ui.add(self.flex.clone(), FlexButton::new(text)).inner,
+            ItemKind::Button(text) => ui.add(self.flex.clone(), Button::new(text)).inner,
             ItemKind::Label(text) => ui.add_simple(self.flex.clone(), |ui| ui.label(text)).inner,
         };
 
@@ -37,7 +36,7 @@ impl Item {
                         let response = flex
                             .add(
                                 FlexItem::new().grow(1.0),
-                                FlexButton::new("Label")
+                                Button::new("Label")
                                     .selected(matches!(self.kind, ItemKind::Label(_))),
                             )
                             .inner;
@@ -49,7 +48,7 @@ impl Item {
                         let response = flex
                             .add(
                                 FlexItem::new().grow(1.0),
-                                FlexButton::new("Button")
+                                Button::new("Button")
                                     .selected(matches!(self.kind, ItemKind::Button(_))),
                             )
                             .inner;
