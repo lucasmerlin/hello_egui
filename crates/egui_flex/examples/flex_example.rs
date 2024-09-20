@@ -1,8 +1,7 @@
 use eframe::NativeOptions;
-use egui::{
-    Area, Button, CentralPanel, Checkbox, Frame, Id, Label, Slider, TextEdit, Widget, Window,
-};
+use egui::{Button, CentralPanel, Checkbox, Frame, Id, Label, Slider, TextEdit, Widget};
 use egui_flex::{Flex, FlexAlign, FlexItem};
+use std::num::NonZeroUsize;
 
 fn main() -> eframe::Result {
     let mut text = "Hello, world!".to_owned();
@@ -11,6 +10,10 @@ fn main() -> eframe::Result {
         NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
+                ctx.options_mut(|opts| {
+                    opts.max_passes = NonZeroUsize::new(3).unwrap();
+                });
+
                 ui.horizontal_top(|ui| {
                     let items = vec![
                         "I",
@@ -89,7 +92,10 @@ fn main() -> eframe::Result {
                                     FlexItem::default().grow(1.0).align_self(*align),
                                     Frame::group(flex.ui().style()),
                                     |ui| {
-                                        ui.label(format!("I have align-self: {:?}", align));
+                                        ui.add(
+                                            Label::new(format!("I have align-self: {:?}", align))
+                                                .wrap(),
+                                        );
                                     },
                                 );
                             });
