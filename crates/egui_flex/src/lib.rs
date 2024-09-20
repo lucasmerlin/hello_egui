@@ -688,8 +688,19 @@ impl<'a> FlexInstance<'a> {
         self.add_container(item, |ui, container| container.content(ui, content))
     }
 
+    /// Add a [`FlexWidget`] to the flex container.
+    /// [`FlexWidget`] is implemented for all default egui widgets.
+    /// If you use a custom third party widget you can use [`Self::add_widget`] instead.
     pub fn add<W: FlexWidget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<W::Response> {
-        self.add_container(item, |ui, container| widget.ui(ui, container))
+        self.add_container(item, |ui, container| widget.flex_ui(ui, container))
+    }
+
+    /// Add a [`egui::Widget`] to the flex container.
+    /// The default egui widgets implement [`FlexWidget`] Aso you can just use [`Self::add`] instead.
+    /// If the widget reports it's intrinsic size via the [`egui::Response`] it will be able to
+    /// grow it's frame according to the flex layout.
+    pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {
+        self.add_container(item, |ui, container| container.content_widget(ui, widget))
     }
 
     pub fn add_frame<R>(
