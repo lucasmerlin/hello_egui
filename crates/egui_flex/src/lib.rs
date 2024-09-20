@@ -268,7 +268,10 @@ impl Flex {
                 //         }
                 //     }
                 // }
-                instance.ui.ctx().request_discard();
+                instance
+                    .ui
+                    .ctx()
+                    .request_discard("Flex item added / removed / size changed");
                 instance.ui.ctx().request_repaint();
             }
 
@@ -892,7 +895,7 @@ impl FlexContainerUi {
         let available_size = ui.available_size();
 
         let response = if self.remeasure_widget {
-            ui.ctx().request_discard();
+            ui.ctx().request_discard("Flex item remeasure");
             let mut child_ui = ui.new_child(UiBuilder::new().max_rect(self.content_rect));
             child_ui.set_invisible();
             let response = child_ui.centered_and_justified(|ui| widget.ui(ui)).inner;
@@ -923,7 +926,7 @@ impl FlexContainerUi {
 
         if remeasure_widget {
             ui.ctx().request_repaint();
-            ui.ctx().request_discard();
+            ui.ctx().request_discard("Triggering flex item remeasure");
 
             // dbg!(available_size);
             // dbg!(intrinsic_size.round(), self.last_inner_size);
