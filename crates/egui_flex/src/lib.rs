@@ -2,8 +2,8 @@ pub mod flex_widget;
 
 use crate::flex_widget::FlexWidget;
 use egui::{
-    Align, Align2, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense, Ui,
-    UiBuilder, Vec2, Widget,
+    Align, Align2, Context, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense,
+    Ui, UiBuilder, Vec2, Widget,
 };
 use std::mem;
 
@@ -199,6 +199,7 @@ impl Flex {
             let cross_direction = 1 - direction;
 
             let rows = self.layout_rows(
+                ui.ctx(),
                 &previous_state,
                 available_size,
                 gap,
@@ -206,8 +207,17 @@ impl Flex {
                 ui.min_rect().min,
             );
 
+            // for row in &rows {
+            //     ui.ctx().debug_painter().debug_rect(
+            //         row.rect.unwrap(),
+            //         egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
+            //         format!("row"),
+            //     );
+            // }
+
             let max_item_size = max_item_size.unwrap_or(ui.available_size());
             let min_size_rows = self.layout_rows(
+                ui.ctx(),
                 &previous_state,
                 max_item_size,
                 gap,
@@ -292,6 +302,7 @@ impl Flex {
 
     fn layout_rows(
         &self,
+        ctx: &Context,
         state: &FlexState,
         available_size: Vec2,
         gap: Vec2,
@@ -357,15 +368,16 @@ impl Flex {
             let mut row_size = Vec2::ZERO;
             row_size[direction] = available_length;
             row_size[cross_direction] = row.cross_size + extra_cross_space_per_row;
-            row_size[cross_direction] =
-                f32::min(row_size[cross_direction], available_size[cross_direction]);
+            // TODO: Should there be an option to also limit in the cross dir?
+            // row_size[cross_direction] =
+            //     f32::min(row_size[cross_direction], available_size[cross_direction]);
 
             row.cross_size_with_extra_space = row_size[cross_direction];
             row.rect = Some(Rect::from_min_size(row_position, row_size));
 
-            // ui.ctx().debug_painter().debug_rect(
+            // ctx.debug_painter().debug_rect(
             //     row.rect.unwrap(),
-            //     egui::Color32::from_rgba_unmultiplied(255, 255, 0, 128),
+            //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
             //     format!("row {}", i),
             // );
 
@@ -434,7 +446,19 @@ impl<'a> FlexInstance<'a> {
         let mut rect = row
             .map(|row| row.rect.unwrap())
             .unwrap_or(parent.max_rect());
-        let child = parent.child_ui(rect, *parent.layout(), None);
+        let child = parent.new_child(UiBuilder::new().max_rect(rect));
+
+        // parent.ctx().debug_painter().debug_rect(
+        //     rect,
+        //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
+        //     format!("row {}", 0),
+        // );
+        // parent.ctx().debug_painter().debug_rect(
+        //     rect,
+        //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 255),
+        //     format!("row"),
+        // );
+
         // child.set_width(child.available_width());
         // child.set_height(child.available_height());
         child
@@ -509,10 +533,10 @@ impl<'a> FlexInstance<'a> {
                     total_size[self.direction] =
                         f32::min(total_size[self.direction], available_size[self.direction]);
                 }
-                total_size[1 - self.direction] = f32::min(
-                    total_size[1 - self.direction],
-                    available_size[1 - self.direction],
-                );
+                // total_size[1 - self.direction] = f32::min(
+                //     total_size[1 - self.direction],
+                //     available_size[1 - self.direction],
+                // );
 
                 let align = item.align_self.unwrap_or_default();
 
@@ -559,6 +583,9 @@ impl<'a> FlexInstance<'a> {
                 // we set the content_rect's size to match the flex ui's available size.
                 content_rect.set_width(max_content_size.x);
                 content_rect.set_height(max_content_size.y);
+                // We only want to limit the content size in the main dir
+                // TODO: Should there be an option to also limit it in the cross dir?
+                content_rect.max[1 - self.direction] = f32::INFINITY;
                 // frame_rect.set_width(self.ui.available_width());
                 // frame_rect.set_height(self.ui.available_height());
 
@@ -812,9 +839,7 @@ impl FlexContainerUi {
         // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
 
-        // TODO: Limiting based on parent max rect doesn't seem to work correctly
-        // let child_rect = content_rect.intersect(ui.max_rect());
-        let child_rect = content_rect;
+        let child_rect = content_rect.intersect(ui.max_rect());
 
         let mut child = ui.child_ui(child_rect, *ui.layout(), None);
 
