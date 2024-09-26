@@ -1,4 +1,4 @@
-use egui::{Align2, Id, Rect, Ui, Vec2};
+use egui::{Align2, Id, Rect, Ui, UiBuilder, Vec2};
 
 /// A widget that measures its content and centers it within the available space.
 pub struct Center {
@@ -48,7 +48,7 @@ impl Center {
             rect
         };
 
-        let mut ui = ui.child_ui(content_rect, *ui.layout(), None);
+        let mut ui = ui.new_child(UiBuilder::new().max_rect(content_rect).layout(*ui.layout()));
 
         if last_size.is_none() {
             ui.set_invisible();
