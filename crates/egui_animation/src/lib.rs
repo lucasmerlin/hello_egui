@@ -14,7 +14,7 @@ pub mod easing {
 }
 
 pub use collapse::*;
-use egui::{Context, Id, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{Context, Id, Pos2, Rect, Sense, Ui, UiBuilder, Vec2};
 use hello_egui_utils::current_scroll_delta;
 
 #[derive(Debug, Clone)]
@@ -115,14 +115,17 @@ pub fn animate_ui_translation(
 
     let current_pos = animate_position(ui, id, target_pos, 1.0, easing, prevent_scroll_animation);
 
-    let mut child = ui.child_ui(rect, *ui.layout(), None);
+    let mut child = ui.new_child(UiBuilder::new().max_rect(rect).layout(*ui.layout()));
 
     let _response = child
-        .allocate_ui_at_rect(Rect::from_min_size(current_pos, rect.size()), |ui| {
-            ui.allocate_ui(size, |ui| {
-                content(ui);
-            });
-        })
+        .allocate_new_ui(
+            UiBuilder::new().max_rect(Rect::from_min_size(current_pos, rect.size())),
+            |ui| {
+                ui.allocate_ui(size, |ui| {
+                    content(ui);
+                });
+            },
+        )
         .response;
 
     rect
