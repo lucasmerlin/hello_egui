@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use egui::util::IdTypeMap;
-use egui::{Context, Id, LayerId, Order, Pos2, Ui, UiStackInfo};
+use egui::{Context, Id, LayerId, Order, Pos2, Ui, UiBuilder, UiStackInfo};
 use taffy::prelude::*;
 
 pub use taffy;
@@ -254,10 +254,14 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                                 ctx.clone(),
                                 LayerId::new(Order::Background, Id::new("measure")),
                                 Id::new("measure"),
-                                rect,
-                                egui::Rect::from_min_size(Default::default(), Default::default()),
-                                UiStackInfo::default(),
+                                UiBuilder::new()
+                                    .max_rect(rect)
+                                    .ui_stack_info(UiStackInfo::default()),
                             );
+                            ui.set_clip_rect(egui::Rect::from_min_size(
+                                Default::default(),
+                                Default::default(),
+                            ));
                             let response = ui.with_layout(
                                 egui::Layout {
                                     main_dir: layout.main_dir,
@@ -348,7 +352,9 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                         return;
                     }
 
-                    let mut child = self.ui.child_ui(rect, *egui_layout, None);
+                    let mut child = self
+                        .ui
+                        .new_child(UiBuilder::new().max_rect(rect).layout(*egui_layout));
 
                     content(&mut child);
                 }
