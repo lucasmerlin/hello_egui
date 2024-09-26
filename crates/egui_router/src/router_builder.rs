@@ -151,7 +151,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     }
 
     /// Add an async route. Check the [matchit] documentation for information about the route syntax.
-    /// The handler will be called with [crate::OwnedRequest] and should return a [Route].
+    /// The handler will be called with [`crate::OwnedRequest`] and should return a [Route].
     ///
     /// # Example
     /// ```rust

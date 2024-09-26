@@ -151,7 +151,7 @@ pub struct Request<'a, State = ()> {
 }
 
 #[cfg(feature = "async")]
-/// Owned request, passed to [handler::AsyncMakeHandler]
+/// Owned request, passed to [`handler::AsyncMakeHandler`]
 pub struct OwnedRequest<State = ()> {
     /// The parsed path params
     pub params: BTreeMap<String, String>,

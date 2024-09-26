@@ -6,7 +6,7 @@
 #[cfg(feature = "broadcast")]
 pub mod broadcast;
 
-/// Broadcast based on [type_map], useful for sending events between different parts of the application.
+/// Broadcast based on [`type_map`], useful for sending events between different parts of the application.
 #[cfg(feature = "type_broadcast")]
 pub mod type_broadcast;
 
@@ -359,7 +359,7 @@ mod async_impl {
         /// Spawns a future that will automatically be cancelled when the inbox is dropped.
         /// Make sure your future is safe to cancel (It may stop at any await point).
         ///
-        /// If you want to spawn a future that should definitely run to completion, use [UiInbox::spawn_detached] instead.
+        /// If you want to spawn a future that should definitely run to completion, use [`UiInbox::spawn_detached`] instead.
         pub fn spawn<F>(&mut self, f: impl FnOnce(UiInboxSender<T>) -> F)
         where
             F: std::future::Future<Output = ()> + MaybeSend + 'static,
@@ -374,7 +374,7 @@ mod async_impl {
                 let mut future = pin!(future);
 
                 select! {
-                    _ = future => {},
+                    () = future => {},
                     _ = rx => {},
                 }
             });

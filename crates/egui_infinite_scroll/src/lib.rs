@@ -403,7 +403,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         });
     }
 
-    /// Layout for to use with [egui_extras::TableBody].
+    /// Layout for to use with [`egui_extras::TableBody`].
     #[cfg(feature = "egui_extras")]
     pub fn ui_table(
         &mut self,

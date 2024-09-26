@@ -24,7 +24,7 @@ async fn main() -> eframe::Result<()> {
             let router = router.get_or_insert_with(|| {
                 EguiRouter::builder()
                     .error_ui(|ui, state: &AppState, error| {
-                        ui.label(format!("Error: {}", error));
+                        ui.label(format!("Error: {error}"));
                         if ui.button("back").clicked() {
                             state.clone().send(RouterMessage::Back).ok();
                         }
@@ -96,7 +96,7 @@ async fn post(request: OwnedRequest<AppState>) -> HandlerResult<impl Route<AppSt
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 if let Some(id) = &id {
-                    ui.label(format!("Post: {}", id));
+                    ui.label(format!("Post: {id}"));
 
                     if ui.button("back").clicked() {
                         sender.send(RouterMessage::Back).ok();

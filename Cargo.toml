@@ -92,18 +92,15 @@ unsafe_code = "deny"
 [workspace.lints.clippy]
 pedantic = { level = "deny", priority = 1 }
 enum_glob_use = { level = "deny", priority = 2 }
-module_name_repetitions = { level = "allow", priority = 3 }
-cast_precision_loss = { level = "allow", priority = 4 }
-cast_possible_truncation = { level = "allow", priority = 5 }
-cast_sign_loss = { level = "allow", priority = 6 }
-out_of_bounds_indexing = { level = "allow", priority = 7 }
-perf = { level = "warn", priority = 8 }
-style = { level = "warn", priority = 9 }
+perf = { level = "warn", priority = 3 }
+style = { level = "warn", priority = 4 }
 # TODO: Uncomment/Deny the following lines when the clippy lints are fixed
-#unwrap_used = { level = "deny", priority = 10 }
-#expect_used = { level = "deny", priority = 11 }
-# needless_doctest_main = { level = "allow", priority = 12 }
-# implicit_hasher = { level = "allow", priority = 13 }
+# unwrap_used = { level = "deny", priority = 100 }
+#expect_used = { level = "deny", priority = 101 }
+module_name_repetitions = { level = "allow", priority = 10 }
+cast_precision_loss = { level = "allow", priority = 11 }
+cast_possible_truncation = { level = "allow", priority = 12 }
+cast_sign_loss = { level = "allow", priority = 13 }
 float_cmp = { level = "allow", priority = 14 }
 struct_excessive_bools = { level = "allow", priority = 15 }
 must_use_candidate = { level = "allow", priority = 16 }
@@ -111,6 +108,7 @@ return_self_not_must_use = { level = "allow", priority = 17 }
 missing_panics_doc = { level = "allow", priority = 18 }
 missing_errors_doc = { level = "allow", priority = 19 }
 missing_fields_in_debug = { level = "allow", priority = 20 }
+doc_markdown = { level = "allow", priority = 21 }
 
 [patch.crates-io]
 #wry = { path = "../../RustroverProjects/github/wry" }

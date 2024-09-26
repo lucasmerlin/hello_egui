@@ -24,7 +24,7 @@ struct Nested {
 }
 
 fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
-    let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
+    let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate()));
 
     FormField::new(&mut form, "user_name")
         .label("User Name")
@@ -43,7 +43,7 @@ fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
         );
 
     if let Some(Ok(())) = form.handle_submit(&ui.button("Submit"), ui) {
-        println!("Form submitted: {:?}", test);
+        println!("Form submitted: {test:?}");
     }
 }
 
@@ -81,7 +81,7 @@ mod tests {
             vec: vec![Nested { test: 0 }],
         };
 
-        let report = GardeReport::new(test.validate(&()));
+        let report = GardeReport::new(test.validate());
 
         assert!(report
             .get_field_error("user_name".into_field_path())

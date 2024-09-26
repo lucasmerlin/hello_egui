@@ -7,7 +7,7 @@ use crate::validation_report::IntoFieldPath;
 pub use garde;
 use garde::Path;
 
-/// Create a [garde::Path] to be submitted to [crate::FormField::new]
+/// Create a [`garde::Path`] to be submitted to [`crate::FormField::new`]
 /// Example:
 /// ```rust
 /// use egui_form::garde::field_path;
@@ -29,12 +29,12 @@ macro_rules! _garde_field_path {
     };
 }
 
-/// A wrapper around a [garde::Report] that implements [EguiValidationReport].
+/// A wrapper around a [`garde::Report`] that implements [`EguiValidationReport`].
 pub struct GardeReport(BTreeMap<garde::Path, garde::Error>);
 
 impl GardeReport {
-    /// Create a new [GardeReport] from a [garde::Report].
-    /// You can call this function with the result of a call to [garde::Validate::validate].
+    /// Create a new [`GardeReport`] from a [`garde::Report`].
+    /// You can call this function with the result of a call to [`garde::Validate::validate`].
     ///
     /// # Example
     /// ```

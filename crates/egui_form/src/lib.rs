@@ -4,9 +4,9 @@
 
 mod form;
 
-/// To use [garde] with egui_form, you need to create a [garde::GardeReport] and pass it to the [Form] instance.
+/// To use [garde] with `egui_form`, you need to create a [`garde::GardeReport`] and pass it to the [Form] instance.
 ///
-/// Then, when you create a [FormField], you pass the field's name as a &str.
+/// Then, when you create a [`FormField`], you pass the field's name as a &str.
 /// For nested fields and arrays, the syntax for the field name looks like this:
 /// `nested.array[0].field`
 ///
