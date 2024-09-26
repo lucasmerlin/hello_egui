@@ -3,7 +3,7 @@
 #![warn(missing_docs)]
 
 use egui::scroll_area::ScrollAreaOutput;
-use egui::{Align2, Area, Color32, Id, Rect, Sense, Ui, Vec2};
+use egui::{Align2, Area, Color32, Id, Rect, Sense, Ui, UiBuilder, Vec2};
 
 use crate::progress_spinner::ProgressSpinner;
 
@@ -103,7 +103,11 @@ impl PullToRefresh {
         ui: &mut Ui,
         content: impl FnOnce(&mut Ui) -> T,
     ) -> PullToRefreshResponse<T> {
-        let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
+        let mut child = ui.new_child(
+            UiBuilder::new()
+                .max_rect(ui.available_rect_before_wrap())
+                .layout(*ui.layout()),
+        );
 
         let output = content(&mut child);
 
