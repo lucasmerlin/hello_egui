@@ -19,17 +19,17 @@ mod image;
 /// Register the thumbhash image loader with the given egui context.
 /// Do this once while the app is initializing.
 pub fn register(ctx: &Context) {
-    ctx.add_image_loader(Arc::new(ThumbhashImageLoader::new()))
+    ctx.add_image_loader(Arc::new(ThumbhashImageLoader::new()));
 }
 
-/// The ImageLoader implementation for thumbhash images.
+/// The `ImageLoader` implementation for thumbhash images.
 #[derive(Clone, Default)]
 pub struct ThumbhashImageLoader {
     images: Mutex<HashMap<u64, Arc<ColorImage>>>,
 }
 
 impl ThumbhashImageLoader {
-    /// Create a new ThumbhashImageLoader.
+    /// Create a new `ThumbhashImageLoader`.
     pub fn new() -> Self {
         Self::default()
     }
@@ -63,7 +63,7 @@ impl ImageLoader for ThumbhashImageLoader {
                         images.insert(id, image.clone());
                         Ok(ImagePoll::Ready { image })
                     }
-                    Err(_) => Err(LoadError::Loading("Invalid thumbhash".to_string())),
+                    Err(()) => Err(LoadError::Loading("Invalid thumbhash".to_string())),
                 }
             }
         } else {

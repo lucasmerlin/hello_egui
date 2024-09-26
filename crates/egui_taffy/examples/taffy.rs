@@ -1,5 +1,6 @@
-use eframe::egui;
+#![allow(clippy::too_many_lines)] // It's ok as it is an example
 use eframe::emath::Align;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Color32, Direction, Frame, Id, Layout, Resize, ScrollArea, Ui};
 use rand::prelude::SliceRandom;
 use taffy::prelude::{
@@ -20,7 +21,7 @@ const TEXTS: [&str; 5] = [
     "flow nicely in yor layout",
 ];
 pub fn main() -> eframe::Result<()> {
-    let buttons: Vec<_> = TEXTS.iter().map(|s| s.to_string()).collect();
+    let buttons: Vec<_> = TEXTS.iter().map(std::string::ToString::to_string).collect();
 
     let many_buttons = (0..100).fold(Vec::new(), |mut acc, _| {
         acc.push(buttons.choose(&mut rand::thread_rng()).unwrap().to_string());
@@ -29,7 +30,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
@@ -220,7 +221,7 @@ fn list_example(ui: &mut Ui) {
         })
         .collect();
 
-    let texts: Vec<_> = texts.iter().map(|text| text.as_str()).collect();
+    let texts: Vec<_> = texts.iter().map(std::string::String::as_str).collect();
 
     {
         let mut taffy = TaffyPass::new(
@@ -241,7 +242,7 @@ fn list_example(ui: &mut Ui) {
             },
         );
 
-        texts.iter().for_each(|text| {
+        for text in &texts {
             taffy.add_children_with_ui(
                 Style {
                     display: Display::Flex,
@@ -319,7 +320,7 @@ fn list_example(ui: &mut Ui) {
                     }
                 },
             );
-        });
+        }
 
         taffy.show();
     }

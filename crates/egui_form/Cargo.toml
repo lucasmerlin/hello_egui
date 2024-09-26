@@ -40,3 +40,6 @@ eframe = { workspace = true, features = ["default"] }
 
 garde = { version = "0.18.0", features = ["email", "derive"] }
 validator = { version = "0.18.1", features = ["derive"] }
+
+[lints]
+workspace = true

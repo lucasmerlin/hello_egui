@@ -38,7 +38,8 @@ mod form;
 /// }
 ///
 /// pub fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
-///     let mut form = Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
+///     let mut form =
+///         Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
 ///
 ///     FormField::new(&mut form, field_path!("user_name"))
 ///         .label("User Name")
@@ -66,10 +67,10 @@ pub mod garde;
 mod validation_report;
 
 mod form_field;
-/// To use [validator] with egui_form, you need to create a [validator::ValidatorReport] and pass it to the [Form] instance.
+/// To use [validator] with `egui_form`, you need to create a [`validator::ValidatorReport`] and pass it to the [Form] instance.
 ///
-/// Then, when you create a [FormField], you pass a slice of [validator::PathItem]s.
-/// Usually, you would use the [field_path!] macro to create the slice.
+/// Then, when you create a [`FormField`], you pass a slice of [`validator::PathItem`]s.
+/// Usually, you would use the [`field_path`!] macro to create the slice.
 /// For nested fields and arrays, the syntax for the field name looks like this:
 /// `field_path!("nested", "array", 0, "field")`
 ///

@@ -47,6 +47,7 @@ impl<'a> Item<'a> {
         self.drag_source(Some(size), ui, add_content)
     }
 
+    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     fn drag_source(
         self,
         size: Option<Vec2>,
@@ -190,7 +191,7 @@ impl<'a> Item<'a> {
                             rect.min,
                         ),
                         self.state,
-                    )
+                    );
                 },
             );
 
@@ -233,7 +234,7 @@ impl<'a> Item<'a> {
                             animated_position,
                         ),
                         self.state,
-                    )
+                    );
                 },
             );
 
@@ -278,7 +279,7 @@ impl<'a> Item<'a> {
                         ui,
                         Handle::new(id, state.index, dnd_state, hovering_over_any_handle, pos),
                         state,
-                    )
+                    );
                 })
                 .response
                 .rect

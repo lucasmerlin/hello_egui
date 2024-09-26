@@ -17,5 +17,8 @@ egui.workspace = true
 simple-easing = "1"
 
 [dev-dependencies]
-eframe =  { workspace = true, default-features = true}
+eframe = { workspace = true, default-features = true }
 rand = "0.8.5"
+
+[lints]
+workspace = true

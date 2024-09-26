@@ -1,18 +1,18 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Frame, Margin, ScrollArea};
 use egui_virtual_list::VirtualList;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 
 pub fn main() -> eframe::Result<()> {
-    let items: Vec<_> = (0..100000).collect();
+    let items: Vec<_> = (0..100_000).collect();
 
     // Since the list stores state that is expensive to calculate, we have to store it somewhere in our application.
     let mut virtual_list = VirtualList::new();
 
     eframe::run_simple_native(
         "Virtual List Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
@@ -29,7 +29,7 @@ pub fn main() -> eframe::Result<()> {
                             .inner_margin(Margin::symmetric(16.0, 8.0 + height / 2.0))
                             .show(ui, |ui| {
                                 ui.set_width(ui.available_width());
-                                ui.label(format!("Item {}", item));
+                                ui.label(format!("Item {item}"));
                             });
 
                         // Return the amount of items that were rendered this row,

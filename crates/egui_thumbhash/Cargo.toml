@@ -16,9 +16,21 @@ base64 = "0.22.1"
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-egui_extras = { workspace = true, default-features = true, features = ["file", "image", "http"] }
+egui_extras = { workspace = true, default-features = true, features = [
+    "file",
+    "image",
+    "http",
+] }
 
-oxhttp = { version = "0.2.0", default-features = false, features = ["client", "rustls", "webpki-roots", "rustls-pki-types"] }
+oxhttp = { version = "0.2.0", default-features = false, features = [
+    "client",
+    "rustls",
+    "webpki-roots",
+    "rustls-pki-types",
+] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 image = "0.25.1"
+
+[lints]
+workspace = true

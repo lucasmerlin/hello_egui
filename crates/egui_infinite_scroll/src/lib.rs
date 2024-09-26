@@ -30,7 +30,7 @@ pub enum LoadingState<T, Cursor> {
 }
 
 impl<T, C> LoadingState<T, C> {
-    /// Returns true if the state is [LoadingState::Loading]
+    /// Returns true if the state is [`LoadingState::Loading`]
     pub fn loading(&self) -> bool {
         matches!(self, Self::Loading)
     }
@@ -61,7 +61,7 @@ pub struct InfiniteScroll<T: Debug + Send + Sync, Cursor: Clone + Debug> {
 
     filter: Option<FilterType<T>>,
 
-    /// The egui_virtual_list instance. You can use this to customize settings of the virtual list.
+    /// The `egui_virtual_list` instance. You can use this to customize settings of the virtual list.
     pub virtual_list: VirtualList,
 }
 
@@ -173,7 +173,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     }
 
     /// Retry loading the top items
-    /// This only works if the top loading state is [LoadingState::Error]
+    /// This only works if the top loading state is [`LoadingState::Error`]
     pub fn retry_top(&mut self) {
         if let LoadingState::Error(_) = self.top_loading_state {
             self.top_loading_state = LoadingState::Idle;
@@ -181,7 +181,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     }
 
     /// Retry loading the bottom items
-    /// This only works if the bottom loading state is [LoadingState::Error]
+    /// This only works if the bottom loading state is [`LoadingState::Error`]
     pub fn retry_bottom(&mut self) {
         if let LoadingState::Error(_) = self.bottom_loading_state {
             self.bottom_loading_state = LoadingState::Idle;
@@ -189,7 +189,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     }
 
     /// Resets the infinite scroll, clearing all items and loading states.
-    /// This is a alias for [InfiniteScroll::reload].
+    /// This is a alias for [`InfiniteScroll::reload`].
     pub fn reset(&mut self) {
         self.items.clear();
         self.top_loading_state = LoadingState::Idle;
@@ -212,7 +212,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     }
 
     /// Resets the infinite scroll, clearing all items and loading states.
-    /// This is a alias for [InfiniteScroll::reset].
+    /// This is a alias for [`InfiniteScroll::reset`].
     pub fn reload(&mut self) {
         self.reset();
     }

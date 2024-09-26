@@ -5,7 +5,7 @@ use egui::{Response, RichText, TextStyle, Widget};
 use std::borrow::Cow;
 
 /// A form field that can be validated.
-/// Will color the field red (using the color from [egui::style::Visuals]::error_fg_color) if there is an error.
+/// Will color the field red (using the color from [`egui::style::Visuals::error_fg_color`]) if there is an error.
 /// Will show the error message below the field if the field is blurred and there is an error.
 pub struct FormField<'a, 'f, Errors: EguiValidationReport> {
     error: Option<Cow<'static, str>>,
@@ -14,10 +14,10 @@ pub struct FormField<'a, 'f, Errors: EguiValidationReport> {
 }
 
 impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
-    /// Create a new FormField.
+    /// Create a new `FormField`.
     /// Pass a [Form] and a reference to the field you want to validate.
-    /// If you use [crate::garde], just pass the field name / path as a string.
-    /// If you use [crate::validator], pass a field reference using the [crate::field_path] macro.
+    /// If you use [`crate::garde`], just pass the field name / path as a string.
+    /// If you use [`crate::validator`], pass a field reference using the [`crate::field_path`] macro.
     pub fn new<'c, I: IntoFieldPath<Errors::FieldPath<'c>>>(
         form: &'f mut Form<Errors>,
         into_field_path: I,
@@ -75,8 +75,7 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
                         ui.style()
                             .text_styles
                             .get(&TextStyle::Body)
-                            .map(|s| s.size)
-                            .unwrap_or(16.0)
+                            .map_or(16.0, |s| s.size)
                             * 0.9,
                     ),
                 );

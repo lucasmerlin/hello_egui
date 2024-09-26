@@ -1,6 +1,9 @@
 use egui::epaint::RectShape;
 use egui::load::TexturePoll;
-use egui::{Color32, Id, Image, Rect, Response, Rounding, SizeHint, TextureOptions, Ui, Widget};
+use egui::{
+    Color32, Id, Image, Pos2, Rect, Response, Rounding, SizeHint, Stroke, TextureOptions, Ui, Vec2,
+    Widget,
+};
 
 use crate::thumbhash_to_uri;
 
@@ -15,10 +18,10 @@ pub struct ThumbhashImage<'a, 'h> {
 }
 
 impl<'a, 'h> ThumbhashImage<'a, 'h> {
-    /// Create a new ThumbhashImage widget.
+    /// Create a new `ThumbhashImage` widget.
     /// You should pass a [Image] with the configuration you want.
     /// Since the width of the egui Image is currently a bit finicky, you can use
-    /// [Image::fit_to_exact_size] to make sure the image is the size you want.
+    /// [`Image::fit_to_exact_size`] to make sure the image is the size you want.
     pub fn new(image: Image<'a>, thumbhash: &'h [u8]) -> Self {
         Self {
             id: Id::new(thumbhash),
@@ -52,7 +55,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
     }
 
     /// Set the rounding of the image.
-    /// Use this instead of [Image::rounding] to make sure the rounding is applied to the
+    /// Use this instead of [`Image::rounding`] to make sure the rounding is applied to the
     /// thumbhash image as well.
     pub fn rounding(mut self, rounding: impl Into<Rounding>) -> Self {
         self.rounding = Some(rounding.into());
@@ -102,8 +105,8 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
                     rounding: self.rounding.unwrap_or_default(),
                     fill_texture_id: texture.id,
                     fill: Color32::from_rgba_premultiplied(i, i, i, i),
-                    stroke: Default::default(),
-                    uv: Rect::from_min_size(Default::default(), egui::Vec2::new(1.0, 1.0)),
+                    stroke: Stroke::default(),
+                    uv: Rect::from_min_size(Pos2::default(), Vec2::new(1.0, 1.0)),
                     blur_width: 0.0,
                 });
             }

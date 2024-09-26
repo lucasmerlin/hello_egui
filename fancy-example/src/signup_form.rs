@@ -18,13 +18,13 @@ pub const SIGNUP_FORM_EXAMPLE: Example = Example {
 };
 
 fn validate_password(password: &str) -> Result<(), ValidationError> {
-    if password.chars().all(|c| c.is_alphanumeric()) {
+    if password.chars().all(char::is_alphanumeric) {
         return Err(ValidationError::new("validate_password"));
     }
-    if password.chars().all(|c| c.is_lowercase()) {
+    if password.chars().all(char::is_lowercase) {
         return Err(ValidationError::new("validate_password"));
     }
-    if password.chars().all(|c| c.is_uppercase()) {
+    if password.chars().all(char::is_uppercase) {
         return Err(ValidationError::new("validate_password"));
     }
     if password.chars().all(|c| !c.is_ascii_digit()) {
@@ -41,10 +41,10 @@ fn validate_repeat_password(
     repeat_password: &str,
     context: &ValidateContext,
 ) -> Result<(), ValidationError> {
-    if repeat_password != context.password {
-        Err(ValidationError::new("password_mismatch"))
-    } else {
+    if repeat_password == context.password {
         Ok(())
+    } else {
+        Err(ValidationError::new("password_mismatch"))
     }
 }
 
@@ -91,6 +91,7 @@ fn text_edit_singleline(value: &mut String) -> TextEdit {
 }
 
 impl ExampleTrait for SignupForm {
+    #[allow(clippy::too_many_lines)] // It's an example
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         demo_area(ui, SIGNUP_FORM_EXAMPLE.name, 400.0, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
@@ -119,14 +120,14 @@ impl ExampleTrait for SignupForm {
                         match error.code.as_ref() {
                             "length" => match (error.params.get("min"), error.params.get("max")) {
                                 (Some(min), Some(max)) => {
-                                    format!("Must be between {} and {} characters long", min, max)
+                                    format!("Must be between {min} and {max} characters long")
                                         .into()
                                 }
                                 (Some(min), None) => {
-                                    format!("Must be at least {} characters long", min).into()
+                                    format!("Must be at least {min} characters long").into()
                                 }
                                 (None, Some(max)) => {
-                                    format!("Must be at most {} characters long", max).into()
+                                    format!("Must be at most {max} characters long").into()
                                 }
                                 _ => "Invalid length".into(),
                             },
@@ -163,10 +164,10 @@ impl ExampleTrait for SignupForm {
                 let max_width = ui.available_width();
 
                 ui.label(
-                    r#"This is a example signup form showcasing egui_form's form validation.
+                    r"This is a example signup form showcasing egui_form's form validation.
 Try signing up with invalid data to see the validation errors.
 Errors will show up after editing a field or after trying to submit.
-            "#,
+            ",
                 );
 
                 let horizontal_fields =

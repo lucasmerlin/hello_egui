@@ -36,7 +36,7 @@ impl MyApplicationState {
             loop {
                 std::thread::sleep(std::time::Duration::from_secs(1));
                 count += 1;
-                sender.send(format!("Count: {}", count)).ok();
+                sender.send(format!("Count: {count}")).ok();
             }
         });
 

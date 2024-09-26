@@ -25,7 +25,7 @@ pub use handler::{HandlerError, HandlerResult};
 pub use router::EguiRouter;
 pub use router_builder::RouterBuilder;
 
-/// A route instance created by a [handler::Handler]
+/// A route instance created by a [`handler::Handler`]
 pub trait Route<State = ()> {
     /// Render the route ui
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State);
@@ -33,7 +33,7 @@ pub trait Route<State = ()> {
 
 impl<F: FnMut(&mut Ui, &mut State), State> Route<State> for F {
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State) {
-        self(ui, state)
+        self(ui, state);
     }
 }
 
@@ -71,7 +71,7 @@ impl From<HistoryError> for RouterError {
 pub struct TransitionConfig {
     duration: Option<f32>,
     easing: fn(f32) -> f32,
-    _in: Transition,
+    in_: Transition,
     out: Transition,
 }
 
@@ -80,7 +80,7 @@ impl Default for TransitionConfig {
         Self {
             duration: None,
             easing: ease_in_ease_out,
-            _in: transition::SlideTransition::new(Vec2::X).into(),
+            in_: transition::SlideTransition::new(Vec2::X).into(),
             out: transition::SlideTransition::new(Vec2::X * -0.1).into(),
         }
     }
@@ -88,15 +88,15 @@ impl Default for TransitionConfig {
 
 impl TransitionConfig {
     /// Create a new transition
-    pub fn new(_in: impl Into<Transition>, out: impl Into<Transition>) -> Self {
+    pub fn new(in_: impl Into<Transition>, out: impl Into<Transition>) -> Self {
         Self {
-            _in: _in.into(),
+            in_: in_.into(),
             out: out.into(),
             ..Self::default()
         }
     }
 
-    /// A iOS-like slide transition (Same as [TransitionConfig::default])
+    /// A iOS-like slide transition (Same as [`TransitionConfig::default`])
     pub fn slide() -> Self {
         Self::default()
     }
@@ -140,7 +140,7 @@ struct CurrentTransition<State> {
     leaving_route: Option<RouteState<State>>,
 }
 
-/// Request passed to a [handler::MakeHandler]
+/// Request passed to a [`handler::MakeHandler`]
 pub struct Request<'a, State = ()> {
     /// The parsed path params
     pub params: matchit::Params<'a, 'a>,

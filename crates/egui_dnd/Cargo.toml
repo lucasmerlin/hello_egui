@@ -31,3 +31,5 @@ color-hex = "0.2.0"
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
 
+[lints]
+workspace = true

@@ -104,7 +104,7 @@ impl EguiWebView {
                         let guard = view_ref_weak.lock();
                         if let Some(view) = guard.as_ref() {
                             if let Err(err) = view.evaluate_script(include_str!("webview.js")) {
-                                println!("Error loading webview script: {}", err);
+                                println!("Error loading webview script: {err}");
                             };
                         }
                     }
@@ -115,14 +115,7 @@ impl EguiWebView {
             })
             .with_ipc_handler(move |msg| {
                 let result = Self::handle_js_event(msg.into_body(), &ctx_clone);
-                match result {
-                    Ok(event) => {
-                        tx.send(event).ok();
-                    }
-                    Err(err) => {
-                        println!("Error handling js event: {}", err);
-                    }
-                }
+                tx.send(result).ok();
             });
 
         #[allow(clippy::arc_with_non_send_sync)]
@@ -148,17 +141,17 @@ impl EguiWebView {
         }
     }
 
-    fn handle_js_event(msg: String, _ctx: &Context) -> Result<WebViewEvent, Box<dyn Error>> {
+    fn handle_js_event(msg: String, _ctx: &Context) -> WebViewEvent {
         let event = serde_json::from_str::<JsEvent>(&msg).map(|e| e.event);
 
         match event {
-            Ok(JsEventType::Focus) => Ok(WebViewEvent::Focus),
-            Ok(JsEventType::Blur) => Ok(WebViewEvent::Blur),
-            Err(_) => Ok(WebViewEvent::Ipc(msg)),
+            Ok(JsEventType::Focus) => WebViewEvent::Focus,
+            Ok(JsEventType::Blur) => WebViewEvent::Blur,
+            Err(_) => WebViewEvent::Ipc(msg),
         }
     }
 
-    fn take_screenshot(&mut self) {
+    fn take_screenshot() {
         // let ctx = self.context.clone();
         // let tx = self.inbox.sender();
 
@@ -186,10 +179,11 @@ impl EguiWebView {
         //     .ok();
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
         let json = serde_json::to_string(&command)?;
         self.view
-            .evaluate_script(&format!("__egui_webview_handle_command({})", json))?;
+            .evaluate_script(&format!("__egui_webview_handle_command({json})"))?;
         Ok(())
     }
 
@@ -216,10 +210,7 @@ impl EguiWebView {
                 WebViewEvent::Focus => {
                     ui.memory_mut(|mem| mem.request_focus(response.id));
                 }
-                WebViewEvent::Blur => {}
-                WebViewEvent::Loaded(_) => {}
-                WebViewEvent::Loading(_) => {}
-                WebViewEvent::Ipc(_) => {}
+                _ => {}
             })
             .collect();
 
@@ -261,7 +252,7 @@ impl EguiWebView {
 
         if !should_display && self.displayed_last_frame {
             self.current_image = None;
-            self.take_screenshot();
+            Self::take_screenshot();
         }
         self.displayed_last_frame = should_display;
 
@@ -280,12 +271,12 @@ impl EguiWebView {
         self.view
             .set_bounds(wry::Rect {
                 position: Position::Logical(LogicalPosition::new(
-                    wv_rect.min.x as f64,
-                    wv_rect.min.y as f64,
+                    f64::from(wv_rect.min.x),
+                    f64::from(wv_rect.min.y),
                 )),
                 size: Size::Logical(LogicalSize::new(
-                    wv_rect.width() as f64,
-                    wv_rect.height() as f64,
+                    f64::from(wv_rect.width()),
+                    f64::from(wv_rect.height()),
                 )),
             })
             .unwrap();
@@ -312,7 +303,9 @@ struct GlobalWebViewState {
     rendered_this_frame: HashSet<Id>,
 }
 
+#[allow(unsafe_code)]
 unsafe impl Send for GlobalWebViewState {}
+#[allow(unsafe_code)]
 unsafe impl Sync for GlobalWebViewState {}
 
 pub const WEBVIEW_ID: &str = "egui_webview";
@@ -332,7 +325,7 @@ pub fn init_webview(ctx: &Context) {
                 rendered_this_frame: HashSet::new(),
                 views: HashMap::new(),
             },
-        )
+        );
     });
 }
 
@@ -344,12 +337,12 @@ pub fn webview_end_frame(ctx: &Context) {
         );
         state.views.retain(|id, view| {
             if let Some(view) = view.upgrade() {
-                if !state.rendered_this_frame.contains(id) {
-                    println!("Set visible false");
-                    view.set_visible(false).ok();
-                } else {
+                if state.rendered_this_frame.contains(id) {
                     println!("Set visible true");
                     view.set_visible(true).ok();
+                } else {
+                    println!("Set visible false");
+                    view.set_visible(false).ok();
                 }
 
                 true

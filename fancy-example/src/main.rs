@@ -30,7 +30,6 @@ pub enum FancyMessage {
 }
 
 pub struct App {
-    sidebar: SideBar,
     sidebar_expanded: bool,
     shared_state: SharedState,
     inbox: UiInbox<FancyMessage>,
@@ -51,7 +50,6 @@ impl App {
         let router = router(&mut state);
         Self {
             inbox,
-            sidebar: SideBar::new(),
             shared_state: state,
             sidebar_expanded: false,
             router,
@@ -76,7 +74,7 @@ impl eframe::App for App {
             .resizable(false)
             .exact_width(170.0)
             .show_animated(ctx, is_expanded, |ui| {
-                if self.sidebar.ui(ui, &mut self.shared_state) {
+                if SideBar::ui(ui, &mut self.shared_state) {
                     self.sidebar_expanded = false;
                 }
             });
@@ -133,6 +131,8 @@ pub fn demo_area(ui: &mut Ui, title: &'static str, width: f32, content: impl FnO
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
+    use eframe::NativeOptions;
+
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -148,12 +148,12 @@ fn main() -> eframe::Result<()> {
             loop {
                 tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
             }
-        })
+        });
     });
 
     eframe::run_native(
         "Dnd Example App",
-        Default::default(),
+        NativeOptions::default(),
         Box::new(move |ctx| {
             egui_extras::install_image_loaders(&ctx.egui_ctx);
             egui_thumbhash::register(&ctx.egui_ctx);
@@ -187,7 +187,7 @@ struct Gradient(pub Vec<Color32>);
 
 // taken from the egui demo
 fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
-    use egui::epaint::*;
+    use egui::epaint::{pos2, Mesh, Shape};
 
     let rect = ui.max_rect();
 
@@ -218,11 +218,11 @@ fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
 fn animate_color(ui: &mut Ui, color: Color32, id: Id, duration: f32) -> Color32 {
     Color32::from_rgba_premultiplied(
         ui.ctx()
-            .animate_value_with_time(id.with(0), color[0] as f32, duration) as u8,
+            .animate_value_with_time(id.with(0), f32::from(color[0]), duration) as u8,
         ui.ctx()
-            .animate_value_with_time(id.with(1), color[1] as f32, duration) as u8,
+            .animate_value_with_time(id.with(1), f32::from(color[1]), duration) as u8,
         ui.ctx()
-            .animate_value_with_time(id.with(2), color[2] as f32, duration) as u8,
+            .animate_value_with_time(id.with(2), f32::from(color[2]), duration) as u8,
         color[3],
     )
 }

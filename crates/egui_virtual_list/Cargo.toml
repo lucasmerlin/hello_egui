@@ -16,3 +16,6 @@ web-time = "1"
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 rand = "0.8"
+
+[lints]
+workspace = true

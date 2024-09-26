@@ -1,5 +1,5 @@
-use eframe::egui;
 use eframe::emath::Align;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, ComboBox, Layout, ScrollArea, Vec2};
 use egui_animation::{animate_ui_translation, Collapse};
 use hello_egui_utils::measure_text;
@@ -40,6 +40,7 @@ const EASINGS: [(fn(f32) -> f32, &str); 31] = [
     (simple_easing::expo_out, "Exponential out"),
 ];
 
+#[allow(clippy::too_many_lines)] // It's ok for an example.
 pub fn main() -> eframe::Result<()> {
     let mut target = 0.0;
 
@@ -57,7 +58,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ui.horizontal_wrapped(|ui| {
@@ -71,9 +72,9 @@ pub fn main() -> eframe::Result<()> {
                         )
                         .width(200.0)
                         .show_ui(ui, |ui| {
-                            EASINGS.iter().for_each(|(easing_fn, name)| {
+                            for (easing_fn, name) in &EASINGS {
                                 ui.selectable_value(&mut easing, *easing_fn, *name);
-                            });
+                            }
                         });
                 });
 
@@ -146,7 +147,7 @@ pub fn main() -> eframe::Result<()> {
                                     let size = measure_text(ui, text) + Vec2::new(4.0, 0.0);
 
                                     ui.allocate_ui(size, |ui| {
-                                        words.iter().for_each(|(id, text)| {
+                                        for (id, text) in &words {
                                             let size = measure_text(ui, **text);
                                             animate_ui_translation(
                                                 ui,
@@ -158,7 +159,7 @@ pub fn main() -> eframe::Result<()> {
                                                     ui.label(**text);
                                                 },
                                             );
-                                        });
+                                        }
                                     });
                                     words = vec![];
                                 } else {

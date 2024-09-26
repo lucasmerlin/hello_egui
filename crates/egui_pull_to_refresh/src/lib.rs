@@ -32,7 +32,7 @@ impl PullToRefreshState {
         match self {
             PullToRefreshState::Idle => Some(0.0),
             PullToRefreshState::Dragging { distance, .. } => {
-                Some((distance / min_distance).clamp(0.0, 1.0) as f64)
+                Some(f64::from((distance / min_distance).clamp(0.0, 1.0)))
             }
             PullToRefreshState::DoRefresh => Some(1.0),
             PullToRefreshState::Refreshing => None,
@@ -120,7 +120,7 @@ impl PullToRefresh {
         }
     }
 
-    /// Shows the pull to refresh widget, wrapping a [egui::ScrollArea].
+    /// Shows the pull to refresh widget, wrapping a [`egui::ScrollArea`].
     /// Pass the output of the scroll area to the content function.
     pub fn scroll_area_ui<T>(
         self,
@@ -140,6 +140,7 @@ impl PullToRefresh {
         }
     }
 
+    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     fn internal_ui(
         self,
         ui: &mut Ui,
@@ -227,8 +228,7 @@ impl PullToRefresh {
             PullToRefreshState::Dragging { .. } => {
                 state.progress(self.min_refresh_distance).unwrap_or(1.0)
             }
-            PullToRefreshState::DoRefresh => 1.0,
-            PullToRefreshState::Refreshing => 1.0,
+            PullToRefreshState::DoRefresh | PullToRefreshState::Refreshing => 1.0,
         } as f32;
 
         let anim_progress = ui.ctx().animate_value_with_time(
@@ -263,7 +263,7 @@ impl PullToRefresh {
                             spinner_color.r(),
                             spinner_color.g(),
                             spinner_color.b(),
-                            (spinner_color.a() as f32 * 0.7).round() as u8,
+                            (f32::from(spinner_color.a()) * 0.7).round() as u8,
                         );
                     }
                     ProgressSpinner::new()

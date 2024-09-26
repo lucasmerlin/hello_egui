@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{Align2, Area, CentralPanel, Frame, Id, Vec2};
 use ehttp::Request;
 
@@ -14,7 +14,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Pull to refresh dad jokes",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 // Disable text selection, so it doesn't interfere with the drag gesture

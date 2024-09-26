@@ -64,7 +64,7 @@ impl Default for VirtualList {
 }
 
 impl VirtualList {
-    /// Create a new VirtualList
+    /// Create a new `VirtualList`
     pub fn new() -> Self {
         Self {
             previous_item_range: usize::MAX..usize::MAX,
@@ -119,6 +119,7 @@ impl VirtualList {
 
     /// The layout closure gets called with the index of the first item that should be displayed.
     /// It should return the number of items that were displayed.
+    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     pub fn ui_custom_layout(
         &mut self,
         ui: &mut Ui,
@@ -224,8 +225,7 @@ impl VirtualList {
         let item_start_index = self
             .rows
             .get(row_start_index)
-            .map(|row| row.range.start)
-            .unwrap_or(0)
+            .map_or(0, |row| row.range.start)
             + index_offset;
 
         let mut current_item_index = item_start_index;
@@ -285,23 +285,17 @@ impl VirtualList {
 
                     let size_with_space = size;
 
-                    self.average_row_size = Some(
-                        self.average_row_size
-                            .map(|size| {
-                                (current_row as f32 * size + size_with_space)
-                                    / (current_row as f32 + 1.0)
-                            })
-                            .unwrap_or(size),
-                    );
+                    self.average_row_size = Some(self.average_row_size.map_or(size, |size| {
+                        (current_row as f32 * size + size_with_space) / (current_row as f32 + 1.0)
+                    }));
 
-                    self.average_items_per_row = Some(
-                        self.average_items_per_row
-                            .map(|avg_count| {
-                                (current_row as f32 * avg_count + count as f32)
-                                    / (current_row as f32 + 1.0)
-                            })
-                            .unwrap_or(count as f32),
-                    );
+                    self.average_items_per_row = Some(self.average_items_per_row.map_or(
+                        count as f32,
+                        |avg_count| {
+                            (current_row as f32 * avg_count + count as f32)
+                                / (current_row as f32 + 1.0)
+                        },
+                    ));
 
                     self.last_known_row_index = Some(current_row);
                 }

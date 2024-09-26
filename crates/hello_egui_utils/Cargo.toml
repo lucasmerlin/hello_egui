@@ -22,3 +22,6 @@ wasm-bindgen-futures = { version = "0.4", optional = true }
 [features]
 async = ["dep:wasm-bindgen-futures"]
 tokio = ["async", "dep:tokio"]
+
+[lints]
+workspace = true

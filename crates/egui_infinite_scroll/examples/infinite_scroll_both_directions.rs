@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, ScrollArea, Spinner};
 use std::thread::{sleep, spawn};
 
@@ -25,7 +25,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Infinite Scroll Both Directions Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().animated(false).show(ui, |ui| {
@@ -38,7 +38,7 @@ pub fn main() -> eframe::Result<()> {
                     });
 
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
-                        ui.label(format!("Item {}", item));
+                        ui.label(format!("Item {item}"));
                     });
 
                     ui.vertical_centered(|ui| {

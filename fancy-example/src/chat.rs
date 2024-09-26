@@ -148,6 +148,7 @@ impl ChatExample {
         }
     }
 
+    #[allow(clippy::too_many_lines)] // It's an example
     pub fn ui(&mut self, ui: &mut Ui, shared_state: &SharedState) {
         if !self.shown {
             self.shown = true;
@@ -278,17 +279,7 @@ impl ChatExample {
                                 })
                                 .response;
 
-                            let points = if !is_message_from_myself {
-                                let top = response.rect.left_top() + Vec2::splat(margin);
-                                let arrow_rect =
-                                    Rect::from_two_pos(top, top + Vec2::new(-rounding, rounding));
-
-                                vec![
-                                    arrow_rect.left_top(),
-                                    arrow_rect.right_top(),
-                                    arrow_rect.right_bottom(),
-                                ]
-                            } else {
+                            let points = if is_message_from_myself {
                                 let top = response.rect.right_top() + Vec2::new(-margin, margin);
                                 let arrow_rect =
                                     Rect::from_two_pos(top, top + Vec2::new(rounding, rounding));
@@ -297,6 +288,16 @@ impl ChatExample {
                                     arrow_rect.left_top(),
                                     arrow_rect.right_top(),
                                     arrow_rect.left_bottom(),
+                                ]
+                            } else {
+                                let top = response.rect.left_top() + Vec2::splat(margin);
+                                let arrow_rect =
+                                    Rect::from_two_pos(top, top + Vec2::new(-rounding, rounding));
+
+                                vec![
+                                    arrow_rect.left_top(),
+                                    arrow_rect.right_top(),
+                                    arrow_rect.right_bottom(),
                                 ]
                             };
 
@@ -351,6 +352,6 @@ impl ChatExample {
 
 impl ExampleTrait for ChatExample {
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        self.ui(ui, shared_state)
+        self.ui(ui, shared_state);
     }
 }

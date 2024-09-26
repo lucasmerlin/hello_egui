@@ -9,7 +9,7 @@ pub use validator;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 /// Represents either a field in a struct or a indexed field in a list.
-/// Usually created with the [crate::field_path] macro.
+/// Usually created with the [`crate::field_path`] macro.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PathItem<'a> {
     /// Field in a struct.
@@ -36,8 +36,8 @@ impl<'a> From<&'a str> for PathItem<'a> {
     }
 }
 
-/// Create a field path to be submitted to a [crate::FormField::new].
-/// This macro takes a list of field names and indexes and returns a slice of [PathItem]s.
+/// Create a field path to be submitted to a [`crate::FormField::new`].
+/// This macro takes a list of field names and indexes and returns a slice of [`PathItem`]s.
 /// # Example
 /// ```
 /// use egui_form::validator::{PathItem, field_path};
@@ -69,8 +69,8 @@ pub struct ValidatorReport {
 }
 
 impl ValidatorReport {
-    /// Create a new [ValidatorReport] from a [validator::ValidationErrors].
-    /// You can call this function with the result of a call to [validator::Validate::validate].
+    /// Create a new [`ValidatorReport`] from a [`validator::ValidationErrors`].
+    /// You can call this function with the result of a call to [`validator::Validate::validate`].
     pub fn new(result: Result<(), ValidationErrors>) -> Self {
         ValidatorReport {
             errors: result.err(),
@@ -78,14 +78,14 @@ impl ValidatorReport {
         }
     }
 
-    /// Convenience function to validate a value and create a [ValidatorReport] from it.
+    /// Convenience function to validate a value and create a [`ValidatorReport`] from it.
     pub fn validate<T: Validate>(value: T) -> Self {
         let result = value.validate();
         Self::new(result)
     }
 
     /// Add a custom translation function to the report.
-    /// Pass a function that takes a [ValidationError] and returns a translated error message.
+    /// Pass a function that takes a [`ValidationError`] and returns a translated error message.
     pub fn with_translation<F: Fn(&ValidationError) -> Cow<'static, str> + 'static>(
         mut self,
         get_t: F,
@@ -100,9 +100,8 @@ fn get_error_recursively<'a>(
     fields: &[PathItem],
 ) -> Option<&'a Vec<ValidationError>> {
     if let Some((field, rest)) = fields.split_first() {
-        let field = match field {
-            PathItem::Field(field) => field,
-            _ => return None,
+        let PathItem::Field(field) = field else {
+            return None;
         };
         match errors.0.get(field.as_ref()) {
             Some(ValidationErrorsKind::Struct(errors)) => get_error_recursively(errors, rest),

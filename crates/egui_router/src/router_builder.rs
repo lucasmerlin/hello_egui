@@ -8,7 +8,7 @@ pub(crate) type ErrorUi<State> =
     Arc<Box<dyn Fn(&mut egui::Ui, &State, &crate::handler::HandlerError) + Send + Sync>>;
 pub(crate) type LoadingUi<State> = Arc<Box<dyn Fn(&mut egui::Ui, &State) + Send + Sync>>;
 
-/// Builder to create a [EguiRouter]
+/// Builder to create a [`EguiRouter`]
 pub struct RouterBuilder<State, H> {
     pub(crate) router: matchit::Router<RouteKind<State>>,
     pub(crate) default_route: Option<String>,
@@ -43,7 +43,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
             default_duration: None,
             history_kind: None,
             error_ui: Arc::new(Box::new(|ui, _, err| {
-                ui.label(format!("Error: {}", err));
+                ui.label(format!("Error: {err}"));
             })),
             loading_ui: Arc::new(Box::new(|ui, _| {
                 ui.spinner();
@@ -82,7 +82,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
         self
     }
 
-    /// Set the default route (when using [history::BrowserHistory], window.location.pathname will be used instead)
+    /// Set the default route (when using [`history::BrowserHistory`], window.location.pathname will be used instead)
     pub fn default_path(mut self, route: impl Into<String>) -> Self {
         self.default_route = Some(route.into());
         self
@@ -112,7 +112,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     }
 
     /// Add a route. Check the [matchit] documentation for information about the route syntax.
-    /// The handler will be called with [crate::Request] and should return a [Route].
+    /// The handler will be called with [`crate::Request`] and should return a [Route].
     ///
     /// # Example
     /// ```rust
@@ -177,8 +177,6 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     ///    .async_route("/", my_handler)
     ///    .async_route("/:post", my_fallible_handler)
     ///    .build(&mut ());
-    ///
-    ///
     #[cfg(feature = "async")]
     pub fn async_route<HandlerArgs, Han>(mut self, route: &str, handler: Han) -> Self
     where

@@ -59,7 +59,7 @@ pub fn main() -> eframe::Result<()> {
                     ui.checkbox(&mut use_perfect_cursors, "Use Perfect Cursors");
                 });
 
-                cursors.iter_mut().for_each(|cursor| {
+                for cursor in &mut cursors {
                     if cursor.last_time.elapsed() > cursor.delay {
                         cursor.last_time = Instant::now();
 
@@ -86,11 +86,11 @@ pub fn main() -> eframe::Result<()> {
                             cursor.last_point = Some(pos);
                         }
                     }
-                });
+                }
 
                 for cursor in &mut cursors {
                     let current_pos = if use_perfect_cursors {
-                        cursor.cursor.tick().map(|p| p.into())
+                        cursor.cursor.tick().map(std::convert::Into::into)
                     } else {
                         cursor.received_point
                     };

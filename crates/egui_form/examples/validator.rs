@@ -63,8 +63,8 @@ fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
             egui::DragValue::new(&mut test.vec[0].test).range(0..=11),
         );
 
-    if let Some(Ok(_)) = form.handle_submit(&ui.button("Submit"), ui) {
-        println!("Form submitted: {:?}", test);
+    if let Some(Ok(())) = form.handle_submit(&ui.button("Submit"), ui) {
+        println!("Form submitted: {test:?}");
     }
 }
 

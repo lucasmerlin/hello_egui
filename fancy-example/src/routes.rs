@@ -1,3 +1,4 @@
+#![allow(clippy::needless_pass_by_value)]
 use crate::crate_ui::{CrateUi, ALL_CRATES};
 use crate::example::EXAMPLES;
 use crate::shared_state::SharedState;
@@ -30,7 +31,7 @@ pub fn crate_route(req: Request<SharedState>) -> impl Route<SharedState> {
 
     let mut crate_ui = CrateUi::new();
     move |ui: &mut Ui, _state: &mut SharedState| {
-        crate_ui.ui(ui, item);
+        crate_ui.ui(ui, *item);
     }
 }
 

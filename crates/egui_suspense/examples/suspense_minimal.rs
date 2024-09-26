@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::CentralPanel;
 
 use egui_suspense::EguiSuspense;
@@ -34,11 +34,11 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 suspense.ui(ui, |ui, data, state| {
-                    ui.label(format!("Data: {:?}", data));
+                    ui.label(format!("Data: {data:?}"));
 
                     if ui.button("Reload").clicked() {
                         state.reload();
@@ -48,13 +48,13 @@ pub fn main() -> eframe::Result<()> {
                 ui.separator();
 
                 single_suspense.ui(ui, |ui, data, _state| {
-                    ui.label(format!("Data: {:?}", data));
+                    ui.label(format!("Data: {data:?}"));
                 });
 
                 ui.separator();
 
                 already_loaded_suspense.ui(ui, |ui, data, _state| {
-                    ui.label(format!("Data: {:?}", data));
+                    ui.label(format!("Data: {data:?}"));
                 });
             });
         },

@@ -9,7 +9,12 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_in
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-async = ["dep:hello_egui_utils", "hello_egui_utils/async", "dep:futures-channel", "dep:futures"]
+async = [
+    "dep:hello_egui_utils",
+    "hello_egui_utils/async",
+    "dep:futures-channel",
+    "dep:futures",
+]
 tokio = ["async", "hello_egui_utils/tokio"]
 egui = ["dep:egui"]
 default = ["egui"]
@@ -48,3 +53,6 @@ ehttp = { version = "0.5.0", features = ["json"] }
 serde_json = "1"
 rand = "0.8"
 derive-new = "0.6"
+
+[lints]
+workspace = true

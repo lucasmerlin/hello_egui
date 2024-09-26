@@ -48,3 +48,6 @@ ureq = "2"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4.39"
 gloo-timers = { version = "0.3.0", features = ["futures"] }
+
+[lints]
+workspace = true

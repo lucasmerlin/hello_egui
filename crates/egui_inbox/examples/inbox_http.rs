@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::CentralPanel;
 use egui_inbox::UiInbox;
 use ehttp::Request;
@@ -33,7 +33,7 @@ impl MyComponent {
                             let json: serde_json::Value = response.json().unwrap();
                             json["datetime"].as_str().unwrap().to_string()
                         }
-                        Err(err) => format!("Error: {:?}", err),
+                        Err(err) => format!("Error: {err:?}"),
                     };
 
                     // Queues the message in the inbox and calls request_repaint so the ui will be updated immediately
@@ -43,7 +43,7 @@ impl MyComponent {
         }
 
         if let Some(time) = &self.state {
-            ui.strong(format!("Time: {:?}", time));
+            ui.strong(format!("Time: {time:?}"));
         } else {
             ui.label("No time yet");
         }
@@ -55,7 +55,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 my_component.ui(ui);

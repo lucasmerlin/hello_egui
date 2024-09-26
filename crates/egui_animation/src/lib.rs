@@ -25,7 +25,7 @@ struct AnimationState {
 
 type Easing = fn(f32) -> f32;
 
-/// Same as [Context::animate_bool_with_time] but with an easing function.
+/// Same as [`Context::animate_bool_with_time`] but with an easing function.
 pub fn animate_bool_eased(
     ctx: &Context,
     id: impl Hash + Sized,
@@ -37,7 +37,7 @@ pub fn animate_bool_eased(
     easing(x)
 }
 
-/// Same as [Context::animate_value_with_time] but with an easing function.
+/// Same as [`Context::animate_value_with_time`] but with an easing function.
 pub fn animate_eased(
     ctx: &Context,
     id: impl Hash + Sized,
@@ -71,7 +71,7 @@ pub fn animate_eased(
 }
 
 /// Animate a position. Useful to e.g. animate swapping items in a list.
-/// This is basically a wrapper around [animate_eased] that animates both x and y.
+/// This is basically a wrapper around [`animate_eased`] that animates both x and y.
 /// It will try to correct for scrolling, since in egui, scroll will change a widgets y position.
 pub fn animate_position(
     ui: &mut Ui,
@@ -99,7 +99,7 @@ pub fn animate_position(
     position - scroll_offset
 }
 
-/// A wrapper around [animate_position] that animates the position of a child ui.
+/// A wrapper around [`animate_position`] that animates the position of a child ui.
 pub fn animate_ui_translation(
     ui: &mut Ui,
     id: impl Hash + Sized + Debug + Copy,

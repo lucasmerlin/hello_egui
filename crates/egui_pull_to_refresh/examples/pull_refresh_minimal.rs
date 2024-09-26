@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::sleep;
 
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Ui};
 
 use egui_pull_to_refresh::PullToRefresh;
@@ -16,7 +16,7 @@ fn my_ui(ui: &mut Ui, count: u64, loading: bool) -> bool {
             ui.set_height(ui.available_size().y);
             ui.label("Pull to refresh demo");
 
-            ui.label(format!("Count: {}", count));
+            ui.label(format!("Count: {count}"));
         });
     });
 
@@ -37,7 +37,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Pull to refresh minimal example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 // Disable text selection, so it doesn't interfere with the drag gesture
