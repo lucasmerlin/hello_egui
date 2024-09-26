@@ -1,4 +1,4 @@
-use egui::{Button, CentralPanel, Checkbox, DragValue, Frame, Slider, TextEdit, Vec2};
+use egui::{Button, CentralPanel, Checkbox, DragValue, Frame, TextEdit, Vec2};
 use egui_flex::{Flex, FlexAlignContent, FlexItem};
 
 fn main() -> eframe::Result {

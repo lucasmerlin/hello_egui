@@ -612,7 +612,8 @@ impl<'a> FlexInstance<'a> {
                 // );
                 // }
 
-                let mut child_ui = ui.child_ui(frame_rect, *ui.layout(), None);
+                let mut child_ui =
+                    ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
                 child_ui.spacing_mut().item_spacing = self.item_spacing;
 
                 let res = container_ui(
@@ -841,7 +842,7 @@ impl FlexContainerUi {
 
         let child_rect = content_rect.intersect(ui.max_rect());
 
-        let mut child = ui.child_ui(child_rect, *ui.layout(), None);
+        let mut child = ui.new_child(UiBuilder::new().max_rect(child_rect).layout(*ui.layout()));
 
         let r = content(&mut child);
 
