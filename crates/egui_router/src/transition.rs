@@ -1,5 +1,5 @@
 use crate::TransitionConfig;
-use egui::{Id, Ui, Vec2};
+use egui::{Id, Ui, UiBuilder, Vec2};
 
 /// Trait for declaring a transition.
 /// Prefer [ComposableTransitionTrait] unless you need to create a new ui to apply the transition.
@@ -16,7 +16,12 @@ pub trait ComposableTransitionTrait {
 
 impl<T: ComposableTransitionTrait> TransitionTrait for T {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut child = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id, None);
+        let mut child = ui.new_child(
+            UiBuilder::new()
+                .max_rect(ui.max_rect())
+                .layout(*ui.layout())
+                .id_salt(with_id),
+        );
         self.apply(&mut child, t);
         child
     }
@@ -96,7 +101,12 @@ impl TransitionTrait for SlideTransition {
         let offset = available_size * (1.0 - t) * self.amount;
         let child_rect = ui.max_rect().translate(offset);
 
-        ui.child_ui_with_id_source(child_rect, *ui.layout(), with_id, None)
+        ui.new_child(
+            UiBuilder::new()
+                .max_rect(child_rect)
+                .layout(*ui.layout())
+                .id_salt(with_id),
+        )
     }
 }
 
@@ -261,11 +271,11 @@ impl ActiveTransition {
 
     pub fn show_default(ui: &mut Ui, with_id: usize, content: impl FnOnce(&mut Ui)) {
         with_temp_auto_id(ui, with_id, |ui| {
-            let mut ui = ui.child_ui_with_id_source(
-                ui.max_rect(),
-                *ui.layout(),
-                Id::new("router_child").with(with_id),
-                None,
+            let mut ui = ui.new_child(
+                UiBuilder::new()
+                    .max_rect(ui.max_rect())
+                    .layout(*ui.layout())
+                    .id_salt(Id::new("router_child").with(with_id)),
             );
             content(&mut ui);
         });
