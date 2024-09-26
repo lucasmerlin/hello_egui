@@ -1,7 +1,7 @@
 use crate::item::{Item, ItemResponse};
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, ItemState};
-use egui::{Id, Layout, Pos2, Rect, Ui, Vec2};
+use egui::{Id, Layout, Pos2, Rect, Ui, UiBuilder, Vec2};
 
 /// Calculates some information that is later used to detect in which index the dragged item should be placed.
 /// [ItemIterator::next] should be called for each item in the list.
@@ -110,12 +110,17 @@ impl<'a> ItemIterator<'a> {
         );
         let rect = if is_dragged_item {
             if let Some((_id, pos)) = self.hovering_item {
-                let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
+                let mut child = ui.new_child(
+                    UiBuilder::new()
+                        .max_rect(ui.available_rect_before_wrap())
+                        .layout(*ui.layout()),
+                );
                 let start = ui.next_widget_position();
                 let rect = child
-                    .allocate_ui_at_rect(Rect::from_min_size(pos, child.available_size()), |ui| {
-                        content(ui, item)
-                    })
+                    .allocate_new_ui(
+                        UiBuilder::new().max_rect(Rect::from_min_size(pos, child.available_size())),
+                        |ui| content(ui, item),
+                    )
                     .inner
                     .0;
                 Rect::from_min_size(start, rect.size())
