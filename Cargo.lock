@@ -1222,21 +1222,13 @@ checksum = "56ce8c6da7551ec6c462cbaf3bfbc75131ebbfa1c944aeaa9dab51ca1c5f0c3b"
 
 [[package]]
 name = "ecolor"
-version = "0.28.1"
-source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
-dependencies = [
- "emath 0.28.1",
-]
-
-[[package]]
-name = "ecolor"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5629649a8ae57c73f175f4a96419905a8102cfbfcbce96ea25a826bbf468e990"
 dependencies = [
  "bytemuck",
  "color-hex",
- "emath 0.29.0",
+ "emath",
 ]
 
 [[package]]
@@ -1248,7 +1240,7 @@ dependencies = [
  "ahash",
  "bytemuck",
  "document-features",
- "egui 0.29.0",
+ "egui",
  "egui-wgpu",
  "egui-winit",
  "egui_glow",
@@ -1276,25 +1268,14 @@ dependencies = [
 
 [[package]]
 name = "egui"
-version = "0.28.1"
-source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
-dependencies = [
- "ahash",
- "emath 0.28.1",
- "epaint 0.28.1",
- "nohash-hasher",
-]
-
-[[package]]
-name = "egui"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26bab3b3572566257a497b5f87d2cccaf7f7f122d4b8b620cba0493becc7955e"
 dependencies = [
  "accesskit",
  "ahash",
- "emath 0.29.0",
- "epaint 0.29.0",
+ "emath",
+ "epaint",
  "log",
  "nohash-hasher",
 ]
@@ -1308,8 +1289,8 @@ dependencies = [
  "ahash",
  "bytemuck",
  "document-features",
- "egui 0.29.0",
- "epaint 0.29.0",
+ "egui",
+ "epaint",
  "log",
  "thiserror",
  "type-map",
@@ -1327,7 +1308,7 @@ dependencies = [
  "accesskit_winit",
  "ahash",
  "arboard",
- "egui 0.29.0",
+ "egui",
  "log",
  "raw-window-handle 0.6.2",
  "smithay-clipboard",
@@ -1341,7 +1322,7 @@ name = "egui_animation"
 version = "0.5.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "hello_egui_utils",
  "rand 0.8.5",
  "simple-easing",
@@ -1349,24 +1330,24 @@ dependencies = [
 
 [[package]]
 name = "egui_commonmark"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe88871b75bd43c52a2b44ce5b53160506e7976e239112c56728496d019cc60d"
+checksum = "6f169228b94d1c8eb9330b7ea1b5f65b1193b6bea95159c87f574ed4aff8c172"
 dependencies = [
- "egui 0.28.1",
+ "egui",
  "egui_commonmark_backend",
- "egui_extras 0.28.1",
+ "egui_extras",
  "pulldown-cmark",
 ]
 
 [[package]]
 name = "egui_commonmark_backend"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "148edd9546feba319b16d5a5e551cda46095031ec1e6665e5871eef9ee692967"
+checksum = "dcd08f95abeb137e59c9bfdd0880d362bff74a83afe13805fde7a2d014ef773d"
 dependencies = [
- "egui 0.28.1",
- "egui_extras 0.28.1",
+ "egui",
+ "egui_extras",
  "pulldown-cmark",
 ]
 
@@ -1376,9 +1357,9 @@ version = "0.9.1"
 dependencies = [
  "color-hex",
  "eframe",
- "egui 0.29.0",
+ "egui",
  "egui_animation",
- "egui_extras 0.29.0",
+ "egui_extras",
  "egui_infinite_scroll",
  "egui_virtual_list",
  "hello_egui_utils",
@@ -1389,25 +1370,12 @@ dependencies = [
 
 [[package]]
 name = "egui_extras"
-version = "0.28.1"
-source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
-dependencies = [
- "ahash",
- "egui 0.28.1",
- "enum-map",
- "image",
- "log",
- "mime_guess2",
-]
-
-[[package]]
-name = "egui_extras"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9f1beb57a3c942fac2f058655188c79ac1cd200555e4f3684cd0c965ceb3a67"
 dependencies = [
  "ahash",
- "egui 0.29.0",
+ "egui",
  "ehttp",
  "enum-map",
  "image",
@@ -1420,7 +1388,7 @@ name = "egui_flex"
 version = "0.1.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "egui_inbox",
 ]
 
@@ -1429,7 +1397,7 @@ name = "egui_form"
 version = "0.2.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "garde",
  "validator",
 ]
@@ -1442,7 +1410,7 @@ checksum = "ea182206896187f7a2fcc207a1573785fc31330cb245f6cebcf663ea933f8d20"
 dependencies = [
  "ahash",
  "bytemuck",
- "egui 0.29.0",
+ "egui",
  "glow 0.14.0",
  "log",
  "memoffset 0.9.1",
@@ -1457,7 +1425,7 @@ version = "0.5.0"
 dependencies = [
  "derive-new",
  "eframe",
- "egui 0.29.0",
+ "egui",
  "ehttp",
  "futures",
  "futures-channel",
@@ -1474,8 +1442,8 @@ name = "egui_infinite_scroll"
 version = "0.4.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
- "egui_extras 0.29.0",
+ "egui",
+ "egui_extras",
  "egui_inbox",
  "egui_virtual_list",
  "hello_egui_utils",
@@ -1489,7 +1457,7 @@ name = "egui_pull_to_refresh"
 version = "0.5.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "egui_inbox",
  "ehttp",
 ]
@@ -1499,7 +1467,7 @@ name = "egui_router"
 version = "0.1.2"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "egui_animation",
  "egui_inbox",
  "egui_suspense",
@@ -1517,7 +1485,7 @@ name = "egui_suspense"
 version = "0.5.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "egui_inbox",
  "futures",
  "hello_egui_utils",
@@ -1531,7 +1499,7 @@ name = "egui_taffy"
 version = "0.1.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "rand 0.8.5",
  "taffy",
 ]
@@ -1542,8 +1510,8 @@ version = "0.4.0"
 dependencies = [
  "base64",
  "eframe",
- "egui 0.29.0",
- "egui_extras 0.29.0",
+ "egui",
+ "egui_extras",
  "image",
  "oxhttp",
  "serde",
@@ -1556,7 +1524,7 @@ name = "egui_virtual_list"
 version = "0.4.0"
 dependencies = [
  "eframe",
- "egui 0.29.0",
+ "egui",
  "rand 0.8.5",
  "web-time",
 ]
@@ -1567,8 +1535,8 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "eframe",
- "egui 0.29.0",
- "egui_extras 0.29.0",
+ "egui",
+ "egui_extras",
  "egui_inbox",
  "image",
  "log",
@@ -1599,11 +1567,6 @@ name = "either"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
-
-[[package]]
-name = "emath"
-version = "0.28.1"
-source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
 
 [[package]]
 name = "emath"
@@ -1667,20 +1630,6 @@ dependencies = [
 
 [[package]]
 name = "epaint"
-version = "0.28.1"
-source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
-dependencies = [
- "ab_glyph",
- "ahash",
- "ecolor 0.28.1",
- "emath 0.28.1",
- "epaint_default_fonts 0.28.1",
- "nohash-hasher",
- "parking_lot",
-]
-
-[[package]]
-name = "epaint"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "445e11ec86a4d85e1350578ba20b2d89977ed937f3faab32e1c3ec81d20c1842"
@@ -1688,18 +1637,13 @@ dependencies = [
  "ab_glyph",
  "ahash",
  "bytemuck",
- "ecolor 0.29.0",
- "emath 0.29.0",
- "epaint_default_fonts 0.29.0",
+ "ecolor",
+ "emath",
+ "epaint_default_fonts",
  "log",
  "nohash-hasher",
  "parking_lot",
 ]
-
-[[package]]
-name = "epaint_default_fonts"
-version = "0.28.1"
-source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
 
 [[package]]
 name = "epaint_default_fonts"
@@ -1790,11 +1734,11 @@ dependencies = [
  "casey",
  "color-hex",
  "eframe",
- "egui 0.29.0",
+ "egui",
  "egui_animation",
  "egui_commonmark",
  "egui_dnd",
- "egui_extras 0.29.0",
+ "egui_extras",
  "egui_flex",
  "egui_form",
  "egui_inbox",
@@ -2638,7 +2582,7 @@ name = "hello_egui_utils"
 version = "0.5.0"
 dependencies = [
  "concat-idents",
- "egui 0.29.0",
+ "egui",
  "tokio",
  "wasm-bindgen-futures",
 ]
@@ -4209,9 +4153,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8746739f11d39ce5ad5c2520a9b75285310dbfe78c541ccf832d38615765aec0"
+checksum = "666f0f59e259aea2d72e6012290c09877a780935cc3c18b1ceded41f3890d59c"
 dependencies = [
  "bitflags 2.6.0",
  "memchr",
@@ -6789,5 +6733,15 @@ dependencies = [
 
 [[patch.unused]]
 name = "eframe"
+version = "0.28.1"
+source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
+
+[[patch.unused]]
+name = "egui"
+version = "0.28.1"
+source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"
+
+[[patch.unused]]
+name = "egui_extras"
 version = "0.28.1"
 source = "git+https://github.com/emilk/egui?branch=master#06f709481a4e5e74bec961544c77e9afcae265db"

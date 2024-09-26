@@ -1,6 +1,6 @@
 use eframe::NativeOptions;
-use egui::{Button, Ui, Window};
-use egui_flex::{Flex, FlexDirection, FlexInstance, FlexItem};
+use egui::{Button, Window};
+use egui_flex::{Flex, FlexInstance, FlexItem};
 
 #[derive(Clone, Debug)]
 enum ItemKind {

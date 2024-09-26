@@ -1,5 +1,5 @@
 use casey::snake;
-use egui::{Button, Response, ScrollArea, Ui, Widget};
+use egui::{Button, ScrollArea, Ui, Widget};
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 
 use Crate::*;
@@ -164,13 +164,13 @@ pub fn crate_usage_ui(ui: &mut Ui, crates: &[CrateUsage], shared_state: &SharedS
     });
 }
 
-pub fn crate_button_ui(ui: &mut Ui, name: &str, selected: bool) -> Response {
-    ui.scope(|ui| {
-        ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
-        Button::new(name).selected(selected).rounding(16.0).ui(ui)
-    })
-    .inner
-}
+// pub fn crate_button_ui(ui: &mut Ui, name: &str, selected: bool) -> Response {
+//     ui.scope(|ui| {
+//         ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
+//         Button::new(name).selected(selected).rounding(16.0).ui(ui)
+//     })
+//     .inner
+// }
 
 #[macro_export]
 macro_rules! crate_usage {
@@ -212,11 +212,7 @@ impl CrateUi {
                 // TODO: Find a better solution or cache string
                 let readme_split = readme_split.replace(" no_run", "");
 
-                CommonMarkViewer::new(item.name()).show(
-                    ui,
-                    &mut self.markdown_cache,
-                    &readme_split,
-                );
+                CommonMarkViewer::new().show(ui, &mut self.markdown_cache, &readme_split);
             });
         });
     }

@@ -4,7 +4,8 @@ use std::time::Duration;
 
 use eframe::emath::Vec2;
 use egui::{
-    Align, Frame, Label, Layout, Rect, RichText, Rounding, ScrollArea, Shape, Stroke, Ui, Widget,
+    Align, Frame, Label, Layout, Rect, RichText, Rounding, ScrollArea, Shape, Stroke, Ui,
+    UiBuilder, Widget,
 };
 
 use egui_animation::animate_continuous;
@@ -211,7 +212,11 @@ impl ChatExample {
                                 // chat bubble layout where the own bubbles are right-aligned and
                                 // the text within is left-aligned.
                                 let (_pos, galley, _response) = label.layout_in_ui(
-                                    &mut ui.child_ui(ui.max_rect(), *ui.layout(), None),
+                                    &mut ui.new_child(
+                                        UiBuilder::new()
+                                            .max_rect(ui.max_rect())
+                                            .layout(*ui.layout()),
+                                    ),
                                 );
                                 let rect = galley.rect;
                                 // Calculate the width of the frame based on the width of

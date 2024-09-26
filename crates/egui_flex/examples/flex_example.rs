@@ -1,5 +1,5 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Checkbox, Frame, Id, Label, Slider, TextEdit, Widget};
+use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
 use egui_flex::{Flex, FlexAlign, FlexItem};
 use std::num::NonZeroUsize;
 
@@ -190,14 +190,14 @@ fn main() -> eframe::Result {
                 // });
 
                 ui.horizontal_wrapped(|ui| {
-                    ui.button("Normal Button");
+                    let _ = ui.button("Normal Button");
                     Flex::horizontal().show(ui, |flex| {
                         flex.add(FlexItem::new(), Button::new("Hello"));
                     });
-                    ui.button("Normal Button");
+                    let _ = ui.button("Normal Button");
                 });
 
-                ui.button("Button");
+                let _ = ui.button("Button");
 
                 // Window::new("Window").show(ui.ctx(), |ui| {
                 //     Flex::horizontal().show(ui, |flex| {
