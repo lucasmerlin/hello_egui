@@ -4,7 +4,7 @@
 
 use std::ops::Range;
 
-use egui::{Align, Pos2, Rect, Ui, Vec2};
+use egui::{Align, Pos2, Rect, Ui, UiBuilder, Vec2};
 use web_time::{Duration, SystemTime};
 
 /// The response from a call to [`VirtualList::ui_custom_layout`]
@@ -169,7 +169,11 @@ impl VirtualList {
         // to maintain the scroll position
         let scroll_items_top_step_2 =
             if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
-                let mut measure_ui = ui.child_ui(ui.max_rect(), *ui.layout(), None);
+                let mut measure_ui = ui.new_child(
+                    UiBuilder::new()
+                        .max_rect(ui.max_rect())
+                        .layout(*ui.layout()),
+                );
                 measure_ui.set_invisible();
 
                 let start_height = measure_ui.next_widget_position();
