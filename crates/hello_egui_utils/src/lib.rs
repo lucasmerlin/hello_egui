@@ -5,18 +5,20 @@
 /// Helper struct to easily align things with unknown sizes
 pub mod center;
 
-use egui::{Align, Label, Layout, Ui, Vec2, WidgetText};
+use egui::{Align, Label, Layout, Ui, UiBuilder, Vec2, WidgetText};
 
 pub use concat_idents::concat_idents;
 
 /// Returns the size of the text in the current ui (based on the max width of the ui)
 pub fn measure_text(ui: &mut Ui, text: impl Into<WidgetText>) -> Vec2 {
     // There might be a more elegant way but this is enough for now
-    let res = Label::new(text).layout_in_ui(&mut ui.child_ui(
-        ui.available_rect_before_wrap(),
-        Layout::left_to_right(Align::Center),
-        None,
-    ));
+    let res = Label::new(text).layout_in_ui(
+        &mut ui.new_child(
+            UiBuilder::new()
+                .max_rect(ui.available_rect_before_wrap())
+                .layout(Layout::left_to_right(Align::Center)),
+        ),
+    );
 
     // There seem to be rounding errors in egui's text rendering
     // so we add a little bit of padding
