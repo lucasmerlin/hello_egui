@@ -266,6 +266,7 @@ impl<'a> Item<'a> {
             .interactable(false)
             .fixed_pos(pos)
             .order(Order::Tooltip)
+            .constrain(false)
             .show(ui.ctx(), |ui| {
                 ui.with_layout(layout, |ui| {
                     if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {

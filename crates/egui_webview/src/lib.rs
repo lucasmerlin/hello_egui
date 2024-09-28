@@ -266,13 +266,15 @@ impl EguiWebView {
             });
         }
 
+        let screen_rect = ui.ctx().screen_rect();
+        let wv_height = screen_rect.height() * ui.ctx().zoom_factor();
         let wv_rect = response.rect * ui.ctx().zoom_factor();
 
         self.view
             .set_bounds(wry::Rect {
                 position: Position::Logical(LogicalPosition::new(
                     f64::from(wv_rect.min.x),
-                    f64::from(wv_rect.min.y),
+                    f64::from(wv_height - wv_rect.max.y),
                 )),
                 size: Size::Logical(LogicalSize::new(
                     f64::from(wv_rect.width()),
