@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_form.svg)](https://crates.io/crates/egui_form)
 
-
-
 [content]:<>
-
 
 egui_form adds form validation to egui.
 It can either use [validator](https://crates.io/crates/validator)
@@ -61,7 +58,7 @@ struct Fields {
 }
 
 fn form_ui(ui: &mut Ui, fields: &mut Fields) {
-    let mut form = Form::new().add_report(GardeReport::new(fields.validate(&())));
+    let mut form = Form::new().add_report(GardeReport::new(fields.validate()));
 
     FormField::new(&mut form, field_path!("user_name"))
         .label("User Name")

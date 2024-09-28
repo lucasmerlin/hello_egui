@@ -39,7 +39,7 @@ mod form;
 ///
 /// pub fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
 ///     let mut form =
-///         Form::new().add_report(egui_form::garde::GardeReport::new(test.validate(&())));
+///         Form::new().add_report(egui_form::garde::GardeReport::new(test.validate()));
 ///
 ///     FormField::new(&mut form, field_path!("user_name"))
 ///         .label("User Name")

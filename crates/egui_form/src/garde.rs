@@ -54,7 +54,7 @@ impl GardeReport {
     ///     tags: vec!["tag1".to_string(), "waaaaytooooloooong".to_string()],
     /// };
     ///
-    /// let report = GardeReport::new(test.validate(&()));
+    /// let report = GardeReport::new(test.validate());
     ///
     /// assert!(report
     ///     .get_field_error(field_path!("user_name").into_field_path())
