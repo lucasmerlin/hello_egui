@@ -176,7 +176,7 @@ impl<'a> Item<'a> {
                 rect.min
             };
 
-            let mut child = ui.new_child(UiBuilder::new().max_rect(rect).layout(*ui.layout()));
+            let mut child = ui.new_child(UiBuilder::new().max_rect(rect));
 
             child.allocate_new_ui(
                 UiBuilder::new().max_rect(Rect::from_min_size(position, rect.size())),
@@ -216,11 +216,7 @@ impl<'a> Item<'a> {
 
             let size = ui.available_size();
 
-            let mut child = ui.new_child(
-                UiBuilder::new()
-                    .max_rect(ui.max_rect())
-                    .layout(*ui.layout()),
-            );
+            let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
             let response = child.allocate_new_ui(
                 UiBuilder::new().max_rect(Rect::from_min_size(position, size)),
                 |ui| {

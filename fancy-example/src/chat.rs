@@ -213,11 +213,7 @@ impl ChatExample {
                                 // chat bubble layout where the own bubbles are right-aligned and
                                 // the text within is left-aligned.
                                 let (_pos, galley, _response) = label.layout_in_ui(
-                                    &mut ui.new_child(
-                                        UiBuilder::new()
-                                            .max_rect(ui.max_rect())
-                                            .layout(*ui.layout()),
-                                    ),
+                                    &mut ui.new_child(UiBuilder::new().max_rect(ui.max_rect())),
                                 );
                                 let rect = galley.rect;
                                 // Calculate the width of the frame based on the width of

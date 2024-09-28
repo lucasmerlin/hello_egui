@@ -170,11 +170,7 @@ impl VirtualList {
         // to maintain the scroll position
         let scroll_items_top_step_2 =
             if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
-                let mut measure_ui = ui.new_child(
-                    UiBuilder::new()
-                        .max_rect(ui.max_rect())
-                        .layout(*ui.layout()),
-                );
+                let mut measure_ui = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
                 measure_ui.set_invisible();
 
                 let start_height = measure_ui.next_widget_position();

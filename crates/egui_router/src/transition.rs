@@ -16,12 +16,7 @@ pub trait ComposableTransitionTrait {
 
 impl<T: ComposableTransitionTrait> TransitionTrait for T {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut child = ui.new_child(
-            UiBuilder::new()
-                .max_rect(ui.max_rect())
-                .layout(*ui.layout())
-                .id_salt(with_id),
-        );
+        let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()).id_salt(with_id));
         self.apply(&mut child, t);
         child
     }
@@ -101,12 +96,7 @@ impl TransitionTrait for SlideTransition {
         let offset = available_size * (1.0 - t) * self.amount;
         let child_rect = ui.max_rect().translate(offset);
 
-        ui.new_child(
-            UiBuilder::new()
-                .max_rect(child_rect)
-                .layout(*ui.layout())
-                .id_salt(with_id),
-        )
+        ui.new_child(UiBuilder::new().max_rect(child_rect).id_salt(with_id))
     }
 }
 
@@ -210,7 +200,7 @@ impl ActiveTransition {
         &mut self,
         ui: &mut Ui,
         state: &mut State,
-        (in_id, contentin_): (usize, impl FnOnce(&mut Ui, &mut State)),
+        (in_id, content_in): (usize, impl FnOnce(&mut Ui, &mut State)),
         content_out: Option<(usize, impl FnOnce(&mut Ui, &mut State))>,
     ) -> ActiveTransitionResult {
         let dt = ui.input(|i| i.stable_dt);
@@ -227,7 +217,7 @@ impl ActiveTransition {
                     (self.easing)(t),
                     Id::new("router_child").with(in_id),
                 );
-                contentin_(&mut out_ui, state);
+                content_in(&mut out_ui, state);
             });
 
             if let Some((out_id, content_out)) = content_out {
@@ -258,7 +248,7 @@ impl ActiveTransition {
                     (self.easing)(t),
                     Id::new("router_child").with(in_id),
                 );
-                contentin_(&mut in_ui, state);
+                content_in(&mut in_ui, state);
             });
         }
 
@@ -274,7 +264,6 @@ impl ActiveTransition {
             let mut ui = ui.new_child(
                 UiBuilder::new()
                     .max_rect(ui.max_rect())
-                    .layout(*ui.layout())
                     .id_salt(Id::new("router_child").with(with_id)),
             );
             content(&mut ui);

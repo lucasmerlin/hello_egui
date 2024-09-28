@@ -110,11 +110,8 @@ impl<'a> ItemIterator<'a> {
         );
         let rect = if is_dragged_item {
             if let Some((_id, pos)) = self.hovering_item {
-                let mut child = ui.new_child(
-                    UiBuilder::new()
-                        .max_rect(ui.available_rect_before_wrap())
-                        .layout(*ui.layout()),
-                );
+                let mut child =
+                    ui.new_child(UiBuilder::new().max_rect(ui.available_rect_before_wrap()));
                 let start = ui.next_widget_position();
                 let rect = child
                     .allocate_new_ui(

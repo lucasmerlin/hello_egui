@@ -105,7 +105,7 @@ impl Default for Demo {
     }
 }
 
-fn main() {
+fn main() -> eframe::Result<()> {
     let mut demo = Demo::default();
     eframe::run_simple_native(
         "flex custom",
@@ -122,5 +122,4 @@ fn main() {
             });
         },
     )
-    .unwrap();
 }

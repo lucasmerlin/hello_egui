@@ -48,7 +48,7 @@ impl Center {
             rect
         };
 
-        let mut ui = ui.new_child(UiBuilder::new().max_rect(content_rect).layout(*ui.layout()));
+        let mut ui = ui.new_child(UiBuilder::new().max_rect(content_rect));
 
         if last_size.is_none() {
             ui.set_invisible();

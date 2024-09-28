@@ -744,7 +744,7 @@ impl FlexContainerUi {
 
         let child_rect = content_rect.intersect(ui.max_rect());
 
-        let mut child = ui.new_child(UiBuilder::new().max_rect(child_rect).layout(*ui.layout()));
+        let mut child = ui.new_child(UiBuilder::new().max_rect(child_rect));
 
         let r = content(&mut child);
 
