@@ -8,11 +8,7 @@ use egui_flex::{Flex, FlexItem};
 pub struct SideBar {}
 
 impl SideBar {
-    pub fn new() -> Self {
-        Self {}
-    }
-
-    pub fn ui(&mut self, ui: &mut Ui, shared: &mut SharedState) -> bool {
+    pub fn ui(ui: &mut Ui, shared: &mut SharedState) -> bool {
         let mut clicked = false;
         ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
             ui.add_space(4.0);
@@ -24,9 +20,9 @@ impl SideBar {
 
             ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
 
-            for category in EXAMPLES.iter() {
+            for category in EXAMPLES {
                 ui.small(category.name);
-                for example in category.examples.iter() {
+                for example in category.examples {
                     let route = format!("/example/{}", example.slug);
                     if ui
                         .selectable_label(
@@ -52,7 +48,7 @@ impl SideBar {
             ui.spacing_mut().item_spacing = Vec2::splat(8.0);
 
             Flex::horizontal().grow_items(1.0).show(ui, |flex| {
-                for item in ALL_CRATES.iter() {
+                for item in ALL_CRATES {
                     let route = format!("/crate/{}", item.name());
                     let selected = shared.active_route == route;
 

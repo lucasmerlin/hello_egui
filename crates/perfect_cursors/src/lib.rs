@@ -55,7 +55,7 @@ impl PerfectCursor {
     }
 
     pub fn add_point(&mut self, point: (f32, f32)) {
-        if Some(point) == self.prev_point.map(|p| p.into_tuple()) {
+        if Some(point) == self.prev_point.map(spline::Vec2::into_tuple) {
             return;
         }
         let point = Vec2::new(point.0, point.1);
@@ -72,7 +72,7 @@ impl PerfectCursor {
         }
 
         if self.state == AnimationState::Stopped {
-            if self.prev_point.unwrap().dist(&point) < 4.0 {
+            if self.prev_point.unwrap().dist(point) < 4.0 {
                 self.current_point = Some(point);
                 return;
             }
@@ -115,7 +115,7 @@ impl PerfectCursor {
             AnimationState::Animating { ref mut queue, .. } => {
                 queue.push(animation);
             }
-            _ => {}
+            AnimationState::Stopped => {}
         }
     }
 
@@ -123,14 +123,14 @@ impl PerfectCursor {
         let mut set_state = None;
 
         let result = match &mut self.state {
-            AnimationState::Stopped => self.current_point.map(|p| p.into_tuple()),
-            AnimationState::Idle => self.current_point.map(|p| p.into_tuple()),
+            AnimationState::Stopped | AnimationState::Idle => {
+                self.current_point.map(spline::Vec2::into_tuple)
+            }
             AnimationState::Animating { current, queue } => {
                 let start_time = current
                     .start_time
                     .get_or_insert_with(web_time::Instant::now);
-                let t = (web_time::Instant::now() - *start_time).as_secs_f32()
-                    / current.duration.as_secs_f32();
+                let t = (*start_time).elapsed().as_secs_f32() / current.duration.as_secs_f32();
 
                 let point = self.spline.get_spline_point(t + current.start as f32);
 

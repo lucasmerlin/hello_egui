@@ -1,4 +1,4 @@
-use eframe::emath::Align;
+use eframe::{emath::Align, NativeOptions};
 use egui::{
     popup_above_or_below_widget, AboveOrBelow, CentralPanel, Context, Id, Layout,
     PopupCloseBehavior, TextEdit, Widget, Window,
@@ -14,8 +14,8 @@ pub struct WebBrowser {
 }
 
 impl WebBrowser {
-    pub fn new(ctx: Context, id: Id, url: &str, window: &impl HasWindowHandle) -> Self {
-        let view = EguiWebView::new(&ctx, id, window, |b| b.with_url(url));
+    pub fn new(ctx: &Context, id: Id, url: &str, window: &impl HasWindowHandle) -> Self {
+        let view = EguiWebView::new(ctx, id, window, |b| b.with_url(url));
 
         Self {
             id,
@@ -112,27 +112,31 @@ pub fn main() -> eframe::Result<()> {
 
     let mut count = 0;
 
-    eframe::run_simple_native("Dnd Example App", Default::default(), move |ctx, _frame| {
-        egui_extras::install_image_loaders(ctx);
+    eframe::run_simple_native(
+        "Dnd Example App",
+        NativeOptions::default(),
+        move |ctx, frame| {
+            egui_extras::install_image_loaders(ctx);
 
-        CentralPanel::default().show(ctx, |ui| {
-            if windows.is_empty() || ui.button("New Window").clicked() {
-                init_webview(ctx);
+            CentralPanel::default().show(ctx, |ui| {
+                if windows.is_empty() || ui.button("New Window").clicked() {
+                    init_webview(ctx);
 
-                let url = default_urls[count % default_urls.len()];
+                    let url = default_urls[count % default_urls.len()];
 
-                windows.push(WebBrowser::new(
-                    ctx.clone(),
-                    Id::new(format!("Window {}", count)),
-                    url,
-                    _frame,
-                ));
-                count += 1;
-            }
-        });
+                    windows.push(WebBrowser::new(
+                        ctx,
+                        Id::new(format!("Window {count}")),
+                        url,
+                        frame,
+                    ));
+                    count += 1;
+                }
+            });
 
-        windows.retain_mut(|w| w.ui(ctx));
+            windows.retain_mut(|w| w.ui(ctx));
 
-        webview_end_frame(ctx);
-    })
+            webview_end_frame(ctx);
+        },
+    )
 }

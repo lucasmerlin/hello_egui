@@ -64,7 +64,7 @@ impl ProgressSpinner {
 
             let points: Vec<Pos2> = (0..=n_points)
                 .map(|i| {
-                    let angle = lerp(start_angle..=end_angle, i as f64 / n_points as f64);
+                    let angle = lerp(start_angle..=end_angle, f64::from(i) / f64::from(n_points));
                     let (sin, cos) = angle.sin_cos();
                     rect.center() + radius * vec2(cos as f32, sin as f32)
                 })

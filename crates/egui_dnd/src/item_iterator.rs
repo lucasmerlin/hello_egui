@@ -1,10 +1,10 @@
 use crate::item::{Item, ItemResponse};
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, ItemState};
-use egui::{Id, Layout, Pos2, Rect, Ui, Vec2};
+use egui::{Id, Layout, Pos2, Rect, Ui, UiBuilder, Vec2};
 
 /// Calculates some information that is later used to detect in which index the dragged item should be placed.
-/// [ItemIterator::next] should be called for each item in the list.
+/// [`ItemIterator::next`] should be called for each item in the list.
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
     dragged_item_rect: Option<Rect>,
@@ -66,7 +66,7 @@ impl<'a> ItemIterator<'a> {
     /// Draw a dnd item. This should be called for each item in the list.
     ///
     /// If `add_surrounding_space_automatically` is false, you need to call
-    /// [ItemIterator::space_before] and [ItemIterator::space_after] manually.
+    /// [`ItemIterator::space_before`] and [`ItemIterator::space_after`] manually.
     /// This is useful, e.g. to add a divider between items. Check the custom ui example.
     pub fn next(
         &mut self,
@@ -94,7 +94,7 @@ impl<'a> ItemIterator<'a> {
         }
 
         if add_surrounding_space_automatically {
-            self.space_before(ui, id, |_ui, _space| {})
+            self.space_before(ui, id, |_ui, _space| {});
         }
 
         let dragging = self.state.detection_state.is_dragging();
@@ -110,12 +110,14 @@ impl<'a> ItemIterator<'a> {
         );
         let rect = if is_dragged_item {
             if let Some((_id, pos)) = self.hovering_item {
-                let mut child = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
+                let mut child =
+                    ui.new_child(UiBuilder::new().max_rect(ui.available_rect_before_wrap()));
                 let start = ui.next_widget_position();
                 let rect = child
-                    .allocate_ui_at_rect(Rect::from_min_size(pos, child.available_size()), |ui| {
-                        content(ui, item)
-                    })
+                    .allocate_new_ui(
+                        UiBuilder::new().max_rect(Rect::from_min_size(pos, child.available_size())),
+                        |ui| content(ui, item),
+                    )
                     .inner
                     .0;
                 Rect::from_min_size(start, rect.size())
@@ -131,7 +133,7 @@ impl<'a> ItemIterator<'a> {
         }
 
         if add_surrounding_space_automatically {
-            self.space_after(ui, id, |_ui, _space| {})
+            self.space_after(ui, id, |_ui, _space| {});
         }
 
         if let Some(dragged_item_rect) = self.dragged_item_rect {
@@ -220,10 +222,10 @@ impl<'a> ItemIterator<'a> {
         mark_next: bool,
     ) {
         if self.closest_item.is_none() || distance < self.closest_item.unwrap().0 {
-            if !mark_next {
-                self.closest_item = Some((distance, item.map(|(idx, id)| (idx, id, pos))));
-            } else {
+            if mark_next {
                 self.mark_next_as_closest_item = Some((distance, pos));
+            } else {
+                self.closest_item = Some((distance, item.map(|(idx, id)| (idx, id, pos))));
             }
         }
     }

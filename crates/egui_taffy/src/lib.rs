@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use egui::util::IdTypeMap;
-use egui::{Context, Id, LayerId, Order, Pos2, Ui, UiStackInfo};
+use egui::{Context, Id, LayerId, Order, Pos2, RawInput, Ui, UiBuilder, UiStackInfo, Vec2};
 use taffy::prelude::*;
 
 pub use taffy;
@@ -67,7 +67,7 @@ pub struct TaffyPass<'a, 'f> {
 }
 
 impl<'a, 'f> TaffyPass<'a, 'f> {
-    fn with_state<T>(id: Id, ctx: Context, f: impl FnOnce(&mut TaffyState) -> T) -> T {
+    fn with_state<T>(id: Id, ctx: &Context, f: impl FnOnce(&mut TaffyState) -> T) -> T {
         ctx.data_mut(|data: &mut IdTypeMap| {
             let data = data.get_temp_mut_or_insert_with(id, TaffyState::new);
 
@@ -76,13 +76,13 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
     }
 
     pub fn new(ui: &'a mut Ui, id: Id, style: Style) -> Self {
-        let current_node = Self::with_state(id, ui.ctx().clone(), |state| {
+        let current_node = Self::with_state(id, ui.ctx(), |state| {
             state.begin_pass(style);
             state.root_node
         });
 
         let measure_ctx = Context::default();
-        let _ = measure_ctx.run(Default::default(), |_| {});
+        let _ = measure_ctx.run(RawInput::default(), |_| {});
 
         Self {
             id,
@@ -116,7 +116,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         let previous_node = self.current_node;
         let previous_node_index = self.current_node_index;
 
-        Self::with_state(self.id, self.ui.ctx().clone(), |state| {
+        Self::with_state(self.id, self.ui.ctx(), |state| {
             let index = self.content_fns.len();
             self.content_fns.push(content);
 
@@ -161,7 +161,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         layout: egui::Layout,
         content: impl FnMut(&mut Ui) + 'f,
     ) {
-        Self::with_state(self.id, self.ui.ctx().clone(), |state| {
+        Self::with_state(self.id, self.ui.ctx(), |state| {
             let content_idx = self.content_fns.len();
             self.content_fns.push(Some(Box::new(content)));
 
@@ -203,6 +203,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         });
     }
 
+    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     pub fn show(mut self) {
         let ctx = self.measure_ctx.clone();
         let (layouts, node) = self.ui.ctx().data_mut(|data: &mut IdTypeMap| {
@@ -243,7 +244,7 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                             };
 
                             let rect = egui::Rect::from_min_size(
-                                Default::default(),
+                                Pos2::default(),
                                 egui::Vec2::new(
                                     known_size.width.unwrap_or(available_width),
                                     known_size.height.unwrap_or(available_height),
@@ -254,10 +255,14 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                                 ctx.clone(),
                                 LayerId::new(Order::Background, Id::new("measure")),
                                 Id::new("measure"),
-                                rect,
-                                egui::Rect::from_min_size(Default::default(), Default::default()),
-                                UiStackInfo::default(),
+                                UiBuilder::new()
+                                    .max_rect(rect)
+                                    .ui_stack_info(UiStackInfo::default()),
                             );
+                            ui.set_clip_rect(egui::Rect::from_min_size(
+                                Pos2::default(),
+                                Vec2::default(),
+                            ));
                             let response = ui.with_layout(
                                 egui::Layout {
                                     main_dir: layout.main_dir,
@@ -348,7 +353,9 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
                         return;
                     }
 
-                    let mut child = self.ui.child_ui(rect, *egui_layout, None);
+                    let mut child = self
+                        .ui
+                        .new_child(UiBuilder::new().max_rect(rect).layout(*egui_layout));
 
                     content(&mut child);
                 }

@@ -1,6 +1,6 @@
 use eframe::NativeOptions;
-use egui::{Button, Ui, Window};
-use egui_flex::{Flex, FlexDirection, FlexInstance, FlexItem};
+use egui::{Button, Window};
+use egui_flex::{Flex, FlexInstance, FlexItem};
 
 #[derive(Clone, Debug)]
 enum ItemKind {
@@ -23,8 +23,8 @@ struct Item {
 impl Item {
     pub fn show(&mut self, ui: &mut FlexInstance) {
         let response = match &self.kind {
-            ItemKind::Button(text) => ui.add(self.flex.clone(), Button::new(text)).inner,
-            ItemKind::Label(text) => ui.add_simple(self.flex.clone(), |ui| ui.label(text)).inner,
+            ItemKind::Button(text) => ui.add(self.flex, Button::new(text)).inner,
+            ItemKind::Label(text) => ui.add_simple(self.flex, |ui| ui.label(text)).inner,
         };
 
         response.context_menu(|ui| {
@@ -105,7 +105,7 @@ impl Default for Demo {
     }
 }
 
-fn main() {
+fn main() -> eframe::Result<()> {
     let mut demo = Demo::default();
     eframe::run_simple_native(
         "flex custom",
@@ -115,11 +115,11 @@ fn main() {
                 ui.set_width(ui.available_width());
                 ui.set_height(ui.available_height());
                 demo.flex.clone().show(ui, |flex| {
-                    for item in demo.items.iter_mut() {
+                    for item in &mut demo.items {
                         item.show(flex);
                     }
                 });
             });
         },
-    );
+    )
 }

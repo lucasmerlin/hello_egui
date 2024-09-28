@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::sleep;
 
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, ScrollArea};
 
 use egui_pull_to_refresh::PullToRefresh;
@@ -23,7 +23,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Pull to refresh minimal example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 // Disable text selection, so it doesn't interfere with the drag gesture
@@ -42,7 +42,7 @@ pub fn main() -> eframe::Result<()> {
                         ui.label("And works with scroll areas!");
                         let count = current_state.count;
                         for i in count..count + 100 {
-                            ui.label(format!("Hello {}", i));
+                            ui.label(format!("Hello {i}"));
                         }
                     })
                 });

@@ -1,4 +1,6 @@
-use egui::{CursorIcon, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{
+    CursorIcon, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Sense, Ui, UiBuilder, Vec2,
+};
 use egui_animation::animate_position;
 
 use crate::state::DragDetectionState;
@@ -45,6 +47,7 @@ impl<'a> Item<'a> {
         self.drag_source(Some(size), ui, add_content)
     }
 
+    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     fn drag_source(
         self,
         size: Option<Vec2>,
@@ -173,21 +176,24 @@ impl<'a> Item<'a> {
                 rect.min
             };
 
-            let mut child = ui.child_ui(rect, *ui.layout(), None);
+            let mut child = ui.new_child(UiBuilder::new().max_rect(rect));
 
-            child.allocate_ui_at_rect(Rect::from_min_size(position, rect.size()), |ui| {
-                drag_body(
-                    ui,
-                    Handle::new(
-                        id,
-                        index,
-                        self.dnd_state,
-                        hovering_over_any_handle,
-                        rect.min,
-                    ),
-                    self.state,
-                )
-            });
+            child.allocate_new_ui(
+                UiBuilder::new().max_rect(Rect::from_min_size(position, rect.size())),
+                |ui| {
+                    drag_body(
+                        ui,
+                        Handle::new(
+                            id,
+                            index,
+                            self.dnd_state,
+                            hovering_over_any_handle,
+                            rect.min,
+                        ),
+                        self.state,
+                    );
+                },
+            );
 
             rect
         } else {
@@ -210,20 +216,23 @@ impl<'a> Item<'a> {
 
             let size = ui.available_size();
 
-            let mut child = ui.child_ui(ui.max_rect(), *ui.layout(), None);
-            let response = child.allocate_ui_at_rect(Rect::from_min_size(position, size), |ui| {
-                drag_body(
-                    ui,
-                    Handle::new(
-                        id,
-                        index,
-                        self.dnd_state,
-                        hovering_over_any_handle,
-                        animated_position,
-                    ),
-                    self.state,
-                )
-            });
+            let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
+            let response = child.allocate_new_ui(
+                UiBuilder::new().max_rect(Rect::from_min_size(position, size)),
+                |ui| {
+                    drag_body(
+                        ui,
+                        Handle::new(
+                            id,
+                            index,
+                            self.dnd_state,
+                            hovering_over_any_handle,
+                            animated_position,
+                        ),
+                        self.state,
+                    );
+                },
+            );
 
             ui.allocate_space(response.response.rect.size()).1
         };
@@ -266,7 +275,7 @@ impl<'a> Item<'a> {
                         ui,
                         Handle::new(id, state.index, dnd_state, hovering_over_any_handle, pos),
                         state,
-                    )
+                    );
                 })
                 .response
                 .rect

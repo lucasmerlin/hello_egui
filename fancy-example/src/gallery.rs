@@ -57,7 +57,7 @@ impl Gallery {
 }
 
 impl ExampleTrait for Gallery {
-    fn ui(&mut self, ui: &mut Ui, _shared_state: &mut SharedState) {
+    fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         demo_area(ui, "Gallery", 1000.0, |ui| {
             let height = 300.0;
 
@@ -88,7 +88,7 @@ impl ExampleTrait for Gallery {
                             let total_width = ui.available_width();
 
                             let mut count = 1;
-                            let mut combined_width = item.first().map(|item| item.width).unwrap_or(0.0);
+                            let mut combined_width = item.first().map_or(0.0, |item| item.width);
 
                             while combined_width < total_width - item_spacing * (count - 1) as f32
                                 && count < item.len()
@@ -145,7 +145,7 @@ impl ExampleTrait for Gallery {
 
             ui.add_space(8.0);
 
-            crate_usage_ui(ui, GALLERY_EXAMPLE.crates, _shared_state);
+            crate_usage_ui(ui, GALLERY_EXAMPLE.crates, shared_state);
         });
     }
 }

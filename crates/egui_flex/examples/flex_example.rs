@@ -1,8 +1,9 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Checkbox, Frame, Id, Label, Slider, TextEdit, Widget};
+use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
 use egui_flex::{Flex, FlexAlign, FlexItem};
 use std::num::NonZeroUsize;
 
+#[allow(clippy::too_many_lines)] // It's an example
 fn main() -> eframe::Result {
     let mut text = "Hello, world!".to_owned();
     eframe::run_simple_native(
@@ -80,25 +81,23 @@ fn main() -> eframe::Result {
                                 },
                             );
 
-                            [
+                            for align in &[
                                 FlexAlign::Start,
                                 FlexAlign::End,
                                 FlexAlign::Center,
                                 FlexAlign::Stretch,
-                            ]
-                            .iter()
-                            .for_each(|align| {
+                            ] {
                                 flex.add_frame(
                                     FlexItem::default().grow(1.0).align_self(*align),
                                     Frame::group(flex.ui().style()),
                                     |ui| {
                                         ui.add(
-                                            Label::new(format!("I have align-self: {:?}", align))
+                                            Label::new(format!("I have align-self: {align:?}"))
                                                 .wrap(),
                                         );
                                     },
                                 );
-                            });
+                            }
 
                             flex.add_simple(FlexItem::new().grow(1.0).basis(150.0), |ui| {
                                 ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
@@ -190,14 +189,14 @@ fn main() -> eframe::Result {
                 // });
 
                 ui.horizontal_wrapped(|ui| {
-                    ui.button("Normal Button");
+                    let _ = ui.button("Normal Button");
                     Flex::horizontal().show(ui, |flex| {
                         flex.add(FlexItem::new(), Button::new("Hello"));
                     });
-                    ui.button("Normal Button");
+                    let _ = ui.button("Normal Button");
                 });
 
-                ui.button("Button");
+                let _ = ui.button("Button");
 
                 // Window::new("Window").show(ui.ctx(), |ui| {
                 //     Flex::horizontal().show(ui, |flex| {

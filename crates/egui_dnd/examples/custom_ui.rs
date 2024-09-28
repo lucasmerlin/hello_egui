@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Frame, Stroke, Ui};
 
 use egui_dnd::{dnd, DragDropItem};
@@ -8,7 +8,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ui.label("Drag and drop the items below");
@@ -20,8 +20,7 @@ pub fn main() -> eframe::Result<()> {
                                 .stroke(Stroke::new(1.0, egui::Color32::from_rgb(0, 0, 0)))
                                 .show(ui, |ui| {
                                     ui.set_min_size(space);
-                                })
-                                .inner
+                                });
                         };
                         iter.space_before(ui, item.id(), space_content);
 

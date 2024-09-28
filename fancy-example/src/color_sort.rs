@@ -24,6 +24,7 @@ pub const COLOR_SORT_WRAPPED_EXAMPLE: Example = Example {
 
 #[derive(Clone)]
 pub struct Color {
+    #[allow(clippy::struct_field_names)]
     pub color: Color32,
     pub name: &'static str,
     pub rounded: bool,
@@ -32,7 +33,7 @@ pub struct Color {
 
 impl Hash for Color {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.index.hash(state)
+        self.index.hash(state);
     }
 }
 
@@ -112,7 +113,7 @@ impl ColorSort {
                             });
                         });
                     })
-                })
+                });
             });
         });
 

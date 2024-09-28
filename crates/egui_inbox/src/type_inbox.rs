@@ -28,17 +28,17 @@ struct TypeInboxInner {
     ctx: RequestRepaintContext,
 }
 
-/// A type-map based version of [UiInbox] which can be used to send messages
+/// A type-map based version of [`UiInbox`] which can be used to send messages
 /// to a component from different parts of the application.
 ///
-/// Use [crate::TypeBroadcast] instead, if you want to send messages to multiple components (mpmc like channel).
+/// Use [`crate::TypeBroadcast`] instead, if you want to send messages to multiple components (mpmc like channel).
 #[derive(Clone, Debug)]
 pub struct TypeInbox(Arc<Mutex<TypeInboxInner>>);
 
 impl TypeInbox {
-    /// Create a new [TypeInbox] with the given [RequestRepaintContext].
-    /// Usually, this would be a [egui::Context].
-    pub fn new(ctx: impl AsRequestRepaint + 'static) -> Self {
+    /// Create a new [`TypeInbox`] with the given [`RequestRepaintContext`].
+    /// Usually, this would be a [`egui::Context`].
+    pub fn new(ctx: &(impl AsRequestRepaint + 'static)) -> Self {
         Self(Arc::new(Mutex::new(TypeInboxInner {
             map: TypeMap::new(),
             ctx: ctx.as_request_repaint(),

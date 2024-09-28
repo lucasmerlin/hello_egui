@@ -39,7 +39,9 @@ pub struct NativeTextField {
     field_type: TextFieldType,
 }
 
+#[allow(unsafe_code)]
 unsafe impl Send for NativeTextField {}
+#[allow(unsafe_code)]
 unsafe impl Sync for NativeTextField {}
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -66,7 +68,7 @@ impl NativeTextField {
         });
         NativeTextField {
             webview: view,
-            current_text: "".to_string(),
+            current_text: String::new(),
             field_type: text_field_type,
         }
     }
@@ -119,11 +121,11 @@ impl NativeTextField {
 
     pub fn current_text_mut(&mut self, f: impl FnOnce(&mut String) -> bool) {
         if f(&mut self.current_text) {
-            self.set_text(self.current_text.clone());
+            self.set_text(&self.current_text);
         }
     }
 
-    pub fn set_text(&self, text: String) {
+    pub fn set_text(&self, text: &str) {
         self.webview
             .view
             .evaluate_script(&format!("set_text(\"{}\")", text.replace('\"', "\\\"")))

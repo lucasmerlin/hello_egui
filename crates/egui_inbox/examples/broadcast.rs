@@ -23,7 +23,7 @@ impl AuthUi {
     fn ui(&mut self, ui: &mut egui::Ui) {
         let mut logout = false;
         if let Some(user) = &self.logged_in_as {
-            ui.label(format!("Logged in as: {}", user));
+            ui.label(format!("Logged in as: {user}"));
             if ui.button("Log out").clicked() {
                 self.app_state
                     .auth_broadcast

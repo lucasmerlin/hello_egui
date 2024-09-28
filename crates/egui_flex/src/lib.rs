@@ -2,8 +2,8 @@ pub mod flex_widget;
 
 use crate::flex_widget::FlexWidget;
 use egui::{
-    Align, Align2, Context, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense,
-    Ui, UiBuilder, Vec2, Widget,
+    Align, Align2, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense, Ui,
+    UiBuilder, Vec2, Widget,
 };
 use std::mem;
 
@@ -71,7 +71,7 @@ impl Default for Flex {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct FlexItem {
     grow: Option<f32>,
     basis: Option<f32>,
@@ -99,7 +99,7 @@ impl FlexItem {
         self
     }
 
-    /// If align_self is stretch, how do we align the content?
+    /// If `align_self` is stretch, how do we align the content?
     pub fn align_self_content(mut self, align_self_content: Align2) -> Self {
         self.align_content = Some(align_self_content);
         self
@@ -191,15 +191,10 @@ impl Flex {
 
             // We ceil in order to prevent rounding errors to wrap the layout unexpectedly
             let available_size = target_size.unwrap_or(ui.available_size()).ceil();
-            let direction = if ui.layout().main_dir().is_horizontal() {
-                0
-            } else {
-                1
-            };
+            let direction = usize::from(!ui.layout().main_dir().is_horizontal());
             let cross_direction = 1 - direction;
 
             let rows = self.layout_rows(
-                ui.ctx(),
                 &previous_state,
                 available_size,
                 gap,
@@ -207,26 +202,9 @@ impl Flex {
                 ui.min_rect().min,
             );
 
-            // for row in &rows {
-            //     ui.ctx().debug_painter().debug_rect(
-            //         row.rect.unwrap(),
-            //         egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
-            //         format!("row"),
-            //     );
-            // }
-
             let max_item_size = max_item_size.unwrap_or(ui.available_size());
-            let min_size_rows = self.layout_rows(
-                ui.ctx(),
-                &previous_state,
-                max_item_size,
-                gap,
-                direction,
-                ui.min_rect().min,
-            );
 
             let mut instance = FlexInstance {
-                current_index: 0,
                 current_row: 0,
                 current_row_index: 0,
                 flex: &self,
@@ -235,7 +213,7 @@ impl Flex {
                     max_item_size,
                 },
                 direction,
-                row_ui: FlexInstance::row_ui(ui, rows.first(), direction),
+                row_ui: FlexInstance::row_ui(ui, rows.first()),
                 ui,
                 rows,
                 max_item_size,
@@ -269,15 +247,6 @@ impl Flex {
             // });
 
             if previous_state != instance.state {
-                // println!("State changed");
-                // for i in 0..instance.state.items.len() {
-                //     if let Some(prev_item) = previous_state.items.get(i) {
-                //         let item = &instance.state.items[i];
-                //         if prev_item != item {
-                //             dbg!(i, prev_item, item);
-                //         }
-                //     }
-                // }
                 instance
                     .ui
                     .ctx()
@@ -302,7 +271,6 @@ impl Flex {
 
     fn layout_rows(
         &self,
-        ctx: &Context,
         state: &FlexState,
         available_size: Vec2,
         gap: Vec2,
@@ -320,8 +288,9 @@ impl Flex {
             let item_length = item
                 .config
                 .basis
-                .map(|basis| basis + item.margin.sum()[direction])
-                .unwrap_or(item.size_with_margin[direction]);
+                .map_or(item.size_with_margin[direction], |basis| {
+                    basis + item.margin.sum()[direction]
+                });
 
             if item_length + gap_direction + current_row.total_size > available_length
                 && !current_row.items.is_empty()
@@ -364,7 +333,7 @@ impl Flex {
 
         let mut row_position = min_position;
 
-        for (i, row) in rows.iter_mut().enumerate() {
+        for row in &mut rows {
             let mut row_size = Vec2::ZERO;
             row_size[direction] = available_length;
             row_size[cross_direction] = row.cross_size + extra_cross_space_per_row;
@@ -375,12 +344,6 @@ impl Flex {
             row.cross_size_with_extra_space = row_size[cross_direction];
             row.rect = Some(Rect::from_min_size(row_position, row_size));
 
-            // ctx.debug_painter().debug_rect(
-            //     row.rect.unwrap(),
-            //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
-            //     format!("row {}", i),
-            // );
-
             row_position[cross_direction] += row_size[cross_direction] + gap[cross_direction];
 
             row.extra_space = available_length - row.total_size;
@@ -388,10 +351,10 @@ impl Flex {
         rows
     }
 
-    /// Show the flex ui. It will try to stay within Ui::max_rect.
+    /// Show the flex ui. It will try to stay within `Ui::max_rect`.
     ///
-    /// Note: You will likely get weird results when showing this within a Ui::horizontal layout,
-    /// since it limits the max_rect to some small value. Use Ui::horizontal_top instead.
+    /// Note: You will likely get weird results when showing this within a `Ui::horizontal` layout,
+    /// since it limits the `max_rect` to some small value. Use `Ui::horizontal_top` instead.
     pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> InnerResponse<R> {
         self.show_inside(ui, None, None, f).1
     }
@@ -427,7 +390,6 @@ struct FlexState {
 
 pub struct FlexInstance<'a> {
     flex: &'a Flex,
-    current_index: usize,
     current_row: usize,
     current_row_index: usize,
     state: FlexState,
@@ -442,26 +404,10 @@ pub struct FlexInstance<'a> {
 }
 
 impl<'a> FlexInstance<'a> {
-    fn row_ui(parent: &mut Ui, row: Option<&RowData>, direction: usize) -> Ui {
-        let mut rect = row
-            .map(|row| row.rect.unwrap())
-            .unwrap_or(parent.max_rect());
-        let child = parent.new_child(UiBuilder::new().max_rect(rect));
+    fn row_ui(parent: &mut Ui, row: Option<&RowData>) -> Ui {
+        let rect = row.map_or(parent.max_rect(), |row| row.rect.unwrap());
 
-        // parent.ctx().debug_painter().debug_rect(
-        //     rect,
-        //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
-        //     format!("row {}", 0),
-        // );
-        // parent.ctx().debug_painter().debug_rect(
-        //     rect,
-        //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 255),
-        //     format!("row"),
-        // );
-
-        // child.set_width(child.available_width());
-        // child.set_height(child.available_height());
-        child
+        parent.new_child(UiBuilder::new().max_rect(rect))
     }
 
     pub fn direction(&self) -> FlexDirection {
@@ -480,6 +426,7 @@ impl<'a> FlexInstance<'a> {
         self.ui
     }
 
+    #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
     pub fn add_container<R>(
         &mut self,
         item: FlexItem,
@@ -493,12 +440,6 @@ impl<'a> FlexInstance<'a> {
         };
 
         let row = self.rows.get_mut(self.current_row);
-        //
-        // self.row_ui.ctx().debug_painter().debug_rect(
-        //     self.row_ui.min_rect(),
-        //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
-        //     format!("row {}", self.current_row),
-        // );
 
         let res = self.row_ui.scope(|ui| {
             let res = if let Some(row) = row {
@@ -533,10 +474,6 @@ impl<'a> FlexInstance<'a> {
                     total_size[self.direction] =
                         f32::min(total_size[self.direction], available_size[self.direction]);
                 }
-                // total_size[1 - self.direction] = f32::min(
-                //     total_size[1 - self.direction],
-                //     available_size[1 - self.direction],
-                // );
 
                 let align = item.align_self.unwrap_or_default();
 
@@ -598,33 +535,17 @@ impl<'a> FlexInstance<'a> {
                     );
                 }
 
-                // ui.ctx().debug_painter().debug_rect(
-                //     frame_rect,
-                //     egui::Color32::from_rgba_unmultiplied(255, 0, 0, 128),
-                //     format!("frame_rect {}", self.current_index),
-                // );
-                //
-                // if item.basis.is_some() {
-                // ui.ctx().debug_painter().debug_rect(
-                //     content_rect,
-                //     egui::Color32::from_rgba_unmultiplied(0, 255, 0, 128),
-                //     format!("{}", self.current_index),
-                // );
-                // }
-
-                let mut child_ui = ui.child_ui(frame_rect, *ui.layout(), None);
+                let mut child_ui =
+                    ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
                 child_ui.spacing_mut().item_spacing = self.item_spacing;
 
                 let res = container_ui(
                     &mut child_ui,
                     FlexContainerUi {
                         direction: self.direction,
-                        extra_length,
-                        basis: item.basis,
                         content_rect,
                         frame_rect,
                         margin: item_state.margin,
-                        parent_min_rect,
                         max_item_size: max_content_size,
                         // If the available space grows we want to remeasure the widget, in case
                         // it's wrapped so it can un-wrap
@@ -635,11 +556,6 @@ impl<'a> FlexInstance<'a> {
                     },
                 );
                 let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
-                // ui.ctx().debug_painter().debug_rect(
-                //     ui.min_rect(),
-                //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 128),
-                //     format!("allocated {}", self.current_index),
-                // );
 
                 (res, row.items.len(), frame_rect)
             } else {
@@ -651,12 +567,9 @@ impl<'a> FlexInstance<'a> {
                     ui,
                     FlexContainerUi {
                         direction: self.direction,
-                        extra_length: 0.0,
-                        basis: item.basis,
                         content_rect: rect,
                         frame_rect: rect,
                         margin: Margin::ZERO,
-                        parent_min_rect: rect,
                         max_item_size: self.max_item_size,
                         remeasure_widget: false,
                         last_inner_size: None,
@@ -700,8 +613,7 @@ impl<'a> FlexInstance<'a> {
         if self.current_row_index >= row_len {
             self.current_row += 1;
             self.current_row_index = 0;
-            self.row_ui =
-                FlexInstance::row_ui(self.ui, self.rows.get(self.current_row), self.direction);
+            self.row_ui = FlexInstance::row_ui(self.ui, self.rows.get(self.current_row));
         }
 
         InnerResponse::new(inner, res.response)
@@ -784,12 +696,9 @@ impl<'a> FlexInstance<'a> {
 
 pub struct FlexContainerUi {
     direction: usize,
-    basis: Option<f32>,
-    extra_length: f32,
     content_rect: Rect,
     frame_rect: Rect,
     margin: Margin,
-    parent_min_rect: Rect,
     max_item_size: Vec2,
     remeasure_widget: bool,
     last_inner_size: Option<Vec2>,
@@ -824,16 +733,10 @@ impl FlexContainerUi {
         content: impl FnOnce(&mut Ui) -> R,
     ) -> FlexContainerResponse<R> {
         let Self {
-            direction,
-            extra_length,
-            basis,
             content_rect,
             frame_rect,
             margin,
-            parent_min_rect,
-            max_item_size,
-            remeasure_widget: _,
-            last_inner_size: _,
+            ..
         } = self;
 
         // We will assume that the margin is symmetrical
@@ -841,19 +744,11 @@ impl FlexContainerUi {
 
         let child_rect = content_rect.intersect(ui.max_rect());
 
-        let mut child = ui.child_ui(child_rect, *ui.layout(), None);
+        let mut child = ui.new_child(UiBuilder::new().max_rect(child_rect));
 
         let r = content(&mut child);
 
         let child_min_rect = child.min_rect();
-
-        // let mut extended_size = child_min_rect.size();
-        // if let Some(basis) = basis {
-        //     extended_size[direction] = basis;
-        // }
-        // extended_size[direction] += extra_length;
-        //
-        // ui.allocate_exact_size(extended_size, Sense::hover());
 
         ui.allocate_exact_size(
             Vec2::max(frame_rect.size() - margin.sum(), Vec2::ZERO),
@@ -878,22 +773,13 @@ impl FlexContainerUi {
         flex: Flex,
         content: impl FnOnce(&mut FlexInstance) -> R,
     ) -> FlexContainerResponse<R> {
-        // ui.ctx().debug_painter().debug_rect(
-        //     self.frame_rect,
-        //     egui::Color32::from_rgba_unmultiplied(0, 0, 255, 128),
-        //     format!("frame_rect"),
-        // );
         let Self {
-            direction,
-            basis,
-            extra_length,
-            content_rect,
             frame_rect,
             margin,
-            parent_min_rect,
             max_item_size,
             remeasure_widget: _,
             last_inner_size: _,
+            ..
         } = self;
 
         // We will assume that the margin is symmetrical
@@ -928,7 +814,6 @@ impl FlexContainerUi {
         widget: impl Widget,
     ) -> FlexContainerResponse<Response> {
         let margin_top_left = ui.min_rect().min - self.frame_rect.min;
-        let available_size = ui.available_size();
 
         let response = if self.remeasure_widget {
             ui.ctx().request_discard("Flex item remeasure");
@@ -963,9 +848,6 @@ impl FlexContainerUi {
         if remeasure_widget {
             ui.ctx().request_repaint();
             ui.ctx().request_discard("Triggering flex item remeasure");
-
-            // dbg!(available_size);
-            // dbg!(intrinsic_size.round(), self.last_inner_size);
         }
 
         FlexContainerResponse {

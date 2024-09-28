@@ -15,3 +15,6 @@ egui.workspace = true
 eframe = { workspace = true, default-features = true }
 egui_inbox.workspace = true
 ehttp = "0.5.0"
+
+[lints]
+workspace = true

@@ -37,3 +37,6 @@ eframe = { workspace = true, default-features = true }
 rand = "0.8"
 
 tokio = { version = "1", features = ["full"] }
+
+[lints]
+workspace = true

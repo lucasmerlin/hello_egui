@@ -1,8 +1,8 @@
 use crate::TransitionConfig;
-use egui::{Id, Ui, Vec2};
+use egui::{Id, Ui, UiBuilder, Vec2};
 
 /// Trait for declaring a transition.
-/// Prefer [ComposableTransitionTrait] unless you need to create a new ui to apply the transition.
+/// Prefer [`ComposableTransitionTrait`] unless you need to create a new ui to apply the transition.
 pub trait TransitionTrait {
     /// Create a child ui with the transition applied
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui;
@@ -16,7 +16,7 @@ pub trait ComposableTransitionTrait {
 
 impl<T: ComposableTransitionTrait> TransitionTrait for T {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut child = ui.child_ui_with_id_source(ui.max_rect(), *ui.layout(), with_id, None);
+        let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()).id_salt(with_id));
         self.apply(&mut child, t);
         child
     }
@@ -59,7 +59,7 @@ pub struct NoTransition;
 /// Slide transition
 #[derive(Debug, Clone)]
 pub struct SlideTransition {
-    /// Amount and direction to slide. Default is [Vec2::X] (so it will slide in from the right)
+    /// Amount and direction to slide. Default is [`Vec2::X`] (so it will slide in from the right)
     pub amount: Vec2,
 }
 
@@ -74,7 +74,7 @@ impl Default for SlideTransition {
 }
 
 impl SlideTransition {
-    /// Create a new slide transition. Default is [Vec2::X] (so it will slide in from the right)
+    /// Create a new slide transition. Default is [`Vec2::X`] (so it will slide in from the right)
     pub fn new(amount: Vec2) -> Self {
         Self { amount }
     }
@@ -96,7 +96,7 @@ impl TransitionTrait for SlideTransition {
         let offset = available_size * (1.0 - t) * self.amount;
         let child_rect = ui.max_rect().translate(offset);
 
-        ui.child_ui_with_id_source(child_rect, *ui.layout(), with_id, None)
+        ui.new_child(UiBuilder::new().max_rect(child_rect).id_salt(with_id))
     }
 }
 
@@ -139,14 +139,14 @@ pub enum TransitionType {
     /// Forward transition
     Forward {
         /// Will be applied to the page that is being navigated to
-        _in: Transition,
+        in_: Transition,
         /// Will be applied to the page that is being navigated from
         out: Transition,
     },
     /// Backward transition (will play the out transition in reverse)
     Backward {
         /// Will be applied to the page that is being navigated to
-        _in: Transition,
+        in_: Transition,
         /// Will be applied to the page that is being navigated from
         out: Transition,
     },
@@ -156,7 +156,7 @@ pub(crate) struct ActiveTransition {
     duration: Option<f32>,
     progress: f32,
     easing: fn(f32) -> f32,
-    _in: Transition,
+    in_: Transition,
     out: Transition,
     backward: bool,
 }
@@ -172,7 +172,7 @@ impl ActiveTransition {
             duration: config.duration,
             easing: config.easing,
             progress: 0.0,
-            _in: config._in,
+            in_: config.in_,
             out: config.out,
             backward: false,
         }
@@ -183,7 +183,7 @@ impl ActiveTransition {
             duration: config.duration,
             easing: config.easing,
             progress: 0.0,
-            _in: config._in,
+            in_: config.in_,
             out: config.out,
             backward: true,
         }
@@ -210,7 +210,27 @@ impl ActiveTransition {
         let t = self.progress.min(1.0);
         ui.ctx().request_repaint();
 
-        if !self.backward {
+        if self.backward {
+            with_temp_auto_id(ui, in_id, |ui| {
+                let mut out_ui = self.out.create_child_ui(
+                    ui,
+                    (self.easing)(t),
+                    Id::new("router_child").with(in_id),
+                );
+                content_in(&mut out_ui, state);
+            });
+
+            if let Some((out_id, content_out)) = content_out {
+                with_temp_auto_id(ui, out_id, |ui| {
+                    let mut in_ui = self.in_.create_child_ui(
+                        ui,
+                        (self.easing)(1.0 - t),
+                        Id::new("router_child").with(out_id),
+                    );
+                    content_out(&mut in_ui, state);
+                });
+            }
+        } else {
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
@@ -223,33 +243,13 @@ impl ActiveTransition {
             }
 
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui = self._in.create_child_ui(
+                let mut in_ui = self.in_.create_child_ui(
                     ui,
                     (self.easing)(t),
                     Id::new("router_child").with(in_id),
                 );
                 content_in(&mut in_ui, state);
             });
-        } else {
-            with_temp_auto_id(ui, in_id, |ui| {
-                let mut out_ui = self.out.create_child_ui(
-                    ui,
-                    (self.easing)(t),
-                    Id::new("router_child").with(in_id),
-                );
-                content_in(&mut out_ui, state);
-            });
-
-            if let Some((out_id, content_out)) = content_out {
-                with_temp_auto_id(ui, out_id, |ui| {
-                    let mut in_ui = self._in.create_child_ui(
-                        ui,
-                        (self.easing)(1.0 - t),
-                        Id::new("router_child").with(out_id),
-                    );
-                    content_out(&mut in_ui, state);
-                });
-            }
         }
 
         if self.progress >= 1.0 {
@@ -261,11 +261,10 @@ impl ActiveTransition {
 
     pub fn show_default(ui: &mut Ui, with_id: usize, content: impl FnOnce(&mut Ui)) {
         with_temp_auto_id(ui, with_id, |ui| {
-            let mut ui = ui.child_ui_with_id_source(
-                ui.max_rect(),
-                *ui.layout(),
-                Id::new("router_child").with(with_id),
-                None,
+            let mut ui = ui.new_child(
+                UiBuilder::new()
+                    .max_rect(ui.max_rect())
+                    .id_salt(Id::new("router_child").with(with_id)),
             );
             content(&mut ui);
         });

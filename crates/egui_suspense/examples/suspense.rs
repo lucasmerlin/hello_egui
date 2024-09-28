@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Window};
 
 use egui_suspense::EguiSuspense;
@@ -8,7 +8,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Suspense Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 Window::new("Main Window").show(ui.ctx(), |ui| {
@@ -42,7 +42,7 @@ pub fn main() -> eframe::Result<()> {
                 suspenses.iter_mut().enumerate().for_each(|(i, suspense)| {
                     Window::new(i.to_string()).show(ui.ctx(), |ui| {
                         suspense.ui(ui, |ui, data, _state| {
-                            ui.label(format!("Data: {:?}", data));
+                            ui.label(format!("Data: {data:?}"));
                         });
                     });
                 });

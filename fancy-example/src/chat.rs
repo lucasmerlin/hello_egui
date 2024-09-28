@@ -4,7 +4,8 @@ use std::time::Duration;
 
 use eframe::emath::Vec2;
 use egui::{
-    Align, Frame, Label, Layout, Rect, RichText, Rounding, ScrollArea, Shape, Stroke, Ui, Widget,
+    Align, Frame, Label, Layout, Rect, RichText, Rounding, ScrollArea, Shape, Stroke, Ui,
+    UiBuilder, Widget,
 };
 
 use egui_animation::animate_continuous;
@@ -147,6 +148,7 @@ impl ChatExample {
         }
     }
 
+    #[allow(clippy::too_many_lines)] // It's an example
     pub fn ui(&mut self, ui: &mut Ui, shared_state: &SharedState) {
         if !self.shown {
             self.shown = true;
@@ -211,7 +213,7 @@ impl ChatExample {
                                 // chat bubble layout where the own bubbles are right-aligned and
                                 // the text within is left-aligned.
                                 let (_pos, galley, _response) = label.layout_in_ui(
-                                    &mut ui.child_ui(ui.max_rect(), *ui.layout(), None),
+                                    &mut ui.new_child(UiBuilder::new().max_rect(ui.max_rect())),
                                 );
                                 let rect = galley.rect;
                                 // Calculate the width of the frame based on the width of
@@ -273,17 +275,7 @@ impl ChatExample {
                                 })
                                 .response;
 
-                            let points = if !is_message_from_myself {
-                                let top = response.rect.left_top() + Vec2::splat(margin);
-                                let arrow_rect =
-                                    Rect::from_two_pos(top, top + Vec2::new(-rounding, rounding));
-
-                                vec![
-                                    arrow_rect.left_top(),
-                                    arrow_rect.right_top(),
-                                    arrow_rect.right_bottom(),
-                                ]
-                            } else {
+                            let points = if is_message_from_myself {
                                 let top = response.rect.right_top() + Vec2::new(-margin, margin);
                                 let arrow_rect =
                                     Rect::from_two_pos(top, top + Vec2::new(rounding, rounding));
@@ -292,6 +284,16 @@ impl ChatExample {
                                     arrow_rect.left_top(),
                                     arrow_rect.right_top(),
                                     arrow_rect.left_bottom(),
+                                ]
+                            } else {
+                                let top = response.rect.left_top() + Vec2::splat(margin);
+                                let arrow_rect =
+                                    Rect::from_two_pos(top, top + Vec2::new(-rounding, rounding));
+
+                                vec![
+                                    arrow_rect.left_top(),
+                                    arrow_rect.right_top(),
+                                    arrow_rect.right_bottom(),
                                 ]
                             };
 
@@ -346,6 +348,6 @@ impl ChatExample {
 
 impl ExampleTrait for ChatExample {
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        self.ui(ui, shared_state)
+        self.ui(ui, shared_state);
     }
 }

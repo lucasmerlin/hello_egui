@@ -1,3 +1,4 @@
+use eframe::NativeOptions;
 use egui::CentralPanel;
 use egui_suspense::EguiSuspense;
 use futures::TryFutureExt;
@@ -5,20 +6,20 @@ use futures::TryFutureExt;
 #[tokio::main]
 async fn main() -> eframe::Result<()> {
     let mut timezones: EguiSuspense<Vec<String>, _> = EguiSuspense::reloadable_async(|| {
-        reqwest::get("https://worldtimeapi.org/api/timezone").and_then(|r| r.json())
+        reqwest::get("https://worldtimeapi.org/api/timezone").and_then(reqwest::Response::json)
     });
 
     let mut suspense = EguiSuspense::reloadable_async(|| {
-        reqwest::get("https://worldtimeapi.org/api/ip").and_then(|r| r.text())
+        reqwest::get("https://worldtimeapi.org/api/ip").and_then(reqwest::Response::text)
     });
 
     eframe::run_simple_native(
         "Suspense Async Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 timezones.ui(ui, |ui, data, state| {
-                    ui.label(format!("Timezones: {:?}", data));
+                    ui.label(format!("Timezones: {data:?}"));
                     if ui.button("Reload").clicked() {
                         state.reload();
                     }
@@ -28,7 +29,7 @@ async fn main() -> eframe::Result<()> {
                     if ui.button("Reload").clicked() {
                         state.reload();
                     }
-                    ui.label(format!("Data: {:?}", data));
+                    ui.label(format!("Data: {data:?}"));
                 });
             });
         },

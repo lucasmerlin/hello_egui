@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 
 use egui::{CentralPanel, Frame, Label, ScrollArea, TopBottomPanel, Ui, Vec2, Widget};
 use egui_dnd::dnd;
@@ -10,7 +10,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
                 ui.horizontal(|ui| {

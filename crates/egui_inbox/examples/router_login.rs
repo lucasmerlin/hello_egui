@@ -2,14 +2,14 @@
 /// utilizing the `TypeInbox` as a message passing system between independent components.
 ///
 /// The `TypeInbox` can be utilized as a application wide message bus, where components can send messages
-/// to each other, without the AppState even having to know about any of the message types.
+/// to each other, without the `AppState` even having to know about any of the message types.
 ///
 /// The individual components could be in seperate modules or even seperate crates, with the messages and
 /// events being defined in a shared crate.
 use std::sync::Arc;
 
 use derive_new::new;
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{vec2, Area, CentralPanel, Context, Id, Ui, Window};
 use parking_lot::Mutex;
 
@@ -54,7 +54,7 @@ struct AppState {
 mod home {
     use derive_new::new;
 
-    use crate::*;
+    use crate::{AppState, AuthMessage, RouterMessage, Ui};
 
     #[derive(new)]
     pub struct HomeUi {
@@ -83,7 +83,9 @@ mod home {
 mod dashboard {
     use derive_new::new;
 
-    use crate::*;
+    use crate::{
+        AppState, AuthEvent, AuthMessage, BroadcastReceiver, Context, RouterMessage, Ui, UiInbox,
+    };
 
     #[derive(new)]
     pub struct DashboardUi {
@@ -123,10 +125,10 @@ mod dashboard {
             let user = self.app_state.auth.lock();
 
             if let Some(user) = user.as_ref() {
-                ui.label(format!("Welcome, {}!", user));
+                ui.label(format!("Welcome, {user}!"));
 
                 if let Some(lucky_number) = self.lucky_number {
-                    ui.label(format!("Your lucky number is: {}", lucky_number));
+                    ui.label(format!("Your lucky number is: {lucky_number}"));
                 } else {
                     ui.label("Our magicians are still calculating your lucky number...");
                     ui.spinner();
@@ -147,7 +149,7 @@ mod dashboard {
 mod auth {
     use derive_new::new;
 
-    use crate::*;
+    use crate::{egui, AppState, AuthEvent, AuthMessage, Context, RouterMessage, Window};
 
     #[derive(new)]
     pub struct AuthDialog {
@@ -249,11 +251,11 @@ fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             let (state, auth, router, auth_rx) = state.get_or_insert_with(|| {
                 let state = AppState {
-                    inbox: TypeInbox::new(ctx.clone()),
+                    inbox: TypeInbox::new(ctx),
                     auth: Arc::new(Mutex::new(None)),
                     broadcast: TypeBroadcast::new(),
                 };

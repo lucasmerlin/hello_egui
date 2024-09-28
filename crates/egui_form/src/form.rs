@@ -31,9 +31,9 @@ impl<R: EguiValidationReport> Form<R> {
     }
 
     /// Add a validation report to the form.
-    /// This will be either a [crate::validator::ValidatorReport] or a [crate::garde::GardeReport].
+    /// This will be either a [`crate::validator::ValidatorReport`] or a [`crate::garde::GardeReport`].
     /// You can add multiple reports to the form.
-    /// You can also pass a custom Report for your own validation logic, if you implement [EguiValidationReport] for it.
+    /// You can also pass a custom Report for your own validation logic, if you implement [`EguiValidationReport`] for it.
     pub fn add_report(mut self, value: R) -> Self {
         self.validation_results.push(value);
         self
@@ -43,7 +43,7 @@ impl<R: EguiValidationReport> Form<R> {
     /// You usually pass this a button response.
     /// If this function returns Some(Ok(_)), the form data can be submitted.
     ///
-    /// You can also use [EguiValidationReport::try_submit] directly.
+    /// You can also use [`EguiValidationReport::try_submit`] directly.
     pub fn handle_submit(
         &mut self,
         response: &Response,
@@ -62,7 +62,7 @@ impl<R: EguiValidationReport> Form<R> {
         let has_errors = self
             .validation_results
             .iter()
-            .any(|errors| errors.has_errors());
+            .any(super::validation_report::EguiValidationReport::has_errors);
         if has_errors {
             ui.memory_mut(|mem| {
                 for control in &self.controls {

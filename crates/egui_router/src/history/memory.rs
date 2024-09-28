@@ -2,7 +2,7 @@ use crate::history::{History, HistoryEvent, HistoryResult};
 use egui::Context;
 use std::iter;
 
-/// A memory history implementation. Currently, this is a no-op, since [EguiRouter] stores the
+/// A memory history implementation. Currently, this is a no-op, since [`EguiRouter`] stores the
 /// history itself, but this could change in the future.
 #[derive(Debug, Clone, Default)]
 pub struct MemoryHistory {}

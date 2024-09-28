@@ -31,7 +31,7 @@ mod types {
     pub type ReloadFnRef<'a> = &'a mut (dyn FnMut() + Send + Sync);
 }
 
-use types::*;
+use types::{ErrorUiFn, LoadingUiFn, ReloadFn, ReloadFnRef};
 
 /// Helper struct to call the reload function.
 pub struct State<'a> {
@@ -262,7 +262,7 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
     }
 
     /// Reload the data.
-    /// If this is a [Self::single_try], this does nothing.
+    /// If this is a [`Self::single_try`], this does nothing.
     pub fn reload(&mut self) {
         if let Some(reload_fn) = &mut self.reload_fn {
             self.data = None;
@@ -280,7 +280,9 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
 
     /// Returns true if the data failed to load.
     pub fn has_error(&self) -> bool {
-        self.data.as_ref().map(|r| r.is_err()).unwrap_or(false)
+        self.data
+            .as_ref()
+            .map_or(false, std::result::Result::is_err)
     }
 
     /// Returns the data if it is loaded.

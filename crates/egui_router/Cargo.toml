@@ -32,7 +32,11 @@ thiserror = "1"
 form_urlencoded = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3", features = ["History", "PopStateEvent", "HtmlCollection"] }
+web-sys = { version = "0.3", features = [
+    "History",
+    "PopStateEvent",
+    "HtmlCollection",
+] }
 js-sys = "0.3"
 wasm-bindgen = "0.2"
 
@@ -42,3 +46,6 @@ eframe = { workspace = true, default-features = true }
 egui_animation = { workspace = true }
 tokio = { version = "1", features = ["full"] }
 egui_suspense = { workspace = true, features = ["async", "tokio"] }
+
+[lints]
+workspace = true

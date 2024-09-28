@@ -23,8 +23,11 @@ pub trait FlexWidget {
 }
 
 mod egui_widgets {
-    use super::*;
-    use egui::widgets::*;
+    use super::{FlexContainerResponse, FlexContainerUi, FlexWidget, Ui};
+    use egui::widgets::{
+        Button, Checkbox, DragValue, Hyperlink, Image, ImageButton, Label, Link, ProgressBar,
+        RadioButton, SelectableLabel, Slider, Spinner, TextEdit,
+    };
     macro_rules! impl_widget {
         ($($widget:ty),*) => {
             $(

@@ -9,7 +9,7 @@ impl Vec2 {
         Self { x, y }
     }
 
-    pub fn dist(&self, other: &Vec2) -> f32 {
+    pub fn dist(self, other: Vec2) -> f32 {
         ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
 
@@ -32,7 +32,7 @@ impl Spline {
         let mut total_length = 0.0;
         for (i, point) in points.iter().enumerate() {
             if i > 0 {
-                let length = point.dist(&points[i - 1]);
+                let length = point.dist(points[i - 1]);
                 lengths.push(length);
                 total_length += length;
             }
@@ -47,7 +47,7 @@ impl Spline {
 
     pub fn add_point(&mut self, point: Vec2) {
         if let Some(prev) = self.prev {
-            let length = point.dist(&prev);
+            let length = point.dist(prev);
             self.lengths.push(length);
             self.total_length += length;
             self.points.push(point);

@@ -24,7 +24,7 @@ impl<T: Hash> DragDropItem for T {
 
 /// An instruction in what order to update the source list.
 /// The item at from should be removed from the list and inserted at to.
-/// You can use [shift_vec] to do this for a Vec.
+/// You can use [`shift_vec`] to do this for a Vec.
 #[derive(Debug, Clone)]
 pub struct DragUpdate {
     /// Index of the item to move
@@ -34,13 +34,13 @@ pub struct DragUpdate {
 }
 
 /// Response containing state of the drag & drop list and a potential update to the source list.
-/// The update can be applied immediately or at latest when [DragDropResponse::is_drag_finished] returns true.
+/// The update can be applied immediately or at latest when [`DragDropResponse::is_drag_finished`] returns true.
 #[derive(Debug, Clone)]
 pub struct DragDropResponse {
     state: DragDetectionState,
     /// Contains ongoing information about which index is currently being dragged where.
     /// You can use this to consistently update the source list while the drag & drop event is ongoing.
-    /// If you only want to update the source list when the drag & drop event has finished, use [DragDropResponse::final_update] instead.
+    /// If you only want to update the source list when the drag & drop event has finished, use [`DragDropResponse::final_update`] instead.
     pub update: Option<DragUpdate>,
     finished: bool,
     cancellation_reason: Option<&'static str>,
@@ -49,22 +49,26 @@ pub struct DragDropResponse {
 
 impl DragDropResponse {
     /// Returns true if we are currently evaluating whether a drag should be started.
+    #[must_use]
     pub fn is_evaluating_drag(&self) -> bool {
         self.state.is_evaluating_drag()
     }
 
     /// Returns true if we are currently dragging an item.
+    #[must_use]
     pub fn is_dragging(&self) -> bool {
         self.state.is_dragging()
     }
 
     /// Returns the id of the item that is currently being dragged.
+    #[must_use]
     pub fn dragged_item_id(&self) -> Option<Id> {
         self.state.dragged_item()
     }
 
     /// Returns true if the drag & drop event has finished and the item has been dropped.
     /// The update should be applied to the source list.
+    #[must_use]
     pub fn is_drag_finished(&self) -> bool {
         self.finished
     }
@@ -81,6 +85,7 @@ impl DragDropResponse {
 
     /// Returns the update if the drag & drop event has finished and the item has been dropped.
     /// Useful for the if let syntax.
+    #[must_use]
     pub fn final_update(&self) -> Option<DragUpdate> {
         if self.finished {
             self.update.clone()
@@ -90,13 +95,14 @@ impl DragDropResponse {
     }
 
     /// Returns a [Option<&str>] with the reason if a drag & drop event was cancelled.
+    #[must_use]
     pub fn cancellation_reason(&self) -> Option<&'static str> {
         self.cancellation_reason
     }
 }
 
 /// Holds the data needed to draw the floating item while it is being dragged
-/// Deprecated: Use [crate::dnd] or [crate::Dnd::new] instead
+/// Deprecated: Use [`crate::dnd`] or [`crate::Dnd::new`] instead
 #[derive(Clone, Debug)]
 pub struct DragDropUi {
     pub(crate) detection_state: DragDetectionState,
@@ -119,7 +125,7 @@ impl Default for DragDropUi {
     }
 }
 
-/// [Handle::ui] is used to draw the drag handle
+/// [`Handle::ui`] is used to draw the drag handle
 pub struct Handle<'a> {
     id: Id,
     idx: usize,
@@ -187,12 +193,12 @@ impl DragDetectionState {
 
     pub(crate) fn dragged_item_size(&self) -> Option<Vec2> {
         match self {
-            DragDetectionState::Dragging {
-                dragged_item_size, ..
-            } => Some(*dragged_item_size),
             DragDetectionState::TransitioningBackAfterDragFinished {
                 dragged_item_size: Some(dragged_item_size),
                 ..
+            }
+            | DragDetectionState::Dragging {
+                dragged_item_size, ..
             } => Some(*dragged_item_size),
             _ => None,
         }
@@ -229,10 +235,11 @@ impl<'a> Handle<'a> {
         }
     }
 
-    /// You can add [Sense::click] if you want to listen for clicks on the handle
+    /// You can add [`Sense::click`] if you want to listen for clicks on the handle
     /// **Warning**: This will make anything sensing clicks in the handle not draggable
     /// Make sure to not set this if your handle consists of a single button, and directly
     /// query the button for clicks.
+    #[must_use]
     pub fn sense(mut self, sense: Sense) -> Self {
         self.sense = Some(sense);
         self
@@ -240,6 +247,7 @@ impl<'a> Handle<'a> {
 
     /// If `true`, the cursor will change to a grab cursor when hovering over the handle
     /// This is `true` by default
+    #[must_use]
     pub fn show_drag_cursor_on_hover(mut self, show: bool) -> Self {
         self.show_drag_cursor_on_hover = show;
         self
@@ -248,13 +256,14 @@ impl<'a> Handle<'a> {
     /// By default, selectable labels are disabled in the handle, to not interfere with dragging.
     /// You can use this to re-enable them.
     /// Note that if you disable selectable labels globally, this won't have any effect.
+    #[must_use]
     pub fn enable_selectable_labels(mut self) -> Self {
         self.disable_selectable_labels = false;
         self
     }
 
-    /// Draw the drag handle. Use [Handle::sense] to add a click sense.
-    /// You can also add buttons in the handle, but they won't be interactive if you pass Sense::click
+    /// Draw the drag handle. Use [`Handle::sense`] to add a click sense.
+    /// You can also add buttons in the handle, but they won't be interactive if you pass `Sense::click`
     pub fn ui(mut self, ui: &mut Ui, contents: impl FnOnce(&mut Ui)) -> egui::Response {
         let disabled = if self.disable_selectable_labels {
             let interaction = &mut ui.style_mut().interaction;
@@ -279,7 +288,7 @@ impl<'a> Handle<'a> {
         self.handle_response(response.response, ui)
     }
 
-    /// This is useful if you want to sort items in a horizontal_wrapped.
+    /// This is useful if you want to sort items in a `horizontal_wrapped`.
     /// This doesn't create a new scope.
     pub fn ui_sized(
         mut self,
@@ -357,7 +366,7 @@ impl<'a> Handle<'a> {
                 id: self.id,
                 offset,
                 // We set this in the Item
-                dragged_item_size: Default::default(),
+                dragged_item_size: Vec2::default(),
                 closest_item: (self.id, self.item_pos),
                 source_idx: self.idx,
                 hovering_idx: self.idx,
@@ -380,14 +389,14 @@ pub struct DragDropConfig {
     /// How long does the user have to keep pressing until a drag may begin?
     /// This is useful when dragging and dropping on a touch screen in a scrollable area.
     pub drag_delay: Duration,
-    /// How far can the pointer move during the [DragDropConfig::drag_delay] before the drag is cancelled?
+    /// How far can the pointer move during the [`DragDropConfig::drag_delay`] before the drag is cancelled?
     pub scroll_tolerance: Option<f32>,
     /// How far does the pointer have to move before a drag starts?
     /// This is useful when the handle is also a button.
     /// If the pointer is released before this threshold, the drag never starts and the button / handle can be clicked.
-    /// If you want to detect clicks on the handle itself, [Handle::sense] to add a click sense to the handle.
+    /// If you want to detect clicks on the handle itself, [`Handle::sense`] to add a click sense to the handle.
     pub click_tolerance: f32,
-    /// If we have been holding longer than this duration, a drag will be started even if the pointer has not moved above [DragDropConfig::click_tolerance].
+    /// If we have been holding longer than this duration, a drag will be started even if the pointer has not moved above [`DragDropConfig::click_tolerance`].
     pub click_tolerance_timeout: Duration,
 }
 
@@ -399,6 +408,7 @@ impl Default for DragDropConfig {
 
 impl DragDropConfig {
     /// Optimized for mouse usage
+    #[must_use]
     pub fn mouse() -> Self {
         Self {
             click_tolerance: 1.0,
@@ -409,7 +419,8 @@ impl DragDropConfig {
     }
 
     /// Optimized for touch usage in a fixed size area (no scrolling)
-    /// Has a higher click tolerance than [DragDropConfig::mouse]
+    /// Has a higher click tolerance than [`DragDropConfig::mouse`]
+    #[must_use]
     pub fn touch() -> Self {
         Self {
             scroll_tolerance: None,
@@ -420,6 +431,7 @@ impl DragDropConfig {
     }
 
     /// Optimized for touch usage in a scrollable area
+    #[must_use]
     pub fn touch_scroll() -> Self {
         Self {
             scroll_tolerance: Some(6.0),
@@ -430,7 +442,7 @@ impl DragDropConfig {
     }
 }
 
-/// [DragDropUi] stores the state of the Drag & Drop list.
+/// [`DragDropUi`] stores the state of the Drag & Drop list.
 impl DragDropUi {
     /// Sets the config used when dragging with the mouse or when no touch config is set
     pub fn with_mouse_config(mut self, config: DragDropConfig) -> Self {
@@ -440,16 +452,16 @@ impl DragDropUi {
 
     /// Sets the config used when dragging with touch
     /// If None, the mouse config is used instead
-    /// Use [DragDropConfig::touch] or [DragDropConfig::touch_scroll] to get a config optimized for touch
-    /// The default is [DragDropConfig::touch]
-    /// For dragging in a ScrollArea, use [DragDropConfig::touch_scroll]
+    /// Use [`DragDropConfig::touch`] or [`DragDropConfig::touch_scroll`] to get a config optimized for touch
+    /// The default is [`DragDropConfig::touch`]
+    /// For dragging in a `ScrollArea`, use [`DragDropConfig::touch_scroll`]
     pub fn with_touch_config(mut self, config: Option<DragDropConfig>) -> Self {
         self.touch_config = config;
         self
     }
 
     fn config(&self, ui: &Ui) -> &DragDropConfig {
-        if ui.input(|i| i.any_touches()) {
+        if ui.input(egui::InputState::any_touches) {
             self.touch_config.as_ref().unwrap_or(&self.mouse_config)
         } else {
             &self.mouse_config
@@ -457,6 +469,7 @@ impl DragDropUi {
     }
 
     /// Draw the items and handle drag & drop stuff
+    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     pub fn ui(
         &mut self,
         ui: &mut Ui,
@@ -556,7 +569,7 @@ impl DragDropUi {
         };
 
         let pointer_released = ui.input(|i| i.pointer.any_released());
-        let should_update = closest_item.map(|i| i.1.is_some()).unwrap_or(false);
+        let should_update = closest_item.is_some_and(|i| i.1.is_some());
 
         // The cursor is not hovering over any item, so cancel
         if first_frame && !hovering_over_any_handle {
@@ -597,36 +610,34 @@ impl DragDropUi {
             }
         }
 
-        let mut response = if !drag_phase_changed_this_frame {
-            if let DragDetectionState::Dragging {
-                source_idx,
-                hovering_idx,
-                hovering_last_item,
-                ..
-            } = self.detection_state
-            {
-                DragDropResponse {
-                    finished: false,
-                    update: Some(DragUpdate {
-                        from: source_idx,
-                        to: if hovering_last_item {
-                            hovering_idx + 1
-                        } else {
-                            hovering_idx
-                        },
-                    }),
-                    state: self.detection_state.clone(),
-                    cancellation_reason: None,
-                    has_changed: should_update,
-                }
-            } else {
-                DragDropResponse {
-                    finished: false,
-                    update: None,
-                    state: self.detection_state.clone(),
-                    cancellation_reason: None,
-                    has_changed: false,
-                }
+        let mut response = if drag_phase_changed_this_frame {
+            DragDropResponse {
+                finished: false,
+                update: None,
+                state: self.detection_state.clone(),
+                cancellation_reason: None,
+                has_changed: false,
+            }
+        } else if let DragDetectionState::Dragging {
+            source_idx,
+            hovering_idx,
+            hovering_last_item,
+            ..
+        } = self.detection_state
+        {
+            DragDropResponse {
+                finished: false,
+                update: Some(DragUpdate {
+                    from: source_idx,
+                    to: if hovering_last_item {
+                        hovering_idx + 1
+                    } else {
+                        hovering_idx
+                    },
+                }),
+                state: self.detection_state.clone(),
+                cancellation_reason: None,
+                has_changed: should_update,
             }
         } else {
             DragDropResponse {

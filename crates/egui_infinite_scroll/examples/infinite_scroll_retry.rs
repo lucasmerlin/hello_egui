@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, ScrollArea};
 use egui_infinite_scroll::{InfiniteScroll, LoadingState};
 
@@ -18,7 +18,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Infinite Scroll Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
@@ -28,7 +28,7 @@ pub fn main() -> eframe::Result<()> {
                     };
 
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
-                        ui.label(format!("Item {}", item));
+                        ui.label(format!("Item {item}"));
                     });
 
                     match infinite_scroll.bottom_loading_state() {

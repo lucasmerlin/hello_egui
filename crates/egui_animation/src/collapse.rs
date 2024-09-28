@@ -1,5 +1,5 @@
 use crate::animate_bool_eased;
-use egui::{Id, Rect, Ui, Vec2};
+use egui::{Id, Rect, Ui, UiBuilder, Vec2};
 
 /// Collapse animation to hide/show content.
 /// Currently only vertical collapse is supported.
@@ -49,10 +49,13 @@ impl Collapse {
             .ctx()
             .memory_mut(|mem| *mem.data.get_temp_mut_or(id, 0.0));
 
-        let mut child = ui.child_ui(
-            Rect::from_min_size(ui.next_widget_position(), ui.available_size()),
-            *ui.layout(),
-            None,
+        let mut child = ui.new_child(
+            UiBuilder::new()
+                .max_rect(Rect::from_min_size(
+                    ui.next_widget_position(),
+                    ui.available_size(),
+                ))
+                .layout(*ui.layout()),
         );
 
         let current_size = last_size * x;

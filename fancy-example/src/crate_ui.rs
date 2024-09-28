@@ -1,8 +1,11 @@
 use casey::snake;
-use egui::{Button, Response, ScrollArea, Ui, Widget};
+use egui::{Button, ScrollArea, Ui, Widget};
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 
-use Crate::*;
+use Crate::{
+    EguiAnimation, EguiDnd, EguiForm, EguiInbox, EguiInfiniteScroll, EguiPullToRefresh, EguiRouter,
+    EguiSuspense, EguiThumbhash, EguiVirtualList,
+};
 
 use crate::shared_state::SharedState;
 use crate::{demo_area, FancyMessage};
@@ -76,7 +79,7 @@ crate_impl!(
 );
 
 impl Crate {
-    pub fn short_name(&self) -> &'static str {
+    pub fn short_name(self) -> &'static str {
         if let Some(name) = self.name().strip_prefix("egui_") {
             name
         } else {
@@ -84,7 +87,7 @@ impl Crate {
         }
     }
 
-    pub fn short_description(&self) -> &'static str {
+    pub fn short_description(self) -> &'static str {
         match self {
             EguiAnimation => "Animation utilities for egui",
             EguiDnd => "Drag and drop sorting for egui",
@@ -164,13 +167,13 @@ pub fn crate_usage_ui(ui: &mut Ui, crates: &[CrateUsage], shared_state: &SharedS
     });
 }
 
-pub fn crate_button_ui(ui: &mut Ui, name: &str, selected: bool) -> Response {
-    ui.scope(|ui| {
-        ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
-        Button::new(name).selected(selected).rounding(16.0).ui(ui)
-    })
-    .inner
-}
+// pub fn crate_button_ui(ui: &mut Ui, name: &str, selected: bool) -> Response {
+//     ui.scope(|ui| {
+//         ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
+//         Button::new(name).selected(selected).rounding(16.0).ui(ui)
+//     })
+//     .inner
+// }
 
 #[macro_export]
 macro_rules! crate_usage {
@@ -193,7 +196,7 @@ impl CrateUi {
         }
     }
 
-    pub fn ui(&mut self, ui: &mut Ui, item: &Crate) {
+    pub fn ui(&mut self, ui: &mut Ui, item: Crate) {
         demo_area(ui, item.name(), 1000.0, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
@@ -206,17 +209,12 @@ impl CrateUi {
 
                 let readme_split = readme
                     .split_once(README_CONTENT_SEPARATOR)
-                    .map(|(_, a)| a)
-                    .unwrap_or(readme);
+                    .map_or(readme, |(_, a)| a);
 
                 // TODO: Find a better solution or cache string
                 let readme_split = readme_split.replace(" no_run", "");
 
-                CommonMarkViewer::new(item.name()).show(
-                    ui,
-                    &mut self.markdown_cache,
-                    &readme_split,
-                );
+                CommonMarkViewer::new().show(ui, &mut self.markdown_cache, &readme_split);
             });
         });
     }

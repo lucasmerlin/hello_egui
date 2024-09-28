@@ -1,3 +1,4 @@
+#![allow(clippy::needless_pass_by_value)] // It's ok here as it is an example
 use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Frame, ScrollArea, Ui};
 use egui_inbox::UiInbox;
@@ -82,7 +83,7 @@ fn post(request: Request<AppState>) -> impl Route<AppState> {
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 if let Some(id) = &id {
-                    ui.label(format!("Post: {}", id));
+                    ui.label(format!("Post: {id}"));
 
                     if ui.button("back").clicked() {
                         inbox.sender().send(RouterMessage::Back).ok();

@@ -1,6 +1,6 @@
 name: CI
 
-on: [ push ]
+on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
@@ -11,10 +11,10 @@ jobs:
   tests:
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
@@ -47,7 +47,7 @@ jobs:
   miri:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Miri
         uses: actions-rs/toolchain@v1

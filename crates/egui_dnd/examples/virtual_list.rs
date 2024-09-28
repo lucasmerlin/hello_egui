@@ -1,5 +1,5 @@
-use eframe::egui;
 use eframe::epaint::Margin;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Frame, Id, ScrollArea};
 use egui_dnd::dnd;
 use egui_virtual_list::VirtualList;
@@ -7,12 +7,12 @@ use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 
 pub fn main() -> eframe::Result<()> {
-    let mut items: Vec<_> = (0..100000).collect();
+    let mut items: Vec<_> = (0..100_000).collect();
     let mut virtual_list = VirtualList::new();
 
     eframe::run_simple_native(
         "DnD Virtual List Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
@@ -27,7 +27,7 @@ pub fn main() -> eframe::Result<()> {
                                 true,
                                 |ui, dnd_item| {
                                     dnd_item.ui(ui, |ui, handle, _item_state| {
-                                        draw_item(ui, handle, item);
+                                        draw_item(ui, handle, *item);
                                     })
                                 },
                             );
@@ -47,10 +47,10 @@ pub fn main() -> eframe::Result<()> {
     )
 }
 
-fn draw_item(ui: &mut egui::Ui, handle: egui_dnd::Handle, item: &i32) {
+fn draw_item(ui: &mut egui::Ui, handle: egui_dnd::Handle, item: i32) {
     // For the sake of the example we generate a random height based on the item index
     // but if your row height e.g. depends on some text with varying rows this would also work.
-    let mut rng = StdRng::seed_from_u64(*item as u64);
+    let mut rng = StdRng::seed_from_u64(item as u64);
     let height = rng.gen_range(0.0..=100.0);
 
     Frame::canvas(ui.style())
@@ -58,7 +58,7 @@ fn draw_item(ui: &mut egui::Ui, handle: egui_dnd::Handle, item: &i32) {
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
             handle.ui(ui, |ui| {
-                ui.label(format!("Item {}", item));
+                ui.label(format!("Item {item}"));
             });
         });
 }

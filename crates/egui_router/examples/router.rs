@@ -20,7 +20,7 @@ async fn main() -> eframe::Result<()> {
     let init = |ctx: &Context| {
         let mut app_state = AppState {
             message: "Hello, World!".to_string(),
-            inbox: TypeInbox::new(ctx.clone()),
+            inbox: TypeInbox::new(ctx),
         };
         let mut router = EguiRouter::builder()
             .transition(TransitionConfig::fade_up().with_easing(egui_animation::easing::quad_out))
@@ -46,7 +46,7 @@ async fn main() -> eframe::Result<()> {
             let mut router = router.get_or_insert_with(|| init(ctx));
             let mut window_router = window_router.get_or_insert_with(|| init(ctx));
 
-            for state in [&mut router, &mut window_router].iter_mut() {
+            for state in &mut [&mut router, &mut window_router] {
                 state
                     .1
                     .inbox
@@ -148,12 +148,12 @@ fn post(mut request: Request<AppState>) -> impl Route<AppState> {
         background(ui, ui.style().visuals.extreme_bg_color, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 if let Some(id) = &id {
-                    ui.label(format!("Post: {}", id));
+                    ui.label(format!("Post: {id}"));
 
                     ui.label(format!("Id: {:?}", ui.next_auto_id()));
 
                     if let Some(search) = &search {
-                        ui.label(format!("Search: {}", search));
+                        ui.label(format!("Search: {search}"));
                     }
 
                     if ui.button("back").clicked() {

@@ -29,7 +29,7 @@ pub struct EguiRouter<State, History = DefaultHistory> {
 }
 
 impl<State: 'static, H: History + Default> EguiRouter<State, H> {
-    /// Create a new [RouterBuilder]
+    /// Create a new [`RouterBuilder`]
     pub fn builder() -> RouterBuilder<State, H> {
         RouterBuilder::new()
     }
@@ -53,7 +53,12 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             .or(builder.default_route.map(|d| (d, None)))
         {
             router
-                .navigate_impl(state, r, TransitionConfig::none(), state_index.unwrap_or(0))
+                .navigate_impl(
+                    state,
+                    &r,
+                    TransitionConfig::none(),
+                    state_index.unwrap_or(0),
+                )
                 .unwrap();
         }
 
@@ -74,11 +79,11 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     fn navigate_impl(
         &mut self,
         state: &mut State,
-        path: String,
+        path: &str,
         transition_config: TransitionConfig,
         new_state: u32,
     ) -> RouterResult {
-        let (path, query) = Self::parse_path(&path);
+        let (path, query) = Self::parse_path(path);
 
         let mut redirect = None;
         let result = self.router.at_mut(path);
@@ -118,7 +123,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
         if let Some(redirect) = redirect {
             self.history_kind.replace(&redirect, new_state)?;
-            self.navigate_impl(state, redirect, transition_config, new_state)?;
+            self.navigate_impl(state, &redirect, transition_config, new_state)?;
         }
 
         result
@@ -132,10 +137,10 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         transition_config: TransitionConfig,
     ) -> RouterResult {
         let path = path.into();
-        let current_state = self.history.last().map(|r| r.state).unwrap_or(0);
+        let current_state = self.history.last().map_or(0, |r| r.state);
         let new_state = current_state + 1;
         self.history_kind.push(&path, new_state)?;
-        self.navigate_impl(state, path.clone(), transition_config, new_state)?;
+        self.navigate_impl(state, &path, transition_config, new_state)?;
         Ok(())
     }
 
@@ -144,7 +149,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.navigate_transition(state, route, self.forward_transition.clone())
     }
 
-    fn back_impl(&mut self, transition_config: TransitionConfig) -> RouterResult {
+    fn back_impl(&mut self, transition_config: TransitionConfig) {
         if self.history.len() > 1 {
             let leaving_route = self.history.pop();
             self.current_transition = Some(CurrentTransition {
@@ -153,13 +158,13 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                 leaving_route,
             });
         }
-        Ok(())
     }
 
     /// Go back with a custom transition
     pub fn back_transition(&mut self, transition_config: TransitionConfig) -> RouterResult {
         self.history_kind.back()?;
-        self.back_impl(transition_config)
+        self.back_impl(transition_config);
+        Ok(())
     }
 
     /// Go back with the default transition
@@ -179,7 +184,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let path = path.into();
         let result = self.router.at_mut(&path);
 
-        let current_state = self.history.last().map(|r| r.state).unwrap_or(0);
+        let current_state = self.history.last().map_or(0, |r| r.state);
         let new_state = current_state;
 
         let (path, query) = Self::parse_path(&path);
@@ -242,17 +247,17 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                 .find(|r| r.path == path && r.state == state_index)
                 .map(|r| r.state)
             {
-                let active_state = self.history.last().map(|r| r.state).unwrap_or(0);
+                let active_state = self.history.last().map_or(0, |r| r.state);
 
                 // Retain all routes with a state less than or equal to the new state and the active state so that we can animate them out
                 self.history
                     .retain(|r| r.state <= route_state || r.state == active_state);
 
                 if route_state < active_state {
-                    self.back_impl(self.backward_transition.clone()).ok();
+                    self.back_impl(self.backward_transition.clone());
                 }
             } else {
-                self.navigate_impl(state, path, self.forward_transition.clone(), state_index)
+                self.navigate_impl(state, &path, self.forward_transition.clone(), state_index)
                     .ok();
             }
         }

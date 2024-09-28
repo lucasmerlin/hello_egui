@@ -15,11 +15,28 @@ tag-prefix = "hello_egui-"
 all-features = true
 
 [features]
-all = ["animation", "dnd", "flex", "form", "inbox", "infinite_scroll", "pull_to_refresh", "router", "suspense", "thumbhash", "virtual_list"]
+all = [
+    "animation",
+    "dnd",
+    "flex",
+    "form",
+    "inbox",
+    "infinite_scroll",
+    "pull_to_refresh",
+    "router",
+    "suspense",
+    "thumbhash",
+    "virtual_list",
+]
 full = ["all", "async", "tokio"]
 
 animation = ["dep:egui_animation"]
-async = ["egui_suspense/async", "egui_infinite_scroll/async", "egui_router/async", "egui_inbox/async"]
+async = [
+    "egui_suspense/async",
+    "egui_infinite_scroll/async",
+    "egui_router/async",
+    "egui_inbox/async",
+]
 dnd = ["dep:egui_dnd"]
 flex = ["dep:egui_flex"]
 form = ["dep:egui_form"]
@@ -65,9 +82,33 @@ egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.4.
 egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.4.0" }
 hello_egui = { path = ".", version = "0.5.0" }
 
-egui = { version = "0.28.0", default-features = false }
-eframe = { version = "0.28.0", default-features = false }
-egui_extras = { version = "0.28.0", default-features = false }
+egui = { version = "0.29.0", default-features = false }
+eframe = { version = "0.29.0", default-features = false }
+egui_extras = { version = "0.29.0", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = 1 }
+enum_glob_use = { level = "deny", priority = 2 }
+perf = { level = "warn", priority = 3 }
+style = { level = "warn", priority = 4 }
+# TODO: Uncomment/Deny the following lines when the clippy lints are fixed
+# unwrap_used = { level = "deny", priority = 100 }
+#expect_used = { level = "deny", priority = 101 }
+module_name_repetitions = { level = "allow", priority = 10 }
+cast_precision_loss = { level = "allow", priority = 11 }
+cast_possible_truncation = { level = "allow", priority = 12 }
+cast_sign_loss = { level = "allow", priority = 13 }
+float_cmp = { level = "allow", priority = 14 }
+struct_excessive_bools = { level = "allow", priority = 15 }
+must_use_candidate = { level = "allow", priority = 16 }
+return_self_not_must_use = { level = "allow", priority = 17 }
+missing_panics_doc = { level = "allow", priority = 18 }
+missing_errors_doc = { level = "allow", priority = 19 }
+missing_fields_in_debug = { level = "allow", priority = 20 }
+doc_markdown = { level = "allow", priority = 21 }
 
 [patch.crates-io]
 #wry = { path = "../../RustroverProjects/github/wry" }

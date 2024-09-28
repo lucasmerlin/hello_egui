@@ -7,13 +7,15 @@ use crate::validation_report::IntoFieldPath;
 pub use garde;
 use garde::Path;
 
-/// Create a [garde::Path] to be submitted to [crate::FormField::new]
+/// Create a [`garde::Path`] to be submitted to [`crate::FormField::new`]
 /// Example:
 /// ```rust
-/// use garde::Path;
 /// use egui_form::garde::field_path;
-/// assert_eq!(field_path!("root", "vec", 0, "nested"), Path::new("root")
-///     .join("vec").join(0).join("nested"))
+/// use garde::Path;
+/// assert_eq!(
+///     field_path!("root", "vec", 0, "nested"),
+///     Path::new("root").join("vec").join(0).join("nested")
+/// )
 /// ```
 #[macro_export]
 macro_rules! _garde_field_path {
@@ -27,35 +29,39 @@ macro_rules! _garde_field_path {
     };
 }
 
-/// A wrapper around a [garde::Report] that implements [EguiValidationReport].
+/// A wrapper around a [`garde::Report`] that implements [`EguiValidationReport`].
 pub struct GardeReport(BTreeMap<garde::Path, garde::Error>);
 
 impl GardeReport {
-    /// Create a new [GardeReport] from a [garde::Report].
-    /// You can call this function with the result of a call to [garde::Validate::validate].
+    /// Create a new [`GardeReport`] from a [`garde::Report`].
+    /// You can call this function with the result of a call to [`garde::Validate::validate`].
     ///
     /// # Example
     /// ```
-    /// use garde::Validate;
-    /// use egui_form::{EguiValidationReport, IntoFieldPath};
     /// use egui_form::garde::{field_path, GardeReport};
+    /// use egui_form::{EguiValidationReport, IntoFieldPath};
+    /// use garde::Validate;
     /// #[derive(Validate)]
     /// struct Test {
-    ///    #[garde(length(min = 3, max = 10))]
-    ///   pub user_name: String,
-    ///   #[garde(inner(length(min = 3, max = 10)))]
-    ///   pub tags: Vec<String>,
+    ///     #[garde(length(min = 3, max = 10))]
+    ///     pub user_name: String,
+    ///     #[garde(inner(length(min = 3, max = 10)))]
+    ///     pub tags: Vec<String>,
     /// }
     ///
     /// let test = Test {
-    ///    user_name: "testfiwuehfwoi".to_string(),
-    ///    tags: vec!["tag1".to_string(), "waaaaytooooloooong".to_string()],
+    ///     user_name: "testfiwuehfwoi".to_string(),
+    ///     tags: vec!["tag1".to_string(), "waaaaytooooloooong".to_string()],
     /// };
     ///
-    /// let report = GardeReport::new(test.validate(&()));
+    /// let report = GardeReport::new(test.validate());
     ///
-    /// assert!(report.get_field_error(field_path!("user_name").into_field_path()).is_some());
-    /// assert!(report.get_field_error(field_path!("tags", 1).into_field_path()).is_some());
+    /// assert!(report
+    ///     .get_field_error(field_path!("user_name").into_field_path())
+    ///     .is_some());
+    /// assert!(report
+    ///     .get_field_error(field_path!("tags", 1).into_field_path())
+    ///     .is_some());
     /// ```
     pub fn new(result: Result<(), garde::Report>) -> Self {
         if let Err(errors) = result {

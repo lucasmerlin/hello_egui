@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::CentralPanel;
 use egui_inbox::UiInbox;
 
@@ -8,7 +8,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 // `read` will return an iterator over all pending messages
@@ -18,7 +18,7 @@ pub fn main() -> eframe::Result<()> {
                 // There also is a `replace` method that you can use as a shorthand for the above:
                 // inbox.replace(ui, &mut state);
 
-                ui.label(format!("State: {:?}", state));
+                ui.label(format!("State: {state:?}"));
                 if ui.button("Async Task").clicked() {
                     state = Some("Waiting for async task to complete".to_string());
                     let tx = inbox.sender();

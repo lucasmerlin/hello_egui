@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-/// A trait telling egui_form how to parse validation errors.
+/// A trait telling `egui_form` how to parse validation errors.
 pub trait EguiValidationReport {
     /// The type used to identify fields.
     type FieldPath<'a>: Clone;
@@ -20,7 +20,7 @@ pub trait EguiValidationReport {
     fn get_errors(&self) -> Option<&Self::Errors>;
 }
 
-/// Helper trait to allow constructing non-nested FormFields without using the field_path!() macro
+/// Helper trait to allow constructing non-nested `FormFields` without using the `field_path`!() macro
 pub trait IntoFieldPath<T> {
     /// Conver this type into a [T]
     fn into_field_path(self) -> T;

@@ -11,14 +11,14 @@ struct Fields {
 }
 
 fn form_ui(ui: &mut Ui, fields: &mut Fields) {
-    let mut form = Form::new().add_report(GardeReport::new(fields.validate(&())));
+    let mut form = Form::new().add_report(GardeReport::new(fields.validate()));
 
     FormField::new(&mut form, field_path!("user_name"))
         .label("User Name")
         .ui(ui, TextEdit::singleline(&mut fields.user_name));
 
     if let Some(Ok(())) = form.handle_submit(&ui.button("Submit"), ui) {
-        println!("Submitted: {:?}", fields);
+        println!("Submitted: {fields:?}");
     }
 }
 

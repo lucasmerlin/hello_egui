@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Id, ScrollArea};
 use egui_dnd::dnd;
 use egui_infinite_scroll::InfiniteScroll;
@@ -12,7 +12,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "DnD Infinite Scroll Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
@@ -28,7 +28,7 @@ pub fn main() -> eframe::Result<()> {
                                                 ui.label("drag");
                                             }
                                         });
-                                        ui.label(format!("Item {}", item));
+                                        ui.label(format!("Item {item}"));
                                     });
                                 })
                             });

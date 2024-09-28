@@ -6,11 +6,11 @@
 #[cfg(feature = "broadcast")]
 pub mod broadcast;
 
-/// Broadcast based on [type_map], useful for sending events between different parts of the application.
+/// Broadcast based on [`type_map`], useful for sending events between different parts of the application.
 #[cfg(feature = "type_broadcast")]
 pub mod type_broadcast;
 
-/// Type-map based version of [UiInbox], useful for sending messages
+/// Type-map based version of [`UiInbox`], useful for sending messages
 /// to specific components from different parts of the application.
 #[cfg(feature = "type_inbox")]
 pub mod type_inbox;
@@ -43,12 +43,12 @@ enum RequestRepaintInner {
     Arc(Arc<dyn RequestRepaintTrait + Send + Sync>),
 }
 
-/// Usually holds a reference to [egui::Context], but can also hold a boxed callback.
+/// Usually holds a reference to [`egui::Context`], but can also hold a boxed callback.
 #[derive(Debug, Clone)]
 pub struct RequestRepaintContext(RequestRepaintInner);
 
 impl RequestRepaintContext {
-    /// Create a new [RequestRepaintContext] from a callback function.
+    /// Create a new [`RequestRepaintContext`] from a callback function.
     pub fn from_callback<F>(f: F) -> Self
     where
         F: Fn() + Send + Sync + 'static,
@@ -56,7 +56,7 @@ impl RequestRepaintContext {
         Self(RequestRepaintInner::Arc(Arc::new(f)))
     }
 
-    /// Create a new [RequestRepaintContext] from something that implements [RequestRepaintTrait].
+    /// Create a new [`RequestRepaintContext`] from something that implements [`RequestRepaintTrait`].
     pub fn from_trait<T>(t: T) -> Self
     where
         T: RequestRepaintTrait + Send + Sync + 'static,
@@ -64,7 +64,7 @@ impl RequestRepaintContext {
         Self(RequestRepaintInner::Arc(Arc::new(t)))
     }
 
-    /// Create a new [RequestRepaintContext] from an [egui::Context].
+    /// Create a new [`RequestRepaintContext`] from an [`egui::Context`].
     #[cfg(feature = "egui")]
     pub fn from_egui_ctx(ctx: egui::Context) -> Self {
         Self(RequestRepaintInner::Ctx(ctx))
@@ -87,9 +87,9 @@ impl Debug for RequestRepaintInner {
     }
 }
 
-/// Trait to get a [RequestRepaintContext] from.
+/// Trait to get a [`RequestRepaintContext`] from.
 pub trait AsRequestRepaint {
-    /// Should return a [RequestRepaintContext] that can be used to request a repaint.
+    /// Should return a [`RequestRepaintContext`] that can be used to request a repaint.
     fn as_request_repaint(&self) -> RequestRepaintContext;
 }
 
@@ -142,7 +142,9 @@ mod egui_impl {
 ///                     let mut sender = inbox.sender();
 ///                     std::thread::spawn(move || {
 ///                         std::thread::sleep(std::time::Duration::from_secs(1));
-///                         sender.send(Some("Hello from another thread!".to_string())).ok();
+///                         sender
+///                             .send(Some("Hello from another thread!".to_string()))
+///                             .ok();
 ///                     });
 ///                 }
 ///             });
@@ -179,7 +181,7 @@ impl<T> State<T> {
     }
 }
 
-/// Sender for [UiInbox].
+/// Sender for [`UiInbox`].
 pub struct UiInboxSender<T> {
     state: Arc<Mutex<State<T>>>,
 }
@@ -220,9 +222,9 @@ impl<T> Drop for UiInbox<T> {
 
 impl<T> UiInbox<T> {
     /// Create a new inbox.
-    /// The context is grabbed from the [Ui] passed to [UiInbox::read], so
-    /// if you call [UiInbox::send] before [UiInbox::read], no repaint is requested.
-    /// If you want to set the context on creation, use [UiInbox::new_with_ctx].
+    /// The context is grabbed from the [Ui] passed to [`UiInbox::read`], so
+    /// if you call [`UiInbox::send`] before [`UiInbox::read`], no repaint is requested.
+    /// If you want to set the context on creation, use [`UiInbox::new_with_ctx`].
     pub fn new() -> Self {
         Self::_new(None)
     }
@@ -256,7 +258,7 @@ impl<T> UiInbox<T> {
     }
 
     /// Set the [Context] to use for requesting repaints.
-    /// Usually this is not needed, since the [Context] is grabbed from the [Ui] passed to [UiInbox::read].
+    /// Usually this is not needed, since the [Context] is grabbed from the [Ui] passed to [`UiInbox::read`].
     pub fn set_ctx(&mut self, ctx: &impl AsRequestRepaint) {
         self.state.lock().ctx = Some(ctx.as_request_repaint());
     }
@@ -275,9 +277,9 @@ impl<T> UiInbox<T> {
         mem::take(&mut state.queue).into_iter()
     }
 
-    /// Same as [UiInbox::read], but you don't need to pass a reference to [Ui].
-    /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
-    /// [UiInbox::new_with_ctx] manually.
+    /// Same as [`UiInbox::read`], but you don't need to pass a reference to [Ui].
+    /// If you use this, make sure you set the [Context] with [`UiInbox::set_ctx`] or
+    /// [`UiInbox::new_with_ctx`] manually.
     pub fn read_without_ctx(&self) -> impl Iterator<Item = T> {
         let mut state = self.state.lock();
         mem::take(&mut state.queue).into_iter()
@@ -307,7 +309,7 @@ impl<T> UiInbox<T> {
     }
 
     /// Replaces the value of the options with [Some<T>] if there is an item in the inbox.
-    /// Otherwise, similar to [UiInbox::replace].
+    /// Otherwise, similar to [`UiInbox::replace`].
     pub fn replace_option(&self, ui: &impl AsRequestRepaint, target: &mut Option<T>) {
         let mut state = self.state.lock();
         if state.ctx.is_none() {
@@ -320,9 +322,9 @@ impl<T> UiInbox<T> {
         }
     }
 
-    /// Same as [UiInbox::replace], but you don't need to pass a reference to [Ui].
-    /// If you use this, make sure you set the [Context] with [UiInbox::set_ctx] or
-    /// [UiInbox::new_with_ctx] manually.
+    /// Same as [`UiInbox::replace`], but you don't need to pass a reference to [Ui].
+    /// If you use this, make sure you set the [Context] with [`UiInbox::set_ctx`] or
+    /// [`UiInbox::new_with_ctx`] manually.
     pub fn replace_without_ctx(&self, target: &mut T) -> bool {
         let mut state = self.state.lock();
         let item = mem::take(&mut state.queue).pop();
@@ -357,7 +359,7 @@ mod async_impl {
         /// Spawns a future that will automatically be cancelled when the inbox is dropped.
         /// Make sure your future is safe to cancel (It may stop at any await point).
         ///
-        /// If you want to spawn a future that should definitely run to completion, use [UiInbox::spawn_detached] instead.
+        /// If you want to spawn a future that should definitely run to completion, use [`UiInbox::spawn_detached`] instead.
         pub fn spawn<F>(&mut self, f: impl FnOnce(UiInboxSender<T>) -> F)
         where
             F: std::future::Future<Output = ()> + MaybeSend + 'static,
@@ -372,7 +374,7 @@ mod async_impl {
                 let mut future = pin!(future);
 
                 select! {
-                    _ = future => {},
+                    () = future => {},
                     _ = rx => {},
                 }
             });

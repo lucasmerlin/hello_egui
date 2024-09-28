@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::{egui, NativeOptions};
 use egui::CentralPanel;
 use egui_extras::Column;
 
@@ -13,7 +13,7 @@ pub fn main() -> eframe::Result<()> {
 
     eframe::run_simple_native(
         "Infinite Scroll Simple Example",
-        Default::default(),
+        NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default().show(ctx, |ui| {
                 if ui.button("Reset").clicked() {
@@ -32,7 +32,7 @@ pub fn main() -> eframe::Result<()> {
                             });
 
                             ui.col(|ui| {
-                                ui.label(format!("{}", item));
+                                ui.label(format!("{item}"));
                             });
                         });
                     });
