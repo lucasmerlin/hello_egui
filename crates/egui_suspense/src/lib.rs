@@ -254,7 +254,6 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
         }
 
         if clear_data {
-            println!("Clearing data");
             self.data = None;
         }
 
