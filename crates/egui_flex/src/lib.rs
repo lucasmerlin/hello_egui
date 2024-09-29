@@ -1,12 +1,18 @@
-pub mod flex_widget;
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
-use crate::flex_widget::FlexWidget;
+mod flex_widget;
+
+pub use crate::flex_widget::FlexWidget;
+
 use egui::{
     Align, Align2, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense, Ui,
     UiBuilder, Vec2, Widget,
 };
 use std::mem;
 
+/// The direction in which the flex container should lay out its children.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexDirection {
     #[default]
@@ -14,6 +20,7 @@ pub enum FlexDirection {
     Vertical,
 }
 
+/// How to justify the content (alignment in the main axis).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexJustify {
     #[default]
@@ -25,6 +32,7 @@ pub enum FlexJustify {
     SpaceEvenly,
 }
 
+/// How to align the content in the cross axis on the current line.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexAlign {
     Start,
@@ -34,6 +42,7 @@ pub enum FlexAlign {
     Stretch,
 }
 
+/// How to align the content in the cross axis across the whole container.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FlexAlignContent {
     #[default]
@@ -46,6 +55,7 @@ pub enum FlexAlignContent {
     SpaceAround,
 }
 
+/// A flex container.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Flex {
     id_salt: Option<Id>,
@@ -71,6 +81,7 @@ impl Default for Flex {
     }
 }
 
+/// Configuration for a flex item.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct FlexItem {
     grow: Option<f32>,
@@ -80,26 +91,37 @@ pub struct FlexItem {
 }
 
 impl FlexItem {
+    /// Create a new flex item.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// How much should this item grow compared to the other items.
+    ///
+    /// By default items don't grow.
     pub fn grow(mut self, grow: f32) -> Self {
         self.grow = Some(grow);
         self
     }
 
+    /// Set the default size of the item, before it grows.
+    /// If this is not set, the items "intrinsic size" will be used.
     pub fn basis(mut self, basis: f32) -> Self {
         self.basis = Some(basis);
         self
     }
 
+    /// How do we align the item in the cross axis?
+    ///
+    /// Default is `stretch`.
     pub fn align_self(mut self, align_self: FlexAlign) -> Self {
         self.align_self = Some(align_self);
         self
     }
 
     /// If `align_self` is stretch, how do we align the content?
+    ///
+    /// Default is `center`.
     pub fn align_self_content(mut self, align_self_content: Align2) -> Self {
         self.align_content = Some(align_self_content);
         self
@@ -107,58 +129,73 @@ impl FlexItem {
 }
 
 impl Flex {
+    /// Create a new flex container.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Create a new horizontal flex container.
     pub fn horizontal() -> Self {
         Self::default().direction(FlexDirection::Horizontal)
     }
 
+    /// Create a new vertical flex container.
     pub fn vertical() -> Self {
         Self::default().direction(FlexDirection::Vertical)
     }
 
+    /// Set the direction of the flex container.
     pub fn direction(mut self, direction: FlexDirection) -> Self {
         self.direction = direction;
         self
     }
 
+    /// Set how to justify the content (alignment in the main axis).
     pub fn justify(mut self, justify: FlexJustify) -> Self {
         self.justify = justify;
         self
     }
 
+    /// Set the default configuration for the items in the flex container.
     pub fn align_items(mut self, align_items: FlexAlign) -> Self {
         self.default_item.align_self = Some(align_items);
         self
     }
 
+    /// If `align_items` is stretch, how do we align the item content?
     pub fn align_items_content(mut self, align_item_content: Align2) -> Self {
         self.default_item.align_content = Some(align_item_content);
         self
     }
 
+    /// Set how to align the content in the cross axis across the whole container.
     pub fn align_content(mut self, align_content: FlexAlignContent) -> Self {
         self.align_content = align_content;
         self
     }
 
+    /// Set the default grow factor for the items in the flex container.
     pub fn grow_items(mut self, grow: f32) -> Self {
         self.default_item.grow = Some(grow);
         self
     }
 
+    /// Set the gap between the items in the flex container.
+    ///
+    /// Default is `item_spacing` of the [`Ui`].
     pub fn gap(mut self, gap: Vec2) -> Self {
         self.gap = Some(gap);
         self
     }
 
+    /// Should the flex container wrap it's content.
+    /// If this is set to `false` the content may overflow the [`Ui::max_rect`]
     pub fn wrap(mut self, wrap: bool) -> Self {
         self.wrap = wrap;
         self
     }
 
+    /// Customize the id of the flex container to prevent conflicts with other flex containers.
     pub fn id_salt(mut self, id_salt: impl Into<Id>) -> Self {
         self.id_salt = Some(id_salt.into());
         self
@@ -351,7 +388,7 @@ impl Flex {
         rows
     }
 
-    /// Show the flex ui. It will try to stay within `Ui::max_rect`.
+    /// Show the flex ui. If [`Self::wrap`] is `true`, it will try to stay within [`Ui::max_rect`].
     ///
     /// Note: You will likely get weird results when showing this within a `Ui::horizontal` layout,
     /// since it limits the `max_rect` to some small value. Use `Ui::horizontal_top` instead.
@@ -388,6 +425,7 @@ struct FlexState {
     max_item_size: Vec2,
 }
 
+/// An instance of a flex container, used to add items to the container.
 pub struct FlexInstance<'a> {
     flex: &'a Flex,
     current_row: usize,
@@ -410,22 +448,30 @@ impl<'a> FlexInstance<'a> {
         parent.new_child(UiBuilder::new().max_rect(rect))
     }
 
+    /// Get the direction of the flex container.
     pub fn direction(&self) -> FlexDirection {
         self.flex.direction
     }
 
+    /// Is the flex container horizontal?
     pub fn is_horizontal(&self) -> bool {
         self.flex.direction == FlexDirection::Horizontal
     }
 
+    /// Is the flex container vertical?
     pub fn is_vertical(&self) -> bool {
         self.flex.direction == FlexDirection::Vertical
     }
 
+    /// Get the ui of the flex container (e.g. to read the style or access the context).
     pub fn ui(&self) -> &Ui {
         self.ui
     }
 
+    /// Show a flex container. This is split in a outer and inner [Ui]. The outer [Ui] will
+    /// grow according to the flex layout, while the inner [Ui] will be centered / positioned
+    /// based on the [FlexItem::align_self_content].
+    /// Use the [FlexContainerUi] to show your content in the inner [Ui].
     #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
     pub fn add_container<R>(
         &mut self,
@@ -619,6 +665,8 @@ impl<'a> FlexInstance<'a> {
         InnerResponse::new(inner, res.response)
     }
 
+    /// Add a simple item to the flex container.
+    /// It will be positioned based on [FlexItem::align_self_content].
     pub fn add_simple<R>(
         &mut self,
         item: FlexItem,
@@ -642,6 +690,8 @@ impl<'a> FlexInstance<'a> {
         self.add_container(item, |ui, container| container.content_widget(ui, widget))
     }
 
+    /// Add some content with a frame. The frame will be stretched according to the flex layout.
+    /// The content will be centered / positioned based on [FlexItem::align_self_content].
     pub fn add_frame<R>(
         &mut self,
         item: FlexItem,
@@ -653,6 +703,8 @@ impl<'a> FlexInstance<'a> {
         })
     }
 
+    /// Add a nested flex container. Currently this doesn't correctly support wrapping the content
+    /// in the nested container (once the content wraps, you will get weird results).
     pub fn add_flex<R>(
         &mut self,
         item: FlexItem,
@@ -664,6 +716,8 @@ impl<'a> FlexInstance<'a> {
         })
     }
 
+    /// Add a nested flex container with a frame.
+    /// See [`Self::add_flex`] for limitations.
     pub fn add_flex_frame<R>(
         &mut self,
         item: FlexItem,
@@ -688,12 +742,13 @@ impl<'a> FlexInstance<'a> {
         })
     }
 
-    /// Adds an empty item with flex-grow 1.0
+    /// Adds an empty item with flex-grow 1.0.
     pub fn grow(&mut self) -> Response {
         self.add_simple(FlexItem::new().grow(1.0), |_| {}).response
     }
 }
 
+/// Helper to show the inner content of a container.
 pub struct FlexContainerUi {
     direction: usize,
     content_rect: Rect,
@@ -704,6 +759,8 @@ pub struct FlexContainerUi {
     last_inner_size: Option<Vec2>,
 }
 
+/// The response of the inner content of a container, should be passed as a return value from the
+/// closure.
 pub struct FlexContainerResponse<T> {
     child_rect: Rect,
     inner: T,
@@ -714,6 +771,7 @@ pub struct FlexContainerResponse<T> {
 }
 
 impl<T> FlexContainerResponse<T> {
+    /// Map the inner value of the response.
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> FlexContainerResponse<U> {
         FlexContainerResponse {
             child_rect: self.child_rect,
@@ -727,6 +785,7 @@ impl<T> FlexContainerResponse<T> {
 }
 
 impl FlexContainerUi {
+    /// Add the inner content of the container.
     pub fn content<R>(
         self,
         ui: &mut Ui,
@@ -767,6 +826,7 @@ impl FlexContainerUi {
         }
     }
 
+    /// Add a nested flex container.
     pub fn content_flex<R>(
         self,
         ui: &mut Ui,
@@ -807,7 +867,7 @@ impl FlexContainerUi {
         }
     }
 
-    #[track_caller]
+    /// Add a widget to the container.
     pub fn content_widget(
         self,
         ui: &mut Ui,
