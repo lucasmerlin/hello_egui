@@ -119,7 +119,7 @@ doc_markdown = { level = "allow", priority = 21 }
 #egui_extras = { path = "../../IdeaProjects/egui/crates/egui_extras" }
 #winit = { path = "../../IdeaProjects/github/winit" }
 
-
-egui = { git = "https://github.com/emilk/egui", branch = "master" }
-eframe = { git = "https://github.com/emilk/egui", branch = "master" }
-egui_extras = { git = "https://github.com/emilk/egui", branch = "master" }
+#
+#egui = { git = "https://github.com/emilk/egui", branch = "master" }
+#eframe = { git = "https://github.com/emilk/egui", branch = "master" }
+#egui_extras = { git = "https://github.com/emilk/egui", branch = "master" }
