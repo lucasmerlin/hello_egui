@@ -165,11 +165,20 @@ fn main() -> eframe::Result<()> {
 // when compiling to web using trunk.
 #[cfg(target_arch = "wasm32")]
 fn main() {
+    use wasm_bindgen::JsCast;
     let web_options = eframe::WebOptions::default();
+    let element = eframe::web_sys::window()
+        .expect("failed to get window")
+        .document()
+        .expect("failed to get document")
+        .get_element_by_id("canvas")
+        .expect("failed to get canvas element")
+        .dyn_into::<eframe::web_sys::HtmlCanvasElement>()
+        .unwrap();
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
             .start(
-                "canvas",
+                element,
                 web_options,
                 Box::new(|a| {
                     egui_extras::install_image_loaders(&a.egui_ctx);

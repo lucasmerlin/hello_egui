@@ -45,6 +45,7 @@ type HistoryResult<T = ()> = Result<T, HistoryError>;
 /// History error
 #[derive(Debug, thiserror::Error)]
 pub enum HistoryError {
+    /// Updating the browser history failed
     #[cfg(target_arch = "wasm32")]
     #[error("History error: {0:?}")]
     JsError(wasm_bindgen::JsValue),
