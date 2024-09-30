@@ -14,6 +14,7 @@ use std::mem;
 
 /// The direction in which the flex container should lay out its children.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum FlexDirection {
     #[default]
     Horizontal,
@@ -22,6 +23,7 @@ pub enum FlexDirection {
 
 /// How to justify the content (alignment in the main axis).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum FlexJustify {
     #[default]
     Start,
@@ -34,6 +36,7 @@ pub enum FlexJustify {
 
 /// How to align the content in the cross axis on the current line.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum FlexAlign {
     Start,
     End,
@@ -44,6 +47,7 @@ pub enum FlexAlign {
 
 /// How to align the content in the cross axis across the whole container.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum FlexAlignContent {
     #[default]
     Normal,

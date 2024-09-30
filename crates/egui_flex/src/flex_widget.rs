@@ -10,6 +10,7 @@ use egui::Ui;
 /// If your widget has no frmae you don't need to implement this trait and can use
 /// [`crate::FlexInstance::add_widget`] to add any [`egui::Widget`].
 pub trait FlexWidget {
+    /// The response type of the widget
     type Response;
     /// Show your widget here. Use the provided [`Ui`] to draw the container (e.g. using a [`egui::Frame`])
     /// and in the frame ui use [`FlexContainerUi::content`] to draw your widget.
