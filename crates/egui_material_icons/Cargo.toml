@@ -1,5 +1,5 @@
 [package]
-name = "egui-material-icons"
+name = "egui_material_icons"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 egui.workspace = true
-material-icons-proc-macro = { path = "../material-icons-proc-macro" }
+material_icons_proc_macro.workspace = true
 
 [dev-dependencies]
 eframe.workspace = true

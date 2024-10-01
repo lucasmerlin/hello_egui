@@ -1322,16 +1322,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-material-icons"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui",
- "egui_demo_lib",
- "material-icons-proc-macro",
-]
-
-[[package]]
 name = "egui-wgpu"
 version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1512,6 +1502,16 @@ dependencies = [
  "rand 0.8.5",
  "tokio",
  "web-time",
+]
+
+[[package]]
+name = "egui_material_icons"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_demo_lib",
+ "material_icons_proc_macro",
 ]
 
 [[package]]
@@ -2632,11 +2632,13 @@ dependencies = [
  "egui_form",
  "egui_inbox",
  "egui_infinite_scroll",
+ "egui_material_icons",
  "egui_pull_to_refresh",
  "egui_router",
  "egui_suspense",
  "egui_thumbhash",
  "egui_virtual_list",
+ "material_icons_proc_macro",
 ]
 
 [[package]]
@@ -3178,7 +3180,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
-name = "material-icons-proc-macro"
+name = "material_icons_proc_macro"
 version = "0.1.0"
 
 [[package]]

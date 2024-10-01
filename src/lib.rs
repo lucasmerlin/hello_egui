@@ -14,6 +14,8 @@ pub use egui_form as form;
 pub use egui_inbox as inbox;
 #[cfg(feature = "infinite_scroll")]
 pub use egui_infinite_scroll as infinite_scroll;
+#[cfg(feature = "material_icons")]
+pub use egui_material_icons as material_icons;
 #[cfg(feature = "pull_to_refresh")]
 pub use egui_pull_to_refresh as pull_to_refresh;
 #[cfg(feature = "router")]
@@ -24,3 +26,5 @@ pub use egui_suspense as suspense;
 pub use egui_thumbhash as thumbhash;
 #[cfg(feature = "virtual_list")]
 pub use egui_virtual_list as virtual_list;
+#[cfg(feature = "material_icons_proc_macro")]
+pub use material_icons_proc_macro;
