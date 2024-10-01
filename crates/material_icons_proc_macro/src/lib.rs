@@ -9,6 +9,7 @@ pub fn code_points(_item: TokenStream) -> TokenStream {
 
     let code: String = codepoints
         .split("\n")
+        .map(str::trim)
         .filter_map(|point| {
             let split_point: Vec<&str> = point.split(" ").collect();
 
