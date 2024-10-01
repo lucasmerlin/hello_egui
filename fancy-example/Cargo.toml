@@ -23,17 +23,17 @@ hello_egui_utils.workspace = true
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
 egui_extras = { workspace = true, features = ["http", "image"] }
-ehttp = { version = "0.5.0" }
+ehttp.workspace = true
 thumbhash = "0.1.0"
 
-image = { version = "0.25.2", features = ["jpeg", "png", "webp"] }
+image = { workspace = true, features = ["jpeg", "png", "webp"] }
 color-hex = "0.2.0"
 
 wasm-bindgen = "0.2.93"
 wasm-bindgen-futures = "0.4.43"
 
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 
 casey = "0.4.0"
 
@@ -42,7 +42,7 @@ egui_commonmark = { version = "0.18.0", features = [] }
 validator = { version = "0.18.1", features = ["derive"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1", features = ["time", "rt", "macros"] }
+tokio = { workspace = true, features = ["time", "rt", "macros"] }
 ureq = "2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

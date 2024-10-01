@@ -44,7 +44,7 @@ wasm-bindgen = "0.2"
 egui_inbox = { workspace = true, features = ["type_inbox"] }
 eframe = { workspace = true, default-features = true }
 egui_animation = { workspace = true }
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 egui_suspense = { workspace = true, features = ["async", "tokio"] }
 
 [lints]

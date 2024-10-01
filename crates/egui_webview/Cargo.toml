@@ -12,11 +12,11 @@ wry = "0.45.0"
 egui.workspace = true
 egui_inbox = { workspace = true }
 
-image = "0.25.2"
+image.workspace = true
 base64 = "0.22.1"
 egui_extras = { workspace = true, features = ["image"] }
-serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1"
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 log = "0.4.22"
 rgb = "0.8"
 

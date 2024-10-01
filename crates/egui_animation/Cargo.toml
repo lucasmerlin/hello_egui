@@ -11,14 +11,12 @@ homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_anim
 
 [dependencies]
 hello_egui_utils.workspace = true
-
 egui.workspace = true
-
-simple-easing = "1"
+simple-easing.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-rand = "0.8.5"
+rand.workspace = true
 
 [lints]
 workspace = true

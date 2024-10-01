@@ -1,0 +1,14 @@
+[package]
+name = "egui-material-icons"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui.workspace = true
+material-icons-proc-macro = { path = "../material-icons-proc-macro" }
+
+[dev-dependencies]
+eframe.workspace = true
+egui_demo_lib = "0.29"
