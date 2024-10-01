@@ -10,5 +10,5 @@ egui.workspace = true
 material_icons_proc_macro.workspace = true
 
 [dev-dependencies]
-eframe.workspace = true
+eframe = { workspace = true, default-features = true }
 egui_demo_lib = "0.29"
