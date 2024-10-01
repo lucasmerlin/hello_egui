@@ -14,6 +14,14 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install packages (Linux)
+        if: runner.os == 'Linux'
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.2
+        with:
+          packages: libwebkit2gtk-4.1-dev
+          version: 1.0
+          execute_install_scripts: true
+
       - uses: actions/checkout@v4
 
       - name: Set up cargo cache
@@ -23,7 +31,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-targets --all-features --workspace --exclude egui_webview --exclude egui_flex -- -D warnings
+          args: --all-targets --all-features --workspace -- -D warnings
 
       - name: RustFmt
         uses: actions-rs/cargo@v1
@@ -35,7 +43,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features --workspace --exclude egui_webview
+          args: --all-features --workspace
 
       - name: Cargo Doc
         if: ${{ matrix.os == 'ubuntu-latest' }}

@@ -15,7 +15,7 @@ taffy = "0.5.2"
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 
-rand = "0.8.5"
+rand.workspace = true
 
 [lints]
 workspace = true

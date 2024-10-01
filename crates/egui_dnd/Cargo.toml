@@ -12,19 +12,17 @@ license = "MIT"
 
 [dependencies]
 egui_animation.workspace = true
-
 egui.workspace = true
-
-simple-easing = "1"
+simple-easing.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-time = "1"
 
 [dev-dependencies]
-egui_infinite_scroll = { path = "../egui_infinite_scroll" }
-egui_virtual_list = { path = "../egui_virtual_list" }
-hello_egui_utils = { path = "../hello_egui_utils" }
-rand = "0.8"
+egui_infinite_scroll.workspace = true
+egui_virtual_list.workspace = true
+hello_egui_utils.workspace = true
+rand.workspace = true
 
 egui_extras.workspace = true
 color-hex = "0.2.0"

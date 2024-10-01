@@ -39,7 +39,7 @@ required-features = ["type_inbox", "type_broadcast", "broadcast"]
 egui = { workspace = true, optional = true }
 hello_egui_utils = { workspace = true, optional = true }
 futures-channel = { version = "0.3", optional = true }
-futures = { version = "0.3", optional = true }
+futures = { workspace = true, optional = true }
 # Egui uses parking_lot so we should be fine with using it too (regarding compile times).
 parking_lot = "0.12"
 
@@ -48,10 +48,10 @@ type-map = { version = "0.5.0", optional = true }
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-tokio = { version = "1", features = ["full"] }
-ehttp = { version = "0.5.0", features = ["json"] }
-serde_json = "1"
-rand = "0.8"
+tokio = { workspace = true, features = ["full"] }
+ehttp = { workspace = true, features = ["json"] }
+serde_json.workspace = true
+rand.workspace = true
 derive-new = "0.7"
 
 [lints]
