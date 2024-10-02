@@ -1,6 +1,7 @@
 use crate::chat::CHAT_EXAMPLE;
 use crate::color_sort::{COLOR_SORT_EXAMPLE, COLOR_SORT_WRAPPED_EXAMPLE};
 use crate::crate_ui::CrateUsage;
+use crate::flex::FLEX_EXAMPLE;
 use crate::gallery::GALLERY_EXAMPLE;
 use crate::shared_state::SharedState;
 use crate::signup_form::SIGNUP_FORM_EXAMPLE;
@@ -23,6 +24,10 @@ pub const EXAMPLES: &[Category] = &[
     Category {
         name: "Form Validation",
         examples: &[SIGNUP_FORM_EXAMPLE],
+    },
+    Category {
+        name: "Layout",
+        examples: &[FLEX_EXAMPLE],
     },
 ];
 
