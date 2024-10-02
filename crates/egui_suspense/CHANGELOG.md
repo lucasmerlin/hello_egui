@@ -1,5 +1,10 @@
 # egui_suspense changelog
 
+## 0.6.0
+
+- Updated egui to 0.29
+- remove accidental `println!` statement
+
 ## 0.5.0
 
 - Made egui_suspense !Send and !Sync on wasm

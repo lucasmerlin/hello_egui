@@ -1,5 +1,9 @@
 # egui_form changelog
 
+## 0.3.0
+
+- update egui to 0.29
+
 ## 0.2.0
 
 - update egui to 0.28

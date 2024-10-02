@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+
+- update egui to 0.29
+
 ## 0.9.1
 
 - make ItemIterator public

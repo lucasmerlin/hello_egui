@@ -1,8 +1,10 @@
 # hello_egui changelog
 
-## unreleased
+## 0.6.0
 
+- update all crates for egui 0.29 support
 - introducing [egui_flex](https://crates.io/crates/egui_flex), a subset of flexbox for egui
+- introducing [egui_material_icons](https://crates.io/crates/egui_material_icons), material icons for egui
 
 ## 0.5.0
 
