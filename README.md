@@ -25,6 +25,10 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
     - Drag & drop sorting library for egui
     - released on [crates.io](https://crates.io/crates/egui_dnd)
 
+- [egui_flex](crates/egui_flex)
+    - Flexbox layout for egui
+    - released on [crates.io](https://crates.io/crates/egui_flex)
+
 - [egui_inbox](crates/egui_inbox)
     - Simple utility for sending messages to egui uis from other threads / async functions
     - released on [crates.io](https://crates.io/crates/egui_inbox)
