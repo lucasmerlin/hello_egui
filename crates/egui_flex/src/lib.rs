@@ -213,6 +213,14 @@ impl Flex {
         max_item_size: Option<Vec2>,
         f: impl FnOnce(&mut FlexInstance) -> R,
     ) -> (Vec2, InnerResponse<R>) {
+        if cfg!(debug_assertions)
+            && (ui.cursor().min.x.fract() == 0.5 || ui.cursor().min.y.fract() == 0.5)
+        {
+            log::warn!(
+                "Ui cursor position is misaligned by 0.5px! \
+                This may cause flickering / repeated calles to Ctx::request_discard."
+            );
+        }
         let id = if let Some(id_salt) = self.id_salt {
             ui.id().with(id_salt)
         } else {

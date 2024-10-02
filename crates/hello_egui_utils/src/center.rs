@@ -42,7 +42,11 @@ impl Center {
         let last_size = ui.ctx().data(|mem| mem.get_temp(data_id));
 
         let content_rect = if let Some(size) = last_size {
-            let left_top = self.align2.align_size_within_rect(size, rect).left_top();
+            let left_top = self
+                .align2
+                .align_size_within_rect(size, rect)
+                .left_top()
+                .round();
             Rect::from_min_size(left_top, rect.size())
         } else {
             rect

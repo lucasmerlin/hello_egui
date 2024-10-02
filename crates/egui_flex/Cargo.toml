@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 egui.workspace = true
+log.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
