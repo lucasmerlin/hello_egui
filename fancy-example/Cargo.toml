@@ -40,6 +40,7 @@ casey = "0.4.0"
 egui_commonmark = { version = "0.18.0", features = [] }
 
 validator = { version = "0.18.1", features = ["derive"] }
+env_logger = "0.11"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["time", "rt", "macros"] }

@@ -205,6 +205,7 @@ impl Flex {
         self
     }
 
+    #[track_caller]
     fn show_inside<R>(
         self,
         ui: &mut Ui,
@@ -212,6 +213,14 @@ impl Flex {
         max_item_size: Option<Vec2>,
         f: impl FnOnce(&mut FlexInstance) -> R,
     ) -> (Vec2, InnerResponse<R>) {
+        if cfg!(debug_assertions)
+            && (ui.cursor().min.x.fract() == 0.5 || ui.cursor().min.y.fract() == 0.5)
+        {
+            log::warn!(
+                "Ui cursor position is misaligned by 0.5px! \
+                This may cause flickering / repeated calles to Ctx::request_discard."
+            );
+        }
         let id = if let Some(id_salt) = self.id_salt {
             ui.id().with(id_salt)
         } else {
@@ -225,6 +234,8 @@ impl Flex {
             FlexDirection::Horizontal => Layout::left_to_right(Align::Min),
             FlexDirection::Vertical => Layout::top_down(Align::Min),
         };
+
+        let mut state_changed = false;
 
         let r = ui.with_layout(layout, |ui| {
             let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
@@ -243,7 +254,7 @@ impl Flex {
                 ui.min_rect().min,
             );
 
-            let max_item_size = max_item_size.unwrap_or(ui.available_size());
+            let max_item_size = round_vec2(max_item_size.unwrap_or(ui.available_size()));
 
             let mut instance = FlexInstance {
                 current_row: 0,
@@ -288,11 +299,7 @@ impl Flex {
             // });
 
             if previous_state != instance.state {
-                instance
-                    .ui
-                    .ctx()
-                    .request_discard("Flex item added / removed / size changed");
-                instance.ui.ctx().request_repaint();
+                state_changed = true;
             }
 
             instance.ui.ctx().memory_mut(|mem| {
@@ -306,6 +313,13 @@ impl Flex {
             });
             (min_size, r)
         });
+
+        // We move this down here because `#[track_caller]` doesn't work with closures
+        if state_changed {
+            ui.ctx()
+                .request_discard("Flex item added / removed / size changed");
+            ui.ctx().request_repaint();
+        }
 
         (r.inner.0, InnerResponse::new(r.inner.1, r.response))
     }
@@ -396,6 +410,7 @@ impl Flex {
     ///
     /// Note: You will likely get weird results when showing this within a `Ui::horizontal` layout,
     /// since it limits the `max_rect` to some small value. Use `Ui::horizontal_top` instead.
+    #[track_caller]
     pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> InnerResponse<R> {
         self.show_inside(ui, None, None, f).1
     }
@@ -632,18 +647,18 @@ impl<'a> FlexInstance<'a> {
             let (res, row_len, frame_rect) = res;
 
             let margin_bottom_right = res.container_min_rect.min - frame_rect.min;
-            let margin = Margin {
+            let margin = round_margin(Margin {
                 top: res.margin_top_left.y,
                 left: res.margin_top_left.x,
                 bottom: margin_bottom_right.y,
                 right: margin_bottom_right.x,
-            };
+            });
 
             let item = ItemState {
                 margin,
-                inner_size: res.child_rect.size().round(),
+                inner_size: round_vec2(res.child_rect.size()),
                 id: ui.id(),
-                size_with_margin: (res.child_rect.size() + margin.sum()).round(),
+                size_with_margin: round_vec2(res.child_rect.size() + margin.sum()),
                 config: item,
                 remeasure_widget: res.remeasure_widget,
             };
@@ -709,6 +724,7 @@ impl<'a> FlexInstance<'a> {
 
     /// Add a nested flex container. Currently this doesn't correctly support wrapping the content
     /// in the nested container (once the content wraps, you will get weird results).
+    #[track_caller]
     pub fn add_flex<R>(
         &mut self,
         item: FlexItem,
@@ -722,6 +738,7 @@ impl<'a> FlexInstance<'a> {
 
     /// Add a nested flex container with a frame.
     /// See [`Self::add_flex`] for limitations.
+    #[track_caller]
     pub fn add_flex_frame<R>(
         &mut self,
         item: FlexItem,
@@ -831,6 +848,7 @@ impl FlexContainerUi {
     }
 
     /// Add a nested flex container.
+    #[track_caller]
     pub fn content_flex<R>(
         self,
         ui: &mut Ui,
@@ -906,7 +924,7 @@ impl FlexContainerUi {
         // If the size changed in the cross direction the widget might have grown in the main direction
         // and wrapped, we need to remeasure the widget (draw it once with full available size)
         let remeasure_widget = self.last_inner_size.is_some_and(|last_size| {
-            last_size[1 - self.direction].round() != intrinsic_size[1 - self.direction].round()
+            round(last_size[1 - self.direction]) != round(intrinsic_size[1 - self.direction])
         }) && !self.remeasure_widget;
 
         if remeasure_widget {
@@ -922,5 +940,30 @@ impl FlexContainerUi {
             container_min_rect: ui.min_rect(),
             remeasure_widget,
         }
+    }
+}
+
+/// Round a float to 5 decimal places.
+fn round(i: f32) -> f32 {
+    const PRECISION: f32 = 1e3;
+    let i = (i * PRECISION).round() / PRECISION;
+    // I've seen this flip from 0.0 to -0.0 in a discard-loop
+    if i == -0.0 {
+        0.0
+    } else {
+        i
+    }
+}
+
+fn round_vec2(v: Vec2) -> Vec2 {
+    Vec2::new(round(v.x), round(v.y))
+}
+
+fn round_margin(margin: Margin) -> Margin {
+    Margin {
+        top: round(margin.top),
+        left: round(margin.left),
+        bottom: round(margin.bottom),
+        right: round(margin.right),
     }
 }

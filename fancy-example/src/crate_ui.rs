@@ -3,8 +3,8 @@ use egui::{Button, ScrollArea, Ui, Widget};
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 
 use Crate::{
-    EguiAnimation, EguiDnd, EguiForm, EguiInbox, EguiInfiniteScroll, EguiPullToRefresh, EguiRouter,
-    EguiSuspense, EguiThumbhash, EguiVirtualList,
+    EguiAnimation, EguiDnd, EguiFlex, EguiForm, EguiInbox, EguiInfiniteScroll, EguiPullToRefresh,
+    EguiRouter, EguiSuspense, EguiThumbhash, EguiVirtualList,
 };
 
 use crate::shared_state::SharedState;
@@ -17,6 +17,7 @@ pub const README_CONTENT_SEPARATOR: &str = "[content]:<>";
 pub enum Crate {
     EguiAnimation,
     EguiDnd,
+    EguiFlex,
     EguiForm,
     EguiInbox,
     EguiInfiniteScroll,
@@ -68,6 +69,7 @@ macro_rules! crate_impl {
 crate_impl!(
     EguiAnimation,
     EguiDnd,
+    EguiFlex,
     EguiForm,
     EguiInbox,
     EguiInfiniteScroll,
@@ -91,6 +93,7 @@ impl Crate {
         match self {
             EguiAnimation => "Animation utilities for egui",
             EguiDnd => "Drag and drop sorting for egui",
+            EguiFlex => "Flex layout for egui",
             EguiForm => "Form validation for egui",
             EguiInbox => "Channel with ergonomics optimized for egui",
             EguiInfiniteScroll => "Infinite scroll widget for egui",

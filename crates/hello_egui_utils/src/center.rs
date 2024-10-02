@@ -42,7 +42,11 @@ impl Center {
         let last_size = ui.ctx().data(|mem| mem.get_temp(data_id));
 
         let content_rect = if let Some(size) = last_size {
-            let left_top = self.align2.align_size_within_rect(size, rect).left_top();
+            let left_top = self
+                .align2
+                .align_size_within_rect(size, rect)
+                .left_top()
+                .round();
             Rect::from_min_size(left_top, rect.size())
         } else {
             rect
@@ -50,13 +54,14 @@ impl Center {
 
         let mut ui = ui.new_child(UiBuilder::new().max_rect(content_rect));
 
-        if last_size.is_none() {
-            ui.set_invisible();
-        }
-
         let result = content(&mut ui);
 
         let size = ui.min_size();
+
+        if Some(size.round()) != last_size.map(Vec2::round) {
+            ui.ctx().request_repaint();
+            ui.ctx().request_discard("hello_egui_utils::Center");
+        }
 
         ui.ctx().data_mut(|mem| {
             mem.insert_temp(data_id, size);

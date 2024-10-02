@@ -1,9 +1,9 @@
-use std::hash::Hash;
-
 use eframe::egui::Color32;
 use eframe::emath::lerp;
 use eframe::{egui, Frame};
 use egui::{Context, Id, SidePanel, Ui};
+use std::hash::Hash;
+use std::num::NonZeroUsize;
 
 use egui_inbox::UiInbox;
 use egui_router::EguiRouter;
@@ -17,6 +17,7 @@ mod chat;
 mod color_sort;
 mod crate_ui;
 mod example;
+mod flex;
 mod futures;
 mod gallery;
 mod routes;
@@ -36,18 +37,16 @@ pub struct App {
     router: EguiRouter<SharedState>,
 }
 
-impl Default for App {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl App {
-    pub fn new() -> Self {
+    pub fn new(ctx: &Context) -> Self {
         let (tx, inbox) = UiInbox::channel();
         let mut state = SharedState::new(tx);
 
         let router = router(&mut state);
+
+        ctx.options_mut(|opts| {
+            opts.max_passes = NonZeroUsize::new(4).unwrap();
+        });
         Self {
             inbox,
             shared_state: state,
@@ -132,6 +131,7 @@ pub fn demo_area(ui: &mut Ui, title: &'static str, width: f32, content: impl FnO
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     use eframe::NativeOptions;
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -157,7 +157,7 @@ fn main() -> eframe::Result<()> {
         Box::new(move |ctx| {
             egui_extras::install_image_loaders(&ctx.egui_ctx);
             egui_thumbhash::register(&ctx.egui_ctx);
-            Ok(Box::new(App::new()) as Box<dyn eframe::App>)
+            Ok(Box::new(App::new(&ctx.egui_ctx)) as Box<dyn eframe::App>)
         }),
     )
 }
@@ -180,10 +180,10 @@ fn main() {
             .start(
                 element,
                 web_options,
-                Box::new(|a| {
-                    egui_extras::install_image_loaders(&a.egui_ctx);
-                    egui_thumbhash::register(&a.egui_ctx);
-                    Ok(Box::new(App::new()) as Box<dyn eframe::App>)
+                Box::new(|ctx| {
+                    egui_extras::install_image_loaders(&ctx.egui_ctx);
+                    egui_thumbhash::register(&ctx.egui_ctx);
+                    Ok(Box::new(App::new(&ctx.egui_ctx)) as Box<dyn eframe::App>)
                 }),
             )
             .await

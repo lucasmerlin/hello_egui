@@ -99,6 +99,7 @@ tokio = "1"
 futures = "0.3"
 serde = "1"
 image = "0.25"
+log = "0.4"
 
 [workspace.lints.rust]
 unsafe_code = "deny"
