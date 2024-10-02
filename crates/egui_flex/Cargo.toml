@@ -2,6 +2,13 @@
 name = "egui_flex"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_flex"
+description = "A flexbox-like layout system for egui."
+keywords = ["egui", "flexbox", "layout", "gui"]
+categories = ["gui"]
+license = "MIT"
+homepage = ""
+
 
 [dependencies]
 egui.workspace = true

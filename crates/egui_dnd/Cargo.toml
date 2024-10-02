@@ -3,9 +3,10 @@ name = "egui_dnd"
 version = "0.9.1"
 edition = "2021"
 authors = ["Lucas Meurer"]
-repository = "https://github.com/lucasmerlin/hello_egui"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd"
 homepage = "https://lucasmerlin.github.io/hello_egui/"
-keywords = ["egui", "drag", "drop", "ui"]
+keywords = ["egui", "drag", "drop", "ui", "gui"]
+categories = ["gui"]
 description = "A drag and drop library for egui"
 license = "MIT"
 

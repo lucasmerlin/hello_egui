@@ -2,6 +2,11 @@
 name = "material_icons_proc_macro"
 version = "0.1.0"
 edition = "2021"
+categories = ["gui"]
+keywords = ["egui", "icons", "material"]
+description = "Material icons for egui."
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_material_icons"
 
 [lib]
 proc-macro = true
