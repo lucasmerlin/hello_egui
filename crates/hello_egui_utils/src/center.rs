@@ -50,13 +50,14 @@ impl Center {
 
         let mut ui = ui.new_child(UiBuilder::new().max_rect(content_rect));
 
-        if last_size.is_none() {
-            ui.set_invisible();
-        }
-
         let result = content(&mut ui);
 
         let size = ui.min_size();
+
+        if Some(size.round()) != last_size.map(Vec2::round) {
+            ui.ctx().request_repaint();
+            ui.ctx().request_discard("hello_egui_utils::Center");
+        }
 
         ui.ctx().data_mut(|mem| {
             mem.insert_temp(data_id, size);
