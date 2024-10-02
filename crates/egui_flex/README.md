@@ -1,5 +1,14 @@
 # egui_flex
 
+[![egui_ver](https://img.shields.io/badge/egui-0.29-blue)](https://github.com/emilk/egui)
+[![Latest version](https://img.shields.io/crates/v/egui_flex.svg)](https://crates.io/crates/egui_flex)
+[![Documentation](https://docs.rs/egui_flex/badge.svg)](https://docs.rs/egui_flex)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
+[![License](https://img.shields.io/crates/l/egui_flex.svg)](https://crates.io/crates/egui_flex)
+
+
+[content]:<>
+
 I was curious how much of flexbox I could implement in egui in a single-pass layout, by just remembering the sizes
 of widgets from the previous frame. Turns out it's quite a lot!
 
