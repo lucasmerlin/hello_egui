@@ -1,9 +1,12 @@
-use proc_macro::TokenStream;
-use std::collections::HashSet;
+#!/usr/bin/env rust-script
+//! This script generates the `src/icons.rs` file from the `MaterialSymbolsRounded-Regular.codepoints` file.
+//! Install the `rust-script` crate with `cargo install rust-script` to run this script.
 
-#[proc_macro]
-pub fn code_points(_item: TokenStream) -> TokenStream {
-    let codepoints = include_str!("../MaterialSymbolsRounded-Regular.codepoints");
+use std::collections::HashSet;
+use std::path::PathBuf;
+
+pub fn main() {
+    let codepoints = include_str!("./MaterialSymbolsRounded-Regular.codepoints");
 
     let mut names = HashSet::new();
 
@@ -32,5 +35,9 @@ pub fn code_points(_item: TokenStream) -> TokenStream {
         })
         .collect();
 
-    code.parse().unwrap()
+    let file = PathBuf::try_from(file!()).unwrap();
+    let icons = file.parent().unwrap().join("src").join("icons.rs");
+    std::fs::write(icons, code).unwrap();
+
+    println!("Generated src/icons.rs");
 }

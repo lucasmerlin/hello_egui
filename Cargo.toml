@@ -50,7 +50,6 @@ thumbhash = ["dep:egui_thumbhash"]
 tokio = ["egui_suspense/tokio", "egui_infinite_scroll/tokio"]
 virtual_list = ["dep:egui_virtual_list"]
 material_icons = ["dep:egui_material_icons"]
-material_icons_proc_macro = ["dep:material_icons_proc_macro"]
 
 [dependencies]
 egui_animation = { workspace = true, optional = true }
@@ -65,7 +64,6 @@ egui_suspense = { workspace = true, optional = true }
 egui_thumbhash = { workspace = true, optional = true }
 egui_virtual_list = { workspace = true, optional = true }
 egui_material_icons = { workspace = true, optional = true }
-material_icons_proc_macro = { workspace = true, optional = true }
 
 
 [workspace]
@@ -86,7 +84,6 @@ egui_virtual_list = { path = "./crates/egui_virtual_list", version = "0.4.0" }
 egui_infinite_scroll = { path = "./crates/egui_infinite_scroll", version = "0.4.0" }
 egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.4.0" }
 egui_material_icons = { path = "./crates/egui_material_icons", version = "0.1.0" }
-material_icons_proc_macro = { path = "./crates/material_icons_proc_macro", version = "0.1.0" }
 hello_egui = { path = ".", version = "0.5.0" }
 
 egui = { version = "0.29", default-features = false }

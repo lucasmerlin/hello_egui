@@ -12,7 +12,6 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_ma
 
 [dependencies]
 egui.workspace = true
-material_icons_proc_macro.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }

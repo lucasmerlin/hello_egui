@@ -20,3 +20,6 @@ egui_material_icons::initialize(&cc.egui_ctx);
 // later in some ui:
 ui.button(egui_material_icons::icons::ICON_ADD);
 ```
+
+Currently this provides the rounded icons, I could also add a feature to enable different variants.
+If you need this just open an issue.

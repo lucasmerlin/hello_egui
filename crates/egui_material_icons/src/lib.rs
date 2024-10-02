@@ -1,10 +1,11 @@
+#![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
+
 use egui::{
     Button, FontData, FontDefinitions, FontFamily, Frame, Margin, Response, RichText, Widget,
 };
 
-pub mod icons {
-    material_icons_proc_macro::code_points!();
-}
+pub mod icons;
 
 pub const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Filled-Regular.ttf");
 
