@@ -698,7 +698,18 @@ impl<'a> FlexInstance<'a> {
 
     /// Add a simple item to the flex container.
     /// It will be positioned based on [FlexItem::align_self_content].
+    #[deprecated = "Use `add_ui` instead"]
     pub fn add_simple<R>(
+        &mut self,
+        item: FlexItem,
+        content: impl FnOnce(&mut Ui) -> R,
+    ) -> InnerResponse<R> {
+        self.add_container(item, |ui, container| container.content(ui, content))
+    }
+
+    /// Add a child ui to the flex container.
+    /// It will be positioned based on [FlexItem::align_self_content].
+    pub fn add_ui<R>(
         &mut self,
         item: FlexItem,
         content: impl FnOnce(&mut Ui) -> R,
@@ -723,7 +734,21 @@ impl<'a> FlexInstance<'a> {
 
     /// Add some content with a frame. The frame will be stretched according to the flex layout.
     /// The content will be centered / positioned based on [FlexItem::align_self_content].
+    #[deprecated = "Use `add_ui_frame` instead"]
     pub fn add_frame<R>(
+        &mut self,
+        item: FlexItem,
+        frame: Frame,
+        content: impl FnOnce(&mut Ui) -> R,
+    ) -> InnerResponse<R> {
+        self.add_container(item, |ui, container| {
+            frame.show(ui, |ui| container.content(ui, content)).inner
+        })
+    }
+
+    /// Add some content with a frame. The frame will be stretched according to the flex layout.
+    /// The content will be centered / positioned based on [FlexItem::align_self_content].
+    pub fn add_ui_frame<R>(
         &mut self,
         item: FlexItem,
         frame: Frame,
