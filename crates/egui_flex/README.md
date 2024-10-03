@@ -31,7 +31,9 @@ what all the different flex keywords mean.
   has `grow > 0.0 || align_self == Stretch`
 
 - nested flex containers work and will grow as expected _as long as they don't wrap_:
+
   ![image](https://github.com/user-attachments/assets/e2c7a742-8307-4f3c-ae2e-b92f0e1c2529)
+
   Every group in the screenshot represents a flex container or flex item so this shows flexes nested three levels deep.
 
   You can't arbitrarily nest flexes in child ui's, you have to use a special method on the flex builder to add nested
