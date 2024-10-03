@@ -13,7 +13,7 @@ Provides material icons (now material symbols) for egui.
 
 example:
 
-```
+```no_build
 // register the fonts:
 egui_material_icons::initialize(&cc.egui_ctx);
 
@@ -21,5 +21,5 @@ egui_material_icons::initialize(&cc.egui_ctx);
 ui.button(egui_material_icons::icons::ICON_ADD);
 ```
 
-Currently this provides the rounded icons, I could also add a feature to enable different variants.
+Currently, this provides the rounded icons, I could also add a feature to enable different variants.
 If you need this just open an issue.
