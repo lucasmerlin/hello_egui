@@ -3,11 +3,11 @@ name = "egui_flex"
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_flex"
+homepage = "https://lucasmerlin.github.io/hello_egui/#/example/flex"
 description = "A flexbox-like layout system for egui."
 keywords = ["egui", "flexbox", "layout", "gui"]
 categories = ["gui"]
 license = "MIT"
-homepage = ""
 
 
 [dependencies]
