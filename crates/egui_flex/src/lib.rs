@@ -46,6 +46,8 @@ pub enum FlexAlign {
 }
 
 /// How to align the content in the cross axis across the whole container.
+///
+/// NOTE: Currently only [`FlexAlignContent::Normal`] and [`FlexAlignContent::Stretch`] are implemented.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub enum FlexAlignContent {
@@ -380,6 +382,7 @@ impl Flex {
         let available_cross_size = available_size[cross_direction];
         let total_row_cross_size = rows.iter().map(|row| row.cross_size).sum::<f32>();
         let extra_cross_space_per_row = match self.align_content {
+            #[allow(clippy::match_same_arms)]
             FlexAlignContent::Normal => 0.0,
             FlexAlignContent::Stretch => {
                 let extra_cross_space = f32::max(
@@ -391,7 +394,8 @@ impl Flex {
 
                 extra_cross_space / rows.len() as f32
             }
-            _ => unimplemented!(),
+            // TODO: Implement the other aligns
+            _ => 0.0,
         };
 
         let mut row_position = min_position;

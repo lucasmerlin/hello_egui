@@ -63,6 +63,10 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
     - For a showcase, check the [gallery example](https://lucasmerlin.github.io/hello_egui/#/example/gallery).
     - released on [crates.io](https://crates.io/crates/egui_thumbhash)
 
+- [egui_material_icons](crates/egui_material_icons)
+    - Material icons for egui
+    - released on [crates.io](https://crates.io/crates/egui_material_icons)
+
 ## **Experimental** Crates
 
 - [egui_animation](crates/egui_animation)
