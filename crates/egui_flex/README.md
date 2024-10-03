@@ -46,6 +46,7 @@ what all the different flex keywords mean.
 
 - justify-content: should be easy to add
 - handling wrapping in nested flex: not 100% certain but I think this should be possible
+- max width: with flex-grow it's currently not possible to set a max width right now
 
 #### The following things are not possible
 
@@ -60,7 +61,7 @@ https://github.com/user-attachments/assets/3f8d324e-7e51-4f4b-9415-f2d61e24d322
 
 ### Real world example
 
-Finally I wanted to share a real world example how flex can improve the ui by a lot. In
+Finally, I wanted to share a real world example how flex can improve the ui by a lot. In
 the [hello_egui demo app](https://lucasmerlin.github.io/hello_egui/) I have a list of crates displayed as small tags in
 the sidebar. When just shown with ui.horizontal_wrapped it looks really weird:
 
@@ -69,3 +70,36 @@ the sidebar. When just shown with ui.horizontal_wrapped it looks really weird:
 When updated to use egui_flex it looks much nicer:
 
 ![image](https://github.com/user-attachments/assets/a36240bf-db08-4046-9d83-2b62f5c512b1)
+
+### Example
+
+Here is a simple example of how to use egui_flex:
+
+```rust no_run
+use eframe::NativeOptions;
+use egui::{Button, CentralPanel};
+use egui_flex::{item, Flex, FlexAlignContent};
+
+fn main() -> eframe::Result {
+    eframe::run_simple_native(file!(), NativeOptions::default(), |ctx, _frame| {
+        CentralPanel::default().show(ctx, |ui| {
+            Flex::horizontal().show(ui, |flex| {
+                flex.add(item().grow(1.0), Button::new("Growing button"));
+                flex.add(item(), Button::new("Non-growing button"));
+
+                // Nested flex
+                flex.add_flex(
+                    item().grow(1.0),
+                    // We need the FlexAlignContent::Stretch to make the buttons fill the space
+                    Flex::vertical().align_content(FlexAlignContent::Stretch),
+                    |flex| {
+                        flex.add(item(), Button::new("Vertical button"));
+                        flex.add(item(), Button::new("Another Vertical button"));
+                    },
+                );
+            });
+        });
+    })
+}
+
+```

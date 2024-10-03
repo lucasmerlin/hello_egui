@@ -94,8 +94,13 @@ pub struct FlexItem {
     align_content: Option<Align2>,
 }
 
+/// Create a new flex item. Shorthand for [`FlexItem::default`].
+pub fn item() -> FlexItem {
+    FlexItem::default()
+}
+
 impl FlexItem {
-    /// Create a new flex item.
+    /// Create a new flex item. You can also use the [`item`] function.
     pub fn new() -> Self {
         Self::default()
     }
@@ -216,9 +221,12 @@ impl Flex {
         if cfg!(debug_assertions)
             && (ui.cursor().min.x.fract() == 0.5 || ui.cursor().min.y.fract() == 0.5)
         {
+            let location = std::panic::Location::caller();
             log::warn!(
                 "Ui cursor position is misaligned by 0.5px! \
-                This may cause flickering / repeated calles to Ctx::request_discard."
+                This may cause flickering / repeated calles to Ctx::request_discard.\
+                \n\tLocation: {}",
+                location
             );
         }
         let id = if let Some(id_salt) = self.id_salt {

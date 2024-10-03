@@ -43,7 +43,7 @@ impl ExampleTrait for FlexExample {
             });
 
             ui.collapsing("Without egui_flex", |ui| {
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     let _ = ui.button("Short Button");
                     let _ = ui.button("Loooooong Button");
                     let _ = ui.button(RichText::new("Big Button").heading());
@@ -52,7 +52,8 @@ impl ExampleTrait for FlexExample {
 
             space(ui);
 
-            ui.label("You can easily add space between to fill the available space:");
+            ui.label("You can easily add space between items to fill the available space:");
+            ui.small("(the same thing would be possible with egui::Sides but the tab order would be messed up)");
             Frame::popup(ui.style()).show(ui, |ui| {
                 Flex::new().show(ui, |flex| {
                     flex.add(
@@ -64,7 +65,6 @@ impl ExampleTrait for FlexExample {
                     flex.add(FlexItem::new(), Button::new("❓"));
                 });
             });
-            ui.label("(the same thing would be possible with egui::Sides but the tab order would be messed up)");
 
             space(ui);
 
