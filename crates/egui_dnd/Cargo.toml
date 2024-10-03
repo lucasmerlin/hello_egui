@@ -1,6 +1,6 @@
 [package]
 name = "egui_dnd"
-version = "0.9.1"
+version = "0.10.0"
 edition = "2021"
 authors = ["Lucas Meurer"]
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd"
