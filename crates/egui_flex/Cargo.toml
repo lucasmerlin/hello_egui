@@ -1,6 +1,6 @@
 [package]
 name = "egui_flex"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_flex"
 homepage = "https://lucasmerlin.github.io/hello_egui/#/example/flex"
