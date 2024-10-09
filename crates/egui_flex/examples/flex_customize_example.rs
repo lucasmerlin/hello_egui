@@ -24,14 +24,14 @@ impl Item {
     pub fn show(&mut self, ui: &mut FlexInstance) {
         let response = match &self.kind {
             ItemKind::Button(text) => ui.add(self.flex, Button::new(text)).inner,
-            ItemKind::Label(text) => ui.add_simple(self.flex, |ui| ui.label(text)).inner,
+            ItemKind::Label(text) => ui.add_ui(self.flex, |ui| ui.label(text)).inner,
         };
 
         response.context_menu(|ui| {
             ui.set_width(200.0);
             ui.set_height(100.0);
             Flex::vertical().show(ui, |flex| {
-                flex.add_simple(FlexItem::new(), |ui| {
+                flex.add_ui(FlexItem::new(), |ui| {
                     Flex::horizontal().show(ui, |flex| {
                         let response = flex
                             .add(
@@ -58,7 +58,7 @@ impl Item {
                         }
                     });
                 });
-                flex.add_simple(FlexItem::new(), |ui| match &mut self.kind {
+                flex.add_ui(FlexItem::new(), |ui| match &mut self.kind {
                     ItemKind::Button(text) => {
                         ui.label("Button Text:");
                         ui.text_edit_multiline(text);

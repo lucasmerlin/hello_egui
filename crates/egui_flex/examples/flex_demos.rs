@@ -30,7 +30,7 @@ fn main() -> eframe::Result {
                 let frame = Frame::group(ui.style());
 
                 Flex::new().show(ui, |flex| {
-                    flex.add_simple(FlexItem::new(), |ui| {
+                    flex.add_ui(FlexItem::new(), |ui| {
                         ui.label("Demo direction:");
                     });
                     if flex
@@ -55,7 +55,7 @@ fn main() -> eframe::Result {
                         demo_dir = FlexDirection::Vertical;
                     };
 
-                    flex.add_simple(FlexItem::new(), |ui| ui.checkbox(&mut grow, "Grow"));
+                    flex.add_ui(FlexItem::new(), |ui| ui.checkbox(&mut grow, "Grow"));
                 });
 
                 let main_dir = if demo_dir == FlexDirection::Horizontal {
@@ -66,7 +66,7 @@ fn main() -> eframe::Result {
                 let grow_items = if grow { 1.0 } else { 0.0 };
 
                 let heading = |flex: &mut FlexInstance, heading| {
-                    flex.add_simple(FlexItem::new().grow(0.0), |ui| {
+                    flex.add_ui(FlexItem::new().grow(0.0), |ui| {
                         ui.heading(heading);
                     });
                 };
@@ -89,7 +89,7 @@ fn main() -> eframe::Result {
                                     FlexAlign::End,
                                     FlexAlign::Stretch,
                                 ] {
-                                    flex.add_frame(
+                                    flex.add_ui_frame(
                                         FlexItem::new().align_self(*align),
                                         frame,
                                         |ui| {
@@ -98,7 +98,7 @@ fn main() -> eframe::Result {
                                     );
                                 }
 
-                                flex.add_frame(FlexItem::new(), frame, |ui| {
+                                flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                     ui.label("Some bigger item\nwith some\nmore lines")
                                 });
                             },
@@ -112,7 +112,7 @@ fn main() -> eframe::Result {
                                 heading(flex, "Grow");
 
                                 for grow in &[0.0, 1.0, 2.0, 3.0] {
-                                    flex.add_frame(FlexItem::new().grow(*grow), frame, |ui| {
+                                    flex.add_ui_frame(FlexItem::new().grow(*grow), frame, |ui| {
                                         ui.label(format!("{grow:?}"));
                                     });
                                 }
@@ -127,7 +127,7 @@ fn main() -> eframe::Result {
                                 heading(flex, "Basis");
 
                                 for basis in &[0.0, 50.0, 100.0, 200.0] {
-                                    flex.add_frame(FlexItem::new().basis(*basis), frame, |ui| {
+                                    flex.add_ui_frame(FlexItem::new().basis(*basis), frame, |ui| {
                                         ui.label(format!("{basis:?}"));
                                     });
                                 }
@@ -146,7 +146,7 @@ fn main() -> eframe::Result {
                                     Flex::new().direction(main_dir).grow_items(grow_items),
                                     frame,
                                     |flex| {
-                                        flex.add_frame(FlexItem::new(), frame, |ui| {
+                                        flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                             ui.label("one");
                                         });
                                         flex.add_flex_frame(
@@ -154,10 +154,10 @@ fn main() -> eframe::Result {
                                             Flex::new().direction(demo_dir).grow_items(grow_items),
                                             frame,
                                             |flex| {
-                                                flex.add_frame(FlexItem::new(), frame, |ui| {
+                                                flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                                     ui.label("two");
                                                 });
-                                                flex.add_frame(FlexItem::new(), frame, |ui| {
+                                                flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                                     ui.label("three");
                                                 });
                                             },
@@ -169,13 +169,13 @@ fn main() -> eframe::Result {
                                     Flex::new().direction(main_dir).grow_items(grow_items),
                                     frame,
                                     |flex| {
-                                        flex.add_frame(FlexItem::new(), frame, |ui| {
+                                        flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                             ui.label("one");
                                         });
-                                        flex.add_frame(FlexItem::new(), frame, |ui| {
+                                        flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                             ui.label("two");
                                         });
-                                        flex.add_frame(FlexItem::new(), frame, |ui| {
+                                        flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                             ui.label("three");
                                         });
                                     },
@@ -190,7 +190,7 @@ fn main() -> eframe::Result {
                             |flex| {
                                 heading(flex, "Align Self Content");
 
-                                flex.add_simple(FlexItem::new(), |ui| {
+                                flex.add_ui(FlexItem::new(), |ui| {
                                     ComboBox::new("self content", "").show_index(
                                         ui,
                                         &mut align_self_content,
@@ -207,7 +207,7 @@ fn main() -> eframe::Result {
                                     FlexAlign::End,
                                     FlexAlign::Stretch,
                                 ] {
-                                    flex.add_frame(
+                                    flex.add_ui_frame(
                                         FlexItem::new()
                                             .align_self(*align)
                                             .align_self_content(align_content),
@@ -218,7 +218,7 @@ fn main() -> eframe::Result {
                                     );
                                 }
 
-                                flex.add_frame(FlexItem::new(), frame, |ui| {
+                                flex.add_ui_frame(FlexItem::new(), frame, |ui| {
                                     ui.label("Some bigger item\nwith some\nmore lines")
                                 });
                             },

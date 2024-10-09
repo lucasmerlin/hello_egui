@@ -87,7 +87,7 @@ fn main() -> eframe::Result {
                                 FlexAlign::Center,
                                 FlexAlign::Stretch,
                             ] {
-                                flex.add_frame(
+                                flex.add_ui_frame(
                                     FlexItem::default().grow(1.0).align_self(*align),
                                     Frame::group(flex.ui().style()),
                                     |ui| {
@@ -99,7 +99,7 @@ fn main() -> eframe::Result {
                                 );
                             }
 
-                            flex.add_simple(FlexItem::new().grow(1.0).basis(150.0), |ui| {
+                            flex.add_ui(FlexItem::new().grow(1.0).basis(150.0), |ui| {
                                 ui.style_mut().spacing.slider_width = ui.available_width() - 50.0;
                                 Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
                             });
@@ -180,11 +180,11 @@ fn main() -> eframe::Result {
                 // ui.horizontal_top(|ui| {
                 //     Flex::new().show(ui, |flex| {
                 //         for i in 0..1000 {
-                //             flex.add_simple(FlexItem::default().grow(1.0), |ui| {
+                //             flex.add_ui(FlexItem::default().grow(1.0), |ui| {
                 //                 ui.label(i.to_string());
                 //             });
                 //         }
-                //         flex.add_simple(FlexItem::default().grow(1000000.0), |ui| {});
+                //         flex.add_ui(FlexItem::default().grow(1000000.0), |ui| {});
                 //     });
                 // });
 

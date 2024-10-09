@@ -83,7 +83,7 @@ pub fn crate_list_ui(ui: &mut Ui, shared: &SharedState) -> bool {
                 };
             }
             // Add a final grow item to fill the remaining space on the last row
-            flex.add_simple(FlexItem::new().grow(9999.0), |_| {});
+            flex.add_ui(FlexItem::new().grow(9999.0), |_| {});
         });
     });
     clicked
