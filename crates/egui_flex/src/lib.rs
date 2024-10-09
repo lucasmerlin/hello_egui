@@ -802,7 +802,7 @@ impl<'a> FlexInstance<'a> {
 
     /// Adds an empty item with flex-grow 1.0.
     pub fn grow(&mut self) -> Response {
-        self.add_simple(FlexItem::new().grow(1.0), |_| {}).response
+        self.add_ui(FlexItem::new().grow(1.0), |_| {}).response
     }
 }
 
