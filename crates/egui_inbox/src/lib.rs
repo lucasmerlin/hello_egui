@@ -75,6 +75,7 @@ impl RequestRepaintContext {
     /// Request a repaint.
     pub fn request_repaint(&self) {
         match &self.0 {
+            #[cfg(feature = "egui")]
             RequestRepaintInner::Ctx(ctx) => ctx.request_repaint(),
             RequestRepaintInner::Arc(boxed) => boxed.request_repaint(),
         }
