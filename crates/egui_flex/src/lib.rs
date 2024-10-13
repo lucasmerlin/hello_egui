@@ -220,17 +220,6 @@ impl Flex {
         max_item_size: Option<Vec2>,
         f: impl FnOnce(&mut FlexInstance) -> R,
     ) -> (Vec2, InnerResponse<R>) {
-        if cfg!(debug_assertions)
-            && (ui.cursor().min.x.fract() == 0.5 || ui.cursor().min.y.fract() == 0.5)
-        {
-            let location = std::panic::Location::caller();
-            log::warn!(
-                "Ui cursor position is misaligned by 0.5px! \
-                This may cause flickering / repeated calles to Ctx::request_discard.\
-                \n\tLocation: {}",
-                location
-            );
-        }
         let id = if let Some(id_salt) = self.id_salt {
             ui.id().with(id_salt)
         } else {
@@ -247,82 +236,88 @@ impl Flex {
 
         let mut state_changed = false;
 
-        let r = ui.with_layout(layout, |ui| {
-            let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
-            let original_item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
+        let r = ui.scope_builder(
+            UiBuilder::new()
+                .layout(layout)
+                .max_rect(round_rect(ui.available_rect_before_wrap())),
+            |ui| {
+                let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
+                let original_item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
 
-            // We ceil in order to prevent rounding errors to wrap the layout unexpectedly
-            let available_size = target_size.unwrap_or(ui.available_size()).ceil();
-            let direction = usize::from(!ui.layout().main_dir().is_horizontal());
-            let cross_direction = 1 - direction;
+                // We ceil in order to prevent rounding errors to wrap the layout unexpectedly
+                let available_size = target_size.unwrap_or(ui.available_size()).ceil();
+                let direction = usize::from(!ui.layout().main_dir().is_horizontal());
+                let cross_direction = 1 - direction;
 
-            let rows = self.layout_rows(
-                &previous_state,
-                available_size,
-                gap,
-                direction,
-                ui.min_rect().min,
-            );
+                let rows = self.layout_rows(
+                    &previous_state,
+                    available_size,
+                    gap,
+                    direction,
+                    ui.min_rect().min,
+                );
 
-            let max_item_size = round_vec2(max_item_size.unwrap_or(ui.available_size()));
+                let max_item_size = round_vec2(max_item_size.unwrap_or(ui.available_size()));
 
-            let mut instance = FlexInstance {
-                current_row: 0,
-                current_row_index: 0,
-                flex: &self,
-                state: FlexState {
-                    items: vec![],
+                let mut instance = FlexInstance {
+                    current_row: 0,
+                    current_row_index: 0,
+                    flex: &self,
+                    state: FlexState {
+                        items: vec![],
+                        max_item_size,
+                    },
+                    direction,
+                    row_ui: FlexInstance::row_ui(ui, rows.first()),
+                    ui,
+                    rows,
                     max_item_size,
-                },
-                direction,
-                row_ui: FlexInstance::row_ui(ui, rows.first()),
-                ui,
-                rows,
-                max_item_size,
-                last_max_item_size: previous_state.max_item_size,
-                item_spacing: original_item_spacing,
-            };
+                    last_max_item_size: previous_state.max_item_size,
+                    item_spacing: original_item_spacing,
+                };
 
-            let r = f(&mut instance);
+                let r = f(&mut instance);
 
-            let mut min_size = instance
-                .state
-                .items
-                .iter()
-                .fold(Vec2::ZERO, |mut current, item| {
-                    current[direction] += item.min_size_with_margin()[direction];
-                    current[cross_direction] = f32::max(
-                        current[cross_direction],
-                        item.min_size_with_margin()[cross_direction],
-                    );
-                    current
-                });
-            min_size[direction] += gap[direction] * (instance.state.items.len() as f32 - 1.0);
+                let mut min_size =
+                    instance
+                        .state
+                        .items
+                        .iter()
+                        .fold(Vec2::ZERO, |mut current, item| {
+                            current[direction] += item.min_size_with_margin()[direction];
+                            current[cross_direction] = f32::max(
+                                current[cross_direction],
+                                item.min_size_with_margin()[cross_direction],
+                            );
+                            current
+                        });
+                min_size[direction] += gap[direction] * (instance.state.items.len() as f32 - 1.0);
 
-            // TODO: We should be able to calculate the min_size by looking at the rows at the
-            // max item size, but form some reason this doesn't work correctly
-            // This would fix wrapping in nested flexes
-            // let min_size = min_size_rows.iter().fold(Vec2::ZERO, |mut current, row| {
-            //     current[direction] = f32::max(current[direction], row.total_size);
-            //     current[cross_direction] += row.cross_size;
-            //     current
-            // });
+                // TODO: We should be able to calculate the min_size by looking at the rows at the
+                // max item size, but form some reason this doesn't work correctly
+                // This would fix wrapping in nested flexes
+                // let min_size = min_size_rows.iter().fold(Vec2::ZERO, |mut current, row| {
+                //     current[direction] = f32::max(current[direction], row.total_size);
+                //     current[cross_direction] += row.cross_size;
+                //     current
+                // });
 
-            if previous_state != instance.state {
-                state_changed = true;
-            }
-
-            instance.ui.ctx().memory_mut(|mem| {
-                mem.data.insert_temp(id, instance.state);
-            });
-
-            instance.rows.iter().for_each(|row| {
-                if let Some(final_rect) = row.final_rect {
-                    instance.ui.allocate_rect(final_rect, Sense::hover());
+                if previous_state != instance.state {
+                    state_changed = true;
                 }
-            });
-            (min_size, r)
-        });
+
+                instance.ui.ctx().memory_mut(|mem| {
+                    mem.data.insert_temp(id, instance.state);
+                });
+
+                instance.rows.iter().for_each(|row| {
+                    if let Some(final_rect) = row.final_rect {
+                        instance.ui.allocate_rect(final_rect, Sense::hover());
+                    }
+                });
+                (min_size, r)
+            },
+        );
 
         // We move this down here because `#[track_caller]` doesn't work with closures
         if state_changed {
@@ -918,7 +913,7 @@ impl FlexContainerUi {
 
         // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
-        let min_size = ui.min_size();
+        let container_min_size = ui.min_size();
 
         ui.set_width(ui.available_width());
         ui.set_height(ui.available_height());
@@ -936,7 +931,7 @@ impl FlexContainerUi {
             inner: res.inner,
             child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
-            min_size,
+            min_size: container_min_size,
             margin_top_left,
             container_min_rect,
             remeasure_widget: false,
@@ -1015,11 +1010,22 @@ fn round_vec2(v: Vec2) -> Vec2 {
     Vec2::new(round(v.x), round(v.y))
 }
 
+fn round_pos2(p: Pos2) -> Pos2 {
+    Pos2::new(round(p.x), round(p.y))
+}
+
 fn round_margin(margin: Margin) -> Margin {
     Margin {
         top: round(margin.top),
         left: round(margin.left),
         bottom: round(margin.bottom),
         right: round(margin.right),
+    }
+}
+
+fn round_rect(rect: Rect) -> Rect {
+    Rect {
+        min: round_pos2(rect.min),
+        max: round_pos2(rect.max),
     }
 }
