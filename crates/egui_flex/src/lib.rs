@@ -290,10 +290,10 @@ impl Flex {
                 .items
                 .iter()
                 .fold(Vec2::ZERO, |mut current, item| {
-                    current[direction] += item.size_with_margin[direction];
+                    current[direction] += item.min_size_with_margin()[direction];
                     current[cross_direction] = f32::max(
                         current[cross_direction],
-                        item.size_with_margin[cross_direction],
+                        item.min_size_with_margin()[cross_direction],
                     );
                     current
                 });
@@ -353,7 +353,7 @@ impl Flex {
             let item_length = item
                 .config
                 .basis
-                .map_or(item.size_with_margin[direction], |basis| {
+                .map_or(item.min_size_with_margin()[direction], |basis| {
                     basis + item.margin.sum()[direction]
                 });
 
@@ -370,8 +370,8 @@ impl Flex {
             }
             current_row.total_grow += item.config.grow.unwrap_or(0.0);
             current_row.items.push(item.clone());
-            if item.size_with_margin[cross_direction] > current_row.cross_size {
-                current_row.cross_size = item.size_with_margin[cross_direction];
+            if item.min_size_with_margin()[cross_direction] > current_row.cross_size {
+                current_row.cross_size = item.min_size_with_margin()[cross_direction];
             }
         }
 
@@ -444,10 +444,20 @@ struct RowData {
 struct ItemState {
     id: Id,
     config: FlexItem,
-    size_with_margin: Vec2,
     inner_size: Vec2,
+    inner_min_size: Vec2,
     margin: Margin,
     remeasure_widget: bool,
+}
+
+impl ItemState {
+    fn inner_size_with_margin(&self) -> Vec2 {
+        self.inner_size + self.margin.sum()
+    }
+
+    fn min_size_with_margin(&self) -> Vec2 {
+        self.inner_min_size + self.margin.sum()
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -537,7 +547,7 @@ impl<'a> FlexInstance<'a> {
 
                 let parent_min_rect = ui.min_rect();
 
-                let mut total_size = item_state.size_with_margin;
+                let mut total_size = item_state.min_size_with_margin();
                 if let Some(basis) = item.basis {
                     total_size[self.direction] = basis + item_state.margin.sum()[self.direction];
                 }
@@ -634,7 +644,7 @@ impl<'a> FlexInstance<'a> {
                 );
                 let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
-                (res, row.items.len(), frame_rect)
+                (res, row.items.len(), child_ui.min_rect())
             } else {
                 ui.set_invisible();
 
@@ -653,12 +663,13 @@ impl<'a> FlexInstance<'a> {
                     },
                 );
 
-                (res, 0, rect)
+                (res, 0, self.ui.min_rect())
             };
 
-            let (res, row_len, frame_rect) = res;
+            let (res, row_len, outer_rect) = res;
 
-            let margin_bottom_right = res.container_min_rect.min - frame_rect.min;
+            let margin_bottom_right = outer_rect.max - res.container_min_rect.max;
+            let margin_bottom_right = res.container_min_rect.min - outer_rect.min;
             let margin = round_margin(Margin {
                 top: res.margin_top_left.y,
                 left: res.margin_top_left.x,
@@ -670,7 +681,7 @@ impl<'a> FlexInstance<'a> {
                 margin,
                 inner_size: round_vec2(res.child_rect.size()),
                 id: ui.id(),
-                size_with_margin: round_vec2(res.child_rect.size() + margin.sum()),
+                inner_min_size: round_vec2(Vec2::max(res.min_size, res.child_rect.size())),
                 config: item,
                 remeasure_widget: res.remeasure_widget,
             };
@@ -821,9 +832,10 @@ pub struct FlexContainerUi {
 /// closure.
 pub struct FlexContainerResponse<T> {
     child_rect: Rect,
-    inner: T,
+    pub inner: T,
     margin_top_left: Vec2,
     max_size: Vec2,
+    min_size: Vec2,
     container_min_rect: Rect,
     remeasure_widget: bool,
 }
@@ -836,6 +848,7 @@ impl<T> FlexContainerResponse<T> {
             inner: f(self.inner),
             margin_top_left: self.margin_top_left,
             max_size: self.max_size,
+            min_size: self.min_size,
             container_min_rect: self.container_min_rect,
             remeasure_widget: self.remeasure_widget,
         }
@@ -856,10 +869,11 @@ impl FlexContainerUi {
             ..
         } = self;
 
-        // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
 
         let child_rect = content_rect.intersect(ui.max_rect());
+
+        let min_size = ui.min_size();
 
         let mut child = ui.new_child(UiBuilder::new().max_rect(child_rect));
 
@@ -878,6 +892,7 @@ impl FlexContainerUi {
             inner: r,
             child_rect: child_min_rect,
             max_size: ui.available_size(),
+            min_size,
             margin_top_left,
             container_min_rect,
             remeasure_widget: false,
@@ -903,6 +918,7 @@ impl FlexContainerUi {
 
         // We will assume that the margin is symmetrical
         let margin_top_left = ui.min_rect().min - frame_rect.min;
+        let min_size = ui.min_size();
 
         ui.set_width(ui.available_width());
         ui.set_height(ui.available_height());
@@ -920,6 +936,7 @@ impl FlexContainerUi {
             inner: res.inner,
             child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
+            min_size,
             margin_top_left,
             container_min_rect,
             remeasure_widget: false,
@@ -933,6 +950,7 @@ impl FlexContainerUi {
         widget: impl Widget,
     ) -> FlexContainerResponse<Response> {
         let margin_top_left = ui.min_rect().min - self.frame_rect.min;
+        let min_size = ui.min_size();
 
         let response = if self.remeasure_widget {
             ui.ctx().request_discard("Flex item remeasure");
@@ -973,6 +991,7 @@ impl FlexContainerUi {
             child_rect: Rect::from_min_size(self.frame_rect.min, intrinsic_size),
             inner: response,
             max_size: ui.available_size(),
+            min_size,
             margin_top_left,
             container_min_rect: ui.min_rect(),
             remeasure_widget,
