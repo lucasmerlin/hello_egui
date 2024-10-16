@@ -7,8 +7,8 @@ mod flex_widget;
 pub use crate::flex_widget::FlexWidget;
 
 use egui::{
-    Align, Align2, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response, Sense, Ui,
-    UiBuilder, Vec2, Widget,
+    Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response,
+    Sense, Ui, UiBuilder, Vec2, Widget,
 };
 use std::mem;
 
@@ -257,7 +257,7 @@ impl Flex {
                     ui.min_rect().min,
                 );
 
-                let max_item_size = round_vec2(max_item_size.unwrap_or(ui.available_size()));
+                let max_item_size = round_vec2(max_item_size.unwrap_or(available_size));
 
                 let mut instance = FlexInstance {
                     current_row: 0,
@@ -446,10 +446,6 @@ struct ItemState {
 }
 
 impl ItemState {
-    fn inner_size_with_margin(&self) -> Vec2 {
-        self.inner_size + self.margin.sum()
-    }
-
     fn min_size_with_margin(&self) -> Vec2 {
         self.inner_min_size + self.margin.sum()
     }
@@ -604,7 +600,7 @@ impl<'a> FlexInstance<'a> {
                 content_rect.set_height(max_content_size.y);
                 // We only want to limit the content size in the main dir
                 // TODO: Should there be an option to also limit it in the cross dir?
-                content_rect.max[1 - self.direction] = f32::INFINITY;
+                content_rect.max[1 - self.direction] = self.max_item_size[1 - self.direction];
                 // frame_rect.set_width(self.ui.available_width());
                 // frame_rect.set_height(self.ui.available_height());
 
@@ -663,7 +659,8 @@ impl<'a> FlexInstance<'a> {
 
             let (res, row_len, outer_rect) = res;
 
-            let margin_bottom_right = outer_rect.max - res.container_min_rect.max;
+            // TODO: This calculates the top left margin, bottom right doesn't work as expected
+            // let margin_bottom_right = outer_rect.max - res.container_min_rect.max;
             let margin_bottom_right = res.container_min_rect.min - outer_rect.min;
             let margin = round_margin(Margin {
                 top: res.margin_top_left.y,
@@ -827,6 +824,7 @@ pub struct FlexContainerUi {
 /// closure.
 pub struct FlexContainerResponse<T> {
     child_rect: Rect,
+    /// The response from the inner content.
     pub inner: T,
     margin_top_left: Vec2,
     max_size: Vec2,
@@ -947,24 +945,18 @@ impl FlexContainerUi {
         let margin_top_left = ui.min_rect().min - self.frame_rect.min;
         let min_size = ui.min_size();
 
-        let response = if self.remeasure_widget {
+        let id_salt = ui.id().with("flex_widget");
+        let mut builder = UiBuilder::new()
+            .id_salt(id_salt)
+            .layout(Layout::centered_and_justified(Direction::TopDown));
+        if self.remeasure_widget {
             ui.ctx().request_discard("Flex item remeasure");
-            let mut child_ui = ui.new_child(UiBuilder::new().max_rect(self.content_rect));
-            child_ui.set_invisible();
-            let response = child_ui.centered_and_justified(|ui| widget.ui(ui)).inner;
-
-            let instrinsic_size = response.intrinsic_size.unwrap_or(Vec2::new(
-                ui.spacing().interact_size.x,
-                ui.spacing().interact_size.y,
-            ));
-            ui.allocate_space(instrinsic_size);
-
-            response
+            builder = builder.max_rect(self.content_rect);
         } else {
             ui.set_width(ui.available_width());
             ui.set_height(ui.available_height());
-            ui.centered_and_justified(|ui| widget.ui(ui)).inner
         };
+        let response = ui.scope_builder(builder, |ui| widget.ui(ui)).inner;
 
         let intrinsic_size = response.intrinsic_size.unwrap_or(Vec2::new(
             ui.spacing().interact_size.x,
