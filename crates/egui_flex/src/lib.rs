@@ -46,19 +46,31 @@ pub enum FlexAlign {
 }
 
 /// How to align the content in the cross axis across the whole container.
-///
-/// NOTE: Currently only [`FlexAlignContent::Normal`] and [`FlexAlignContent::Stretch`] are implemented.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub enum FlexAlignContent {
-    #[default]
-    Normal,
     Start,
     End,
     Center,
+    #[default]
     Stretch,
     SpaceBetween,
     SpaceAround,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Size {
+    Points(f32),
+    Percent(f32),
+}
+
+impl Size {
+    pub fn get(&self, total: f32) -> f32 {
+        match self {
+            Size::Points(p) => *p,
+            Size::Percent(p) => total * *p,
+        }
+    }
 }
 
 /// A flex container.
@@ -71,6 +83,8 @@ pub struct Flex {
     gap: Option<Vec2>,
     default_item: FlexItem,
     wrap: bool,
+    width: Option<Size>,
+    height: Option<Size>,
 }
 
 impl Default for Flex {
@@ -83,6 +97,8 @@ impl Default for Flex {
             gap: None,
             default_item: FlexItem::default(),
             wrap: true,
+            width: None,
+            height: None,
         }
     }
 }
@@ -181,6 +197,10 @@ impl Flex {
     }
 
     /// Set how to align the content in the cross axis across the whole container.
+    ///
+    /// This only has an effect if wrap is set to true.
+    ///
+    /// Default is `stretch`.
     pub fn align_content(mut self, align_content: FlexAlignContent) -> Self {
         self.align_content = align_content;
         self
@@ -213,9 +233,90 @@ impl Flex {
         self
     }
 
+    /// Set the width of the flex container in points (pixels).
+    ///
+    /// The default depends on the parents horizontal justify.
+    /// If `ui.layout().horizontal_justify()` is:
+    /// - true, the width will be set to 100%.
+    /// - false, the width will depend on the width of the content.
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = Some(Size::Points(width));
+        self
+    }
+
+    /// Set the height of the flex container in points (pixels).
+    ///
+    /// The default depends on the parents vertical justify.
+    /// If `ui.layout().vertical_justify()` is:
+    /// - true, the height will be set to 100%.
+    /// - false, the height will depend on the height of the content.
+    pub fn height(mut self, height: f32) -> Self {
+        self.height = Some(Size::Points(height));
+        self
+    }
+
+    /// Set the width of the flex container as a percentage of the available width.
+    /// 1.0 means 100%.
+    ///
+    /// Check [`Self::width`] for more info.
+    pub fn width_percent(mut self, width: f32) -> Self {
+        self.width = Some(Size::Percent(width));
+        self
+    }
+
+    /// Set the height of the flex container as a percentage of the available height.
+    /// 1.0 means 100%.
+    ///
+    /// Check [`Self::height`] for more info.
+    pub fn height_percent(mut self, height: f32) -> Self {
+        self.height = Some(Size::Percent(height));
+        self
+    }
+
+    /// Set the size of the flex container in points (pixels).
+    ///
+    /// Check [`Self::width`] and [`Self::height`] for more info.
+    pub fn size(mut self, size: impl Into<Vec2>) -> Self {
+        let size = size.into();
+        self.width = Some(Size::Points(size.x));
+        self.height = Some(Size::Points(size.y));
+        self
+    }
+
+    /// Set the width of the flex container to 100%.
+    pub fn w_full(mut self) -> Self {
+        self.width = Some(Size::Percent(1.0));
+        self
+    }
+
+    /// Set the height of the flex container to 100%.
+    pub fn h_full(mut self) -> Self {
+        self.height = Some(Size::Percent(1.0));
+        self
+    }
+
+    /// The width of the flex container will be set to the width of the content, but not larger
+    /// than the available width (unless wrap is set to false).
+    ///
+    /// This is the default.
+    pub fn w_auto(mut self) -> Self {
+        self.width = None;
+        self
+    }
+
+    /// The height of the flex container will be set to the height of the content, but not larger
+    /// than the available height (unless wrap is set to false).
+    ///
+    /// This is the default.
+    pub fn h_auto(mut self) -> Self {
+        self.height = None;
+        self
+    }
+
     #[track_caller]
+    #[allow(clippy::too_many_lines)]
     fn show_inside<R>(
-        self,
+        mut self,
         ui: &mut Ui,
         target_size: Option<Vec2>,
         max_item_size: Option<Vec2>,
@@ -230,12 +331,29 @@ impl Flex {
             .ctx()
             .memory(|mem| mem.data.get_temp(id).clone().unwrap_or_default());
 
+        let width = self.width.or_else(|| {
+            if ui.layout().horizontal_justify() {
+                Some(Size::Percent(1.0))
+            } else {
+                None
+            }
+        });
+        let height = self.height.or_else(|| {
+            if ui.layout().vertical_justify() {
+                Some(Size::Percent(1.0))
+            } else {
+                None
+            }
+        });
+
         let layout = match self.direction {
             FlexDirection::Horizontal => Layout::left_to_right(Align::Min),
             FlexDirection::Vertical => Layout::top_down(Align::Min),
         };
 
         let mut state_changed = false;
+
+        let parent_rect = ui.max_rect();
 
         let r = ui.scope_builder(
             UiBuilder::new()
@@ -247,12 +365,19 @@ impl Flex {
 
                 // We ceil in order to prevent rounding errors to wrap the layout unexpectedly
                 let available_size = target_size.unwrap_or(ui.available_size()).ceil();
+
+                let size = [
+                    width.map(|w| w.get(parent_rect.size().x)),
+                    height.map(|h| h.get(parent_rect.size().y)),
+                ];
+
                 let direction = usize::from(!ui.layout().main_dir().is_horizontal());
                 let cross_direction = 1 - direction;
 
                 let rows = self.layout_rows(
                     &previous_state,
                     available_size,
+                    size,
                     gap,
                     direction,
                     ui.min_rect().min,
@@ -330,17 +455,19 @@ impl Flex {
         (r.inner.0, InnerResponse::new(r.inner.1, r.response))
     }
 
+    #[allow(clippy::too_many_lines)]
     fn layout_rows(
-        &self,
+        &mut self,
         state: &FlexState,
         available_size: Vec2,
+        size: [Option<f32>; 2],
         gap: Vec2,
         direction: usize,
         min_position: Pos2,
     ) -> Vec<RowData> {
         let cross_direction = 1 - direction;
 
-        let available_length = available_size[direction];
+        let available_length = size[direction].unwrap_or(available_size[direction]);
         let gap_direction = gap[direction];
 
         let mut rows = vec![];
@@ -375,28 +502,51 @@ impl Flex {
             rows.push(current_row);
         }
 
-        let available_cross_size = available_size[cross_direction];
-        let total_row_cross_size = rows.iter().map(|row| row.cross_size).sum::<f32>();
-        let extra_cross_space_per_row = match self.align_content {
-            #[allow(clippy::match_same_arms)]
-            FlexAlignContent::Normal => 0.0,
-            FlexAlignContent::Stretch => {
-                let extra_cross_space = f32::max(
-                    available_cross_size
-                        - total_row_cross_size
-                        - (rows.len().max(1) - 1) as f32 * gap[cross_direction],
-                    0.0,
-                );
+        let target_cross_size = size[cross_direction];
+        let total_cross_size = rows.iter().map(|row| row.cross_size).sum::<f32>()
+            + (rows.len().max(1) - 1) as f32 * gap[cross_direction];
+        let extra_cross_space = target_cross_size.map_or(0.0, |target_cross_size| {
+            f32::max(target_cross_size - total_cross_size, 0.0)
+        });
 
-                extra_cross_space / rows.len() as f32
+        let mut extra_cross_gap_start = 0.0;
+        let mut extra_cross_gap = 0.0;
+        let mut extra_cross_gap_end = 0.0; // TODO: How to handle extra end space?
+        let mut extra_cross_space_per_row = 0.0;
+
+        if self.wrap == false {
+            self.align_content = FlexAlignContent::Stretch;
+        }
+        match self.align_content {
+            FlexAlignContent::Start => {
+                extra_cross_gap_end = extra_cross_space;
             }
-            // TODO: Implement the other aligns
-            _ => 0.0,
+            FlexAlignContent::Stretch => {
+                extra_cross_space_per_row = extra_cross_space / rows.len() as f32;
+            }
+            FlexAlignContent::End => {
+                extra_cross_gap_start = extra_cross_space;
+            }
+            FlexAlignContent::Center => {
+                extra_cross_gap_start = extra_cross_space / 2.0;
+                extra_cross_gap_end = extra_cross_space / 2.0;
+            }
+            FlexAlignContent::SpaceBetween => {
+                extra_cross_gap = extra_cross_space / (rows.len() as f32 - 1.0);
+            }
+            FlexAlignContent::SpaceAround => {
+                extra_cross_gap = extra_cross_space / rows.len() as f32;
+                extra_cross_gap_start = extra_cross_gap / 2.0;
+                extra_cross_gap_end = extra_cross_gap / 2.0;
+            }
         };
 
         let mut row_position = min_position;
 
-        for row in &mut rows {
+        row_position[cross_direction] += extra_cross_gap_start;
+
+        let row_count = rows.len();
+        for (idx, row) in &mut rows.iter_mut().enumerate() {
             let mut row_size = Vec2::ZERO;
             row_size[direction] = available_length;
             row_size[cross_direction] = row.cross_size + extra_cross_space_per_row;
@@ -407,7 +557,8 @@ impl Flex {
             row.cross_size_with_extra_space = row_size[cross_direction];
             row.rect = Some(Rect::from_min_size(row_position, row_size));
 
-            row_position[cross_direction] += row_size[cross_direction] + gap[cross_direction];
+            row_position[cross_direction] +=
+                row_size[cross_direction] + gap[cross_direction] + extra_cross_gap;
 
             row.extra_space = available_length - row.total_size;
             if row.total_grow == 0.0 {
@@ -669,6 +820,7 @@ impl<'a> FlexInstance<'a> {
                             || self.max_item_size[self.direction]
                                 > self.last_max_item_size[self.direction],
                         last_inner_size: Some(item_state.inner_size),
+                        item,
                     },
                 );
                 let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
@@ -689,6 +841,7 @@ impl<'a> FlexInstance<'a> {
                         max_item_size: self.max_item_size,
                         remeasure_widget: false,
                         last_inner_size: None,
+                        item,
                     },
                 );
 
@@ -867,6 +1020,7 @@ pub struct FlexContainerUi {
     max_item_size: Vec2,
     remeasure_widget: bool,
     last_inner_size: Option<Vec2>,
+    item: FlexItem,
 }
 
 /// The response of the inner content of a container, should be passed as a return value from the
@@ -946,7 +1100,7 @@ impl FlexContainerUi {
     pub fn content_flex<R>(
         self,
         ui: &mut Ui,
-        flex: Flex,
+        mut flex: Flex,
         content: impl FnOnce(&mut FlexInstance) -> R,
     ) -> FlexContainerResponse<R> {
         let Self {
@@ -964,6 +1118,23 @@ impl FlexContainerUi {
 
         ui.set_width(ui.available_width());
         ui.set_height(ui.available_height());
+
+        // We set wrap to false since we currently don't support wrapping in nested flexes
+        flex = flex.wrap(false);
+
+        // Make sure the container actually grows if grow is set.
+        if self.item.grow.is_some_and(|g| g > 0.0) {
+            #[allow(clippy::collapsible_else_if)]
+            if self.direction == 0 {
+                if flex.width.is_none() {
+                    flex = flex.w_full();
+                }
+            } else {
+                if flex.height.is_none() {
+                    flex = flex.h_full();
+                }
+            }
+        }
 
         let (min_size, res) = flex.show_inside(
             ui,
