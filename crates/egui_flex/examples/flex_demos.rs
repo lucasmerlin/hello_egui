@@ -1,6 +1,9 @@
 use eframe::NativeOptions;
-use egui::{Align2, Button, CentralPanel, ComboBox, Frame};
-use egui_flex::{Flex, FlexAlign, FlexAlignContent, FlexDirection, FlexInstance, FlexItem};
+use egui::{Align2, Button, CentralPanel, ComboBox, Frame, Label};
+use egui_flex::{
+    item, Flex, FlexAlign, FlexAlignContent, FlexDirection, FlexInstance, FlexItem, FlexJustify,
+};
+use std::num::NonZeroUsize;
 
 const ALIGNS: [Align2; 9] = [
     Align2::LEFT_TOP,
@@ -26,6 +29,10 @@ fn main() -> eframe::Result {
         "egui_flex demos",
         NativeOptions::default(),
         move |ctx, _frame| {
+            ctx.options_mut(|opts| {
+                opts.max_passes = NonZeroUsize::new(3).unwrap();
+            });
+
             CentralPanel::default().show(ctx, |ui| {
                 let frame = Frame::group(ui.style());
 
@@ -131,6 +138,47 @@ fn main() -> eframe::Result {
                                         ui.label(format!("{basis:?}"));
                                     });
                                 }
+                            },
+                        );
+
+                        flex.add_flex_frame(
+                            FlexItem::new(),
+                            Flex::new().direction(demo_dir).grow_items(grow_items),
+                            frame,
+                            |flex| {
+                                heading(flex, "Justify Content");
+
+                                flex.add_flex(
+                                    item().grow(1.0),
+                                    Flex::new()
+                                        .direction(main_dir)
+                                        .grow_items(grow_items)
+                                        .align_content(FlexAlignContent::Stretch),
+                                    |flex| {
+                                        for justify in &[
+                                            FlexJustify::Start,
+                                            FlexJustify::Center,
+                                            FlexJustify::End,
+                                            FlexJustify::SpaceBetween,
+                                            FlexJustify::SpaceAround,
+                                            FlexJustify::SpaceEvenly,
+                                        ] {
+                                            flex.add_flex_frame(
+                                                FlexItem::new(),
+                                                Flex::new().direction(demo_dir).justify(*justify),
+                                                frame,
+                                                |flex| {
+                                                    flex.add(
+                                                        item(),
+                                                        Label::new(format!("{justify:?}")),
+                                                    );
+                                                    flex.add(item(), Label::new("two"));
+                                                    flex.add(item(), Label::new("three"));
+                                                },
+                                            );
+                                        }
+                                    },
+                                );
                             },
                         );
 

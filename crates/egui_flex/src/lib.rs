@@ -162,6 +162,7 @@ impl Flex {
     }
 
     /// Set how to justify the content (alignment in the main axis).
+    /// This will only have an effect if all items have grow set to 0.
     pub fn justify(mut self, justify: FlexJustify) -> Self {
         self.justify = justify;
         self
@@ -409,6 +410,30 @@ impl Flex {
             row_position[cross_direction] += row_size[cross_direction] + gap[cross_direction];
 
             row.extra_space = available_length - row.total_size;
+            if row.total_grow == 0.0 {
+                match self.justify {
+                    FlexJustify::Start => {}
+                    FlexJustify::End => {
+                        row.extra_start_gap = row.extra_space;
+                    }
+                    FlexJustify::Center => {
+                        row.extra_start_gap = row.extra_space / 2.0;
+                    }
+                    FlexJustify::SpaceBetween => {
+                        row.extra_gap = row.extra_space / (row.items.len() as f32 - 1.0);
+                    }
+                    FlexJustify::SpaceAround => {
+                        row.extra_gap = row.extra_space / row.items.len() as f32;
+                        row.extra_start_gap = row.extra_gap / 2.0;
+                    }
+                    FlexJustify::SpaceEvenly => {
+                        row.extra_gap = row.extra_space / (row.items.len() as f32 + 1.0);
+                        row.extra_start_gap = row.extra_gap;
+                    }
+                }
+                row.extra_gap = round(row.extra_gap).max(0.0);
+                row.extra_start_gap = round(row.extra_start_gap).max(0.0);
+            }
         }
         rows
     }
@@ -429,6 +454,8 @@ struct RowData {
     total_size: f32,
     total_grow: f32,
     extra_space: f32,
+    extra_gap: f32,
+    extra_start_gap: f32,
     cross_size: f32,
     cross_size_with_extra_space: f32,
     rect: Option<Rect>,
@@ -518,6 +545,17 @@ impl<'a> FlexInstance<'a> {
         };
 
         let row = self.rows.get_mut(self.current_row);
+
+        if let Some(row) = &row {
+            if self.current_row_index == 0 {
+                self.row_ui.add_space(row.extra_start_gap);
+            } else {
+                self.row_ui.add_space(row.extra_gap);
+            }
+            row.extra_start_gap
+        } else {
+            0.0
+        };
 
         let res = self.row_ui.scope(|ui| {
             let res = if let Some(row) = row {
@@ -680,17 +718,28 @@ impl<'a> FlexInstance<'a> {
 
             (res.inner, item, row_len)
         });
+        let (inner, item, row_len) = res.inner;
 
+        let is_last_item = self.current_row_index + 1 >= row_len;
+        if is_last_item
+            && self.flex.justify != FlexJustify::Start
+            && self.flex.justify != FlexJustify::End
+            && self.flex.justify != FlexJustify::SpaceBetween
+        {
+            if self.direction == 0 {
+                self.row_ui.add_space(self.row_ui.available_width());
+            } else {
+                self.row_ui.add_space(self.row_ui.available_height());
+            }
+        }
         if let Some(row) = self.rows.get_mut(self.current_row) {
             row.final_rect = Some(self.row_ui.min_rect());
         }
 
-        let (inner, item, row_len) = res.inner;
-
         self.state.items.push(item);
 
         self.current_row_index += 1;
-        if self.current_row_index >= row_len {
+        if is_last_item {
             self.current_row += 1;
             self.current_row_index = 0;
             self.row_ui = FlexInstance::row_ui(self.ui, self.rows.get(self.current_row));
@@ -951,17 +1000,18 @@ impl FlexContainerUi {
             .layout(Layout::centered_and_justified(Direction::TopDown));
         if self.remeasure_widget {
             ui.ctx().request_discard("Flex item remeasure");
-            builder = builder.max_rect(self.content_rect);
+            builder = builder.max_rect(self.content_rect).invisible();
         } else {
             ui.set_width(ui.available_width());
             ui.set_height(ui.available_height());
         };
         let response = ui.scope_builder(builder, |ui| widget.ui(ui)).inner;
 
-        let intrinsic_size = response.intrinsic_size.unwrap_or(Vec2::new(
-            ui.spacing().interact_size.x,
-            ui.spacing().interact_size.y,
-        ));
+        let intrinsic_size = response.intrinsic_size.map_or(
+            Vec2::new(ui.spacing().interact_size.x, ui.spacing().interact_size.y),
+            // Add some vertical space to prevent edge cases where text might wrap
+            |s| s + Vec2::X * 1.0,
+        );
 
         // If the size changed in the cross direction the widget might have grown in the main direction
         // and wrapped, we need to remeasure the widget (draw it once with full available size)
