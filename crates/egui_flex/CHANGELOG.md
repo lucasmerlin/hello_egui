@@ -6,6 +6,7 @@
 - Implement `Flex::justify`
 - Change `Flex::align_content` default to stretch to match the css flexbox behavior
 - Improved textedit flex widget behaviour (once https://github.com/emilk/egui/pull/5275 is merged / released)
+- Change the default of Flex::wrap to false
 
 ## 0.1.1
 

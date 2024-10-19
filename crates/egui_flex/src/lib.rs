@@ -96,7 +96,7 @@ impl Default for Flex {
             align_content: FlexAlignContent::default(),
             gap: None,
             default_item: FlexItem::default(),
-            wrap: true,
+            wrap: false,
             width: None,
             height: None,
         }
@@ -222,6 +222,8 @@ impl Flex {
 
     /// Should the flex container wrap it's content.
     /// If this is set to `false` the content may overflow the [`Ui::max_rect`]
+    ///
+    /// Default: false
     pub fn wrap(mut self, wrap: bool) -> Self {
         self.wrap = wrap;
         self
@@ -331,6 +333,14 @@ impl Flex {
             .ctx()
             .memory(|mem| mem.data.get_temp(id).clone().unwrap_or_default());
 
+        let frame_time = ui.ctx().input(|i| i.time);
+        let passes = ui.ctx().cumulative_pass_nr();
+        if cfg!(debug_assertions)
+            && (previous_state.frame_time == frame_time && previous_state.passes == passes)
+        {
+            panic!("Id clash in flex container! Id: {id:?}");
+        }
+
         let width = self.width.or_else(|| {
             if ui.layout().horizontal_justify() {
                 Some(Size::Percent(1.0))
@@ -367,8 +377,8 @@ impl Flex {
                 let available_size = target_size.unwrap_or(ui.available_size()).ceil();
 
                 let size = [
-                    width.map(|w| w.get(parent_rect.size().x)),
-                    height.map(|h| h.get(parent_rect.size().y)),
+                    width.map(|w| round(w.get(parent_rect.size().x))),
+                    height.map(|h| round(h.get(parent_rect.size().y))),
                 ];
 
                 let direction = usize::from(!ui.layout().main_dir().is_horizontal());
@@ -392,6 +402,8 @@ impl Flex {
                     state: FlexState {
                         items: vec![],
                         max_item_size,
+                        frame_time,
+                        passes,
                     },
                     direction,
                     row_ui: FlexInstance::row_ui(ui, rows.first()),
@@ -400,6 +412,7 @@ impl Flex {
                     max_item_size,
                     last_max_item_size: previous_state.max_item_size,
                     item_spacing: original_item_spacing,
+                    size,
                 };
 
                 let r = f(&mut instance);
@@ -428,7 +441,9 @@ impl Flex {
                 //     current
                 // });
 
-                if previous_state != instance.state {
+                if (&previous_state.items, &previous_state.max_item_size)
+                    != (&instance.state.items, &instance.state.max_item_size)
+                {
                     state_changed = true;
                 }
 
@@ -560,8 +575,15 @@ impl Flex {
             row_position[cross_direction] +=
                 row_size[cross_direction] + gap[cross_direction] + extra_cross_gap;
 
-            row.extra_space = available_length - row.total_size;
-            if row.total_grow == 0.0 {
+            // Only grow items if a explicit size is set or if we wrapped
+            if size[direction].is_some() || row_count > 1 {
+                row.extra_space = available_length - row.total_size;
+            }
+            if row.total_grow == 0.0
+                // If size is none, the flex container should be sized based on the content and
+                // justify doesn't apply
+                && size[direction].is_some()
+            {
                 match self.justify {
                     FlexJustify::Start => {}
                     FlexJustify::End => {
@@ -633,6 +655,9 @@ impl ItemState {
 struct FlexState {
     items: Vec<ItemState>,
     max_item_size: Vec2,
+    // We use this to keep track if there is a id clash.
+    frame_time: f64,
+    passes: u64,
 }
 
 /// An instance of a flex container, used to add items to the container.
@@ -649,6 +674,7 @@ pub struct FlexInstance<'a> {
     last_max_item_size: Vec2,
     // Original item spacing to store when showing children
     item_spacing: Vec2,
+    size: [Option<f32>; 2],
 }
 
 impl<'a> FlexInstance<'a> {
@@ -676,6 +702,11 @@ impl<'a> FlexInstance<'a> {
     /// Get the ui of the flex container (e.g. to read the style or access the context).
     pub fn ui(&self) -> &Ui {
         self.ui
+    }
+
+    /// Create a child ui to e.g. show a overlay over some component
+    pub fn new_child(&mut self, ui_builder: UiBuilder) -> Ui {
+        self.ui.new_child(ui_builder)
     }
 
     /// Show a flex container. This is split in a outer and inner [Ui]. The outer [Ui] will
@@ -728,16 +759,13 @@ impl<'a> FlexInstance<'a> {
                 let parent_min_rect = ui.min_rect();
 
                 let mut total_size = item_state.min_size_with_margin();
-                if let Some(basis) = item.basis {
-                    total_size[self.direction] = basis + item_state.margin.sum()[self.direction];
-                }
                 total_size[self.direction] += extra_length;
 
                 let available_size = ui.available_rect_before_wrap().size();
 
                 // If everything is wrapped we will limit the items size to the containers available
                 // size to prevent it from growing out of the container
-                if row_item_count == 1 {
+                if self.flex.wrap && row_item_count == 1 {
                     total_size[self.direction] =
                         f32::min(total_size[self.direction], available_size[self.direction]);
                 }
@@ -754,30 +782,29 @@ impl<'a> FlexInstance<'a> {
                     }
                 };
 
+                let mut max_rect = ui.max_rect();
+
+                // TODO: Is this right?
+                if total_size[self.direction] > max_rect.size()[self.direction] {
+                    let mut size = max_rect.size();
+                    size[self.direction] = total_size[self.direction];
+                    max_rect = Rect::from_min_size(max_rect.min, size);
+                }
+
                 let frame_rect = match frame_align {
                     None => Rect::from_min_size(parent_min_rect.min, total_size),
                     Some(align) => {
                         let mut align2 = Align2::LEFT_TOP;
                         align2[1 - self.direction] = align;
-                        align2.align_size_within_rect(total_size, ui.max_rect())
+                        align2.align_size_within_rect(total_size, max_rect)
                     }
                 };
 
                 let mut inner_size = item_state.inner_size;
-                if let Some(basis) = item.basis {
-                    inner_size[self.direction] = basis + extra_length;
-                }
-                inner_size[self.direction] = f32::min(
-                    inner_size[self.direction],
-                    available_size[self.direction] - item_state.margin.sum()[self.direction],
-                );
 
                 let content_align = item.align_content.unwrap_or(Align2::CENTER_CENTER);
 
-                let frame_without_margin = Rect {
-                    min: frame_rect.min + item_state.margin.left_top(),
-                    max: frame_rect.max - item_state.margin.right_bottom(),
-                };
+                let frame_without_margin = frame_rect - item_state.margin;
 
                 let mut content_rect =
                     content_align.align_size_within_rect(inner_size, frame_without_margin);
@@ -789,7 +816,7 @@ impl<'a> FlexInstance<'a> {
                 content_rect.set_height(max_content_size.y);
                 // We only want to limit the content size in the main dir
                 // TODO: Should there be an option to also limit it in the cross dir?
-                content_rect.max[1 - self.direction] = self.max_item_size[1 - self.direction];
+                // content_rect.max[1 - self.direction] = self.max_item_size[1 - self.direction];
                 // frame_rect.set_width(self.ui.available_width());
                 // frame_rect.set_height(self.ui.available_height());
 
@@ -859,12 +886,16 @@ impl<'a> FlexInstance<'a> {
                 bottom: margin_bottom_right.y,
                 right: margin_bottom_right.x,
             });
+            let mut inner_size = res.child_rect.size();
+            if let Some(basis) = item.basis {
+                inner_size[self.direction] = basis;
+            }
 
             let item = ItemState {
                 margin,
-                inner_size: round_vec2(res.child_rect.size()),
+                inner_size: round_vec2(inner_size),
                 id: ui.id(),
-                inner_min_size: round_vec2(Vec2::max(res.min_size, res.child_rect.size())),
+                inner_min_size: round_vec2(Vec2::max(res.min_size, inner_size)),
                 config: item,
                 remeasure_widget: res.remeasure_widget,
             };
@@ -874,19 +905,26 @@ impl<'a> FlexInstance<'a> {
         let (inner, item, row_len) = res.inner;
 
         let is_last_item = self.current_row_index + 1 >= row_len;
-        if is_last_item
-            && self.flex.justify != FlexJustify::Start
-            && self.flex.justify != FlexJustify::End
-            && self.flex.justify != FlexJustify::SpaceBetween
-        {
-            if self.direction == 0 {
-                self.row_ui.add_space(self.row_ui.available_width());
-            } else {
-                self.row_ui.add_space(self.row_ui.available_height());
-            }
-        }
+        // TODO: Find a better way to do this, maybe just set the row ui rect to it's max rect?
+        // if is_last_item
+        //     && self.flex.justify != FlexJustify::Start
+        //     && self.flex.justify != FlexJustify::End
+        //     && self.flex.justify != FlexJustify::SpaceBetween
+        // {
+        //     let spacing = mem::take(&mut self.row_ui.spacing_mut().item_spacing);
+        //     if self.direction == 0 {
+        //         self.row_ui.add_space(self.row_ui.available_width());
+        //     } else {
+        //         self.row_ui.add_space(self.row_ui.available_height());
+        //     }
+        //     self.row_ui.spacing_mut().item_spacing = spacing;
+        // }
         if let Some(row) = self.rows.get_mut(self.current_row) {
-            row.final_rect = Some(self.row_ui.min_rect());
+            let mut final_rect = self.row_ui.min_rect();
+            if self.size[self.direction].is_some() {
+                final_rect = final_rect.union(self.row_ui.max_rect());
+            }
+            row.final_rect = Some(final_rect);
         }
 
         self.state.items.push(item);
@@ -1106,9 +1144,10 @@ impl FlexContainerUi {
         let Self {
             frame_rect,
             margin,
-            max_item_size,
+            mut max_item_size,
             remeasure_widget: _,
             last_inner_size: _,
+            item,
             ..
         } = self;
 
@@ -1136,12 +1175,17 @@ impl FlexContainerUi {
             }
         }
 
-        let (min_size, res) = flex.show_inside(
-            ui,
-            Some(frame_rect.size() - margin.sum()),
-            Some(max_item_size),
-            |instance| content(instance),
-        );
+        let target_size = frame_rect.size() - margin.sum();
+        // Limit the max item size if a basis is set. This could be done prettier but works for now.
+        if item.basis.is_some() {
+            max_item_size[self.direction] =
+                f32::min(max_item_size[self.direction], target_size[self.direction]);
+        }
+
+        let (min_size, res) =
+            flex.show_inside(ui, Some(target_size), Some(max_item_size), |instance| {
+                content(instance)
+            });
 
         let container_min_rect = ui.min_rect();
 
