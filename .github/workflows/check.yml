@@ -45,7 +45,7 @@ jobs:
 
       - name: Test
         uses: actions-rs/cargo@v1
-        # Snapshot tests only work on macos, since they require a gpu
+        # Snapshot tests currently only work on macos, since they require a gpu
         if: ${{ matrix.os == 'macos-latest' }}
         with:
           command: test
@@ -62,5 +62,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ runner.os }}
           path: "**/tests/snapshots"
