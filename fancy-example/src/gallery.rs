@@ -118,11 +118,17 @@ impl ExampleTrait for Gallery {
                                     //     item.id,
                                     //     start_idx + idx
                                     // );
-                                    let image_url = format!(
-                                        "https://raw.githubusercontent.com/lucasmerlin/hello_egui\
+                                    let image_url =
+                                        if cfg!(feature = "mock") {
+                                            let path = env!("CARGO_MANIFEST_DIR");
+                                            format!("file://{path}/src/gallery/{}.webp", item.id)
+                                        } else {
+                                            format!(
+                                                "https://raw.githubusercontent.com/lucasmerlin/hello_egui\
                                         /main/fancy-example/src/gallery/{}.webp",
-                                        item.id
-                                    );
+                                                item.id
+                                            )
+                                        };
                                     let image = Image::new(image_url).sense(Sense::click());
                                     let image = ThumbhashImage::new(image, &item.thumbhash)
                                         .id(Id::new("gallery_item").with(start_idx + idx));

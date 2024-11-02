@@ -34,9 +34,27 @@ pub async fn test_pages() {
 
     let mut errors = vec![];
 
+    let wait = [
+        (&CHAT_EXAMPLE, Some("Agreed")),
+        (&GALLERY_EXAMPLE, None),
+        (&STARGAZERS_EXAMPLE, Some("lucasmerlin")),
+    ];
+
     for category in EXAMPLES {
         for example in category.examples {
             open(example, &mut harness);
+
+            if let Some((_, wait_text)) = wait.iter().find(|(e, _)| e.slug == example.slug) {
+                if let Some(text) = wait_text {
+                    wait_for(&mut harness, |harness| harness.query_by_name_contains(text)).await;
+                } else {
+                    tokio::time::sleep(Duration::from_secs_f32(1.0)).await;
+                }
+            }
+
+            for _ in 0..10 {
+                harness.run();
+            }
 
             let res = harness.try_wgpu_snapshot(&format!("example/{}", example.name));
             if let Err(e) = res {

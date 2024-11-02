@@ -40,11 +40,18 @@ pub struct Category {
     pub examples: &'static [Example],
 }
 
+#[derive(Clone, Copy)]
 pub struct Example {
     pub name: &'static str,
     pub slug: &'static str,
     pub crates: &'static [CrateUsage],
     pub get: fn() -> Box<dyn ExampleTrait>,
+}
+
+impl PartialEq for Example {
+    fn eq(&self, other: &Self) -> bool {
+        self.slug == other.slug
+    }
 }
 
 impl Example {

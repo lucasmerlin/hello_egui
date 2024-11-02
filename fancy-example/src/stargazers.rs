@@ -1,9 +1,7 @@
+use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
+use serde::Deserialize;
 use std::fmt::Debug;
 use std::hash::Hash;
-
-use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
-use ehttp::Request;
-use serde::Deserialize;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
 use crate::demo_area;
@@ -29,11 +27,13 @@ pub struct Stargazer {
     pub avatar_url: String,
 }
 
-pub fn example_stargazers() -> Vec<Stargazer> {
+#[cfg(feature = "mock")]
+fn example_stargazers() -> Vec<Stargazer> {
+    let dir = env!("CARGO_MANIFEST_DIR");
     vec![Stargazer {
         login: "lucasmerlin".to_string(),
         html_url: "https://github.com/lucasmerlin".to_string(),
-        avatar_url: "https://avatars.githubusercontent.com/u/8009393?v=4".to_string(),
+        avatar_url: format!("file://{dir}/src/egui.png",),
     }]
 }
 
@@ -65,31 +65,31 @@ impl Stargazers {
         infinite_scroll.virtual_list.hide_on_resize(None);
 
         Self {
+            #[allow(unused_variables)]
             infinite_scroll: infinite_scroll.end_loader(|cursor, callback| {
-                if cfg!(feature = "mock") {
-                    callback(Ok((example_stargazers(), None)));
-                } else {
-                    ehttp::fetch(
-                        Request::get(format!(
-                            "https://api.github.com/repos/lucasmerlin\
+                #[cfg(feature = "mock")]
+                callback(Ok((example_stargazers(), None)));
+                #[cfg(not(feature = "mock"))]
+                ehttp::fetch(
+                    Request::get(format!(
+                        "https://api.github.com/repos/lucasmerlin\
                             /hello_egui/stargazers?per_page=100&page={}",
-                            cursor.unwrap_or(1)
-                        )),
-                        move |result| {
-                            if let Ok(data) = result {
-                                if let Ok(stargazers) =
-                                    serde_json::from_slice::<Vec<Stargazer>>(&data.bytes)
-                                {
-                                    callback(Ok((stargazers, Some(cursor.unwrap_or(1) + 1))));
-                                } else {
-                                    callback(Err("Failed to parse stargazers".to_string()));
-                                }
+                        cursor.unwrap_or(1)
+                    )),
+                    move |result| {
+                        if let Ok(data) = result {
+                            if let Ok(stargazers) =
+                                serde_json::from_slice::<Vec<Stargazer>>(&data.bytes)
+                            {
+                                callback(Ok((stargazers, Some(cursor.unwrap_or(1) + 1))));
                             } else {
-                                callback(Err("Failed to fetch stargazers".to_string()));
-                            };
-                        },
-                    );
-                }
+                                callback(Err("Failed to parse stargazers".to_string()));
+                            }
+                        } else {
+                            callback(Err("Failed to fetch stargazers".to_string()));
+                        };
+                    },
+                );
             }),
         }
     }
@@ -138,14 +138,17 @@ impl Stargazers {
 
                                             let size = Vec2::new(32.0, 32.0);
 
-                                            ui.add(
-                                                Image::new(format!(
+                                            let image_url = if cfg!(feature = "mock") {
+                                                item.avatar_url.clone()
+                                            } else {
+                                                format!(
                                                     "{}&s={}",
                                                     item.avatar_url,
                                                     size.x as u32 * 2
-                                                ))
-                                                .fit_to_exact_size(size),
-                                            );
+                                                )
+                                            };
+
+                                            ui.add(Image::new(image_url).fit_to_exact_size(size));
 
                                             ui.hyperlink_to(
                                                 item.login.as_str(),
