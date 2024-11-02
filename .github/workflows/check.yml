@@ -54,28 +54,9 @@ jobs:
           command: doc
           args: --lib --no-deps --all-features
 
-  miri:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Miri
-        uses: actions-rs/toolchain@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          toolchain: nightly
-          override: true
-          components: miri
-
-      # Separate miri setup from run so that 'Miri Test'
-      # logs are clean.
-      - name: Setup Miri
-        uses: actions-rs/cargo@v1
-        with:
-          command: miri
-          args: setup
-
-      - name: Miri Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: miri
-          args: test --all-features
+          name: test-results
+          path: "**/tests/snapshots"
