@@ -71,7 +71,7 @@ impl Stargazers {
                 callback(Ok((example_stargazers(), None)));
                 #[cfg(not(feature = "mock"))]
                 ehttp::fetch(
-                    Request::get(format!(
+                    ehttp::Request::get(format!(
                         "https://api.github.com/repos/lucasmerlin\
                             /hello_egui/stargazers?per_page=100&page={}",
                         cursor.unwrap_or(1)

@@ -56,7 +56,7 @@ pub async fn test_pages() {
                 harness.run();
             }
 
-            let res = harness.try_wgpu_snapshot(&format!("example/{}", example.name));
+            let res = harness.try_wgpu_snapshot(&format!("example/{}", example.slug));
             if let Err(e) = res {
                 errors.push(e);
             }
