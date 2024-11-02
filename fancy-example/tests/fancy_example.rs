@@ -1,4 +1,3 @@
-use casey::shouty;
 use egui::accesskit::Role;
 use egui_kittest::kittest::{Node, Queryable};
 use egui_kittest::Harness;
@@ -7,9 +6,7 @@ use fancy_example::example::{Example, EXAMPLES};
 use fancy_example::gallery::GALLERY_EXAMPLE;
 use fancy_example::stargazers::STARGAZERS_EXAMPLE;
 use fancy_example::App;
-use std::panic::catch_unwind;
 use std::time::Duration;
-use wasm_bindgen_futures::js_sys::Atomics::notify;
 
 pub fn app() -> Harness<'static> {
     let mut app = None;
@@ -22,11 +19,11 @@ pub fn app() -> Harness<'static> {
 
 fn open(example: &Example, harness: &mut Harness) {
     harness
-        .get_by_role_and_name(Role::Button, &example.name)
+        .get_by_role_and_name(Role::Button, example.name)
         .click();
 
     // TODO: Remove once run runs until no more redraws are needed
-    for i in 0..30 {
+    for _ in 0..30 {
         harness.run();
     }
 }
@@ -59,7 +56,8 @@ pub async fn test_stargazers() {
 
     wait_for(&mut harness, |harness| {
         harness.query_by_name_contains("lucasmerlin")
-    });
+    })
+    .await;
 
     tokio::time::sleep(Duration::from_secs(1)).await;
 

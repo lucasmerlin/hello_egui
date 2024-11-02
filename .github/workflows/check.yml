@@ -23,9 +23,13 @@ jobs:
           execute_install_scripts: true
 
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-cargo-cache
 
       - name: Clippy all-features
         uses: actions-rs/cargo@v1

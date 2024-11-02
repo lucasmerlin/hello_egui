@@ -1,11 +1,8 @@
 use eframe::emath::Vec2;
-use egui::{
-    Align, Button, Checkbox, Context, DragValue, Frame, Label, Layout, ScrollArea, TextEdit, Ui,
-};
+use egui::{Align, Button, Checkbox, DragValue, Frame, Label, Layout, ScrollArea, TextEdit, Ui};
 use egui_flex::{item, Flex, FlexAlign, FlexAlignContent, FlexItem, FlexJustify, Size};
 use egui_kittest::wgpu::TestRenderer;
 use egui_kittest::Harness;
-use hello_egui_utils::run;
 use rstest::rstest;
 use std::cell::Cell;
 
@@ -48,7 +45,7 @@ fn test_justify(
         FlexJustify::SpaceEvenly,
     ];
 
-    let mut app = |ui: &mut Ui| {
+    let app = |ui: &mut Ui| {
         ui.label(format!("align: {align:?}, grow: {grow}"));
 
         for justify in &justify_values {
@@ -72,7 +69,7 @@ fn test_justify(
         }
     };
 
-    let mut harness = Harness::new_ui(app);
+    let harness = Harness::new_ui(app);
 
     harness.wgpu_snapshot(&snapshot_name());
 }
@@ -128,7 +125,7 @@ fn test_size(
     )]
     height: Option<Size>,
 ) {
-    let mut harness = Harness::new_ui(|ui| {
+    let harness = Harness::new_ui(|ui| {
         ui.group(|ui| {
             let mut flex = Flex::horizontal();
 
@@ -298,7 +295,7 @@ fn egui_justify_interaction() {
         ui.group(|ui| {
             ui.label("vertical_centered_justified");
             ui.vertical_centered_justified(|ui| {
-                ui.button("Justified normal button");
+                _ = ui.button("Justified normal button");
 
                 Flex::vertical().show(ui, |flex| {
                     flex.add(item(), Button::new("Justified flex button (vertical)"));
@@ -316,7 +313,7 @@ fn egui_justify_interaction() {
         ui.group(|ui| {
             ui.label("vertical normal");
 
-            ui.button("Non-justified normal button");
+            _ = ui.button("Non-justified normal button");
             Flex::horizontal().show(ui, |flex| {
                 flex.add(item().grow(1.0), Button::new("Non-justified flex button"));
             });
@@ -411,8 +408,6 @@ fn truncate() {
             });
             flex.add(item(), Button::new("World!"));
         });
-
-        Flex::horizontal().w_full().show(ui, |flex| {});
 
         ui.add(Button::new("Helloooooooooooooooooooooo").truncate());
         Flex::horizontal().w_full().show(ui, |flex| {

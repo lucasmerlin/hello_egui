@@ -1,6 +1,6 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Color32, Frame, Label, Stroke, TextEdit, Widget};
-use egui_flex::{item, Flex, FlexAlign, FlexAlignContent, FlexItem};
+use egui::{CentralPanel, TextEdit};
+use egui_flex::{Flex, FlexAlignContent, FlexItem};
 
 fn main() -> eframe::Result {
     let mut text = "Hello, World!".to_string();

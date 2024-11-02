@@ -53,6 +53,12 @@ impl ExampleTrait for Stargazers {
     }
 }
 
+impl Default for Stargazers {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Stargazers {
     pub fn new() -> Self {
         let mut infinite_scroll = InfiniteScroll::new();

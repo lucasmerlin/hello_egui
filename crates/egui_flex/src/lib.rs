@@ -58,9 +58,12 @@ pub enum FlexAlignContent {
     SpaceAround,
 }
 
+/// A size value, either in points or as a percentage of the available space.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Size {
+    /// Size in points (pixels).
     Points(f32),
+    /// Size as a percentage of the available space.
     Percent(f32),
 }
 
@@ -71,6 +74,7 @@ impl From<f32> for Size {
 }
 
 impl Size {
+    /// Get the size in points (pixels) based on the total available space.
     pub fn get(&self, total: f32) -> f32 {
         match self {
             Size::Points(p) => *p,
@@ -80,7 +84,7 @@ impl Size {
 }
 
 /// A flex container.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Flex {
     id_salt: Option<Id>,
     direction: FlexDirection,
@@ -91,22 +95,6 @@ pub struct Flex {
     wrap: bool,
     width: Option<Size>,
     height: Option<Size>,
-}
-
-impl Default for Flex {
-    fn default() -> Self {
-        Self {
-            id_salt: None,
-            direction: FlexDirection::default(),
-            justify: FlexJustify::default(),
-            align_content: FlexAlignContent::default(),
-            gap: None,
-            default_item: FlexItem::default(),
-            wrap: false,
-            width: None,
-            height: None,
-        }
-    }
 }
 
 /// Configuration for a flex item.
@@ -560,15 +548,15 @@ impl Flex {
 
         let mut extra_cross_gap_start = 0.0;
         let mut extra_cross_gap = 0.0;
-        let mut extra_cross_gap_end = 0.0; // TODO: How to handle extra end space?
+        let mut _extra_cross_gap_end = 0.0; // TODO: How to handle extra end space?
         let mut extra_cross_space_per_row = 0.0;
 
-        if self.wrap == false {
+        if !self.wrap {
             self.align_content = FlexAlignContent::Stretch;
         }
         match self.align_content {
             FlexAlignContent::Start => {
-                extra_cross_gap_end = extra_cross_space;
+                _extra_cross_gap_end = extra_cross_space;
             }
             FlexAlignContent::Stretch => {
                 extra_cross_space_per_row = extra_cross_space / rows.len() as f32;
@@ -578,7 +566,7 @@ impl Flex {
             }
             FlexAlignContent::Center => {
                 extra_cross_gap_start = extra_cross_space / 2.0;
-                extra_cross_gap_end = extra_cross_space / 2.0;
+                _extra_cross_gap_end = extra_cross_space / 2.0;
             }
             FlexAlignContent::SpaceBetween => {
                 extra_cross_gap = extra_cross_space / (rows.len() as f32 - 1.0);
@@ -586,7 +574,7 @@ impl Flex {
             FlexAlignContent::SpaceAround => {
                 extra_cross_gap = extra_cross_space / rows.len() as f32;
                 extra_cross_gap_start = extra_cross_gap / 2.0;
-                extra_cross_gap_end = extra_cross_gap / 2.0;
+                _extra_cross_gap_end = extra_cross_gap / 2.0;
             }
         };
 
@@ -595,7 +583,7 @@ impl Flex {
         row_position[cross_direction] += extra_cross_gap_start;
 
         let row_count = rows.len();
-        for (idx, row) in &mut rows.iter_mut().enumerate() {
+        for (_idx, row) in &mut rows.iter_mut().enumerate() {
             let mut row_size = Vec2::ZERO;
             row_size[direction] = available_length;
             row_size[cross_direction] = row.cross_size + extra_cross_space_per_row;
@@ -614,7 +602,7 @@ impl Flex {
             let diff = available_length - row.total_size;
             // Only grow items if a explicit size is set or if we wrapped
             // If diff is < 0.0, we also set extra_space so we can shrink
-            if (size[direction].is_some() || row_count > 1 || diff < 0.0) {
+            if size[direction].is_some() || row_count > 1 || diff < 0.0 {
                 row.extra_space = diff;
             }
             if row.total_grow == 0.0 && row.extra_space > 0.0
@@ -1223,7 +1211,7 @@ impl FlexContainerUi {
     ) -> FlexContainerResponse<R> {
         let Self {
             frame_rect,
-            margin,
+            margin: _,
             mut max_item_size,
             remeasure_widget: _,
             last_inner_size: _,

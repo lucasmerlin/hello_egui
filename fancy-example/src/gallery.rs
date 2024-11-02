@@ -1,4 +1,3 @@
-use egui::load::TextureLoadResult;
 use egui::{Id, Image, OpenUrl, ScrollArea, Sense, Ui, Vec2};
 use serde::Deserialize;
 
@@ -36,6 +35,12 @@ struct GalleryItem {
 
 pub struct Gallery {
     items: InfiniteScroll<GalleryItem, usize>,
+}
+
+impl Default for Gallery {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Gallery {

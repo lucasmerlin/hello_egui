@@ -124,6 +124,12 @@ pub struct ChatExample {
     msgs_received: usize,
 }
 
+impl Default for ChatExample {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ChatExample {
     pub fn new() -> Self {
         let history_loader = Arc::new(HistoryLoader::new());

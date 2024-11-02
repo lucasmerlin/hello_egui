@@ -4,6 +4,8 @@
 
 /// Helper struct to easily align things with unknown sizes
 pub mod center;
+
+/// Utilities to conveniently create egui examples
 #[cfg(feature = "example_util")]
 pub mod example;
 
