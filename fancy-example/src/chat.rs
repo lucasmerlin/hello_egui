@@ -132,8 +132,10 @@ impl ChatExample {
 
         let history_loader_clone = history_loader.clone();
 
+        let mut infinite_scroll = InfiniteScroll::new();
+        infinite_scroll.virtual_list.hide_on_resize(None);
         ChatExample {
-            messages: InfiniteScroll::new().start_loader(move |cursor, cb| {
+            messages: infinite_scroll.start_loader(move |cursor, cb| {
                 println!("Loading messages...");
                 let history_loader = history_loader_clone.clone();
                 spawn(async move {

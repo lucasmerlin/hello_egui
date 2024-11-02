@@ -33,14 +33,17 @@ impl ExampleTrait for FlexExample {
             ui.set_width(ui.available_width());
 
             ui.label("With egui_flex:");
-            Flex::horizontal().grow_items(1.0).show(ui, |flex| {
-                flex.add(FlexItem::new(), Button::new("Short Button"));
-                flex.add(FlexItem::new(), Button::new("Loooooong Button"));
-                flex.add(
-                    FlexItem::new(),
-                    Button::new(RichText::new("Big Button").heading()),
-                );
-            });
+            Flex::horizontal()
+                .grow_items(1.0)
+                .w_full()
+                .show(ui, |flex| {
+                    flex.add(FlexItem::new(), Button::new("Short Button"));
+                    flex.add(FlexItem::new(), Button::new("Loooooong Button"));
+                    flex.add(
+                        FlexItem::new(),
+                        Button::new(RichText::new("Big Button").heading()),
+                    );
+                });
 
             ui.collapsing("Without egui_flex", |ui| {
                 ui.horizontal_wrapped(|ui| {
@@ -55,7 +58,7 @@ impl ExampleTrait for FlexExample {
             ui.label("You can easily add space between items to fill the available space:");
             ui.small("(the same thing would be possible with egui::Sides but the tab order would be messed up)");
             Frame::popup(ui.style()).show(ui, |ui| {
-                Flex::new().show(ui, |flex| {
+                Flex::new().w_full().show(ui, |flex| {
                     flex.add(
                         FlexItem::new(),
                         Link::new(RichText::new("hello_egui").heading().strong()),

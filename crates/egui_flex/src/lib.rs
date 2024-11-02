@@ -64,6 +64,12 @@ pub enum Size {
     Percent(f32),
 }
 
+impl From<f32> for Size {
+    fn from(p: f32) -> Self {
+        Size::Points(p)
+    }
+}
+
 impl Size {
     pub fn get(&self, total: f32) -> f32 {
         match self {
@@ -250,8 +256,8 @@ impl Flex {
     /// If `ui.layout().horizontal_justify()` is:
     /// - true, the width will be set to 100%.
     /// - false, the width will depend on the width of the content.
-    pub fn width(mut self, width: f32) -> Self {
-        self.width = Some(Size::Points(width));
+    pub fn width(mut self, width: impl Into<Size>) -> Self {
+        self.width = Some(width.into());
         self
     }
 
@@ -261,8 +267,8 @@ impl Flex {
     /// If `ui.layout().vertical_justify()` is:
     /// - true, the height will be set to 100%.
     /// - false, the height will depend on the height of the content.
-    pub fn height(mut self, height: f32) -> Self {
-        self.height = Some(Size::Points(height));
+    pub fn height(mut self, height: impl Into<Size>) -> Self {
+        self.height = Some(height.into());
         self
     }
 
@@ -594,8 +600,10 @@ impl Flex {
             row_size[direction] = available_length;
             row_size[cross_direction] = row.cross_size + extra_cross_space_per_row;
             // TODO: Should there be an option to also limit in the cross dir?
-            // row_size[cross_direction] =
-            //     f32::min(row_size[cross_direction], available_size[cross_direction]);
+            // if size[cross_direction].is_some() {
+            //     row_size[cross_direction] =
+            //         f32::min(row_size[cross_direction], available_size[cross_direction]);
+            // }
 
             row.cross_size_with_extra_space = row_size[cross_direction];
             row.rect = Some(Rect::from_min_size(row_position, row_size));
@@ -898,7 +906,7 @@ impl<'a> FlexInstance<'a> {
                         // it's wrapped so it can un-wrap
                         remeasure_widget: item_state.remeasure_widget
                             || self.max_item_size[self.direction]
-                                > self.last_max_item_size[self.direction],
+                                != self.last_max_item_size[self.direction],
                         last_inner_size: Some(item_state.inner_size),
                         target_inner_size,
                         item,
@@ -1248,12 +1256,14 @@ impl FlexContainerUi {
             }
         }
 
-        let target_size = target_inner_size;
+        let mut target_size = target_inner_size;
         // Limit the max item size if a basis is set. This could be done prettier but works for now.
         if item.basis.is_some() {
             max_item_size[self.direction] =
                 f32::min(max_item_size[self.direction], target_size[self.direction]);
         }
+
+        target_size = Vec2::min(target_size, max_item_size);
 
         let (min_size, res) =
             flex.show_inside(ui, Some(target_size), Some(max_item_size), |instance| {

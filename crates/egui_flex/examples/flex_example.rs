@@ -34,6 +34,7 @@ fn main() -> eframe::Result {
                     Flex::new()
                         .align_items(egui_flex::FlexAlign::Stretch)
                         .align_items_content(egui::Align2::CENTER_CENTER)
+                        .wrap(true)
                         .show(ui, |flex| {
                             flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
                                 ui.group(|ui| {

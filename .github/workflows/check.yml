@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -11,7 +11,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install packages (Linux)
@@ -41,6 +41,8 @@ jobs:
 
       - name: Test
         uses: actions-rs/cargo@v1
+        # Snapshot tests only work on macos, since they require a gpu
+        if: ${{ matrix.os == 'macos-latest' }}
         with:
           command: test
           args: --all-features --workspace

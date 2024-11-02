@@ -13,7 +13,9 @@ pub fn initialize(ctx: &egui::Context) {
     let mut fonts = FontDefinitions::default();
     let mut data = FontData::from_static(FONT_DATA);
     data.tweak.y_offset_factor = 0.05;
-    fonts.font_data.insert("material-icons".to_string(), data);
+    fonts
+        .font_data
+        .insert("material-icons".to_string(), data.into());
     fonts
         .families
         .get_mut(&FontFamily::Proportional)

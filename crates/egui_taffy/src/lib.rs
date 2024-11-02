@@ -253,11 +253,11 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
 
                             let mut ui = Ui::new(
                                 ctx.clone(),
-                                LayerId::new(Order::Background, Id::new("measure")),
                                 Id::new("measure"),
                                 UiBuilder::new()
                                     .max_rect(rect)
-                                    .ui_stack_info(UiStackInfo::default()),
+                                    .ui_stack_info(UiStackInfo::default())
+                                    .layer_id(LayerId::new(Order::Background, Id::new("measure"))),
                             );
                             ui.set_clip_rect(egui::Rect::from_min_size(
                                 Pos2::default(),

@@ -29,6 +29,14 @@ pub struct Stargazer {
     pub avatar_url: String,
 }
 
+pub fn example_stargazers() -> Vec<Stargazer> {
+    vec![Stargazer {
+        login: "lucasmerlin".to_string(),
+        html_url: "https://github.com/lucasmerlin".to_string(),
+        avatar_url: "https://avatars.githubusercontent.com/u/8009393?v=4".to_string(),
+    }]
+}
+
 impl Hash for Stargazer {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.login.hash(state);
@@ -47,22 +55,35 @@ impl ExampleTrait for Stargazers {
 
 impl Stargazers {
     pub fn new() -> Self {
+        let mut infinite_scroll = InfiniteScroll::new();
+        infinite_scroll.virtual_list.hide_on_resize(None);
+
         Self {
-            infinite_scroll: InfiniteScroll::new().end_loader(|cursor, callback| {
-                ehttp::fetch(
-                    Request::get(format!("https://api.github.com/repos/lucasmerlin/hello_egui/stargazers?per_page=100&page={}", cursor.unwrap_or(1))),
-                    move |result| {
-                        if let Ok(data) = result {
-                            if let Ok(stargazers) = serde_json::from_slice::<Vec<Stargazer>>(&data.bytes) {
-                                callback(Ok((stargazers, Some(cursor.unwrap_or(1) + 1))));
+            infinite_scroll: infinite_scroll.end_loader(|cursor, callback| {
+                if cfg!(feature = "mock") {
+                    callback(Ok((example_stargazers(), None)));
+                } else {
+                    ehttp::fetch(
+                        Request::get(format!(
+                            "https://api.github.com/repos/lucasmerlin\
+                            /hello_egui/stargazers?per_page=100&page={}",
+                            cursor.unwrap_or(1)
+                        )),
+                        move |result| {
+                            if let Ok(data) = result {
+                                if let Ok(stargazers) =
+                                    serde_json::from_slice::<Vec<Stargazer>>(&data.bytes)
+                                {
+                                    callback(Ok((stargazers, Some(cursor.unwrap_or(1) + 1))));
+                                } else {
+                                    callback(Err("Failed to parse stargazers".to_string()));
+                                }
                             } else {
-                                callback(Err("Failed to parse stargazers".to_string()));
-                            }
-                        } else {
-                            callback(Err("Failed to fetch stargazers".to_string()));
-                        };
-                    },
-                );
+                                callback(Err("Failed to fetch stargazers".to_string()));
+                            };
+                        },
+                    );
+                }
             }),
         }
     }

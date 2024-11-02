@@ -36,7 +36,7 @@ fn main() -> eframe::Result {
             CentralPanel::default().show(ctx, |ui| {
                 let frame = Frame::group(ui.style());
 
-                Flex::new().show(ui, |flex| {
+                Flex::new().w_full().show(ui, |flex| {
                     flex.add_ui(FlexItem::new(), |ui| {
                         ui.label("Demo direction:");
                     });
@@ -80,8 +80,9 @@ fn main() -> eframe::Result {
 
                 Flex::new()
                     .direction(main_dir)
-                    .align_content(FlexAlignContent::Normal)
+                    .align_content(FlexAlignContent::Start)
                     .grow_items(1.0)
+                    .wrap(true)
                     .show(ui, |flex| {
                         flex.add_flex_frame(
                             FlexItem::new(),
@@ -148,12 +149,13 @@ fn main() -> eframe::Result {
                             |flex| {
                                 heading(flex, "Justify Content");
 
-                                flex.add_flex(
+                                flex.add_flex_frame(
                                     item().grow(1.0),
                                     Flex::new()
                                         .direction(main_dir)
                                         .grow_items(grow_items)
-                                        .align_content(FlexAlignContent::Stretch),
+                                        .align_items(FlexAlign::Stretch),
+                                    frame,
                                     |flex| {
                                         for justify in &[
                                             FlexJustify::Start,

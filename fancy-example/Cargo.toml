@@ -7,6 +7,9 @@ publish = false
 [package.metadata.release]
 release = false
 
+[features]
+mock = []
+
 [dependencies]
 egui_animation.workspace = true
 egui_dnd.workspace = true
@@ -22,7 +25,7 @@ hello_egui_utils.workspace = true
 
 egui = { workspace = true, features = ["color-hex"] }
 eframe = { workspace = true, default-features = true }
-egui_extras = { workspace = true, features = ["http", "image"] }
+egui_extras = { workspace = true, features = ["http", "image", "all_loaders"] }
 ehttp.workspace = true
 thumbhash = "0.1.0"
 
@@ -41,6 +44,11 @@ egui_commonmark = { version = "0.18.0", features = [] }
 
 validator = { version = "0.18.1", features = ["derive"] }
 env_logger = "0.11"
+
+[dev-dependencies]
+fancy-example = { path = ".", features = ["mock"] }
+egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+eframe = { workspace = true, features = ["wgpu"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["time", "rt", "macros"] }

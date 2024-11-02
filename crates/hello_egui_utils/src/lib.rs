@@ -4,6 +4,8 @@
 
 /// Helper struct to easily align things with unknown sizes
 pub mod center;
+#[cfg(feature = "example_util")]
+pub mod example;
 
 use egui::{Align, Label, Layout, Ui, UiBuilder, Vec2, WidgetText};
 

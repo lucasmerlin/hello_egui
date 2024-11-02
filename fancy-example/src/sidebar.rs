@@ -63,28 +63,31 @@ pub fn crate_list_ui(ui: &mut Ui, shared: &SharedState) -> bool {
         ui.spacing_mut().button_padding = egui::vec2(6.0, 4.0);
         ui.spacing_mut().item_spacing = Vec2::splat(8.0);
 
-        Flex::horizontal().grow_items(1.0).show(ui, |flex| {
-            for item in ALL_CRATES {
-                let route = format!("/crate/{}", item.name());
-                let selected = shared.active_route == route;
+        Flex::horizontal()
+            .grow_items(1.0)
+            .wrap(true)
+            .show(ui, |flex| {
+                for item in ALL_CRATES {
+                    let route = format!("/crate/{}", item.name());
+                    let selected = shared.active_route == route;
 
-                if flex
-                    .add(
-                        FlexItem::new(),
-                        Button::new(item.short_name())
-                            .selected(selected)
-                            .rounding(16.0),
-                    )
-                    .inner
-                    .clicked()
-                {
-                    shared.tx.send(FancyMessage::Navigate(route)).ok();
-                    clicked = true;
-                };
-            }
-            // Add a final grow item to fill the remaining space on the last row
-            flex.add_ui(FlexItem::new().grow(9999.0), |_| {});
-        });
+                    if flex
+                        .add(
+                            FlexItem::new(),
+                            Button::new(item.short_name())
+                                .selected(selected)
+                                .rounding(16.0),
+                        )
+                        .inner
+                        .clicked()
+                    {
+                        shared.tx.send(FancyMessage::Navigate(route)).ok();
+                        clicked = true;
+                    };
+                }
+                // Add a final grow item to fill the remaining space on the last row
+                flex.add_ui(FlexItem::new().grow(9999.0), |_| {});
+            });
     });
     clicked
 }
