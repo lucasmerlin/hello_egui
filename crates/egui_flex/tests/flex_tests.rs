@@ -388,10 +388,14 @@ fn truncate() {
 
             Flex::vertical().w_full().h_full().show(ui, |flex| {
                 let frame = Frame::group(flex.ui().style());
-                flex.add_flex(item(), Flex::horizontal(), |flex| {
-                    flex.add(item().shrink(), Button::new(text).wrap());
-                    flex.add(item(), Button::new("World!").wrap());
-                });
+                flex.add_flex(
+                    item().frame(Frame::group(flex.ui().style())),
+                    Flex::horizontal(),
+                    |flex| {
+                        flex.add(item().shrink(), Button::new(text).wrap());
+                        flex.add(item(), Button::new("World!").wrap());
+                    },
+                );
             });
         });
 

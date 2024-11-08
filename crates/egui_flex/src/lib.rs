@@ -861,10 +861,23 @@ impl<'a> FlexInstance<'a> {
                 let mut content_rect =
                     content_align.align_size_within_rect(target_inner_size, frame_without_margin);
 
+                if let Some(basis) = item.basis {
+                    let mut size = content_rect.size();
+                    size[self.direction] = basis + extra_length;
+                    content_rect = Rect::from_center_size(
+                        content_rect.center(),
+                        size.min(self.ui.available_size() - item_state.margin.sum()),
+                    );
+                }
+
+                // ui.ctx()
+                //     .debug_painter()
+                //     .debug_rect(content_rect, egui::Color32::RED, "");
+
                 let max_content_size = self.max_item_size - margin.sum();
 
                 // If we shrink, we have to limit the size, otherwise we let it grow to max_content_size
-                if !do_shrink {
+                if !do_shrink && item.basis.is_none() {
                     // Because we want to allow the content to grow (e.g. in case the text gets longer),
                     // we set the content_rect's size to match the flex ui's available size.
                     content_rect.set_width(max_content_size.x);
@@ -876,14 +889,9 @@ impl<'a> FlexInstance<'a> {
                 // frame_rect.set_width(self.ui.available_width());
                 // frame_rect.set_height(self.ui.available_height());
 
-                if let Some(basis) = item.basis {
-                    let mut size = content_rect.size();
-                    size[self.direction] = basis + extra_length;
-                    content_rect = Rect::from_min_size(
-                        content_rect.min,
-                        size.min(self.ui.available_size() - item_state.margin.sum()),
-                    );
-                }
+                // ui.ctx()
+                //     .debug_painter()
+                //     .debug_rect(frame_rect, egui::Color32::GREEN, "");
 
                 let mut child_ui =
                     ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
@@ -1125,8 +1133,6 @@ impl FlexContainerUi {
             ..
         } = self;
 
-        let margin_top_left = ui.min_rect().min - frame_rect.min;
-
         // TODO: Which one is correct?
         let child_rect = content_rect;
         // let child_rect = content_rect.intersect(ui.max_rect());
@@ -1240,7 +1246,7 @@ impl FlexContainerUi {
 
         let intrinsic_size = response.intrinsic_size.map_or(
             Vec2::new(ui.spacing().interact_size.x, ui.spacing().interact_size.y),
-            // Add some vertical space to prevent edge cases where text might wrap
+            // Add some horizontal space to prevent edge cases where text might wrap
             |s| s + Vec2::X * 1.0,
         );
 
@@ -1283,15 +1289,6 @@ fn round_vec2(v: Vec2) -> Vec2 {
 
 fn round_pos2(p: Pos2) -> Pos2 {
     Pos2::new(round(p.x), round(p.y))
-}
-
-fn round_margin(margin: Margin) -> Margin {
-    Margin {
-        top: round(margin.top),
-        left: round(margin.left),
-        bottom: round(margin.bottom),
-        right: round(margin.right),
-    }
 }
 
 fn round_rect(rect: Rect) -> Rect {
