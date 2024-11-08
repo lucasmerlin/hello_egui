@@ -36,6 +36,7 @@ impl ExampleTrait for FlexExample {
             Flex::horizontal()
                 .grow_items(1.0)
                 .w_full()
+                .wrap(true)
                 .show(ui, |flex| {
                     flex.add(FlexItem::new(), Button::new("Short Button"));
                     flex.add(FlexItem::new(), Button::new("Loooooong Button"));

@@ -105,6 +105,7 @@ pub struct FlexItem {
     align_self: Option<FlexAlign>,
     align_content: Option<Align2>,
     shrink: bool,
+    frame: Option<Frame>,
 }
 
 /// Create a new flex item. Shorthand for [`FlexItem::default`].
@@ -154,6 +155,12 @@ impl FlexItem {
     /// Note: You may only ever set this on a single item in a flex container.
     pub fn shrink(mut self) -> Self {
         self.shrink = true;
+        self
+    }
+
+    /// Set the frame of the item.
+    pub fn frame(mut self, frame: Frame) -> Self {
+        self.frame = Some(frame);
         self
     }
 }
@@ -740,18 +747,18 @@ impl<'a> FlexInstance<'a> {
     /// based on the [FlexItem::align_self_content].
     /// Use the [FlexContainerUi] to show your content in the inner [Ui].
     #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
-    pub fn add_container<R>(
-        &mut self,
-        item: FlexItem,
-        container_ui: impl FnOnce(&mut Ui, FlexContainerUi) -> FlexContainerResponse<R>,
-    ) -> InnerResponse<R> {
+    pub fn add_container<R>(&mut self, item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
         let item = FlexItem {
             grow: item.grow.or(self.flex.default_item.grow),
             basis: item.basis.or(self.flex.default_item.basis),
             align_self: item.align_self.or(self.flex.default_item.align_self),
             align_content: item.align_content.or(self.flex.default_item.align_content),
             shrink: item.shrink,
+            frame: item.frame.or(self.flex.default_item.frame),
         };
+
+        let frame = item.frame.unwrap_or(Frame::none());
+        let margin = frame.inner_margin + frame.outer_margin;
 
         let row = self.rows.get_mut(self.current_row);
 
@@ -844,19 +851,19 @@ impl<'a> FlexInstance<'a> {
 
                 if do_shrink {
                     target_inner_size[self.direction] =
-                        total_size[self.direction] - item_state.margin.sum()[self.direction];
+                        total_size[self.direction] - margin.sum()[self.direction];
                 }
 
                 let content_align = item.align_content.unwrap_or(Align2::CENTER_CENTER);
 
-                let frame_without_margin = frame_rect - item_state.margin;
+                let frame_without_margin = frame_rect - margin;
 
                 let mut content_rect =
                     content_align.align_size_within_rect(target_inner_size, frame_without_margin);
 
-                let max_content_size = self.max_item_size - item_state.margin.sum();
+                let max_content_size = self.max_item_size - margin.sum();
 
-                // If we shrink, we have to limit the size.
+                // If we shrink, we have to limit the size, otherwise we let it grow to max_content_size
                 if !do_shrink {
                     // Because we want to allow the content to grow (e.g. in case the text gets longer),
                     // we set the content_rect's size to match the flex ui's available size.
@@ -881,25 +888,30 @@ impl<'a> FlexInstance<'a> {
                 let mut child_ui =
                     ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
                 child_ui.spacing_mut().item_spacing = self.item_spacing;
+                let res = frame
+                    .show(&mut child_ui, |ui| {
+                        let res = content(
+                            ui,
+                            FlexContainerUi {
+                                direction: self.direction,
+                                content_rect,
+                                frame_rect,
+                                margin: item_state.margin,
+                                max_item_size: max_content_size,
+                                // If the available space grows we want to remeasure the widget, in case
+                                // it's wrapped so it can un-wrap
+                                remeasure_widget: item_state.remeasure_widget
+                                    || self.max_item_size[self.direction]
+                                        != self.last_max_item_size[self.direction],
+                                last_inner_size: Some(item_state.inner_size),
+                                target_inner_size,
+                                item,
+                            },
+                        );
 
-                let res = container_ui(
-                    &mut child_ui,
-                    FlexContainerUi {
-                        direction: self.direction,
-                        content_rect,
-                        frame_rect,
-                        margin: item_state.margin,
-                        max_item_size: max_content_size,
-                        // If the available space grows we want to remeasure the widget, in case
-                        // it's wrapped so it can un-wrap
-                        remeasure_widget: item_state.remeasure_widget
-                            || self.max_item_size[self.direction]
-                                != self.last_max_item_size[self.direction],
-                        last_inner_size: Some(item_state.inner_size),
-                        target_inner_size,
-                        item,
-                    },
-                );
+                        res
+                    })
+                    .inner;
                 let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
                 let mut inner_size = res.child_rect.size();
@@ -917,13 +929,13 @@ impl<'a> FlexInstance<'a> {
                     }
                 };
 
-                (inner_size, res, row.items.len(), child_ui.min_rect())
+                (inner_size, res, row.items.len())
             } else {
                 ui.set_invisible();
 
                 let rect = self.ui.available_rect_before_wrap();
 
-                let res = container_ui(
+                let res = content(
                     ui,
                     FlexContainerUi {
                         direction: self.direction,
@@ -938,20 +950,11 @@ impl<'a> FlexInstance<'a> {
                     },
                 );
 
-                (res.child_rect.size(), res, 0, self.ui.min_rect())
+                (res.child_rect.size(), res, 0)
             };
 
-            let (mut inner_size, res, row_len, outer_rect) = res;
+            let (mut inner_size, res, row_len) = res;
 
-            // TODO: This calculates the top left margin, bottom right doesn't work as expected
-            // let margin_bottom_right = outer_rect.max - res.container_min_rect.max;
-            let margin_bottom_right = res.container_min_rect.min - outer_rect.min;
-            let margin = round_margin(Margin {
-                top: res.margin_top_left.y,
-                left: res.margin_top_left.x,
-                bottom: margin_bottom_right.y,
-                right: margin_bottom_right.x,
-            });
             if let Some(basis) = item.basis {
                 inner_size[self.direction] = basis;
             }
@@ -1004,17 +1007,6 @@ impl<'a> FlexInstance<'a> {
         InnerResponse::new(inner, res.response)
     }
 
-    /// Add a simple item to the flex container.
-    /// It will be positioned based on [FlexItem::align_self_content].
-    #[deprecated = "Use `add_ui` instead"]
-    pub fn add_simple<R>(
-        &mut self,
-        item: FlexItem,
-        content: impl FnOnce(&mut Ui) -> R,
-    ) -> InnerResponse<R> {
-        self.add_container(item, |ui, container| container.content(ui, content))
-    }
-
     /// Add a child ui to the flex container.
     /// It will be positioned based on [FlexItem::align_self_content].
     pub fn add_ui<R>(
@@ -1022,14 +1014,20 @@ impl<'a> FlexInstance<'a> {
         item: FlexItem,
         content: impl FnOnce(&mut Ui) -> R,
     ) -> InnerResponse<R> {
-        self.add_container(item, |ui, container| container.content(ui, content))
+        self.add_container(
+            item,
+            Box::new(|ui, container| container.content(ui, content)),
+        )
     }
 
     /// Add a [`FlexWidget`] to the flex container.
     /// [`FlexWidget`] is implemented for all default egui widgets.
     /// If you use a custom third party widget you can use [`Self::add_widget`] instead.
     pub fn add<W: FlexWidget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<W::Response> {
-        self.add_container(item, |ui, container| widget.flex_ui(ui, container))
+        self.add_container(
+            item,
+            Box::new(|ui, container| widget.flex_ui(ui, container)),
+        )
     }
 
     /// Add a [`egui::Widget`] to the flex container.
@@ -1037,34 +1035,10 @@ impl<'a> FlexInstance<'a> {
     /// If the widget reports it's intrinsic size via the [`egui::Response`] it will be able to
     /// grow it's frame according to the flex layout.
     pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {
-        self.add_container(item, |ui, container| container.content_widget(ui, widget))
-    }
-
-    /// Add some content with a frame. The frame will be stretched according to the flex layout.
-    /// The content will be centered / positioned based on [FlexItem::align_self_content].
-    #[deprecated = "Use `add_ui_frame` instead"]
-    pub fn add_frame<R>(
-        &mut self,
-        item: FlexItem,
-        frame: Frame,
-        content: impl FnOnce(&mut Ui) -> R,
-    ) -> InnerResponse<R> {
-        self.add_container(item, |ui, container| {
-            frame.show(ui, |ui| container.content(ui, content)).inner
-        })
-    }
-
-    /// Add some content with a frame. The frame will be stretched according to the flex layout.
-    /// The content will be centered / positioned based on [FlexItem::align_self_content].
-    pub fn add_ui_frame<R>(
-        &mut self,
-        item: FlexItem,
-        frame: Frame,
-        content: impl FnOnce(&mut Ui) -> R,
-    ) -> InnerResponse<R> {
-        self.add_container(item, |ui, container| {
-            frame.show(ui, |ui| container.content(ui, content)).inner
-        })
+        self.add_container(
+            item,
+            Box::new(|ui, container| container.content_widget(ui, widget)),
+        )
     }
 
     /// Add a nested flex container. Currently this doesn't correctly support wrapping the content
@@ -1073,22 +1047,7 @@ impl<'a> FlexInstance<'a> {
     pub fn add_flex<R>(
         &mut self,
         item: FlexItem,
-        flex: Flex,
-        content: impl FnOnce(&mut FlexInstance) -> R,
-    ) -> InnerResponse<R> {
-        self.add_container(item, |ui, container| {
-            container.content_flex(ui, flex, content)
-        })
-    }
-
-    /// Add a nested flex container with a frame.
-    /// See [`Self::add_flex`] for limitations.
-    #[track_caller]
-    pub fn add_flex_frame<R>(
-        &mut self,
-        item: FlexItem,
         mut flex: Flex,
-        frame: Frame,
         content: impl FnOnce(&mut FlexInstance) -> R,
     ) -> InnerResponse<R> {
         // TODO: Is this correct behavior?
@@ -1101,11 +1060,10 @@ impl<'a> FlexInstance<'a> {
             flex.align_content = FlexAlignContent::Stretch;
         }
 
-        self.add_container(item, |ui, container| {
-            frame
-                .show(ui, |ui| container.content_flex(ui, flex, content))
-                .inner
-        })
+        self.add_container(
+            item,
+            Box::new(|ui, container| container.content_flex(ui, flex, content)),
+        )
     }
 
     /// Adds an empty item with flex-grow 1.0.
@@ -1113,6 +1071,8 @@ impl<'a> FlexInstance<'a> {
         self.add_ui(FlexItem::new().grow(1.0), |_| {}).response
     }
 }
+
+type ContentFn<'a, R> = Box<dyn FnOnce(&mut Ui, FlexContainerUi) -> FlexContainerResponse<R> + 'a>;
 
 /// Helper to show the inner content of a container.
 pub struct FlexContainerUi {
@@ -1133,10 +1093,8 @@ pub struct FlexContainerResponse<T> {
     child_rect: Rect,
     /// The response from the inner content.
     pub inner: T,
-    margin_top_left: Vec2,
     max_size: Vec2,
     min_size: Vec2,
-    container_min_rect: Rect,
     remeasure_widget: bool,
 }
 
@@ -1146,10 +1104,8 @@ impl<T> FlexContainerResponse<T> {
         FlexContainerResponse {
             child_rect: self.child_rect,
             inner: f(self.inner),
-            margin_top_left: self.margin_top_left,
             max_size: self.max_size,
             min_size: self.min_size,
-            container_min_rect: self.container_min_rect,
             remeasure_widget: self.remeasure_widget,
         }
     }
@@ -1188,15 +1144,11 @@ impl FlexContainerUi {
             Sense::hover(),
         );
 
-        let container_min_rect = ui.min_rect();
-
         FlexContainerResponse {
             inner: r,
             child_rect: child_min_rect,
             max_size: ui.available_size(),
             min_size,
-            margin_top_left,
-            container_min_rect,
             remeasure_widget: false,
         }
     }
@@ -1220,8 +1172,6 @@ impl FlexContainerUi {
             ..
         } = self;
 
-        // We will assume that the margin is symmetrical
-        let margin_top_left = ui.min_rect().min - frame_rect.min;
         let container_min_size = ui.min_size();
 
         ui.set_width(ui.available_width());
@@ -1258,15 +1208,11 @@ impl FlexContainerUi {
                 content(instance)
             });
 
-        let container_min_rect = ui.min_rect();
-
         FlexContainerResponse {
             inner: res.inner,
             child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
             min_size: container_min_size,
-            margin_top_left,
-            container_min_rect,
             remeasure_widget: false,
         }
     }
@@ -1277,7 +1223,6 @@ impl FlexContainerUi {
         ui: &mut Ui,
         widget: impl Widget,
     ) -> FlexContainerResponse<Response> {
-        let margin_top_left = ui.min_rect().min - self.frame_rect.min;
         let min_size = ui.min_size();
 
         let id_salt = ui.id().with("flex_widget");
@@ -1315,8 +1260,6 @@ impl FlexContainerUi {
             inner: response,
             max_size: ui.available_size(),
             min_size,
-            margin_top_left,
-            container_min_rect: ui.min_rect(),
             remeasure_widget,
         }
     }

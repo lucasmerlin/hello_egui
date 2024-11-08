@@ -37,12 +37,11 @@ fn main() -> eframe::Result {
                                 },
                             );
 
-                            flex.add_flex_frame(
-                                FlexItem::default().grow(1.0),
+                            flex.add_flex(
+                                FlexItem::default().grow(1.0).frame(frame),
                                 Flex::vertical()
                                     .align_content(egui_flex::FlexAlignContent::Stretch)
                                     .grow_items(1.0),
-                                frame,
                                 |flex| {
                                     flex.add(
                                         FlexItem::default().grow(1.0),

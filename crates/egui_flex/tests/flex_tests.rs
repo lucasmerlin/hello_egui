@@ -193,13 +193,12 @@ fn nested() {
             .align_content(FlexAlignContent::Start)
             .grow_items(1.0)
             .show(ui, |flex| {
-                flex.add_flex_frame(
-                    FlexItem::new(),
+                flex.add_flex(
+                    FlexItem::new().frame(frame),
                     Flex::vertical()
                         .align_content(FlexAlignContent::Stretch)
                         .h_full()
                         .grow_items(1.0),
-                    Frame::group(flex.ui().style()),
                     |flex| {
                         flex.add(FlexItem::new(), Button::new("btn"));
                         // flex.add(
@@ -217,42 +216,38 @@ fn nested() {
 
                 flex.add(FlexItem::new().grow(1.0), Button::new("Single Button"));
 
-                flex.add_flex_frame(
-                    FlexItem::new().grow(1.0),
+                flex.add_flex(
+                    FlexItem::new().grow(1.0).frame(frame),
                     Flex::vertical()
                         .align_content(FlexAlignContent::Stretch)
                         .grow_items(1.0)
                         .h_full(),
-                    frame,
                     |flex| {
                         flex.add(FlexItem::new().grow(1.0), Button::new("btn"));
                         flex.add(FlexItem::new(), Button::new("Very long button"));
                     },
                 );
 
-                flex.add_flex_frame(
-                    FlexItem::new().grow(1.0),
+                flex.add_flex(
+                    FlexItem::new().grow(1.0).frame(frame),
                     Flex::vertical()
                         .align_content(FlexAlignContent::Stretch)
                         .grow_items(1.0),
-                    frame,
                     |flex| {
-                        flex.add_flex_frame(
-                            FlexItem::new().grow(1.0),
+                        flex.add_flex(
+                            FlexItem::new().grow(1.0).frame(frame),
                             Flex::horizontal()
                                 .align_content(FlexAlignContent::Stretch)
                                 .grow_items(1.0),
-                            frame,
                             |flex| {
                                 flex.add(FlexItem::new().grow(1.0), Button::new("btn"));
                                 flex.add(FlexItem::new(), Button::new("Very long button"));
 
-                                flex.add_flex_frame(
-                                    FlexItem::new().grow(1.0),
+                                flex.add_flex(
+                                    FlexItem::new().grow(1.0).frame(frame),
                                     Flex::vertical()
                                         .align_content(FlexAlignContent::Stretch)
                                         .grow_items(1.0),
-                                    Frame::group(flex.ui().style()),
                                     |flex| {
                                         flex.add(FlexItem::new().grow(1.0), Button::new("btn"));
                                         flex.add(FlexItem::new(), Button::new("Very long button"));
@@ -269,12 +264,11 @@ fn nested() {
             });
 
         Flex::vertical().show(ui, |flex| {
-            flex.add_flex_frame(
-                FlexItem::new(),
+            flex.add_flex(
+                FlexItem::new().frame(frame),
                 Flex::horizontal()
                     .align_content(FlexAlignContent::Start)
                     .grow_items(1.0),
-                Frame::group(flex.ui().style()),
                 |flex| {
                     flex.add(FlexItem::new().grow(1.0), Button::new("btn"));
                     flex.add(FlexItem::new(), Button::new("Very long button"));
@@ -357,10 +351,9 @@ pub fn chat() {
                 let frame = Frame::none()
                     //.fill(flex.ui().visuals().faint_bg_color)
                     .inner_margin(8.0);
-                flex.add_flex_frame(
-                    FlexItem::new(),
+                flex.add_flex(
+                    FlexItem::new().frame(frame),
                     Flex::horizontal().w_full(),
-                    frame,
                     |flex| {
                         flex.add_flex(item().grow(1.0), Flex::horizontal(), |flex| {
                             flex.add(
@@ -395,7 +388,7 @@ fn truncate() {
 
             Flex::vertical().w_full().h_full().show(ui, |flex| {
                 let frame = Frame::group(flex.ui().style());
-                flex.add_flex_frame(item(), Flex::horizontal(), frame, |flex| {
+                flex.add_flex(item(), Flex::horizontal(), |flex| {
                     flex.add(item().shrink(), Button::new(text).wrap());
                     flex.add(item(), Button::new("World!").wrap());
                 });

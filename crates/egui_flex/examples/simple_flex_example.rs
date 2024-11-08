@@ -1,5 +1,5 @@
 use eframe::NativeOptions;
-use egui::{CentralPanel, TextEdit};
+use egui::{CentralPanel, Label, TextEdit, Widget};
 use egui_flex::{Flex, FlexAlignContent, FlexItem};
 
 fn main() -> eframe::Result {
@@ -32,10 +32,17 @@ fn main() -> eframe::Result {
             //     });
             // });
 
-            Flex::vertical()
+            Flex::horizontal()
                 .align_content(FlexAlignContent::Stretch)
+                .w_full()
                 .show(ui, |flex| {
-                    flex.add(FlexItem::new(), TextEdit::singleline(&mut text));
+                    // flex.add(FlexItem::new(), TextEdit::singleline(&mut text));
+                    flex.add_ui(FlexItem::new().grow(1.0), |ui| {
+                        TextEdit::singleline(&mut text).ui(ui)
+                    });
+                    flex.add_ui(FlexItem::new().grow(1.0), |ui| {
+                        Label::new("Send\nMultiline").ui(ui)
+                    });
                 });
 
             // Flex::horizontal().show(ui, |flex| {
