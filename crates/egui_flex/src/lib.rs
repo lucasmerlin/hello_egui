@@ -106,6 +106,7 @@ pub struct FlexItem {
     align_content: Option<Align2>,
     shrink: bool,
     frame: Option<Frame>,
+    content_id: Option<Id>,
 }
 
 /// Create a new flex item. Shorthand for [`FlexItem::default`].
@@ -161,6 +162,14 @@ impl FlexItem {
     /// Set the frame of the item.
     pub fn frame(mut self, frame: Frame) -> Self {
         self.frame = Some(frame);
+        self
+    }
+
+    /// Egui flex can't always know when the content size of a widget changes (e.g. when a Label
+    /// or Button is truncated). If the content id changes, this will force a remeasure of the
+    /// widget.
+    pub fn content_id(mut self, content_id: Id) -> Self {
+        self.content_id = Some(content_id);
         self
     }
 }
@@ -652,6 +661,16 @@ impl Flex {
     pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> InnerResponse<R> {
         self.show_inside(ui, None, None, f).1
     }
+
+    #[track_caller]
+    pub fn show_in<R>(
+        self,
+        flex: &mut FlexInstance,
+        item: FlexItem,
+        f: impl FnOnce(&mut FlexInstance) -> R,
+    ) -> InnerResponse<R> {
+        flex.add_flex(item, self, f)
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -742,12 +761,8 @@ impl<'a> FlexInstance<'a> {
         self.ui.new_child(ui_builder)
     }
 
-    /// Show a flex container. This is split in a outer and inner [Ui]. The outer [Ui] will
-    /// grow according to the flex layout, while the inner [Ui] will be centered / positioned
-    /// based on the [FlexItem::align_self_content].
-    /// Use the [FlexContainerUi] to show your content in the inner [Ui].
     #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
-    pub fn add_container<R>(&mut self, item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
+    fn add_container<R>(&mut self, item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
         let item = FlexItem {
             grow: item.grow.or(self.flex.default_item.grow),
             basis: item.basis.or(self.flex.default_item.basis),
@@ -755,6 +770,7 @@ impl<'a> FlexInstance<'a> {
             align_content: item.align_content.or(self.flex.default_item.align_content),
             shrink: item.shrink,
             frame: item.frame.or(self.flex.default_item.frame),
+            content_id: item.content_id,
         };
 
         let frame = item.frame.unwrap_or(Frame::none());
@@ -910,7 +926,8 @@ impl<'a> FlexInstance<'a> {
                                 // it's wrapped so it can un-wrap
                                 remeasure_widget: item_state.remeasure_widget
                                     || self.max_item_size[self.direction]
-                                        != self.last_max_item_size[self.direction],
+                                        != self.last_max_item_size[self.direction]
+                                    || item.content_id != item_state.config.content_id,
                                 last_inner_size: Some(item_state.inner_size),
                                 target_inner_size,
                                 item,
