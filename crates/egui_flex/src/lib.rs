@@ -3,13 +3,17 @@
 #![warn(missing_docs)]
 
 mod flex_widget;
+mod utils;
 
 pub use crate::flex_widget::FlexWidget;
-
+use crate::utils::with_visual_transform;
+use egui::emath::TSTransform;
 use egui::{
     Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response,
     Sense, Ui, UiBuilder, Vec2, Widget,
 };
+use std::cmp::min;
+use std::fmt::Debug;
 use std::mem;
 
 /// The direction in which the flex container should lay out its children.
@@ -91,30 +95,96 @@ pub struct Flex {
     justify: FlexJustify,
     align_content: FlexAlignContent,
     gap: Option<Vec2>,
-    default_item: FlexItem,
+    default_item: FlexItemInner,
     wrap: bool,
     width: Option<Size>,
     height: Option<Size>,
 }
 
 /// Configuration for a flex item.
+#[derive(Default)]
+pub struct FlexItem<'a> {
+    frame_builder: Option<Box<dyn FnOnce(&Ui, &Response) -> (Frame, TSTransform) + 'a>>,
+    inner: FlexItemInner,
+}
+
+impl<'a> FlexItem<'a> {
+    fn build_into_inner(self, ui: &Ui, response: &Response) -> FlexItemInner {
+        let FlexItem {
+            mut inner,
+            frame_builder,
+        } = self;
+        if let Some(builder) = frame_builder {
+            let (frame, transform) = builder(ui, response);
+            inner.frame = Some(frame);
+            inner.transform = Some(transform);
+        }
+        inner
+    }
+
+    fn or(self, b: FlexItem<'a>) -> FlexItem<'a> {
+        FlexItem {
+            inner: self.inner.or(b.inner),
+            frame_builder: self.frame_builder.or(b.frame_builder),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
-pub struct FlexItem {
+struct FlexItemInner {
     grow: Option<f32>,
     basis: Option<f32>,
     align_self: Option<FlexAlign>,
     align_content: Option<Align2>,
     shrink: bool,
     frame: Option<Frame>,
+    transform: Option<TSTransform>,
+    content_id: Option<Id>,
+    sense: Option<Sense>,
+}
+
+/// Only the things that are relevant on the next frame
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+struct FlexItemState {
+    grow: Option<f32>,
+    basis: Option<f32>,
+    shrink: bool,
+    margin: Margin,
     content_id: Option<Id>,
 }
 
+impl FlexItemInner {
+    fn or(self, b: FlexItemInner) -> FlexItemInner {
+        FlexItemInner {
+            grow: self.grow.or(b.grow),
+            basis: self.basis.or(b.basis),
+            align_self: self.align_self.or(b.align_self),
+            align_content: self.align_content.or(b.align_content),
+            shrink: self.shrink || b.shrink,
+            frame: self.frame.or(b.frame),
+            transform: self.transform.or(b.transform),
+            content_id: self.content_id.or(b.content_id),
+            sense: self.sense.or(b.sense),
+        }
+    }
+
+    fn into_state(self) -> FlexItemState {
+        FlexItemState {
+            grow: self.grow,
+            basis: self.basis,
+            shrink: self.shrink,
+            margin: self.frame.map_or(Margin::ZERO, |f| f.total_margin()),
+            content_id: self.content_id,
+        }
+    }
+}
+
 /// Create a new flex item. Shorthand for [`FlexItem::default`].
-pub fn item() -> FlexItem {
+pub fn item() -> FlexItem<'static> {
     FlexItem::default()
 }
 
-impl FlexItem {
+impl<'a> FlexItem<'a> {
     /// Create a new flex item. You can also use the [`item`] function.
     pub fn new() -> Self {
         Self::default()
@@ -124,14 +194,14 @@ impl FlexItem {
     ///
     /// By default items don't grow.
     pub fn grow(mut self, grow: f32) -> Self {
-        self.grow = Some(grow);
+        self.inner.grow = Some(grow);
         self
     }
 
     /// Set the default size of the item, before it grows.
     /// If this is not set, the items "intrinsic size" will be used.
     pub fn basis(mut self, basis: f32) -> Self {
-        self.basis = Some(basis);
+        self.inner.basis = Some(basis);
         self
     }
 
@@ -139,7 +209,7 @@ impl FlexItem {
     ///
     /// Default is `stretch`.
     pub fn align_self(mut self, align_self: FlexAlign) -> Self {
-        self.align_self = Some(align_self);
+        self.inner.align_self = Some(align_self);
         self
     }
 
@@ -147,7 +217,7 @@ impl FlexItem {
     ///
     /// Default is `center`.
     pub fn align_self_content(mut self, align_self_content: Align2) -> Self {
-        self.align_content = Some(align_self_content);
+        self.inner.align_content = Some(align_self_content);
         self
     }
 
@@ -155,13 +225,28 @@ impl FlexItem {
     ///
     /// Note: You may only ever set this on a single item in a flex container.
     pub fn shrink(mut self) -> Self {
-        self.shrink = true;
+        self.inner.shrink = true;
         self
     }
 
     /// Set the frame of the item.
     pub fn frame(mut self, frame: Frame) -> Self {
-        self.frame = Some(frame);
+        self.inner.frame = Some(frame);
+        self
+    }
+
+    /// Set the visual transform of the item.
+    pub fn transform(mut self, transform: TSTransform) -> Self {
+        self.inner.transform = Some(transform);
+        self
+    }
+
+    /// Set the frame of the item using a builder function.
+    pub fn frame_builder(
+        mut self,
+        frame_builder: impl FnOnce(&Ui, &Response) -> (Frame, TSTransform) + 'a,
+    ) -> Self {
+        self.frame_builder = Some(Box::new(frame_builder));
         self
     }
 
@@ -169,7 +254,12 @@ impl FlexItem {
     /// or Button is truncated). If the content id changes, this will force a remeasure of the
     /// widget.
     pub fn content_id(mut self, content_id: Id) -> Self {
-        self.content_id = Some(content_id);
+        self.inner.content_id = Some(content_id);
+        self
+    }
+
+    pub fn sense(mut self, sense: Sense) -> Self {
+        self.inner.sense = Some(sense);
         self
     }
 }
@@ -459,6 +549,8 @@ impl Flex {
                         });
                 min_size[direction] += gap[direction] * (instance.state.items.len() as f32 - 1.0);
 
+                min_size = min_size.min(max_item_size);
+
                 // TODO: We should be able to calculate the min_size by looking at the rows at the
                 // max item size, but form some reason this doesn't work correctly
                 // This would fix wrapping in nested flexes
@@ -530,7 +622,7 @@ impl Flex {
                 .config
                 .basis
                 .map_or(item.min_size_with_margin()[direction], |basis| {
-                    basis + item.margin.sum()[direction]
+                    basis + item.config.margin.sum()[direction]
                 });
 
             if item_length + gap_direction + current_row.total_size > available_length
@@ -690,16 +782,15 @@ struct RowData {
 #[derive(Debug, Clone, PartialEq)]
 struct ItemState {
     id: Id,
-    config: FlexItem,
+    config: FlexItemState,
     inner_size: Vec2,
     inner_min_size: Vec2,
-    margin: Margin,
     remeasure_widget: bool,
 }
 
 impl ItemState {
     fn min_size_with_margin(&self) -> Vec2 {
-        self.inner_min_size + self.margin.sum()
+        self.inner_min_size + self.config.margin.sum()
     }
 }
 
@@ -756,26 +847,17 @@ impl<'a> FlexInstance<'a> {
         self.ui
     }
 
+    pub fn painter(&self) -> &egui::Painter {
+        self.ui.painter()
+    }
+
     /// Create a child ui to e.g. show a overlay over some component
     pub fn new_child(&mut self, ui_builder: UiBuilder) -> Ui {
         self.ui.new_child(ui_builder)
     }
 
     #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
-    fn add_container<R>(&mut self, item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
-        let item = FlexItem {
-            grow: item.grow.or(self.flex.default_item.grow),
-            basis: item.basis.or(self.flex.default_item.basis),
-            align_self: item.align_self.or(self.flex.default_item.align_self),
-            align_content: item.align_content.or(self.flex.default_item.align_content),
-            shrink: item.shrink,
-            frame: item.frame.or(self.flex.default_item.frame),
-            content_id: item.content_id,
-        };
-
-        let frame = item.frame.unwrap_or(Frame::none());
-        let margin = frame.inner_margin + frame.outer_margin;
-
+    fn add_container<R>(&mut self, mut item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
         let row = self.rows.get_mut(self.current_row);
 
         if let Some(row) = &row {
@@ -789,212 +871,227 @@ impl<'a> FlexInstance<'a> {
             0.0
         };
 
-        let res = self.row_ui.scope(|ui| {
-            let res = if let Some(row) = row {
-                let row_item_count = row.items.len();
-                // TODO: Handle when this is not set (Why doesn't this fail?)
-                let item_state = row.items.get_mut(self.current_row_index).unwrap();
+        item.inner = item.inner.or(self.flex.default_item);
 
-                let extra_length = if item_state.config.grow.unwrap_or(0.0) > 0.0
-                    && row.total_grow > 0.0
-                {
-                    f32::max(
-                        row.extra_space * item_state.config.grow.unwrap_or(0.0) / row.total_grow,
-                        0.0,
-                    )
-                } else {
-                    0.0
-                };
+        let res = self.row_ui.scope_builder(
+            UiBuilder::new().sense(item.inner.sense.unwrap_or(Sense::hover())),
+            |ui| {
+                let item = item.build_into_inner(ui, &ui.response());
 
-                let do_shrink = item_state.config.shrink && row.extra_space < 0.0;
+                let basis = item.basis;
 
-                let parent_min_rect = ui.min_rect();
+                let frame = item.frame.unwrap_or_default();
+                let transform = item.transform.unwrap_or_default();
+                let margin = frame.inner_margin + frame.outer_margin;
 
-                let mut total_size = item_state.min_size_with_margin();
-                total_size[self.direction] += extra_length;
+                let res = if let Some(row) = row {
+                    let row_item_count = row.items.len();
+                    // TODO: Handle when this is not set (Why doesn't this fail?)
+                    let item_state = row.items.get_mut(self.current_row_index).unwrap();
 
-                if do_shrink {
-                    total_size[self.direction] += row.extra_space;
-                    if total_size[self.direction] < 0.0 {
-                        total_size[self.direction] = 0.0;
+                    let extra_length =
+                        if item_state.config.grow.unwrap_or(0.0) > 0.0 && row.total_grow > 0.0 {
+                            f32::max(
+                                row.extra_space * item_state.config.grow.unwrap_or(0.0)
+                                    / row.total_grow,
+                                0.0,
+                            )
+                        } else {
+                            0.0
+                        };
+
+                    let do_shrink = item_state.config.shrink && row.extra_space < 0.0;
+
+                    let parent_min_rect = ui.min_rect();
+
+                    let mut total_size = item_state.min_size_with_margin();
+                    total_size[self.direction] += extra_length;
+
+                    if do_shrink {
+                        total_size[self.direction] += row.extra_space;
+                        if total_size[self.direction] < 0.0 {
+                            total_size[self.direction] = 0.0;
+                        }
                     }
-                }
 
-                let available_size = ui.available_rect_before_wrap().size();
+                    let available_size = ui.available_rect_before_wrap().size();
 
-                // If everything is wrapped we will limit the items size to the containers available
-                // size to prevent it from growing out of the container
-                if self.flex.wrap && row_item_count == 1 {
-                    total_size[self.direction] =
-                        f32::min(total_size[self.direction], available_size[self.direction]);
-                }
-
-                let align = item.align_self.unwrap_or_default();
-
-                let frame_align = match align {
-                    FlexAlign::Start => Some(Align::Min),
-                    FlexAlign::End => Some(Align::Max),
-                    FlexAlign::Center => Some(Align::Center),
-                    FlexAlign::Stretch => {
-                        total_size[1 - self.direction] = row.cross_size_with_extra_space;
-                        None
+                    // If everything is wrapped we will limit the items size to the containers available
+                    // size to prevent it from growing out of the container
+                    if self.flex.wrap && row_item_count == 1 {
+                        total_size[self.direction] =
+                            f32::min(total_size[self.direction], available_size[self.direction]);
                     }
-                };
 
-                let mut max_rect = ui.max_rect();
+                    let align = item.align_self.unwrap_or_default();
 
-                // TODO: Is this right?
-                if total_size[self.direction] > max_rect.size()[self.direction] {
-                    let mut size = max_rect.size();
-                    size[self.direction] = total_size[self.direction];
-                    max_rect = Rect::from_min_size(max_rect.min, size);
-                }
+                    let frame_align = match align {
+                        FlexAlign::Start => Some(Align::Min),
+                        FlexAlign::End => Some(Align::Max),
+                        FlexAlign::Center => Some(Align::Center),
+                        FlexAlign::Stretch => {
+                            total_size[1 - self.direction] = row.cross_size_with_extra_space;
+                            None
+                        }
+                    };
 
-                let frame_rect = match frame_align {
-                    None => Rect::from_min_size(parent_min_rect.min, total_size),
-                    Some(align) => {
-                        let mut align2 = Align2::LEFT_TOP;
-                        align2[1 - self.direction] = align;
-                        align2.align_size_within_rect(total_size, max_rect)
+                    let mut max_rect = ui.max_rect();
+
+                    // TODO: Is this right?
+                    if total_size[self.direction] > max_rect.size()[self.direction] {
+                        let mut size = max_rect.size();
+                        size[self.direction] = total_size[self.direction];
+                        max_rect = Rect::from_min_size(max_rect.min, size);
                     }
-                };
 
-                // ui.ctx()
-                //     .debug_painter()
-                //     .debug_rect(frame_rect, egui::Color32::RED, "");
+                    let frame_rect = match frame_align {
+                        None => Rect::from_min_size(parent_min_rect.min, total_size),
+                        Some(align) => {
+                            let mut align2 = Align2::LEFT_TOP;
+                            align2[1 - self.direction] = align;
+                            align2.align_size_within_rect(total_size, max_rect)
+                        }
+                    };
 
-                let mut target_inner_size = item_state.inner_size;
+                    // ui.ctx()
+                    //     .debug_painter()
+                    //     .debug_rect(frame_rect, egui::Color32::RED, "");
 
-                if do_shrink {
-                    target_inner_size[self.direction] =
-                        total_size[self.direction] - margin.sum()[self.direction];
-                }
+                    let mut target_inner_size = item_state.inner_size;
 
-                let content_align = item.align_content.unwrap_or(Align2::CENTER_CENTER);
+                    if do_shrink {
+                        target_inner_size[self.direction] =
+                            total_size[self.direction] - margin.sum()[self.direction];
+                    }
 
-                let frame_without_margin = frame_rect - margin;
+                    let content_align = item.align_content.unwrap_or(Align2::CENTER_CENTER);
 
-                let mut content_rect =
-                    content_align.align_size_within_rect(target_inner_size, frame_without_margin);
+                    let frame_without_margin = frame_rect - margin;
 
-                if let Some(basis) = item.basis {
-                    let mut size = content_rect.size();
-                    size[self.direction] = basis + extra_length;
-                    content_rect = Rect::from_center_size(
-                        content_rect.center(),
-                        size.min(self.ui.available_size() - item_state.margin.sum()),
-                    );
-                }
+                    let mut content_rect = content_align
+                        .align_size_within_rect(target_inner_size, frame_without_margin);
 
-                // ui.ctx()
-                //     .debug_painter()
-                //     .debug_rect(content_rect, egui::Color32::RED, "");
-
-                let max_content_size = self.max_item_size - margin.sum();
-
-                // If we shrink, we have to limit the size, otherwise we let it grow to max_content_size
-                if !do_shrink && item.basis.is_none() {
-                    // Because we want to allow the content to grow (e.g. in case the text gets longer),
-                    // we set the content_rect's size to match the flex ui's available size.
-                    content_rect.set_width(max_content_size.x);
-                    content_rect.set_height(max_content_size.y);
-                }
-                // We only want to limit the content size in the main dir
-                // TODO: Should there be an option to also limit it in the cross dir?
-                // content_rect.max[1 - self.direction] = self.max_item_size[1 - self.direction];
-                // frame_rect.set_width(self.ui.available_width());
-                // frame_rect.set_height(self.ui.available_height());
-
-                // ui.ctx()
-                //     .debug_painter()
-                //     .debug_rect(frame_rect, egui::Color32::GREEN, "");
-
-                let mut child_ui =
-                    ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
-                child_ui.spacing_mut().item_spacing = self.item_spacing;
-                let res = frame
-                    .show(&mut child_ui, |ui| {
-                        let res = content(
-                            ui,
-                            FlexContainerUi {
-                                direction: self.direction,
-                                content_rect,
-                                frame_rect,
-                                margin: item_state.margin,
-                                max_item_size: max_content_size,
-                                // If the available space grows we want to remeasure the widget, in case
-                                // it's wrapped so it can un-wrap
-                                remeasure_widget: item_state.remeasure_widget
-                                    || self.max_item_size[self.direction]
-                                        != self.last_max_item_size[self.direction]
-                                    || item.content_id != item_state.config.content_id,
-                                last_inner_size: Some(item_state.inner_size),
-                                target_inner_size,
-                                item,
-                            },
+                    if let Some(basis) = item.basis {
+                        let mut size = content_rect.size();
+                        size[self.direction] = basis + extra_length;
+                        content_rect = Rect::from_center_size(
+                            content_rect.center(),
+                            size.min(self.ui.available_size() - item_state.config.margin.sum()),
                         );
-
-                        res
-                    })
-                    .inner;
-                let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
-
-                let mut inner_size = res.child_rect.size();
-                if do_shrink {
-                    let this_frame = res.child_rect.size()[self.direction];
-                    let last_frame = item_state.inner_size[self.direction];
-                    let target_size_this_frame = target_inner_size[self.direction];
-                    inner_size[self.direction] = if this_frame < target_size_this_frame - 10.0 {
-                        // The content must have changed and is now significantly below a width where
-                        // we shouldn't have to shrink anymore, so we return the new size
-                        this_frame
-                    } else {
-                        // We are currently shrunken, so we have to return the old size
-                        last_frame
                     }
+
+                    // ui.ctx()
+                    //     .debug_painter()
+                    //     .debug_rect(content_rect, egui::Color32::RED, "");
+
+                    let max_content_size = self.max_item_size - margin.sum();
+
+                    // If we shrink, we have to limit the size, otherwise we let it grow to max_content_size
+                    if !do_shrink && item.basis.is_none() {
+                        // Because we want to allow the content to grow (e.g. in case the text gets longer),
+                        // we set the content_rect's size to match the flex ui's available size.
+                        content_rect.set_width(max_content_size.x);
+                        content_rect.set_height(max_content_size.y);
+                    }
+                    // We only want to limit the content size in the main dir
+                    // TODO: Should there be an option to also limit it in the cross dir?
+                    // content_rect.max[1 - self.direction] = self.max_item_size[1 - self.direction];
+                    // frame_rect.set_width(self.ui.available_width());
+                    // frame_rect.set_height(self.ui.available_height());
+
+                    // ui.ctx()
+                    //     .debug_painter()
+                    //     .debug_rect(frame_rect, egui::Color32::GREEN, "");
+
+                    let mut child_ui =
+                        ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
+                    child_ui.spacing_mut().item_spacing = self.item_spacing;
+
+                    let res = with_visual_transform(ui, transform, |ui| {
+                        frame
+                            .show(&mut child_ui, |ui| {
+                                let res = content(
+                                    ui,
+                                    FlexContainerUi {
+                                        direction: self.direction,
+                                        content_rect,
+                                        frame_rect,
+                                        margin: item_state.config.margin,
+                                        max_item_size: max_content_size,
+                                        // If the available space grows we want to remeasure the widget, in case
+                                        // it's wrapped so it can un-wrap
+                                        remeasure_widget: item_state.remeasure_widget
+                                            || self.max_item_size[self.direction]
+                                                != self.last_max_item_size[self.direction]
+                                            || item.content_id != item_state.config.content_id,
+                                        last_inner_size: Some(item_state.inner_size),
+                                        target_inner_size,
+                                        item: item.clone(),
+                                    },
+                                );
+
+                                res
+                            })
+                            .inner
+                    });
+                    let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
+
+                    let mut inner_size = res.child_rect.size();
+                    if do_shrink {
+                        let this_frame = res.child_rect.size()[self.direction];
+                        let last_frame = item_state.inner_size[self.direction];
+                        let target_size_this_frame = target_inner_size[self.direction];
+                        inner_size[self.direction] = if this_frame < target_size_this_frame - 10.0 {
+                            // The content must have changed and is now significantly below a width where
+                            // we shouldn't have to shrink anymore, so we return the new size
+                            this_frame
+                        } else {
+                            // We are currently shrunken, so we have to return the old size
+                            last_frame
+                        }
+                    };
+
+                    (inner_size, res, row.items.len())
+                } else {
+                    ui.set_invisible();
+
+                    let rect = self.ui.available_rect_before_wrap();
+
+                    let res = content(
+                        ui,
+                        FlexContainerUi {
+                            direction: self.direction,
+                            content_rect: rect,
+                            frame_rect: rect,
+                            margin: Margin::ZERO,
+                            max_item_size: self.max_item_size,
+                            remeasure_widget: false,
+                            last_inner_size: None,
+                            target_inner_size: rect.size(),
+                            item: item.clone(),
+                        },
+                    );
+
+                    (res.child_rect.size(), res, 0)
                 };
 
-                (inner_size, res, row.items.len())
-            } else {
-                ui.set_invisible();
+                let (mut inner_size, res, row_len) = res;
 
-                let rect = self.ui.available_rect_before_wrap();
+                if let Some(basis) = basis {
+                    inner_size[self.direction] = basis;
+                }
 
-                let res = content(
-                    ui,
-                    FlexContainerUi {
-                        direction: self.direction,
-                        content_rect: rect,
-                        frame_rect: rect,
-                        margin: Margin::ZERO,
-                        max_item_size: self.max_item_size,
-                        remeasure_widget: false,
-                        last_inner_size: None,
-                        target_inner_size: rect.size(),
-                        item,
-                    },
-                );
+                let item = ItemState {
+                    inner_size: round_vec2(inner_size),
+                    id: ui.id(),
+                    inner_min_size: round_vec2(Vec2::max(res.min_size, inner_size)),
+                    config: item.into_state(),
+                    remeasure_widget: res.remeasure_widget,
+                };
 
-                (res.child_rect.size(), res, 0)
-            };
-
-            let (mut inner_size, res, row_len) = res;
-
-            if let Some(basis) = item.basis {
-                inner_size[self.direction] = basis;
-            }
-
-            let item = ItemState {
-                margin,
-                inner_size: round_vec2(inner_size),
-                id: ui.id(),
-                inner_min_size: round_vec2(Vec2::max(res.min_size, inner_size)),
-                config: item,
-                remeasure_widget: res.remeasure_widget,
-            };
-
-            (res.inner, item, row_len)
-        });
+                (res.inner, item, row_len)
+            },
+        );
         let (inner, item, row_len) = res.inner;
 
         let is_last_item = self.current_row_index + 1 >= row_len;
@@ -1048,11 +1145,8 @@ impl<'a> FlexInstance<'a> {
     /// Add a [`FlexWidget`] to the flex container.
     /// [`FlexWidget`] is implemented for all default egui widgets.
     /// If you use a custom third party widget you can use [`Self::add_widget`] instead.
-    pub fn add<W: FlexWidget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<W::Response> {
-        self.add_container(
-            item,
-            Box::new(|ui, container| widget.flex_ui(ui, container)),
-        )
+    pub fn add<W: FlexWidget>(&mut self, item: FlexItem, widget: W) -> W::Response {
+        widget.flex_ui(item, self)
     }
 
     /// Add a [`egui::Widget`] to the flex container.
@@ -1077,6 +1171,7 @@ impl<'a> FlexInstance<'a> {
     ) -> InnerResponse<R> {
         // TODO: Is this correct behavior?
         if item
+            .inner
             .grow
             .or(self.flex.default_item.grow)
             .is_some_and(|g| g > 0.0)
@@ -1109,7 +1204,7 @@ pub struct FlexContainerUi {
     remeasure_widget: bool,
     last_inner_size: Option<Vec2>,
     target_inner_size: Vec2,
-    item: FlexItem,
+    item: FlexItemInner,
 }
 
 /// The response of the inner content of a container, should be passed as a return value from the
@@ -1204,7 +1299,7 @@ impl FlexContainerUi {
         flex = flex.wrap(false);
 
         // Make sure the container actually grows if grow is set.
-        if self.item.grow.is_some_and(|g| g > 0.0) {
+        if item.grow.is_some_and(|g| g > 0.0) {
             #[allow(clippy::collapsible_else_if)]
             if self.direction == 0 {
                 if flex.width.is_none() {

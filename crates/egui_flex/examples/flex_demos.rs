@@ -46,7 +46,6 @@ fn main() -> eframe::Result {
                             Button::new("Horizontal")
                                 .selected(demo_dir == FlexDirection::Horizontal),
                         )
-                        .inner
                         .clicked()
                     {
                         demo_dir = FlexDirection::Horizontal;
@@ -56,7 +55,6 @@ fn main() -> eframe::Result {
                             FlexItem::new(),
                             Button::new("Vertical").selected(demo_dir == FlexDirection::Vertical),
                         )
-                        .inner
                         .clicked()
                     {
                         demo_dir = FlexDirection::Vertical;

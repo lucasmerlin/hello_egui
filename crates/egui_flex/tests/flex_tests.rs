@@ -1,5 +1,7 @@
 use eframe::emath::Vec2;
-use egui::{Align, Button, Checkbox, DragValue, Frame, Label, Layout, ScrollArea, TextEdit, Ui};
+use egui::{
+    Align, Button, Checkbox, DragValue, Frame, Id, Label, Layout, ScrollArea, TextEdit, Ui,
+};
 use egui_flex::{item, Flex, FlexAlign, FlexAlignContent, FlexItem, FlexJustify, Size};
 use egui_kittest::wgpu::TestRenderer;
 use egui_kittest::Harness;
@@ -373,7 +375,7 @@ pub fn chat() {
 }
 
 #[test]
-fn truncate() {
+fn truncate_shrink() {
     let texts = ["Hello", "Helloooooooooooooooooooooooooooooooo"];
 
     let text_index = Cell::new(0);
@@ -381,7 +383,7 @@ fn truncate() {
         let text = texts[text_index.get()];
 
         ui.group(|ui| {
-            ui.set_max_width(100.0);
+            ui.set_max_width(140.0);
             ui.set_max_height(80.0);
 
             ui.separator();
@@ -392,7 +394,10 @@ fn truncate() {
                     item().frame(Frame::group(flex.ui().style())),
                     Flex::horizontal(),
                     |flex| {
-                        flex.add(item().shrink(), Button::new(text).wrap());
+                        flex.add(
+                            item().shrink().grow(1.0).content_id(Id::new(text)),
+                            Button::new(text).truncate(),
+                        );
                         flex.add(item(), Button::new("World!").wrap());
                     },
                 );
@@ -424,19 +429,19 @@ fn truncate() {
 
     harness.run();
     should_be_stable(&mut harness);
-    results.push(harness.try_wgpu_snapshot("truncate_0_short"));
+    results.push(harness.try_wgpu_snapshot("truncate_shrink_0_short"));
 
     text_index.set(1);
     harness.run();
     harness.run();
     should_be_stable(&mut harness);
-    results.push(harness.try_wgpu_snapshot("truncate_1_long"));
+    results.push(harness.try_wgpu_snapshot("truncate_shrink_1_long"));
 
     text_index.set(0);
     harness.run();
     harness.run();
     should_be_stable(&mut harness);
-    results.push(harness.try_wgpu_snapshot("truncate_2_short"));
+    results.push(harness.try_wgpu_snapshot("truncate_shrink_2_short"));
 
     for result in results {
         result.unwrap();

@@ -78,7 +78,6 @@ pub fn crate_list_ui(ui: &mut Ui, shared: &SharedState) -> bool {
                                 .selected(selected)
                                 .rounding(16.0),
                         )
-                        .inner
                         .clicked()
                     {
                         shared.tx.send(FancyMessage::Navigate(route)).ok();
