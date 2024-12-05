@@ -141,6 +141,7 @@ struct FlexItemInner {
     transform: Option<TSTransform>,
     content_id: Option<Id>,
     sense: Option<Sense>,
+    min_size: [Option<f32>; 2],
 }
 
 /// Only the things that are relevant on the next frame
@@ -165,6 +166,10 @@ impl FlexItemInner {
             transform: self.transform.or(b.transform),
             content_id: self.content_id.or(b.content_id),
             sense: self.sense.or(b.sense),
+            min_size: [
+                self.min_size[0].or(b.min_size[0]),
+                self.min_size[1].or(b.min_size[1]),
+            ],
         }
     }
 
@@ -262,6 +267,28 @@ impl<'a> FlexItem<'a> {
         self.inner.sense = Some(sense);
         self
     }
+
+    /// Set the minimum outer (including Frame margin) size
+    /// of the item in points (pixels).
+    pub fn min_size(mut self, min_size: impl Into<Vec2>) -> Self {
+        let min_size = min_size.into();
+        self.inner.min_size = [Some(min_size.x), Some(min_size.y)];
+        self
+    }
+
+    /// Set the minimum outer (including Frame margin) width
+    /// of the item in points (pixels).
+    pub fn min_width(mut self, min_width: impl Into<Option<f32>>) -> Self {
+        self.inner.min_size[0] = min_width.into();
+        self
+    }
+
+    /// Set the minimum outer (including Frame margin) height
+    /// of the item in points (pixels).
+    pub fn min_height(mut self, min_height: impl Into<Option<f32>>) -> Self {
+        self.inner.min_size[1] = min_height.into();
+        self
+    }
 }
 
 impl Flex {
@@ -316,8 +343,8 @@ impl Flex {
     }
 
     /// Set the default grow factor for the items in the flex container.
-    pub fn grow_items(mut self, grow: f32) -> Self {
-        self.default_item.grow = Some(grow);
+    pub fn grow_items(mut self, grow: impl Into<Option<f32>>) -> Self {
+        self.default_item.grow = grow.into();
         self
     }
 
@@ -844,11 +871,31 @@ impl<'a> FlexInstance<'a> {
 
     /// Get the ui of the flex container (e.g. to read the style or access the context).
     pub fn ui(&self) -> &Ui {
-        self.ui
+        &self.row_ui
     }
 
     pub fn painter(&self) -> &egui::Painter {
-        self.ui.painter()
+        self.row_ui.painter()
+    }
+
+    pub fn visuals(&self) -> &egui::style::Visuals {
+        self.row_ui.visuals()
+    }
+
+    pub fn visuals_mut(&mut self) -> &mut egui::style::Visuals {
+        self.row_ui.visuals_mut()
+    }
+
+    pub fn style(&self) -> &egui::style::Style {
+        self.row_ui.style()
+    }
+
+    pub fn style_mut(&mut self) -> &mut egui::style::Style {
+        self.row_ui.style_mut()
+    }
+
+    pub fn spacing(&self) -> &egui::Spacing {
+        self.row_ui.spacing()
     }
 
     /// Create a child ui to e.g. show a overlay over some component
@@ -1084,7 +1131,13 @@ impl<'a> FlexInstance<'a> {
                 let item = ItemState {
                     inner_size: round_vec2(inner_size),
                     id: ui.id(),
-                    inner_min_size: round_vec2(Vec2::max(res.min_size, inner_size)),
+                    inner_min_size: round_vec2(Vec2::max(
+                        Vec2::new(
+                            item.min_size[0].unwrap_or_default(),
+                            item.min_size[1].unwrap_or_default(),
+                        ) - frame.total_margin().sum(),
+                        inner_size,
+                    )),
                     config: item.into_state(),
                     remeasure_widget: res.remeasure_widget,
                 };
@@ -1214,7 +1267,6 @@ pub struct FlexContainerResponse<T> {
     /// The response from the inner content.
     pub inner: T,
     max_size: Vec2,
-    min_size: Vec2,
     remeasure_widget: bool,
 }
 
@@ -1225,7 +1277,6 @@ impl<T> FlexContainerResponse<T> {
             child_rect: self.child_rect,
             inner: f(self.inner),
             max_size: self.max_size,
-            min_size: self.min_size,
             remeasure_widget: self.remeasure_widget,
         }
     }
@@ -1266,7 +1317,6 @@ impl FlexContainerUi {
             inner: r,
             child_rect: child_min_rect,
             max_size: ui.available_size(),
-            min_size,
             remeasure_widget: false,
         }
     }
@@ -1289,8 +1339,6 @@ impl FlexContainerUi {
             target_inner_size,
             ..
         } = self;
-
-        let container_min_size = ui.min_size();
 
         ui.set_width(ui.available_width());
         ui.set_height(ui.available_height());
@@ -1330,7 +1378,6 @@ impl FlexContainerUi {
             inner: res.inner,
             child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
-            min_size: container_min_size,
             remeasure_widget: false,
         }
     }
@@ -1377,7 +1424,6 @@ impl FlexContainerUi {
             child_rect: Rect::from_min_size(self.frame_rect.min, intrinsic_size),
             inner: response,
             max_size: ui.available_size(),
-            min_size,
             remeasure_widget,
         }
     }

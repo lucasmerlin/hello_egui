@@ -30,14 +30,16 @@ impl FlexWidget for Button {
     fn flex_ui(self, item: FlexItem, flex_instance: &mut FlexInstance) -> Self::Response {
         flex_instance
             .add_ui(
-                item.sense(Sense::click()).frame_builder(|ui, response| {
-                    let style = ui.style().interact(response);
+                item.sense(Sense::click())
+                    .min_height(60.0)
+                    .frame_builder(|ui, response| {
+                        let style = ui.style().interact(response);
 
-                    (
-                        Frame::none().fill(style.bg_fill).stroke(style.bg_stroke),
-                        TSTransform::default(),
-                    )
-                }),
+                        (
+                            Frame::none().fill(style.bg_fill).stroke(style.bg_stroke),
+                            TSTransform::default(),
+                        )
+                    }),
                 |ui| {
                     ui.add(Label::new(self.label.clone()));
                 },
