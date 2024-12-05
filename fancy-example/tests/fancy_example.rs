@@ -19,7 +19,7 @@ pub fn app() -> Harness<'static> {
 
 fn open(example: &Example, harness: &mut Harness) {
     harness
-        .get_by_role_and_name(Role::Button, example.name)
+        .get_by_role_and_label(Role::Button, example.name)
         .click();
 
     // TODO: Remove once run runs until no more redraws are needed
@@ -46,7 +46,10 @@ pub async fn test_pages() {
 
             if let Some((_, wait_text)) = wait.iter().find(|(e, _)| e.slug == example.slug) {
                 if let Some(text) = wait_text {
-                    wait_for(&mut harness, |harness| harness.query_by_name_contains(text)).await;
+                    wait_for(&mut harness, |harness| {
+                        harness.query_by_label_contains(text)
+                    })
+                    .await;
                 } else {
                     tokio::time::sleep(Duration::from_secs_f32(1.0)).await;
                 }
@@ -73,7 +76,7 @@ pub async fn test_stargazers() {
     open(&STARGAZERS_EXAMPLE, &mut harness);
 
     wait_for(&mut harness, |harness| {
-        harness.query_by_name_contains("lucasmerlin")
+        harness.query_by_label_contains("lucasmerlin")
     })
     .await;
 
@@ -93,7 +96,7 @@ pub async fn test_chat() {
     open(&CHAT_EXAMPLE, &mut harness);
 
     wait_for(&mut harness, |harness| {
-        harness.query_by_name_contains("Agreed!")
+        harness.query_by_label_contains("Agreed!")
     })
     .await;
 

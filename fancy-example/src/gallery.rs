@@ -125,8 +125,9 @@ impl ExampleTrait for Gallery {
                                         } else {
                                             format!(
                                                 "https://raw.githubusercontent.com/lucasmerlin/hello_egui\
-                                        /main/fancy-example/src/gallery/{}.webp",
-                                                item.id
+                                        /main/fancy-example/src/gallery/{}.webp#{}",
+                                                item.id,
+                                                start_idx + idx
                                             )
                                         };
                                     let image = Image::new(image_url).sense(Sense::click());

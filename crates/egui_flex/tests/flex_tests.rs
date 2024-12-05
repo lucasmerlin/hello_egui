@@ -390,17 +390,13 @@ fn truncate_shrink() {
 
             Flex::vertical().w_full().h_full().show(ui, |flex| {
                 let frame = Frame::group(flex.ui().style());
-                flex.add_flex(
-                    item().frame(Frame::group(flex.ui().style())),
-                    Flex::horizontal(),
-                    |flex| {
-                        flex.add(
-                            item().shrink().grow(1.0).content_id(Id::new(text)),
-                            Button::new(text).truncate(),
-                        );
-                        flex.add(item(), Button::new("World!").wrap());
-                    },
-                );
+                flex.add_flex(item().frame(frame), Flex::horizontal(), |flex| {
+                    flex.add(
+                        item().shrink().grow(1.0).content_id(Id::new(text)),
+                        Button::new(text).truncate(),
+                    );
+                    flex.add(item(), Button::new("World!").wrap());
+                });
             });
         });
 
