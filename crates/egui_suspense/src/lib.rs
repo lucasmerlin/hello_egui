@@ -40,7 +40,7 @@ pub struct State<'a> {
     reload_fn: ReloadFnRef<'a>,
 }
 
-impl<'a> State<'a> {
+impl State<'_> {
     /// Call this to reload the data.
     pub fn reload(&mut self) {
         (self.reload_fn)();

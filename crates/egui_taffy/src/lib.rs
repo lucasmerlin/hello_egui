@@ -100,10 +100,12 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         content: impl FnMut(&mut Ui) + Send + 'f,
         f: impl FnMut(&mut TaffyPass<'a, 'f>),
     ) {
+        #[allow(clippy::used_underscore_items)]
         self._add_children(style, Some(Box::new(content)), f);
     }
 
     pub fn add_children(&mut self, style: Style, f: impl FnMut(&mut TaffyPass<'a, 'f>)) {
+        #[allow(clippy::used_underscore_items)]
         self._add_children(style, None, f);
     }
 
@@ -253,11 +255,11 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
 
                             let mut ui = Ui::new(
                                 ctx.clone(),
-                                LayerId::new(Order::Background, Id::new("measure")),
                                 Id::new("measure"),
                                 UiBuilder::new()
                                     .max_rect(rect)
-                                    .ui_stack_info(UiStackInfo::default()),
+                                    .ui_stack_info(UiStackInfo::default())
+                                    .layer_id(LayerId::new(Order::Background, Id::new("measure"))),
                             );
                             ui.set_clip_rect(egui::Rect::from_min_size(
                                 Pos2::default(),

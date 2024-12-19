@@ -274,7 +274,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         });
     }
 
-    fn filtered_items<'a>(items: &'a mut [T], filter: &Option<FilterType<T>>) -> Vec<&'a mut T> {
+    fn filtered_items<'a>(items: &'a mut [T], filter: Option<&FilterType<T>>) -> Vec<&'a mut T> {
         if let Some(filter) = filter {
             items
                 .iter_mut()
@@ -295,7 +295,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     ) -> VirtualListResponse {
         self.read_inboxes(ui);
 
-        let mut items = Self::filtered_items(&mut self.items, &self.filter);
+        let mut items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
         let response = self
             .virtual_list
@@ -309,7 +309,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     }
 
     fn update_items(&mut self, item_range: &Range<usize>, end_prefetch: usize) {
-        let items = Self::filtered_items(&mut self.items, &self.filter);
+        let items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
         if item_range.end + end_prefetch >= items.len()
             && matches!(self.bottom_loading_state, LoadingState::Idle { .. })

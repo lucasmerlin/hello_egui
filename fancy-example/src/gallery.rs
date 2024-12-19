@@ -1,4 +1,4 @@
-use egui::{Id, Image, OpenUrl, ScrollArea, Ui, Vec2};
+use egui::{Id, Image, OpenUrl, ScrollArea, Sense, Ui, Vec2};
 use serde::Deserialize;
 
 use egui_infinite_scroll::InfiniteScroll;
@@ -37,6 +37,12 @@ pub struct Gallery {
     items: InfiniteScroll<GalleryItem, usize>,
 }
 
+impl Default for Gallery {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Gallery {
     pub fn new() -> Gallery {
         let items = include_str!("gallery/index.json");
@@ -61,12 +67,10 @@ impl ExampleTrait for Gallery {
         demo_area(ui, "Gallery", 1000.0, |ui| {
             let height = 300.0;
 
-            let refresh_response =
-                PullToRefresh::new(false)
-                    .scroll_area_ui(ui, |ui|
+            let refresh_response = PullToRefresh::new(false).scroll_area_ui(ui, |ui| {
                 ScrollArea::vertical()
                     .max_height(ui.available_height() * 0.9 - 32.0)
-                    .auto_shrink([false ,false])
+                    .auto_shrink([false, false])
                     .show(ui, |ui| {
                         ui.spacing_mut().item_spacing = Vec2::splat(16.0);
                         let item_spacing = ui.spacing_mut().item_spacing.x;
@@ -108,22 +112,31 @@ impl ExampleTrait for Gallery {
                             ui.horizontal(|ui| {
                                 for (idx, item) in item.iter().enumerate().take(count) {
                                     let size = Vec2::new(item.width * scale, height);
-                                    let response = ui.add_sized(
-                                        size,
-                                        ThumbhashImage::new(
-                                            Image::new(format!(
-                                                "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp#{}",
+                                    // TODO: Reintroduce cache busting once fixed: https://github.com/emilk/egui/issues/5341
+                                    // let image_url = format!(
+                                    //     "https://raw.githubusercontent.com/lucasmerlin/hello_egui/main/fancy-example/src/gallery/{}.webp#{}",
+                                    //     item.id,
+                                    //     start_idx + idx
+                                    // );
+                                    let image_url =
+                                        if cfg!(feature = "mock") {
+                                            let path = env!("CARGO_MANIFEST_DIR");
+                                            format!("file://{path}/src/gallery/{}.webp", item.id)
+                                        } else {
+                                            format!(
+                                                "https://raw.githubusercontent.com/lucasmerlin/hello_egui\
+                                        /main/fancy-example/src/gallery/{}.webp#{}",
                                                 item.id,
                                                 start_idx + idx
-                                            )),
-                                            &item.thumbhash,
-                                        )
-                                            .id(Id::new("gallery_item").with(start_idx + idx))
-                                            .rounding(8.0),
-                                    );
+                                            )
+                                        };
+                                    let image = Image::new(image_url).sense(Sense::click());
+                                    let image = ThumbhashImage::new(image, &item.thumbhash)
+                                        .id(Id::new("gallery_item").with(start_idx + idx));
+                                    let response = ui.add_sized(size, image.rounding(8.0));
 
                                     // Workaround for buttons blocking touch scroll: https://github.com/emilk/egui/pull/3815
-                                    if ui.input(|i| i.pointer.any_released() && !i.pointer.is_decidedly_dragging()) && response.hovered() {
+                                    if response.clicked() {
                                         ui.ctx().open_url(OpenUrl::new_tab(format!(
                                             "https://hellopaint.io/gallery/post/{}",
                                             item.id
@@ -135,7 +148,7 @@ impl ExampleTrait for Gallery {
                             count
                         });
                     })
-            );
+            });
 
             if refresh_response.should_refresh() {
                 self.items.reset();

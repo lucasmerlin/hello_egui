@@ -1,9 +1,7 @@
+use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
+use serde::Deserialize;
 use std::fmt::Debug;
 use std::hash::Hash;
-
-use egui::{Frame, Id, Image, ScrollArea, Ui, Vec2};
-use ehttp::Request;
-use serde::Deserialize;
 
 use crate::crate_ui::{crate_usage_ui, Crate, CrateUsage};
 use crate::demo_area;
@@ -29,6 +27,16 @@ pub struct Stargazer {
     pub avatar_url: String,
 }
 
+#[cfg(feature = "mock")]
+fn example_stargazers() -> Vec<Stargazer> {
+    let dir = env!("CARGO_MANIFEST_DIR");
+    vec![Stargazer {
+        login: "lucasmerlin".to_string(),
+        html_url: "https://github.com/lucasmerlin".to_string(),
+        avatar_url: format!("file://{dir}/src/egui.png",),
+    }]
+}
+
 impl Hash for Stargazer {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.login.hash(state);
@@ -45,15 +53,34 @@ impl ExampleTrait for Stargazers {
     }
 }
 
+impl Default for Stargazers {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Stargazers {
     pub fn new() -> Self {
+        let mut infinite_scroll = InfiniteScroll::new();
+        infinite_scroll.virtual_list.hide_on_resize(None);
+
         Self {
-            infinite_scroll: InfiniteScroll::new().end_loader(|cursor, callback| {
+            #[allow(unused_variables)]
+            infinite_scroll: infinite_scroll.end_loader(|cursor, callback| {
+                #[cfg(feature = "mock")]
+                callback(Ok((example_stargazers(), None)));
+                #[cfg(not(feature = "mock"))]
                 ehttp::fetch(
-                    Request::get(format!("https://api.github.com/repos/lucasmerlin/hello_egui/stargazers?per_page=100&page={}", cursor.unwrap_or(1))),
+                    ehttp::Request::get(format!(
+                        "https://api.github.com/repos/lucasmerlin\
+                            /hello_egui/stargazers?per_page=100&page={}",
+                        cursor.unwrap_or(1)
+                    )),
                     move |result| {
                         if let Ok(data) = result {
-                            if let Ok(stargazers) = serde_json::from_slice::<Vec<Stargazer>>(&data.bytes) {
+                            if let Ok(stargazers) =
+                                serde_json::from_slice::<Vec<Stargazer>>(&data.bytes)
+                            {
                                 callback(Ok((stargazers, Some(cursor.unwrap_or(1) + 1))));
                             } else {
                                 callback(Err("Failed to parse stargazers".to_string()));
@@ -111,14 +138,17 @@ impl Stargazers {
 
                                             let size = Vec2::new(32.0, 32.0);
 
-                                            ui.add(
-                                                Image::new(format!(
+                                            let image_url = if cfg!(feature = "mock") {
+                                                item.avatar_url.clone()
+                                            } else {
+                                                format!(
                                                     "{}&s={}",
                                                     item.avatar_url,
                                                     size.x as u32 * 2
-                                                ))
-                                                .fit_to_exact_size(size),
-                                            );
+                                                )
+                                            };
+
+                                            ui.add(Image::new(image_url).fit_to_exact_size(size));
 
                                             ui.hyperlink_to(
                                                 item.login.as_str(),

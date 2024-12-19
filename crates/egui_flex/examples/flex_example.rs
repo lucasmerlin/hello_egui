@@ -32,52 +32,50 @@ fn main() -> eframe::Result {
                     ];
 
                     Flex::new()
+                        .w_full()
                         .align_items(egui_flex::FlexAlign::Stretch)
                         .align_items_content(egui::Align2::CENTER_CENTER)
+                        .wrap(true)
                         .show(ui, |flex| {
-                            flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
-                                ui.group(|ui| {
-                                    content.content(ui, |ui| {
-                                        ui.label("Hello");
-                                    })
-                                })
-                                .inner
-                            });
-
-                            for item in items {
-                                flex.add_container(FlexItem::default().grow(1.0), |ui, content| {
-                                    ui.group(|ui| {
-                                        content.content(ui, |ui| {
-                                            Label::new(item).wrap().ui(ui);
-                                        })
-                                    })
-                                    .inner
-                                });
-                            }
-
-                            flex.add_container(
-                                FlexItem::default().grow(1.0).basis(200.0),
-                                |ui, content| {
-                                    ui.group(|ui| {
-                                        content.content(ui, |ui| {
-                                            TextEdit::singleline(&mut text)
-                                                .desired_width(ui.available_width())
-                                                .ui(ui);
-                                        })
-                                    })
-                                    .inner
+                            flex.add_ui(
+                                FlexItem::default()
+                                    .grow(1.0)
+                                    .frame(Frame::group(flex.ui().style())),
+                                |ui| {
+                                    ui.label("Hello");
                                 },
                             );
 
-                            flex.add_container(
-                                FlexItem::default().grow(1.0).basis(80.0),
-                                |ui, content| {
-                                    ui.group(|ui| {
-                                        content.content(ui, |ui| {
-                                            ui.add(Label::new("I have flex basis 80").wrap());
-                                        })
-                                    })
-                                    .inner
+                            for item in items {
+                                flex.add_ui(
+                                    FlexItem::default()
+                                        .grow(1.0)
+                                        .frame(Frame::group(flex.ui().style())),
+                                    |ui| {
+                                        Label::new(item).wrap().ui(ui);
+                                    },
+                                );
+                            }
+
+                            flex.add_ui(
+                                FlexItem::default()
+                                    .grow(1.0)
+                                    .basis(200.0)
+                                    .frame(Frame::group(flex.ui().style())),
+                                |ui| {
+                                    TextEdit::singleline(&mut text)
+                                        .desired_width(ui.available_width())
+                                        .ui(ui);
+                                },
+                            );
+
+                            flex.add_ui(
+                                FlexItem::default()
+                                    .grow(1.0)
+                                    .basis(80.0)
+                                    .frame(Frame::group(flex.ui().style())),
+                                |ui| {
+                                    ui.add(Label::new("I have flex basis 80").wrap());
                                 },
                             );
 
@@ -87,9 +85,11 @@ fn main() -> eframe::Result {
                                 FlexAlign::Center,
                                 FlexAlign::Stretch,
                             ] {
-                                flex.add_ui_frame(
-                                    FlexItem::default().grow(1.0).align_self(*align),
-                                    Frame::group(flex.ui().style()),
+                                flex.add_ui(
+                                    FlexItem::default()
+                                        .grow(1.0)
+                                        .align_self(*align)
+                                        .frame(Frame::group(flex.ui().style())),
                                     |ui| {
                                         ui.add(
                                             Label::new(format!("I have align-self: {align:?}"))
@@ -104,12 +104,13 @@ fn main() -> eframe::Result {
                                 Slider::new(&mut 0.0, 0.0..=1000.0).ui(ui);
                             });
 
-                            flex.add_flex_frame(
-                                FlexItem::default().grow(1.0),
+                            flex.add_flex(
+                                FlexItem::default()
+                                    .grow(1.0)
+                                    .frame(egui::Frame::group(flex.ui().style())),
                                 Flex::vertical()
                                     .align_content(egui_flex::FlexAlignContent::Stretch)
                                     .grow_items(1.0),
-                                egui::Frame::group(flex.ui().style()),
                                 |flex| {
                                     flex.add(FlexItem::default().grow(1.0), Button::new("btn"));
                                     flex.add(FlexItem::default(), Button::new("Very long button"));

@@ -5,6 +5,10 @@
 /// Helper struct to easily align things with unknown sizes
 pub mod center;
 
+/// Utilities to conveniently create egui examples
+#[cfg(feature = "example_util")]
+pub mod example;
+
 use egui::{Align, Label, Layout, Ui, UiBuilder, Vec2, WidgetText};
 
 pub use concat_idents::concat_idents;
