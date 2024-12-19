@@ -3,6 +3,7 @@
 ## 0.4.0
 
 - update egui to 0.30
+- update validator to 0.19
 
 ## 0.3.0
 

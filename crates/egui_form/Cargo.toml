@@ -33,13 +33,13 @@ required-features = ["validator_garde"]
 egui.workspace = true
 
 garde = { version = "0.20.0", optional = true }
-validator = { version = "0.18.1", optional = true }
+validator = { version = "0.19.0", optional = true }
 
 [dev-dependencies]
 eframe = { workspace = true, features = ["default"] }
 
 garde = { version = "0.20.0", features = ["email", "derive"] }
-validator = { version = "0.18.1", features = ["derive"] }
+validator = { version = "0.19.0", features = ["derive"] }
 
 [lints]
 workspace = true
