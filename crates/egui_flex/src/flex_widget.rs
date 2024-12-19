@@ -1,5 +1,4 @@
-use crate::{FlexContainerResponse, FlexContainerUi, FlexInstance, FlexItem};
-use egui::Ui;
+use crate::{FlexInstance, FlexItem};
 
 /// Implement this trait for a widget to make it usable in a flex container.
 ///
@@ -13,6 +12,8 @@ pub trait FlexWidget {
     /// The response type of the widget
     type Response;
 
+    /// Returns the default [`FlexItem`] for this widget.
+    /// Implement this to allow overriding the item config.
     fn default_item() -> FlexItem<'static> {
         FlexItem::new()
     }
@@ -24,13 +25,12 @@ pub trait FlexWidget {
 }
 
 mod egui_widgets {
-    use super::{FlexContainerResponse, FlexContainerUi, FlexWidget, Ui};
+    use super::FlexWidget;
     use crate::{FlexInstance, FlexItem};
     use egui::widgets::{
         Button, Checkbox, DragValue, Hyperlink, Image, ImageButton, Label, Link, ProgressBar,
         RadioButton, SelectableLabel, Slider, Spinner, TextEdit,
     };
-    use egui::InnerResponse;
 
     macro_rules! impl_widget {
         ($($widget:ty),*) => {

@@ -137,6 +137,7 @@ impl<'a> Dnd<'a> {
         items: impl Iterator<Item = T>,
         mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
+        #[allow(clippy::used_underscore_items)]
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
@@ -159,6 +160,7 @@ impl<'a> Dnd<'a> {
         size: egui::Vec2,
         mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
+        #[allow(clippy::used_underscore_items)]
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
@@ -198,6 +200,7 @@ impl<'a> Dnd<'a> {
     /// This will allow for very flexible UI. You can use it to e.g. render outlines around items
     /// or render items in complex layouts. This is **experimental**.
     pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
+        #[allow(clippy::used_underscore_items)]
         self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
     }
 

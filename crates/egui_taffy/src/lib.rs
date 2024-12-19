@@ -100,10 +100,12 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         content: impl FnMut(&mut Ui) + Send + 'f,
         f: impl FnMut(&mut TaffyPass<'a, 'f>),
     ) {
+        #[allow(clippy::used_underscore_items)]
         self._add_children(style, Some(Box::new(content)), f);
     }
 
     pub fn add_children(&mut self, style: Style, f: impl FnMut(&mut TaffyPass<'a, 'f>)) {
+        #[allow(clippy::used_underscore_items)]
         self._add_children(style, None, f);
     }
 

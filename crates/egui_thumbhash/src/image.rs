@@ -118,7 +118,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
     }
 }
 
-impl<'a, 'h> Widget for ThumbhashImage<'a, 'h> {
+impl Widget for ThumbhashImage<'_, '_> {
     fn ui(self, ui: &mut Ui) -> Response {
         self.ui(ui)
     }

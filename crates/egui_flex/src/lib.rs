@@ -3,16 +3,13 @@
 #![warn(missing_docs)]
 
 mod flex_widget;
-mod utils;
 
 pub use crate::flex_widget::FlexWidget;
-use crate::utils::with_visual_transform;
 use egui::emath::TSTransform;
 use egui::{
     Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response,
     Sense, Ui, UiBuilder, Vec2, Widget,
 };
-use std::cmp::min;
 use std::fmt::Debug;
 use std::mem;
 
@@ -101,14 +98,16 @@ pub struct Flex {
     height: Option<Size>,
 }
 
+type FrameBuilder<'a> = Box<dyn FnOnce(&Ui, &Response) -> (Frame, TSTransform) + 'a>;
+
 /// Configuration for a flex item.
 #[derive(Default)]
 pub struct FlexItem<'a> {
-    frame_builder: Option<Box<dyn FnOnce(&Ui, &Response) -> (Frame, TSTransform) + 'a>>,
+    frame_builder: Option<FrameBuilder<'a>>,
     inner: FlexItemInner,
 }
 
-impl<'a> FlexItem<'a> {
+impl FlexItem<'_> {
     fn build_into_inner(self, ui: &Ui, response: &Response) -> FlexItemInner {
         let FlexItem {
             mut inner,
@@ -120,13 +119,6 @@ impl<'a> FlexItem<'a> {
             inner.transform = Some(transform);
         }
         inner
-    }
-
-    fn or(self, b: FlexItem<'a>) -> FlexItem<'a> {
-        FlexItem {
-            inner: self.inner.or(b.inner),
-            frame_builder: self.frame_builder.or(b.frame_builder),
-        }
     }
 }
 
@@ -263,6 +255,7 @@ impl<'a> FlexItem<'a> {
         self
     }
 
+    /// Set a sense for the FlexItem. The response will be passed to the FrameBuilder closure.
     pub fn sense(mut self, sense: Sense) -> Self {
         self.inner.sense = Some(sense);
         self
@@ -781,6 +774,7 @@ impl Flex {
         self.show_inside(ui, None, None, f).1
     }
 
+    /// Show this flex in another Flex. See also [FlexInstance::add_flex].
     #[track_caller]
     pub fn show_in<R>(
         self,
@@ -847,7 +841,7 @@ pub struct FlexInstance<'a> {
     size: [Option<f32>; 2],
 }
 
-impl<'a> FlexInstance<'a> {
+impl FlexInstance<'_> {
     fn row_ui(parent: &mut Ui, row: Option<&RowData>) -> Ui {
         let rect = row.map_or(parent.max_rect(), |row| row.rect.unwrap());
 
@@ -874,26 +868,32 @@ impl<'a> FlexInstance<'a> {
         &self.row_ui
     }
 
+    /// Access the underlying [`egui::Painter`].
     pub fn painter(&self) -> &egui::Painter {
         self.row_ui.painter()
     }
 
+    /// Access the underlying [`egui::Output`].
     pub fn visuals(&self) -> &egui::style::Visuals {
         self.row_ui.visuals()
     }
 
+    /// Access the underlying [`egui::style::Visuals`].
     pub fn visuals_mut(&mut self) -> &mut egui::style::Visuals {
         self.row_ui.visuals_mut()
     }
 
+    /// Access the underlying [`egui::style::Style`].
     pub fn style(&self) -> &egui::style::Style {
         self.row_ui.style()
     }
 
+    /// Access the underlying [`egui::style::Style`] mutably.
     pub fn style_mut(&mut self) -> &mut egui::style::Style {
         self.row_ui.style_mut()
     }
 
+    /// Access the underlying [`egui::Spacing`].
     pub fn spacing(&self) -> &egui::Spacing {
         self.row_ui.spacing()
     }
@@ -1054,33 +1054,33 @@ impl<'a> FlexInstance<'a> {
                         ui.new_child(UiBuilder::new().max_rect(frame_rect).layout(*ui.layout()));
                     child_ui.spacing_mut().item_spacing = self.item_spacing;
 
-                    let res = with_visual_transform(ui, transform, |ui| {
-                        frame
-                            .show(&mut child_ui, |ui| {
-                                let res = content(
-                                    ui,
-                                    FlexContainerUi {
-                                        direction: self.direction,
-                                        content_rect,
-                                        frame_rect,
-                                        margin: item_state.config.margin,
-                                        max_item_size: max_content_size,
-                                        // If the available space grows we want to remeasure the widget, in case
-                                        // it's wrapped so it can un-wrap
-                                        remeasure_widget: item_state.remeasure_widget
-                                            || self.max_item_size[self.direction]
-                                                != self.last_max_item_size[self.direction]
-                                            || item.content_id != item_state.config.content_id,
-                                        last_inner_size: Some(item_state.inner_size),
-                                        target_inner_size,
-                                        item: item.clone(),
-                                    },
-                                );
-
-                                res
-                            })
-                            .inner
-                    });
+                    let res = child_ui
+                        .with_visual_transform(transform, |ui| {
+                            frame
+                                .show(ui, |ui| {
+                                    content(
+                                        ui,
+                                        FlexContainerUi {
+                                            direction: self.direction,
+                                            content_rect,
+                                            frame_rect,
+                                            margin: item_state.config.margin,
+                                            max_item_size: max_content_size,
+                                            // If the available space grows we want to remeasure the widget, in case
+                                            // it's wrapped so it can un-wrap
+                                            remeasure_widget: item_state.remeasure_widget
+                                                || self.max_item_size[self.direction]
+                                                    != self.last_max_item_size[self.direction]
+                                                || item.content_id != item_state.config.content_id,
+                                            last_inner_size: Some(item_state.inner_size),
+                                            target_inner_size,
+                                            item,
+                                        },
+                                    )
+                                })
+                                .inner
+                        })
+                        .inner;
                     let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
                     let mut inner_size = res.child_rect.size();
@@ -1115,7 +1115,7 @@ impl<'a> FlexInstance<'a> {
                             remeasure_widget: false,
                             last_inner_size: None,
                             target_inner_size: rect.size(),
-                            item: item.clone(),
+                            item,
                         },
                     );
 
@@ -1202,9 +1202,9 @@ impl<'a> FlexInstance<'a> {
         widget.flex_ui(item, self)
     }
 
-    /// Add a [`egui::Widget`] to the flex container.
+    /// Add a [`Widget`] to the flex container.
     /// The default egui widgets implement [`FlexWidget`] Aso you can just use [`Self::add`] instead.
-    /// If the widget reports it's intrinsic size via the [`egui::Response`] it will be able to
+    /// If the widget reports it's intrinsic size via the [`Response`] it will be able to
     /// grow it's frame according to the flex layout.
     pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {
         self.add_container(
@@ -1300,8 +1300,6 @@ impl FlexContainerUi {
         let child_rect = content_rect;
         // let child_rect = content_rect.intersect(ui.max_rect());
 
-        let min_size = ui.min_size();
-
         let mut child = ui.new_child(UiBuilder::new().max_rect(child_rect));
 
         let r = content(&mut child);
@@ -1388,8 +1386,6 @@ impl FlexContainerUi {
         ui: &mut Ui,
         widget: impl Widget,
     ) -> FlexContainerResponse<Response> {
-        let min_size = ui.min_size();
-
         let id_salt = ui.id().with("flex_widget");
         let mut builder = UiBuilder::new()
             .id_salt(id_salt)
