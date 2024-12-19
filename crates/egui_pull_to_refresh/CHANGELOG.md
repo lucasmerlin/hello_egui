@@ -1,5 +1,9 @@
 # egui_pull_to_refresh changelog
 
+## 0.7.0
+
+- Updated egui to 0.30
+
 ## 0.6.0
 
 - Updated egui to 0.29

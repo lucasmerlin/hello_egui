@@ -1,5 +1,10 @@
 # hello_egui changelog
 
+## 0.7.0
+
+- many improvements to egui_flex
+- update all crates for egui 0.30 support
+
 ## 0.6.0
 
 - update all crates for egui 0.29 support

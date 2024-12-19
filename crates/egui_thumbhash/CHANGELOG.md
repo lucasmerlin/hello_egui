@@ -1,5 +1,9 @@
 # egui_thumbhash changelog
 
+## 0.6.0
+
+- Updated egui to 0.30
+
 ## 0.5.0
 
 - Updated egui to 0.29
