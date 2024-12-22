@@ -16,7 +16,6 @@ mock = []
 egui_animation.workspace = true
 egui_dnd.workspace = true
 egui_form = { workspace = true, features = ["validator_validator"] }
-egui_suspense = { workspace = true, features = ["tokio", "async"] }
 egui_inbox.workspace = true
 egui_infinite_scroll.workspace = true
 egui_pull_to_refresh.workspace = true
@@ -32,7 +31,6 @@ ehttp.workspace = true
 thumbhash = "0.1.0"
 
 image = { workspace = true, features = ["jpeg", "png", "webp"] }
-color-hex = "0.2.0"
 
 wasm-bindgen = "0.2.93"
 wasm-bindgen-futures = "0.4.43"

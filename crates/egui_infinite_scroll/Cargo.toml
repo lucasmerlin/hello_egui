@@ -30,7 +30,6 @@ hello_egui_utils.workspace = true
 
 egui.workspace = true
 egui_extras = { workspace = true, optional = true }
-web-time = "1"
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
