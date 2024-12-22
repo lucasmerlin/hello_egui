@@ -22,7 +22,7 @@ egui_extras = { workspace = true, default-features = true, features = [
     "http",
 ] }
 
-oxhttp = { version = "0.2.2", default-features = false, features = [
+oxhttp = { version = "0.2.6", default-features = false, features = [
     "client",
     "rustls",
     "webpki-roots",
