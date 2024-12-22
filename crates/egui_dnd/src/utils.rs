@@ -2,7 +2,7 @@
 ///
 /// Rotates the section of the slice between `source_idx` and `target_idx` such that the item
 /// previously at `source_idx` ends up at `target_idx - 1` if `target_idx > source_idx`, and
-/// at `target_idx` otherwhise. This matches the expected behavior when grabbing the item in
+/// at `target_idx` otherwise. This matches the expected behavior when grabbing the item in
 /// the UI and moving it to another position.
 ///
 /// # Example
