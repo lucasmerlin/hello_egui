@@ -904,7 +904,7 @@ impl FlexInstance<'_> {
     }
 
     #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
-    fn add_container<R>(&mut self, mut item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
+    pub fn add_container<R>(&mut self, mut item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
         let row = self.rows.get_mut(self.current_row);
 
         if let Some(row) = &row {
