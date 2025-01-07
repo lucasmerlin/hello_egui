@@ -1,0 +1,11 @@
+files.extend-exclude = [
+    "*.json",
+    "crates/egui_material_icons/src/icons.rs",
+    "*.codepoints",
+    "crates/egui_dnd/examples",
+    "**/animations.rs",
+]
+
+[default.extend-words]
+# From lorem
+"facilisi" = "facilisi"

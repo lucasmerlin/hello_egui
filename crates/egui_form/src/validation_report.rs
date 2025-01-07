@@ -22,6 +22,6 @@ pub trait EguiValidationReport {
 
 /// Helper trait to allow constructing non-nested `FormFields` without using the `field_path`!() macro
 pub trait IntoFieldPath<T> {
-    /// Conver this type into a [T]
+    /// Convert this type into a [T]
     fn into_field_path(self) -> T;
 }

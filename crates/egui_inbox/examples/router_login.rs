@@ -4,7 +4,7 @@
 /// The `TypeInbox` can be utilized as a application wide message bus, where components can send messages
 /// to each other, without the `AppState` even having to know about any of the message types.
 ///
-/// The individual components could be in seperate modules or even seperate crates, with the messages and
+/// The individual components could be in separate modules or even separate crates, with the messages and
 /// events being defined in a shared crate.
 use std::sync::Arc;
 

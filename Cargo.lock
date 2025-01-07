@@ -1530,7 +1530,6 @@ dependencies = [
  "egui_inbox",
  "egui_kittest",
  "hello_egui_utils",
- "log",
  "rstest",
 ]
 
@@ -1592,7 +1591,6 @@ dependencies = [
  "hello_egui_utils",
  "rand 0.8.5",
  "tokio",
- "web-time",
 ]
 
 [[package]]
@@ -1699,14 +1697,11 @@ dependencies = [
 name = "egui_webview"
 version = "0.1.0"
 dependencies = [
- "base64 0.22.1",
  "eframe",
  "egui 0.30.0",
  "egui_extras 0.30.0",
  "egui_inbox",
  "image",
- "log",
- "rgb",
  "serde",
  "serde_json",
  "wry",
@@ -1930,7 +1925,6 @@ name = "fancy-example"
 version = "0.1.0"
 dependencies = [
  "casey",
- "color-hex",
  "eframe",
  "egui 0.30.0",
  "egui_animation",
@@ -1944,7 +1938,6 @@ dependencies = [
  "egui_kittest",
  "egui_pull_to_refresh",
  "egui_router",
- "egui_suspense",
  "egui_thumbhash",
  "ehttp",
  "env_logger",

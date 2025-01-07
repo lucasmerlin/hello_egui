@@ -12,7 +12,6 @@ license = "MIT"
 
 [dependencies]
 egui.workspace = true
-log.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true, features = ["wgpu"] }
