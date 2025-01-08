@@ -15,4 +15,4 @@ egui.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-egui_demo_lib = "0.29"
+egui_demo_lib = "0.30"
