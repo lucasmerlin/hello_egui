@@ -97,18 +97,20 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
                 SizeHint::default(),
             );
             if let Ok(TexturePoll::Ready { texture, .. }) = image {
-                ui.painter().add(RectShape {
-                    rect: Rect::from_min_size(
-                        response.rect.min,
-                        self.fit_to_exact_size.unwrap_or(response.rect.size()),
+                ui.painter().add(
+                    RectShape::filled(
+                        Rect::from_min_size(
+                            response.rect.min,
+                            self.fit_to_exact_size.unwrap_or(response.rect.size()),
+                        ),
+                        self.rounding.unwrap_or_default(),
+                        Color32::from_rgba_premultiplied(i, i, i, i),
+                    )
+                    .with_texture(
+                        texture.id,
+                        Rect::from_min_size(Pos2::default(), Vec2::new(1.0, 1.0)),
                     ),
-                    rounding: self.rounding.unwrap_or_default(),
-                    fill_texture_id: texture.id,
-                    fill: Color32::from_rgba_premultiplied(i, i, i, i),
-                    stroke: Stroke::default(),
-                    uv: Rect::from_min_size(Pos2::default(), Vec2::new(1.0, 1.0)),
-                    blur_width: 0.0,
-                });
+                );
             }
         }
 

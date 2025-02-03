@@ -170,7 +170,7 @@ impl FlexItemInner {
             grow: self.grow,
             basis: self.basis,
             shrink: self.shrink,
-            margin: self.frame.map_or(Margin::ZERO, |f| f.total_margin()),
+            margin: self.frame.map_or(Margin::ZERO, |f| f.total_margin().into()),
             content_id: self.content_id,
         }
     }
