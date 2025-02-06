@@ -4,8 +4,8 @@ use std::time::Duration;
 
 use eframe::emath::Vec2;
 use egui::{
-    Align, CornerRadius, Frame, Label, Layout, Rect, RichText, ScrollArea, Shape, Stroke,
-    Ui, UiBuilder, Widget,
+    Align, CornerRadius, Frame, Label, Layout, Rect, RichText, ScrollArea, Shape, Stroke, Ui,
+    UiBuilder, Widget,
 };
 
 use egui_animation::animate_continuous;
