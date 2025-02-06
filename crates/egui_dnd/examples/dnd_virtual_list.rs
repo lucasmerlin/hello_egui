@@ -51,10 +51,10 @@ fn draw_item(ui: &mut egui::Ui, handle: egui_dnd::Handle, item: i32) {
     // For the sake of the example we generate a random height based on the item index
     // but if your row height e.g. depends on some text with varying rows this would also work.
     let mut rng = StdRng::seed_from_u64(item as u64);
-    let height = rng.gen_range(0.0..=100.0);
+    let height = rng.random_range(0..=100);
 
     Frame::canvas(ui.style())
-        .inner_margin(Margin::symmetric(16.0, 8.0 + height / 2.0))
+        .inner_margin(Margin::symmetric(16, (8 + height / 2) as i8))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
             handle.ui(ui, |ui| {

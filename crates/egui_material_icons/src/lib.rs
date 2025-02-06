@@ -26,12 +26,12 @@ pub fn initialize(ctx: &egui::Context) {
 }
 
 pub fn icon_button(ui: &mut egui::Ui, icon: &str) -> Response {
-    Frame::none()
+    Frame::NONE
         .inner_margin(Margin {
-            left: 0.0,
-            right: 0.0,
-            top: 0.0,
-            bottom: 0.0,
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
         })
         .show(ui, |ui| {
             Button::new(RichText::new(icon).size(18.0))

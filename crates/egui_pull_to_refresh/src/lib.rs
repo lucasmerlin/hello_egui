@@ -166,7 +166,7 @@ impl PullToRefresh {
             let sense = ui.interact(content_rect, self.id, Sense::hover());
 
             let is_something_blocking_drag = ui.ctx().dragged_id().is_some()
-                && !allow_dragged_id.map_or(false, |id| ui.ctx().is_being_dragged(id));
+                && !allow_dragged_id.is_some_and(|id| ui.ctx().is_being_dragged(id));
 
             if sense.contains_pointer() && !is_something_blocking_drag {
                 let (delta, any_released) = ui.input(|input| {

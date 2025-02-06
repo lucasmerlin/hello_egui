@@ -128,11 +128,11 @@ impl Stargazers {
                         item_handle.ui(ui, |ui, handle, _state| {
                             ui.horizontal(|ui| {
                                 handle.ui(ui, |ui| {
-                                    Frame::none()
+                                    Frame::NONE
                                         .fill(ui.visuals().faint_bg_color)
                                         .inner_margin(8.0)
                                         .outer_margin(2.0)
-                                        .rounding(4.0)
+                                        .corner_radius(4.0)
                                         .show(ui, |ui| {
                                             ui.set_width(ui.available_width());
 

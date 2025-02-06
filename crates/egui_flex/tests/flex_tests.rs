@@ -3,8 +3,8 @@ use egui::{
     Align, Button, Checkbox, DragValue, Frame, Id, Label, Layout, ScrollArea, TextEdit, Ui,
 };
 use egui_flex::{item, Flex, FlexAlign, FlexAlignContent, FlexItem, FlexJustify, Size};
-use egui_kittest::wgpu::TestRenderer;
-use egui_kittest::Harness;
+use egui_kittest::wgpu::WgpuTestRenderer;
+use egui_kittest::{Harness, TestRenderer};
 use rstest::rstest;
 use std::cell::Cell;
 
@@ -15,11 +15,11 @@ fn snapshot_name() -> String {
 }
 
 fn should_be_stable(harness: &mut Harness) {
-    let first = TestRenderer::new().render(harness);
+    let first = WgpuTestRenderer::new().render(&harness.ctx, harness.output());
 
     for _ in 0..3 {
         harness.run();
-        let second = TestRenderer::new().render(harness);
+        let second = WgpuTestRenderer::new().render(&harness.ctx, harness.output());
         #[allow(clippy::manual_assert)]
         if first != second {
             panic!("Is not stable");
@@ -71,9 +71,9 @@ fn test_justify(
         }
     };
 
-    let harness = Harness::new_ui(app);
+    let mut harness = Harness::new_ui(app);
 
-    harness.wgpu_snapshot(&snapshot_name());
+    harness.snapshot(&snapshot_name());
 }
 
 #[test]
@@ -95,15 +95,15 @@ fn test_insert_remove() {
 
     let mut results = vec![];
 
-    results.push(harness.try_wgpu_snapshot("test_insert_remove_0"));
+    results.push(harness.try_snapshot("test_insert_remove_0"));
 
     show.set(true);
     harness.run();
-    results.push(harness.try_wgpu_snapshot("test_insert_remove_1"));
+    results.push(harness.try_snapshot("test_insert_remove_1"));
 
     show.set(false);
     harness.run();
-    results.push(harness.try_wgpu_snapshot("test_insert_remove_2"));
+    results.push(harness.try_snapshot("test_insert_remove_2"));
 
     for result in results {
         result.unwrap();
@@ -127,7 +127,7 @@ fn test_size(
     )]
     height: Option<Size>,
 ) {
-    let harness = Harness::new_ui(|ui| {
+    let mut harness = Harness::new_ui(|ui| {
         ui.group(|ui| {
             let mut flex = Flex::horizontal();
 
@@ -146,7 +146,7 @@ fn test_size(
         });
     });
 
-    harness.wgpu_snapshot(&snapshot_name());
+    harness.snapshot(&snapshot_name());
 }
 
 #[test]
@@ -183,7 +183,7 @@ fn basis_stabilize() {
 
     should_be_stable(&mut harness);
 
-    harness.wgpu_snapshot("basis_stabilize");
+    harness.snapshot("basis_stabilize");
 }
 
 #[test]
@@ -281,7 +281,7 @@ fn nested() {
 
     should_be_stable(&mut harness);
 
-    harness.wgpu_snapshot("nested");
+    harness.snapshot("nested");
 }
 
 // Tests the interaction with vertical_centered_justified
@@ -318,7 +318,7 @@ fn egui_justify_interaction() {
 
     should_be_stable(&mut harness);
 
-    harness.wgpu_snapshot("egui_justify_interaction");
+    harness.snapshot("egui_justify_interaction");
 }
 
 // This somewhat matches the chat ui in HelloPaint, but the test seems to be broken currently
@@ -350,7 +350,7 @@ pub fn chat() {
                     });
                 });
 
-                let frame = Frame::none()
+                let frame = Frame::NONE
                     //.fill(flex.ui().visuals().faint_bg_color)
                     .inner_margin(8.0);
                 flex.add_flex(
@@ -371,7 +371,7 @@ pub fn chat() {
 
     should_be_stable(&mut harness);
 
-    harness.wgpu_snapshot("chat");
+    harness.snapshot("chat");
 }
 
 #[test]
@@ -425,19 +425,19 @@ fn truncate_shrink() {
 
     harness.run();
     should_be_stable(&mut harness);
-    results.push(harness.try_wgpu_snapshot("truncate_shrink_0_short"));
+    results.push(harness.try_snapshot("truncate_shrink_0_short"));
 
     text_index.set(1);
     harness.run();
     harness.run();
     should_be_stable(&mut harness);
-    results.push(harness.try_wgpu_snapshot("truncate_shrink_1_long"));
+    results.push(harness.try_snapshot("truncate_shrink_1_long"));
 
     text_index.set(0);
     harness.run();
     harness.run();
     should_be_stable(&mut harness);
-    results.push(harness.try_wgpu_snapshot("truncate_shrink_2_short"));
+    results.push(harness.try_snapshot("truncate_shrink_2_short"));
 
     for result in results {
         result.unwrap();

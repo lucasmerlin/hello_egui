@@ -36,7 +36,7 @@ impl ThumbhashImageLoader {
 }
 
 impl ImageLoader for ThumbhashImageLoader {
-    fn id(&self) -> &str {
+    fn id(&self) -> &'static str {
         "thumbhash"
     }
 

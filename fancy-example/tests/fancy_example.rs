@@ -56,10 +56,10 @@ pub async fn test_pages() {
             }
 
             for _ in 0..10 {
-                harness.run();
+                harness.step();
             }
 
-            let res = harness.try_wgpu_snapshot(&format!("example/{}", example.slug));
+            let res = harness.try_snapshot(&format!("example/{}", example.slug));
             if let Err(e) = res {
                 errors.push(e);
             }
@@ -86,7 +86,7 @@ pub async fn test_stargazers() {
         harness.run();
     }
 
-    harness.wgpu_snapshot("stargazers");
+    harness.snapshot("stargazers");
 }
 
 #[tokio::test]
@@ -100,7 +100,7 @@ pub async fn test_chat() {
     })
     .await;
 
-    harness.wgpu_snapshot("chat");
+    harness.snapshot("chat");
 }
 
 #[tokio::test]
@@ -115,7 +115,7 @@ pub async fn test_gallery() {
         harness.run();
     }
 
-    harness.wgpu_snapshot("gallery");
+    harness.snapshot("gallery");
 }
 
 pub async fn wait_for<'h, 'hl>(
@@ -126,7 +126,7 @@ pub async fn wait_for<'h, 'hl>(
     let all_steps = 20;
     let mut step = all_steps;
     loop {
-        harness.run();
+        harness.step();
 
         let result = query(harness).is_some();
         if result {

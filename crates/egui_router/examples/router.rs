@@ -187,7 +187,7 @@ async fn async_route() -> impl Route<AppState> {
 }
 
 fn background(ui: &mut Ui, color: Color32, content: impl FnOnce(&mut Ui)) {
-    Frame::none().fill(color).inner_margin(16.0).show(ui, |ui| {
+    Frame::NONE.fill(color).inner_margin(16.0).show(ui, |ui| {
         ui.set_width(ui.available_width());
         ui.set_height(ui.available_height());
         content(ui);
