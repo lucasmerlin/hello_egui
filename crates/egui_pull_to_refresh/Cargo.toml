@@ -1,6 +1,6 @@
 [package]
 name = "egui_pull_to_refresh"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 description = "A pull to refresh library for egui"
 license = "MIT"

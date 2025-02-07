@@ -1,6 +1,6 @@
 [package]
 name = "egui_animation"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 description = "Experimental animation utilities for egui, including easing functions and a collapse view."
 license = "MIT"

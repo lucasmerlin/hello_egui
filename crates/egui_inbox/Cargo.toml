@@ -1,6 +1,6 @@
 [package]
 name = "egui_inbox"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 description = "Utility to send messages to egui views from async functions, callbacks, etc. without having to use interior mutability."
 license = "MIT"

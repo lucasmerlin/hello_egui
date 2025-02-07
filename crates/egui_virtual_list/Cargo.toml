@@ -1,6 +1,6 @@
 [package]
 name = "egui_virtual_list"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 authors = ["Lucas Meurer"]
 homepage = "https://lucasmerlin.github.io/hello_egui/#/example/gallery"

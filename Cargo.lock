@@ -1438,7 +1438,7 @@ dependencies = [
 
 [[package]]
 name = "egui_animation"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1483,7 +1483,7 @@ dependencies = [
 
 [[package]]
 name = "egui_dnd"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "color-hex",
  "eframe",
@@ -1517,7 +1517,7 @@ dependencies = [
 
 [[package]]
 name = "egui_flex"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1529,7 +1529,7 @@ dependencies = [
 
 [[package]]
 name = "egui_form"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1557,7 +1557,7 @@ dependencies = [
 
 [[package]]
 name = "egui_inbox"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "derive-new",
  "eframe",
@@ -1575,7 +1575,7 @@ dependencies = [
 
 [[package]]
 name = "egui_infinite_scroll"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1605,7 +1605,7 @@ dependencies = [
 
 [[package]]
 name = "egui_material_icons"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1614,7 +1614,7 @@ dependencies = [
 
 [[package]]
 name = "egui_pull_to_refresh"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1624,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "egui_router"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1642,7 +1642,7 @@ dependencies = [
 
 [[package]]
 name = "egui_suspense"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1666,7 +1666,7 @@ dependencies = [
 
 [[package]]
 name = "egui_thumbhash"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "eframe",
@@ -1681,7 +1681,7 @@ dependencies = [
 
 [[package]]
 name = "egui_virtual_list"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "eframe",
  "egui",
@@ -2715,7 +2715,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hello_egui"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "egui_animation",
  "egui_dnd",
@@ -2733,7 +2733,7 @@ dependencies = [
 
 [[package]]
 name = "hello_egui_utils"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "concat-idents",
  "eframe",
