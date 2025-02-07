@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0
+
+- Update egui to 0.31
+
 ## 0.11.0
 
 - update egui to 0.30

@@ -1,5 +1,9 @@
 # egui_flex changelog
 
+## 0.3.0
+
+- Update egui to 0.31
+
 ## 0.2.0
 
 - Update to egui 0.30.0

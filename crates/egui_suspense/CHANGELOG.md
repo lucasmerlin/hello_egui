@@ -1,5 +1,9 @@
 # egui_suspense changelog
 
+## 0.8.0
+
+- Update egui to 0.31
+
 ## 0.7.0
 
 - Updated egui to 0.30

@@ -1,6 +1,6 @@
 # egui_thumbhash
 
-[![egui_ver](https://img.shields.io/badge/egui-0.30.0-blue)](https://github.com/emilk/egui)
+[![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_thumbhash.svg)](https://crates.io/crates/egui_thumbhash)
 [![Documentation](https://docs.rs/egui_thumbhash/badge.svg)](https://docs.rs/egui_thumbhash)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)

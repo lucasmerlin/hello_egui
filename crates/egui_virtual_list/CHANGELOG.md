@@ -1,5 +1,9 @@
 # egui_virtual_list changelog
 
+## 0.7.0
+
+- Update egui to 0.31
+
 ## 0.6.0
 
 - Updated egui to 0.30

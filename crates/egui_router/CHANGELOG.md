@@ -1,5 +1,9 @@
 # egui_router changelog
 
+## 0.4.0
+
+- Update egui to 0.31
+
 ## 0.3.0
 
 - Update egui to 0.30

@@ -1,6 +1,8 @@
 # egui_material_icons changelog
 
-## Unreleased
+## 0.3.0
+
+- Update egui to 0.31
 - Updated `initialize`, to not overwrite existing fonts
 - Added `font_insert`, so you can easily add it with `Context::add_font`
 

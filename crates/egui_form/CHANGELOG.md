@@ -1,5 +1,9 @@
 # egui_form changelog
 
+## 0.5.0
+
+- Update egui to 0.31
+
 ## 0.4.0
 
 - update egui to 0.30

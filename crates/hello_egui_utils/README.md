@@ -1,6 +1,6 @@
 # hello_egui_utils
 
-[![egui_ver](https://img.shields.io/badge/egui-0.30.0-blue)](https://github.com/emilk/egui)
+[![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/hello_egui_utils.svg)](https://crates.io/crates/hello_egui_utils)
 [![Documentation](https://docs.rs/hello_egui_utils/badge.svg)](https://docs.rs/hello_egui_utils)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
