@@ -16,10 +16,10 @@ pub fn dnd_ui(ui: &mut Ui, items: &mut [(usize, String)]) {
 
                 item_iter.next(ui, Id::new(item.0), idx, true, |ui, item_handle| {
                     item_handle.ui_sized(ui, size, |ui, handle, _state| {
-                        Frame::none()
+                        Frame::NONE
                             .inner_margin(frame_padding)
                             .fill(ui.visuals().extreme_bg_color)
-                            .rounding(4.0)
+                            .corner_radius(4.0)
                             .show(ui, |ui| {
                                 handle.ui_sized(ui, size, |ui| {
                                     ui.label(&item.1);
@@ -62,7 +62,7 @@ pub fn main() -> eframe::Result<()> {
         NativeOptions::default(),
         move |ctx, _frame| {
             CentralPanel::default()
-                .frame(Frame::none().inner_margin(8.0).fill(
+                .frame(Frame::NONE.inner_margin(8.0).fill(
                     ctx.style().visuals.panel_fill.gamma_multiply(
                         if ctx.style().visuals.dark_mode {
                             1.5

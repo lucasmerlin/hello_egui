@@ -279,9 +279,7 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
 
     /// Returns true if the data failed to load.
     pub fn has_error(&self) -> bool {
-        self.data
-            .as_ref()
-            .map_or(false, std::result::Result::is_err)
+        self.data.as_ref().is_some_and(std::result::Result::is_err)
     }
 
     /// Returns the data if it is loaded.

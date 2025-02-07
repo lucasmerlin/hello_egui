@@ -43,7 +43,7 @@ pub fn main() -> eframe::Result<()> {
                         items,
                         size,
                         |ui, item, handle, _state| {
-                            Frame::none()
+                            Frame::NONE
                                 .fill(ui.visuals().faint_bg_color)
                                 .show(ui, |ui| {
                                     handle.ui_sized(ui, size, |ui| {

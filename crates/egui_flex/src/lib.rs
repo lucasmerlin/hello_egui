@@ -5,7 +5,7 @@
 mod flex_widget;
 
 pub use crate::flex_widget::FlexWidget;
-use egui::emath::TSTransform;
+use egui::emath::{GuiRounding, TSTransform};
 use egui::{
     Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response,
     Sense, Ui, UiBuilder, Vec2, Widget,
@@ -170,7 +170,7 @@ impl FlexItemInner {
             grow: self.grow,
             basis: self.basis,
             shrink: self.shrink,
-            margin: self.frame.map_or(Margin::ZERO, |f| f.total_margin()),
+            margin: self.frame.map_or(Margin::ZERO, |f| f.total_margin().into()),
             content_id: self.content_id,
         }
     }
@@ -497,7 +497,7 @@ impl Flex {
         let r = ui.scope_builder(
             UiBuilder::new()
                 .layout(layout)
-                .max_rect(round_rect(ui.available_rect_before_wrap())),
+                .max_rect(ui.available_rect_before_wrap().round_ui()),
             |ui| {
                 let gap = self.gap.unwrap_or(ui.spacing_mut().item_spacing);
                 let original_item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
@@ -513,8 +513,8 @@ impl Flex {
                 // let size_origin = parent_rect.size();
 
                 let size = [
-                    width.map(|w| round(w.get(size_origin.x))),
-                    height.map(|h| round(h.get(size_origin.y))),
+                    width.map(|w| w.get(size_origin.x).round_ui()),
+                    height.map(|h| h.get(size_origin.y).round_ui()),
                 ];
 
                 let direction = usize::from(!ui.layout().main_dir().is_horizontal());
@@ -530,7 +530,7 @@ impl Flex {
                     ui.min_rect().min,
                 );
 
-                let max_item_size = round_vec2(max_item_size.unwrap_or(available_size));
+                let max_item_size = max_item_size.unwrap_or(available_size).round_ui();
 
                 let mut instance = FlexInstance {
                     current_row: 0,
@@ -758,8 +758,8 @@ impl Flex {
                         row.extra_start_gap = row.extra_gap;
                     }
                 }
-                row.extra_gap = round(row.extra_gap).max(0.0);
-                row.extra_start_gap = round(row.extra_start_gap).max(0.0);
+                row.extra_gap = f32::max(row.extra_gap.round_ui(), 0.0);
+                row.extra_start_gap = f32::max(row.extra_start_gap.round_ui(), 0.0);
             }
         }
         rows
@@ -1129,15 +1129,16 @@ impl FlexInstance<'_> {
                 }
 
                 let item = ItemState {
-                    inner_size: round_vec2(inner_size),
+                    inner_size: inner_size.round_ui(),
                     id: ui.id(),
-                    inner_min_size: round_vec2(Vec2::max(
+                    inner_min_size: Vec2::max(
                         Vec2::new(
                             item.min_size[0].unwrap_or_default(),
                             item.min_size[1].unwrap_or_default(),
                         ) - frame.total_margin().sum(),
                         inner_size,
-                    )),
+                    )
+                    .round_ui(),
                     config: item.into_state(),
                     remeasure_widget: res.remeasure_widget,
                 };
@@ -1408,7 +1409,8 @@ impl FlexContainerUi {
         // If the size changed in the cross direction the widget might have grown in the main direction
         // and wrapped, we need to remeasure the widget (draw it once with full available size)
         let remeasure_widget = self.last_inner_size.is_some_and(|last_size| {
-            round(last_size[1 - self.direction]) != round(intrinsic_size[1 - self.direction])
+            last_size[1 - self.direction].round_ui()
+                != intrinsic_size[1 - self.direction].round_ui()
         }) && !self.remeasure_widget;
 
         if remeasure_widget {
@@ -1422,32 +1424,5 @@ impl FlexContainerUi {
             max_size: ui.available_size(),
             remeasure_widget,
         }
-    }
-}
-
-/// Round a float to 5 decimal places.
-fn round(i: f32) -> f32 {
-    const PRECISION: f32 = 1e3;
-    let i = (i * PRECISION).round() / PRECISION;
-    // I've seen this flip from 0.0 to -0.0 in a discard-loop
-    if i == -0.0 {
-        0.0
-    } else {
-        i
-    }
-}
-
-fn round_vec2(v: Vec2) -> Vec2 {
-    Vec2::new(round(v.x), round(v.y))
-}
-
-fn round_pos2(p: Pos2) -> Pos2 {
-    Pos2::new(round(p.x), round(p.y))
-}
-
-fn round_rect(rect: Rect) -> Rect {
-    Rect {
-        min: round_pos2(rect.min),
-        max: round_pos2(rect.max),
     }
 }

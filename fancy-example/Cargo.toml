@@ -32,17 +32,17 @@ thumbhash = "0.1.0"
 
 image = { workspace = true, features = ["jpeg", "png", "webp"] }
 
-wasm-bindgen = "0.2.93"
-wasm-bindgen-futures = "0.4.43"
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
 
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 
-casey = "0.4.0"
+casey = "0.4.2"
 
-egui_commonmark = { version = "0.19.0", features = [] }
+egui_commonmark = { version = "0.20.0", features = [] }
 
-validator = { version = "0.19.0", features = ["derive"] }
+validator = { version = "0.20.0", features = ["derive"] }
 env_logger = "0.11"
 
 [dev-dependencies]
@@ -55,7 +55,7 @@ tokio = { workspace = true, features = ["time", "rt", "macros"] }
 ureq = "2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen-futures = "0.4.43"
+wasm-bindgen-futures = "0.4.50"
 gloo-timers = { version = "0.3.0", features = ["futures"] }
 
 [lints]

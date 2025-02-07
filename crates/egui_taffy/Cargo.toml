@@ -10,7 +10,7 @@ release = false
 [dependencies]
 egui.workspace = true
 
-taffy = "0.5.2"
+taffy = "0.7.5"
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }

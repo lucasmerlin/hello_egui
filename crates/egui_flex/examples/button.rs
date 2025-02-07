@@ -36,7 +36,7 @@ impl FlexWidget for Button {
                         let style = ui.style().interact(response);
 
                         (
-                            Frame::none().fill(style.bg_fill).stroke(style.bg_stroke),
+                            Frame::NONE.fill(style.bg_fill).stroke(style.bg_stroke),
                             TSTransform::default(),
                         )
                     }),

@@ -110,7 +110,7 @@ fn main() -> eframe::Result {
 
                         flex.add_flex(
                             FlexItem::new().frame(frame),
-                            Flex::new().direction(demo_dir),
+                            Flex::new().w_full().h_full().direction(demo_dir),
                             |flex| {
                                 heading(flex, "Grow");
 

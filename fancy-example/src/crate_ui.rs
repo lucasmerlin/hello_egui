@@ -144,7 +144,7 @@ pub fn crate_usage_ui(ui: &mut Ui, crates: &[CrateUsage], shared_state: &SharedS
             used_for,
         } in crates
         {
-            let response = Button::new(crate_used.name()).rounding(16.0).ui(ui);
+            let response = Button::new(crate_used.name()).corner_radius(16.0).ui(ui);
 
             let response = ui.interact(response.rect, response.id, egui::Sense::click());
 

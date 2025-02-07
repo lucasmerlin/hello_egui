@@ -1,7 +1,7 @@
 use egui::epaint::RectShape;
 use egui::load::TexturePoll;
 use egui::{
-    Color32, Id, Image, Pos2, Rect, Response, Rounding, SizeHint, Stroke, TextureOptions, Ui, Vec2,
+    Color32, CornerRadius, Id, Image, Pos2, Rect, Response, SizeHint, TextureOptions, Ui, Vec2,
     Widget,
 };
 
@@ -13,7 +13,7 @@ pub struct ThumbhashImage<'a, 'h> {
     thumbhash: &'h [u8],
     fade: bool,
     fit_to_exact_size: Option<egui::Vec2>,
-    rounding: Option<Rounding>,
+    rounding: Option<CornerRadius>,
     id: Id,
 }
 
@@ -57,7 +57,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
     /// Set the rounding of the image.
     /// Use this instead of [`Image::rounding`] to make sure the rounding is applied to the
     /// thumbhash image as well.
-    pub fn rounding(mut self, rounding: impl Into<Rounding>) -> Self {
+    pub fn rounding(mut self, rounding: impl Into<CornerRadius>) -> Self {
         self.rounding = Some(rounding.into());
         self
     }
@@ -83,7 +83,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
         // }
 
         if let Some(rounding) = self.rounding {
-            self.image = self.image.rounding(rounding);
+            self.image = self.image.corner_radius(rounding);
         }
 
         let response = self.image.ui(ui);
@@ -97,18 +97,20 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
                 SizeHint::default(),
             );
             if let Ok(TexturePoll::Ready { texture, .. }) = image {
-                ui.painter().add(RectShape {
-                    rect: Rect::from_min_size(
-                        response.rect.min,
-                        self.fit_to_exact_size.unwrap_or(response.rect.size()),
+                ui.painter().add(
+                    RectShape::filled(
+                        Rect::from_min_size(
+                            response.rect.min,
+                            self.fit_to_exact_size.unwrap_or(response.rect.size()),
+                        ),
+                        self.rounding.unwrap_or_default(),
+                        Color32::from_rgba_premultiplied(i, i, i, i),
+                    )
+                    .with_texture(
+                        texture.id,
+                        Rect::from_min_size(Pos2::default(), Vec2::new(1.0, 1.0)),
                     ),
-                    rounding: self.rounding.unwrap_or_default(),
-                    fill_texture_id: texture.id,
-                    fill: Color32::from_rgba_premultiplied(i, i, i, i),
-                    stroke: Stroke::default(),
-                    uv: Rect::from_min_size(Pos2::default(), Vec2::new(1.0, 1.0)),
-                    blur_width: 0.0,
-                });
+                );
             }
         }
 
