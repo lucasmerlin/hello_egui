@@ -9,7 +9,20 @@ pub mod icons;
 
 pub const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Filled-Regular.ttf");
 
-pub fn initialize(ctx: &egui::Context) {
+pub fn add_to_fonts(fonts: &mut FontDefinitions) {
+    let mut data = FontData::from_static(FONT_DATA);
+    data.tweak.y_offset_factor = 0.05;
+    fonts
+        .font_data
+        .insert("material-icons".to_string(), data.into());
+    fonts
+        .families
+        .get_mut(&FontFamily::Proportional)
+        .unwrap()
+        .push("material-icons".to_string());
+}
+
+pub fn replace_initialize(ctx: &egui::Context) {
     let mut fonts = FontDefinitions::default();
     let mut data = FontData::from_static(FONT_DATA);
     data.tweak.y_offset_factor = 0.05;
