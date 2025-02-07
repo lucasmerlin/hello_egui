@@ -55,9 +55,7 @@ pub async fn test_pages() {
                 }
             }
 
-            for _ in 0..10 {
-                harness.step();
-            }
+            harness.run_ok();
 
             let res = harness.try_snapshot(&format!("example/{}", example.slug));
             if let Err(e) = res {
@@ -99,6 +97,8 @@ pub async fn test_chat() {
         harness.query_by_label_contains("Agreed!")
     })
     .await;
+    
+    harness.run_ok();
 
     harness.snapshot("chat");
 }
