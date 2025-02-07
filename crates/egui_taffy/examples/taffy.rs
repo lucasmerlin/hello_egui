@@ -2,7 +2,7 @@
 use eframe::emath::Align;
 use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Color32, Direction, Frame, Id, Layout, Resize, ScrollArea, Ui};
-use rand::prelude::SliceRandom;
+use rand::seq::IndexedRandom;
 use taffy::prelude::{
     AlignContent, AlignItems, Dimension, FlexDirection, FlexWrap, JustifyContent, LengthPercentage,
     Rect, Size,
@@ -24,7 +24,7 @@ pub fn main() -> eframe::Result<()> {
     let buttons: Vec<_> = TEXTS.iter().map(std::string::ToString::to_string).collect();
 
     let many_buttons = (0..100).fold(Vec::new(), |mut acc, _| {
-        acc.push(buttons.choose(&mut rand::thread_rng()).unwrap().to_string());
+        acc.push(buttons.choose(&mut rand::rng()).unwrap().to_string());
         acc
     });
 
@@ -273,9 +273,9 @@ fn list_example(ui: &mut Ui) {
                         },
                         Layout::centered_and_justified(Direction::TopDown),
                         |ui| {
-                            Frame::none()
+                            Frame::NONE
                                 .fill(ui.style().visuals.warn_fg_color)
-                                .rounding(30.0)
+                                .corner_radius(30.0)
                                 .show(ui, |ui| {
                                     ui.set_min_size(ui.available_size());
                                 });
@@ -309,9 +309,9 @@ fn list_example(ui: &mut Ui) {
                             },
                             Layout::centered_and_justified(Direction::TopDown),
                             |ui| {
-                                Frame::none()
+                                Frame::NONE
                                     .fill(Color32::from_gray(100))
-                                    .rounding(30.0)
+                                    .corner_radius(30.0)
                                     .show(ui, |ui| {
                                         ui.set_min_size(ui.available_size());
                                     });

@@ -76,7 +76,7 @@ pub fn crate_list_ui(ui: &mut Ui, shared: &SharedState) -> bool {
                             FlexItem::new(),
                             Button::new(item.short_name())
                                 .selected(selected)
-                                .rounding(16.0),
+                                .corner_radius(16.0),
                         )
                         .clicked()
                     {

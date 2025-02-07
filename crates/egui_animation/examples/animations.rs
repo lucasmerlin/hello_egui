@@ -97,14 +97,14 @@ pub fn main() -> eframe::Result<()> {
                 ui.group(|ui| {
                     ui.horizontal(|ui| {
                         if ui.button("Shuffle Letters").clicked() {
-                            let mut rng = rand::thread_rng();
+                            let mut rng = rand::rng();
                             ids.shuffle(&mut rng);
                             text = if text == text_de { text_en } else { text_de };
                             words = text.split("").collect();
                         }
 
                         if ui.button("Shuffle Words").clicked() {
-                            let mut rng = rand::thread_rng();
+                            let mut rng = rand::rng();
                             ids.shuffle(&mut rng);
                             text = if text == text_de { text_en } else { text_de };
                             words = text.split_inclusive(' ').collect();

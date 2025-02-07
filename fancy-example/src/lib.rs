@@ -81,7 +81,7 @@ impl App {
             });
 
         egui::CentralPanel::default()
-            .frame(egui::Frame::none().fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7)))
+            .frame(egui::Frame::NONE.fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7)))
             .show(ctx, |ui| {
                 vertex_gradient(
                     ui,
@@ -123,9 +123,9 @@ pub fn demo_area(ui: &mut Ui, title: &'static str, width: f32, content: impl FnO
         ui.set_max_width(width);
         ui.set_max_height(ui.available_height() - 20.0);
 
-        egui::Frame::none()
+        egui::Frame::NONE
             .fill(ui.style().visuals.panel_fill)
-            .rounding(4.0)
+            .corner_radius(4.0)
             .inner_margin(20.0)
             .show(ui, |ui| {
                 ui.heading(title);

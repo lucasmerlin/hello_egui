@@ -3,8 +3,8 @@ use crate::demo_area;
 use crate::example::{Example, ExampleTrait};
 use crate::shared_state::SharedState;
 use eframe::emath::Vec2;
-use eframe::epaint::{Color32, Hsva, Rounding};
-use egui::{Id, Sense, Ui};
+use eframe::epaint::{Color32, Hsva};
+use egui::{CornerRadius, Id, Sense, Ui};
 use egui_dnd::{dnd, DragDropItem};
 use std::hash::{Hash, Hasher};
 
@@ -98,12 +98,12 @@ impl ColorSort {
                                 let rect = response.rect;
 
                                 let x = ui.ctx().animate_bool(item.id(), item.rounded);
-                                let rounding = x * 16.0 + 1.0;
+                                let rounding = (x * 16.0 + 1.0).round() as u8;
 
                                 ui.painter().rect_filled(
                                     rect.shrink(x * 4.0 * size_factor)
                                         .shrink(rect.width() * (1.0 - size_factor)),
-                                    Rounding::same(rounding),
+                                    CornerRadius::same(rounding),
                                     item.color,
                                 );
 

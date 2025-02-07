@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use eframe::emath::Vec2;
 use egui::{
-    Align, Frame, Label, Layout, Rect, RichText, Rounding, ScrollArea, Shape, Stroke, Ui,
+    Align, CornerRadius, Frame, Label, Layout, Rect, RichText, ScrollArea, Shape, Stroke, Ui,
     UiBuilder, Widget,
 };
 
@@ -252,20 +252,12 @@ impl ChatExample {
                                 ui.style().visuals.extreme_bg_color
                             };
 
-                            let rounding = 8.0;
+                            let rounding = 8;
                             let margin = 8.0;
-                            let response = Frame::none()
-                                .rounding(Rounding {
-                                    ne: if is_message_from_myself {
-                                        0.0
-                                    } else {
-                                        rounding
-                                    },
-                                    nw: if is_message_from_myself {
-                                        rounding
-                                    } else {
-                                        0.0
-                                    },
+                            let response = Frame::NONE
+                                .corner_radius(CornerRadius {
+                                    ne: if is_message_from_myself { 0 } else { rounding },
+                                    nw: if is_message_from_myself { rounding } else { 0 },
                                     se: rounding,
                                     sw: rounding,
                                 })
@@ -285,8 +277,10 @@ impl ChatExample {
 
                             let points = if is_message_from_myself {
                                 let top = response.rect.right_top() + Vec2::new(-margin, margin);
-                                let arrow_rect =
-                                    Rect::from_two_pos(top, top + Vec2::new(rounding, rounding));
+                                let arrow_rect = Rect::from_two_pos(
+                                    top,
+                                    top + Vec2::new(rounding.into(), rounding.into()),
+                                );
 
                                 vec![
                                     arrow_rect.left_top(),
@@ -295,8 +289,10 @@ impl ChatExample {
                                 ]
                             } else {
                                 let top = response.rect.left_top() + Vec2::splat(margin);
-                                let arrow_rect =
-                                    Rect::from_two_pos(top, top + Vec2::new(-rounding, rounding));
+                                let arrow_rect = Rect::from_two_pos(
+                                    top,
+                                    top + Vec2::new(-f32::from(rounding), rounding.into()),
+                                );
 
                                 vec![
                                     arrow_rect.left_top(),
@@ -313,8 +309,8 @@ impl ChatExample {
                     if self.msgs_received < self.history_loader.messages.len()
                         && !self.messages.initial_loading()
                     {
-                        Frame::none()
-                            .rounding(8.0)
+                        Frame::NONE
+                            .corner_radius(8.0)
                             .inner_margin(8.0)
                             .outer_margin(8.0)
                             .fill(ui.style().visuals.faint_bg_color)

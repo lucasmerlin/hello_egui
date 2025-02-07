@@ -21,7 +21,7 @@ egui_inbox.workspace = true
 hello_egui_utils = { workspace = true, features = ["example_util"] }
 
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
-rstest = "0.23.0"
+rstest = "0.24.0"
 
 [lints]
 workspace = true
