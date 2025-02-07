@@ -81,7 +81,7 @@ pub async fn test_stargazers() {
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     for _ in 0..30 {
-        harness.run();
+        harness.step();
     }
 
     harness.snapshot("stargazers");
@@ -97,7 +97,7 @@ pub async fn test_chat() {
         harness.query_by_label_contains("Agreed!")
     })
     .await;
-    
+
     harness.run_ok();
 
     harness.snapshot("chat");

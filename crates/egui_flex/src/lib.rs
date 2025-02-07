@@ -1204,7 +1204,7 @@ impl FlexInstance<'_> {
     }
 
     /// Add a [`Widget`] to the flex container.
-    /// The default egui widgets implement [`FlexWidget`] Aso you can just use [`Self::add`] instead.
+    /// The default egui widgets implement [`FlexWidget`] Also you can just use [`Self::add`] instead.
     /// If the widget reports it's intrinsic size via the [`Response`] it will be able to
     /// grow it's frame according to the flex layout.
     pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {

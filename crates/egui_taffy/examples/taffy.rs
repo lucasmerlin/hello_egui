@@ -18,7 +18,7 @@ const TEXTS: [&str; 5] = [
     "have",
     "buttons in varying",
     "sizes",
-    "flow nicely in yor layout",
+    "flow nicely in your layout",
 ];
 pub fn main() -> eframe::Result<()> {
     let buttons: Vec<_> = TEXTS.iter().map(std::string::ToString::to_string).collect();

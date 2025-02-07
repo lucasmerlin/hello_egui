@@ -1,7 +1,9 @@
 use eframe::egui;
 use egui::{FontFamily, Label, RichText, Widget};
-use egui_material_icons::icons::*;
-use egui_material_icons::{icon_button, initialize};
+use egui_material_icons::{
+    icon_button,
+    icons::{ICON_ADD, ICON_FAVORITE, ICON_IMAGE, ICON_REMOVE},
+};
 
 fn main() -> Result<(), eframe::Error> {
     let native_options = eframe::NativeOptions::default();
@@ -17,7 +19,7 @@ struct MyEguiApp {}
 
 impl MyEguiApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        initialize(&cc.egui_ctx);
+        egui_material_icons::initialize(&cc.egui_ctx);
 
         Self::default()
     }

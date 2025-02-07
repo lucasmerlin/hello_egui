@@ -11,7 +11,7 @@ pub const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Filled-Re
 pub fn font_insert() -> FontInsert {
     let mut data = FontData::from_static(FONT_DATA);
     data.tweak.y_offset_factor = 0.05;
-    
+
     FontInsert::new(
         "material-icons",
         data,
