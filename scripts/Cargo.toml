@@ -8,3 +8,4 @@ publish = false
 release = false
 
 [dependencies]
+cargo_metadata = "0.19.1"
