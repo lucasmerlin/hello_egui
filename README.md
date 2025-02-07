@@ -8,6 +8,8 @@ while others are highly experimental.
 If you're interested in using one of the experimental crates, open an issue, and I'll try to
 release it on crates.io.
 
+Join the [hello_egui channel on the egui](https://discord.gg/MSftBbKSYm) discord for questions and discussions.
+
 ## Example app
 
 An example using most of the crates is available [here](https://lucasmerlin.github.io/hello_egui/).
