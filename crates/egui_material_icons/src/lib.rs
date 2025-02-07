@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 
 use egui::{
-    Button, FontData, FontDefinitions, FontFamily, Frame, Margin, Response, RichText, Widget,
+    Button, FontData, FontDefinitions, FontFamily, Frame, Response, RichText, Widget,
 };
 
 pub mod icons;
