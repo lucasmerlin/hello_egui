@@ -19,7 +19,7 @@ struct MyEguiApp {}
 
 impl MyEguiApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        egui_material_icons::replace_initialize(&cc.egui_ctx);
+        egui_material_icons::initialize(&cc.egui_ctx);
 
         Self::default()
     }
