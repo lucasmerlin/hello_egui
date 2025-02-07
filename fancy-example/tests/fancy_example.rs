@@ -97,7 +97,7 @@ pub async fn test_chat() {
         harness.query_by_label_contains("Agreed!")
     })
     .await;
-    
+
     harness.run_ok();
 
     harness.snapshot("chat");
