@@ -117,8 +117,9 @@ impl VirtualList {
         self.hide_on_resize = hide_on_resize.into();
     }
 
-    /// The layout closure gets called with the index of the first item that should be displayed.
-    /// It should return the number of items that were displayed.
+    /// The layout closure gets called for each row with the index of the first item that should
+    /// be displayed.
+    /// It should return the number of items that were displayed in the row.
     #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     pub fn ui_custom_layout(
         &mut self,
@@ -175,7 +176,9 @@ impl VirtualList {
 
                 let start_height = measure_ui.next_widget_position();
                 for i in 0..scroll_top_items {
-                    layout(&mut measure_ui, i);
+                    measure_ui.scope_builder(UiBuilder::new().id_salt(i), |ui| {
+                        layout(ui, i);
+                    });
                 }
                 let end_height = measure_ui.next_widget_position();
 
@@ -231,6 +234,8 @@ impl VirtualList {
         let mut first_visible_item_index = None;
         let mut first_visible_item_visibility = None;
         let mut did_scroll = false;
+        
+        ui.skip_ahead_auto_ids(item_start_index);
 
         loop {
             // Bail out if we're recalculating too many items
@@ -243,7 +248,11 @@ impl VirtualList {
             // let item = self.items.get_mut(current_row);
             if current_item_index < length {
                 let pos = ui.next_widget_position() - min;
-                let count = layout(ui, current_item_index);
+                let count = ui
+                    .scope_builder(UiBuilder::new().id_salt(current_item_index), |ui| {
+                        layout(ui, current_item_index)
+                    })
+                    .inner;
                 let size = ui.next_widget_position() - min - pos;
                 let rect = Rect::from_min_size(pos, size);
 
@@ -270,12 +279,18 @@ impl VirtualList {
                         Some((visible_rect.min.y - rect.min.y) / (rect.max.y - rect.min.y));
                 }
 
+                let mut discard_following_rows = false;
+                
                 if let Some(row) = self.rows.get_mut(current_row) {
+                    if row.range != range || row.pos != pos {
+                        // Our row changed, so the following rows are no longer valid
+                        discard_following_rows = true;
+                    }
                     row.range = range;
                     row.pos = pos;
                 } else {
                     self.rows.push(RowData {
-                        range: current_item_index..current_item_index + count,
+                        range,
                         pos,
                     });
 
@@ -294,6 +309,10 @@ impl VirtualList {
                     ));
 
                     self.last_known_row_index = Some(current_row);
+                }
+                
+                if discard_following_rows {
+                    self.rows.truncate(current_row + 1);
                 }
 
                 current_item_index += count;
