@@ -1062,8 +1062,8 @@ impl FlexInstance<'_> {
                                 .show(ui, |ui| {
                                     let max_item_size_changed = self.max_item_size[self.direction]
                                         != self.last_max_item_size[self.direction];
-                                    let content_id_changed = item.content_id
-                                        != item_state.config.content_id;
+                                    let content_id_changed =
+                                        item.content_id != item_state.config.content_id;
                                     let remeasure_widget = item_state.remeasure_widget
                                         || max_item_size_changed
                                         || content_id_changed;

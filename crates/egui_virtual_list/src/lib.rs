@@ -234,7 +234,7 @@ impl VirtualList {
         let mut first_visible_item_index = None;
         let mut first_visible_item_visibility = None;
         let mut did_scroll = false;
-        
+
         ui.skip_ahead_auto_ids(item_start_index);
 
         loop {
@@ -280,7 +280,7 @@ impl VirtualList {
                 }
 
                 let mut discard_following_rows = false;
-                
+
                 if let Some(row) = self.rows.get_mut(current_row) {
                     if row.range != range || row.pos != pos {
                         // Our row changed, so the following rows are no longer valid
@@ -289,10 +289,7 @@ impl VirtualList {
                     row.range = range;
                     row.pos = pos;
                 } else {
-                    self.rows.push(RowData {
-                        range,
-                        pos,
-                    });
+                    self.rows.push(RowData { range, pos });
 
                     let size_with_space = size;
 
@@ -310,7 +307,7 @@ impl VirtualList {
 
                     self.last_known_row_index = Some(current_row);
                 }
-                
+
                 if discard_following_rows {
                     self.rows.truncate(current_row + 1);
                 }

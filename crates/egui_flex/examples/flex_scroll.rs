@@ -1,13 +1,14 @@
 use egui::{Button, Checkbox, Color32, Frame, Label, ScrollArea, Slider, TextEdit, Widget};
-use egui_flex::{item, Flex, FlexAlign, FlexItem};
+use egui_flex::{Flex, FlexAlign, FlexItem};
 use hello_egui_utils::run;
 use std::num::NonZeroUsize;
 
+#[allow(clippy::too_many_lines)]
 fn main() {
     run!(|ui| {
         ScrollArea::vertical().show(ui, |ui| {
             let available_rect = ui.max_rect();
-            for i in 0..50 {
+            for _ in 0..50 {
                 // The scope and the set max height is *essential* to get egui_flex work well
                 // in a scroll area. Since egui_flex checks the available space and limits each items
                 // size to that, we need to give it some space to work with.

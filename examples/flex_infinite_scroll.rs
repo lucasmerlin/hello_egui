@@ -1,15 +1,12 @@
-use egui::{
-    Button, Checkbox, Color32, FontFamily, Frame, Label, RichText, ScrollArea, Slider, TextEdit,
-    Widget,
-};
-use egui_flex::{FlexAlign, FlexDirection, FlexItem, FlexJustify};
-use hello_egui::flex::{item, Flex};
+use egui::{Button, Checkbox, Color32, Frame, Label, ScrollArea, Slider, TextEdit, Widget};
+use egui_flex::{FlexAlign, FlexItem};
+use hello_egui::flex::Flex;
 use hello_egui::infinite_scroll::InfiniteScroll;
 use hello_egui_utils::run;
 use std::num::NonZeroUsize;
 
 fn main() {
-    let mut infinite = InfiniteScroll::new().end_loader(|cursor, callback| {
+    let mut infinite = InfiniteScroll::new().end_loader(|_cursor, callback| {
         callback(Ok((vec!["hi"], Some(1))));
     });
 
@@ -20,13 +17,13 @@ fn main() {
         // std::thread::sleep(std::time::Duration::from_millis(100));
         ScrollArea::vertical().show(ui, |ui| {
             let available_rect = ui.max_rect();
-            infinite.ui(ui, 10, |ui, idx, text| {
+            infinite.ui(ui, 10, |ui, _idx, _text| {
                 // The scope and the set max height is *essential* to get egui_flex work well
                 // in a scroll area. Since egui_flex checks the available space and limits each items
                 // size to that, we need to give it some space to work with.
                 ui.scope(|ui| {
                     ui.set_max_height(available_rect.height());
-                    
+
                     ui.label(format!("Item {:?}", ui.id()));
 
                     // Flex::vertical().w_full().show(ui, |flex| {
