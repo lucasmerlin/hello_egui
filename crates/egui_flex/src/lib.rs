@@ -503,7 +503,8 @@ impl Flex {
                 let original_item_spacing = mem::replace(&mut ui.spacing_mut().item_spacing, gap);
 
                 // We ceil in order to prevent rounding errors to wrap the layout unexpectedly
-                let available_size = target_size.unwrap_or(ui.available_size()).ceil();
+                // let available_size = target_size.unwrap_or(ui.available_size()).ceil();
+                let available_size = target_size.unwrap_or(parent_rect.size());
 
                 // TODO: Is this right? I would expect Vec2::min...
                 let size_origin = Vec2::max(
@@ -530,7 +531,8 @@ impl Flex {
                     ui.min_rect().min,
                 );
 
-                let max_item_size = max_item_size.unwrap_or(available_size).round_ui();
+                // Lets be careful and round this completely
+                let max_item_size = max_item_size.unwrap_or(available_size).round();
 
                 let mut instance = FlexInstance {
                     current_row: 0,
@@ -1058,6 +1060,13 @@ impl FlexInstance<'_> {
                         .with_visual_transform(transform, |ui| {
                             frame
                                 .show(ui, |ui| {
+                                    let max_item_size_changed = self.max_item_size[self.direction]
+                                        != self.last_max_item_size[self.direction];
+                                    let content_id_changed = item.content_id
+                                        != item_state.config.content_id;
+                                    let remeasure_widget = item_state.remeasure_widget
+                                        || max_item_size_changed
+                                        || content_id_changed;
                                     content(
                                         ui,
                                         FlexContainerUi {
@@ -1068,10 +1077,7 @@ impl FlexInstance<'_> {
                                             max_item_size: max_content_size,
                                             // If the available space grows we want to remeasure the widget, in case
                                             // it's wrapped so it can un-wrap
-                                            remeasure_widget: item_state.remeasure_widget
-                                                || self.max_item_size[self.direction]
-                                                    != self.last_max_item_size[self.direction]
-                                                || item.content_id != item_state.config.content_id,
+                                            remeasure_widget,
                                             last_inner_size: Some(item_state.inner_size),
                                             target_inner_size,
                                             item,
@@ -1391,14 +1397,17 @@ impl FlexContainerUi {
         let mut builder = UiBuilder::new()
             .id_salt(id_salt)
             .layout(Layout::centered_and_justified(Direction::TopDown));
-        if self.remeasure_widget {
+        let response = if self.remeasure_widget {
             ui.ctx().request_discard("Flex item remeasure");
             builder = builder.max_rect(self.content_rect).invisible();
+            // We use last frame's size as to not blow up everything
+            ui.allocate_space(self.last_inner_size.unwrap_or_default());
+            ui.new_child(builder).add(widget)
         } else {
             ui.set_width(ui.available_width());
             ui.set_height(ui.available_height());
+            ui.scope_builder(builder, |ui| widget.ui(ui)).inner
         };
-        let response = ui.scope_builder(builder, |ui| widget.ui(ui)).inner;
 
         let intrinsic_size = response.intrinsic_size.map_or(
             Vec2::new(ui.spacing().interact_size.x, ui.spacing().interact_size.y),

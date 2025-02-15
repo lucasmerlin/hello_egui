@@ -1442,7 +1442,7 @@ version = "0.8.0"
 dependencies = [
  "eframe",
  "egui",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "rand 0.9.0",
  "simple-easing",
 ]
@@ -1492,7 +1492,7 @@ dependencies = [
  "egui_extras",
  "egui_infinite_scroll",
  "egui_virtual_list",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "rand 0.9.0",
  "simple-easing",
  "web-time",
@@ -1523,7 +1523,7 @@ dependencies = [
  "egui",
  "egui_inbox",
  "egui_kittest",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "rstest",
 ]
 
@@ -1565,7 +1565,7 @@ dependencies = [
  "ehttp",
  "futures",
  "futures-channel",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "parking_lot",
  "rand 0.9.0",
  "serde_json",
@@ -1582,7 +1582,7 @@ dependencies = [
  "egui_extras",
  "egui_inbox",
  "egui_virtual_list",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "rand 0.9.0",
  "tokio",
 ]
@@ -1648,7 +1648,7 @@ dependencies = [
  "egui",
  "egui_inbox",
  "futures",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "rand 0.9.0",
  "reqwest",
  "tokio",
@@ -1685,6 +1685,7 @@ version = "0.7.0"
 dependencies = [
  "eframe",
  "egui",
+ "hello_egui_utils 0.8.0",
  "rand 0.9.0",
  "web-time",
 ]
@@ -1919,7 +1920,7 @@ dependencies = [
  "env_logger",
  "fancy-example",
  "gloo-timers",
- "hello_egui_utils",
+ "hello_egui_utils 0.8.0",
  "image",
  "serde",
  "serde_json",
@@ -2717,6 +2718,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 name = "hello_egui"
 version = "0.8.0"
 dependencies = [
+ "egui",
  "egui_animation",
  "egui_dnd",
  "egui_flex",
@@ -2729,6 +2731,7 @@ dependencies = [
  "egui_suspense",
  "egui_thumbhash",
  "egui_virtual_list",
+ "hello_egui_utils 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2740,6 +2743,17 @@ dependencies = [
  "egui",
  "tokio",
  "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "hello_egui_utils"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "231af567fb0427750cfd0758c9e2793f303bfcb9e061ab2db63d388db22414b9"
+dependencies = [
+ "concat-idents",
+ "eframe",
+ "egui",
 ]
 
 [[package]]
