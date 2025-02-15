@@ -65,6 +65,11 @@ egui_thumbhash = { workspace = true, optional = true }
 egui_virtual_list = { workspace = true, optional = true }
 egui_material_icons = { workspace = true, optional = true }
 
+[dev-dependencies]
+hello_egui_utils = { version = "0.8.0", features = ["example_util"] }
+egui.workspace = true
+
+
 
 [workspace]
 members = ["fancy-example", "crates/*", "scripts"]

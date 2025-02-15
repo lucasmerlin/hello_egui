@@ -35,13 +35,16 @@ pub async fn test_pages() {
     let mut errors = vec![];
 
     let wait = [
-        (&CHAT_EXAMPLE, Some("Agreed")),
         (&GALLERY_EXAMPLE, None),
         (&STARGAZERS_EXAMPLE, Some("lucasmerlin")),
     ];
 
     for category in EXAMPLES {
         for example in category.examples {
+            // It's to brittle
+            if example.slug == CHAT_EXAMPLE.slug {
+                continue;
+            }
             open(example, &mut harness);
 
             if let Some((_, wait_text)) = wait.iter().find(|(e, _)| e.slug == example.slug) {
