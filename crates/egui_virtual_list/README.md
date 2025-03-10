@@ -12,7 +12,7 @@
 
 
 This crate adds a virtual list widget to [egui](https://github.com/emilk/egui).
-Egui has a basic build in virtual list in the
+Egui has a basic built-in virtual list in the
 [ScrollArea](https://docs.rs/egui/0.25.0/egui/containers/scroll_area/struct.ScrollArea.html#method.show_rows) widget.
 This crate has some extra features though:
 
