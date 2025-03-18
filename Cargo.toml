@@ -132,11 +132,11 @@ doc_markdown = { level = "allow", priority = 21 }
 [patch.crates-io]
 #wry = { path = "../wry" }
 #
-#egui = { path = "../egui/crates/egui" }
-#eframe = { path = "../egui/crates/eframe" }
-#egui-wgpu = { path = "../egui/crates/egui-wgpu" }
-#egui_extras = { path = "../egui/crates/egui_extras" }
-#egui_kittest = { path = "../egui/crates/egui_kittest" }
+egui = { path = "../egui/crates/egui" }
+eframe = { path = "../egui/crates/eframe" }
+egui-wgpu = { path = "../egui/crates/egui-wgpu" }
+egui_extras = { path = "../egui/crates/egui_extras" }
+egui_kittest = { path = "../egui/crates/egui_kittest" }
 #winit = { path = "../winit" }
 
 
