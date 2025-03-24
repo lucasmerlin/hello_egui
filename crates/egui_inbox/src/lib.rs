@@ -396,7 +396,7 @@ mod async_impl {
         /// Send each item of a stream to the inbox, as they come in.
         pub async fn send_stream(
             &mut self,
-            stream: impl futures::Stream<Item = T> + Send + 'static,
+            stream: impl futures::Stream<Item = T> + 'static,
         ) -> Result<(), SendError<T>> {
             let stream = stream.map(|i| Ok(i));
             let mut stream = pin!(stream);
