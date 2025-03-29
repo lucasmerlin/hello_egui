@@ -30,12 +30,14 @@ hello_egui_utils.workspace = true
 
 egui.workspace = true
 egui_extras = { workspace = true, optional = true }
+egui_hooks = { version = "0.7.0", path = "../../../egui_hooks" }
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 rand.workspace = true
 
 tokio = { workspace = true, features = ["full"] }
+hello_egui_utils = { workspace = true, features = ["example_util"] }
 
 [lints]
 workspace = true
