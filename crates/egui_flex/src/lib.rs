@@ -594,7 +594,8 @@ impl Flex {
 
                 instance.rows.iter().for_each(|row| {
                     if let Some(final_rect) = row.final_rect {
-                        instance.ui.allocate_rect(final_rect, Sense::hover(), final_rect.size());
+                        // instance.ui.allocate_rect(final_rect, Sense::hover(), final_rect.size());
+                        instance.ui.allocate_rect(final_rect, Sense::hover());
                     }
                 });
                 (min_size, r)
@@ -1059,13 +1060,6 @@ impl FlexInstance<'_> {
                         .with_visual_transform(transform, |ui| {
                             frame
                                 .show(ui, |ui| {
-                                    let max_item_size_changed = self.max_item_size[self.direction]
-                                        != self.last_max_item_size[self.direction];
-                                    let content_id_changed =
-                                        item.content_id != item_state.config.content_id;
-                                    let remeasure_widget = item_state.remeasure_widget
-                                        || max_item_size_changed
-                                        || content_id_changed;
                                     content(
                                         ui,
                                         FlexContainerUi {
@@ -1083,7 +1077,8 @@ impl FlexInstance<'_> {
                                 .inner
                         })
                         .inner;
-                    let (_, _r) = ui.allocate_space(child_ui.min_rect().size(), child_ui.min_rect().size());
+                    // let (_, _r) = ui.allocate_space(child_ui.min_rect().size(), child_ui.min_rect().size());
+                    let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
                     let mut inner_size = res.child_rect.size();
                     if do_shrink {
