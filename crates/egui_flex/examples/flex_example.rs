@@ -141,7 +141,7 @@ fn main() -> eframe::Result {
                                 Button::new("Button wefoijfgiweopjg"),
                             );
                             flex.add(FlexItem::new().grow(1.0), Button::new("Button"));
-                            flex.add(FlexItem::new(), Button::new("Simple Button"));
+                            flex.add(FlexItem::new(), Button::new("Non-grow Button"));
 
                             flex.add(FlexItem::new(), Checkbox::new(&mut false, "Checkbox"));
 
