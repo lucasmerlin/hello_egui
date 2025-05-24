@@ -9,7 +9,7 @@ pub struct Collapse {
     horizontal: bool,
     visible: bool,
     id: Id,
-    duration: f32,
+    duration: Option<f32>,
 }
 
 impl Collapse {
@@ -28,8 +28,15 @@ impl Collapse {
             horizontal: false,
             visible,
             id: id.into(),
-            duration: 0.2,
+            duration: None,
         }
+    }
+
+    /// Sets the animation time for the collapse animation
+    /// The default is the same as the egui animation time
+    pub fn with_animation_time(mut self, animation_time: f32) -> Self {
+        self.duration = Some(animation_time);
+        self
     }
 
     /// Show the content.
@@ -42,7 +49,7 @@ impl Collapse {
             id,
             visible,
             simple_easing::cubic_in_out,
-            self.duration,
+            self.duration.unwrap_or(ui.style().animation_time),
         );
 
         let last_size = ui
