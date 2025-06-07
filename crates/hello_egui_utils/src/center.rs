@@ -20,7 +20,8 @@ impl Center {
     }
 
     /// Set the alignment
-    #[must_use] pub fn align2(mut self, align2: Align2) -> Self {
+    #[must_use]
+    pub fn align2(mut self, align2: Align2) -> Self {
         self.align2 = align2;
         self
     }

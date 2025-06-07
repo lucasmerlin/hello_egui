@@ -75,7 +75,8 @@ impl Default for SlideTransition {
 
 impl SlideTransition {
     /// Create a new slide transition. Default is [`Vec2::X`] (so it will slide in from the right)
-    #[must_use] pub fn new(amount: Vec2) -> Self {
+    #[must_use]
+    pub fn new(amount: Vec2) -> Self {
         Self { amount }
     }
 }

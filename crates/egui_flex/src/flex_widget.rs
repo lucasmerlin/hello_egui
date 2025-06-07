@@ -14,7 +14,8 @@ pub trait FlexWidget {
 
     /// Returns the default [`FlexItem`] for this widget.
     /// Implement this to allow overriding the item config.
-    #[must_use] fn default_item() -> FlexItem<'static> {
+    #[must_use]
+    fn default_item() -> FlexItem<'static> {
         FlexItem::new()
     }
 
