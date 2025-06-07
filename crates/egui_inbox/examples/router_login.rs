@@ -71,7 +71,7 @@ mod home {
                     self.app_state.inbox.send(RouterMessage::Dashboard);
                 } else {
                     self.app_state.inbox.send(AuthMessage::ShowLoginDialog {
-                        message: "You need to log in to see your personal dashboard".to_string(),
+                        message: "You need to log in to see your personal dashboard".to_owned(),
                         navigate_to_when_finished: Some(RouterMessage::Dashboard),
                     });
                 }

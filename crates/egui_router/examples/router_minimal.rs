@@ -1,4 +1,7 @@
-#![allow(clippy::needless_pass_by_value)] // It's ok here as it is an example
+#![expect(
+    clippy::needless_pass_by_value,
+    reason = "It's ok here as it is an example"
+)]
 use eframe::NativeOptions;
 use egui::{CentralPanel, Color32, Frame, ScrollArea, Ui};
 use egui_inbox::UiInbox;
@@ -45,7 +48,7 @@ async fn main() -> eframe::Result<()> {
     )
 }
 
-fn home(_request: Request<AppState>) -> impl Route<AppState> {
+fn home(_request: Request<'_, AppState>) -> impl Route<AppState> {
     |ui: &mut Ui, state: &mut AppState| {
         background(ui, ui.style().visuals.faint_bg_color, |ui| {
             ui.heading("Home!");
@@ -55,28 +58,28 @@ fn home(_request: Request<AppState>) -> impl Route<AppState> {
             if ui.link("Post 1").clicked() {
                 state
                     .sender()
-                    .send(RouterMessage::Navigate("/post/1".to_string()))
+                    .send(RouterMessage::Navigate("/post/1".to_owned()))
                     .ok();
             }
 
             if ui.link("Post 2").clicked() {
                 state
                     .sender()
-                    .send(RouterMessage::Navigate("/post/2".to_string()))
+                    .send(RouterMessage::Navigate("/post/2".to_owned()))
                     .ok();
             }
 
             if ui.link("Invalid Post").clicked() {
                 state
                     .sender()
-                    .send(RouterMessage::Navigate("/post/".to_string()))
+                    .send(RouterMessage::Navigate("/post/".to_owned()))
                     .ok();
             }
         });
     }
 }
 
-fn post(request: Request<AppState>) -> impl Route<AppState> {
+fn post(request: Request<'_, AppState>) -> impl Route<AppState> {
     let id = request.params.get("id").map(ToOwned::to_owned);
 
     move |ui: &mut Ui, inbox: &mut AppState| {

@@ -24,7 +24,10 @@ pub const COLOR_SORT_WRAPPED_EXAMPLE: Example = Example {
 
 #[derive(Clone)]
 pub struct Color {
-    #[allow(clippy::struct_field_names)]
+    #[expect(
+        clippy::struct_field_names,
+        reason = "This is a color, not a color name"
+    )]
     pub color: Color32,
     pub name: &'static str,
     pub rounded: bool,

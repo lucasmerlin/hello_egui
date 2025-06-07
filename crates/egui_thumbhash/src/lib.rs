@@ -30,6 +30,7 @@ pub struct ThumbhashImageLoader {
 
 impl ThumbhashImageLoader {
     /// Create a new `ThumbhashImageLoader`.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -63,7 +64,7 @@ impl ImageLoader for ThumbhashImageLoader {
                         images.insert(id, image.clone());
                         Ok(ImagePoll::Ready { image })
                     }
-                    Err(()) => Err(LoadError::Loading("Invalid thumbhash".to_string())),
+                    Err(()) => Err(LoadError::Loading("Invalid thumbhash".to_owned())),
                 }
             }
         } else {
@@ -96,6 +97,7 @@ impl ImageLoader for ThumbhashImageLoader {
 }
 
 /// Convert a thumbhash to a URI that can be loaded by the image loader.
+#[must_use]
 pub fn thumbhash_to_uri(thumbhash: &[u8]) -> String {
     format!("thumbhash:{}", BASE64_STANDARD_NO_PAD.encode(thumbhash))
 }
@@ -103,6 +105,7 @@ pub fn thumbhash_to_uri(thumbhash: &[u8]) -> String {
 /// Get the thumbhash data from the thumbhash URI.
 /// Returns None if the URI is not a valid thumbhash URI.
 /// Will not check whether the thumbhash is valid.
+#[must_use]
 pub fn uri_to_thumbhash(uri: &str) -> Option<Vec<u8>> {
     if let Some((prefix, base64)) = uri.split_once(':') {
         if prefix != "thumbhash" {

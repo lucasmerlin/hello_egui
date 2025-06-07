@@ -5,7 +5,7 @@ use egui_animation::{animate_ui_translation, Collapse};
 use hello_egui_utils::measure_text;
 use rand::seq::SliceRandom;
 
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity, reason = "It's ok for an example.")]
 const EASINGS: [(fn(f32) -> f32, &str); 31] = [
     (simple_easing::cubic_in_out, "Cubic in-out"),
     (simple_easing::cubic_in, "Cubic in"),
@@ -40,7 +40,11 @@ const EASINGS: [(fn(f32) -> f32, &str); 31] = [
     (simple_easing::expo_out, "Exponential out"),
 ];
 
-#[allow(clippy::too_many_lines)] // It's ok for an example.
+#[expect(
+    clippy::too_many_lines,
+    unpredictable_function_pointer_comparisons,
+    reason = "It's ok for an example."
+)]
 pub fn main() -> eframe::Result<()> {
     let mut target = 0.0;
 

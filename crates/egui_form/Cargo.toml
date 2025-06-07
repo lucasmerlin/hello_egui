@@ -1,9 +1,10 @@
 [package]
 name = "egui_form"
 version = "0.5.0"
-edition = "2021"
 description = "Form validation for egui"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 repository = "https://github.com/lucasmerlin/hello_egui"
 homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_form"
 keywords = ["egui", "form", "validation"]

@@ -1,4 +1,3 @@
-use std::iter::repeat;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -48,11 +47,11 @@ impl HistoryLoader {
                 let (name, content) = line.split_once(": ").unwrap();
 
                 ChatMessage {
-                    content: content.to_string(),
+                    content: content.to_owned(),
                     from: if name == "me" {
                         None
                     } else {
-                        Some(name.to_string())
+                        Some(name.to_owned())
                     },
                 }
             })
@@ -60,8 +59,7 @@ impl HistoryLoader {
             .collect();
 
         // Repeat the history 5 times to make it longer.
-        let history = repeat(history)
-            .take(5)
+        let history = std::iter::repeat_n(history, 5)
             .flat_map(|history| history.clone())
             .collect();
 
@@ -80,11 +78,11 @@ impl HistoryLoader {
 
                     (
                         ChatMessage {
-                            content: content.to_string(),
+                            content: content.to_owned(),
                             from: if name == "me" {
                                 None
                             } else {
-                                Some(name.to_string())
+                                Some(name.to_owned())
                             },
                         },
                         duration,
@@ -131,6 +129,7 @@ impl Default for ChatExample {
 }
 
 impl ChatExample {
+    #[must_use]
     pub fn new() -> Self {
         let history_loader = Arc::new(HistoryLoader::new());
 
@@ -156,7 +155,7 @@ impl ChatExample {
         }
     }
 
-    #[allow(clippy::too_many_lines)] // It's an example
+    #[expect(clippy::too_many_lines, reason = "It's an example")]
     pub fn ui(&mut self, ui: &mut Ui, shared_state: &SharedState) {
         if !self.shown {
             self.shown = true;

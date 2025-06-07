@@ -38,6 +38,7 @@ pub struct App {
 }
 
 impl App {
+    #[must_use]
     pub fn new(ctx: &Context) -> Self {
         let (tx, inbox) = UiInbox::channel();
         let mut state = SharedState::new(tx);
@@ -147,7 +148,7 @@ fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
 
     let n = gradient.0.len();
     let animation_time = 0.4;
-    assert!(n >= 2);
+    assert!(n >= 2, "Gradient must have at least two colors");
     let mut mesh = Mesh::default();
     for (i, &color) in gradient.0.iter().enumerate() {
         let t = i as f32 / (n as f32 - 1.0);

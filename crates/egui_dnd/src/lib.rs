@@ -51,7 +51,7 @@ pub struct Dnd<'a> {
 ///     })
 /// }
 /// ```
-pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd {
+pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd<'_> {
     let id = Id::new(id_source).with("dnd");
     let mut dnd_ui: DragDropUi =
         ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());
@@ -132,12 +132,15 @@ impl<'a> Dnd<'a> {
     /// `item_ui` is called for each item. Display your item there.
     /// `item_ui` gets a [Handle] that can be used to display the drag handle.
     /// Only the handle can be used to drag the item. If you want the whole item to be draggable, put everything in the handle.
+    #[expect(
+        clippy::used_underscore_items,
+        reason = "We want to use the underscore to indicate that this is a private function"
+    )]
     pub fn show<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
-        mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
+        mut item_ui: impl FnMut(&mut Ui, T, Handle<'_>, ItemState),
     ) -> DragDropResponse {
-        #[allow(clippy::used_underscore_items)]
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
@@ -154,13 +157,16 @@ impl<'a> Dnd<'a> {
     /// For more info, look at the [horizontal example](https://github.com/lucasmerlin/hello_egui/blob/main/crates/egui_dnd/examples/horizontal.rs).
     /// If you need even more control over the size, use [`Dnd::show_custom`] instead, where you
     /// can individually size each item. See the `sort_words` example for an example.
+    #[expect(
+        clippy::used_underscore_items,
+        reason = "We want to use the underscore to indicate that this is a private function"
+    )]
     pub fn show_sized<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
         size: egui::Vec2,
-        mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
+        mut item_ui: impl FnMut(&mut Ui, T, Handle<'_>, ItemState),
     ) -> DragDropResponse {
-        #[allow(clippy::used_underscore_items)]
         self._show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
@@ -178,7 +184,7 @@ impl<'a> Dnd<'a> {
     pub fn show_vec<T: Hash>(
         self,
         items: &mut [T],
-        item_ui: impl FnMut(&mut Ui, &mut T, Handle, ItemState),
+        item_ui: impl FnMut(&mut Ui, &mut T, Handle<'_>, ItemState),
     ) -> DragDropResponse {
         let response = self.show(items.iter_mut(), item_ui);
         response.update_vec(items);
@@ -190,7 +196,7 @@ impl<'a> Dnd<'a> {
         self,
         items: &mut [T],
         size: egui::Vec2,
-        item_ui: impl FnMut(&mut Ui, &mut T, Handle, ItemState),
+        item_ui: impl FnMut(&mut Ui, &mut T, Handle<'_>, ItemState),
     ) -> DragDropResponse {
         let response = self.show_sized(items.iter_mut(), size, item_ui);
         response.update_vec(items);
@@ -199,8 +205,11 @@ impl<'a> Dnd<'a> {
 
     /// This will allow for very flexible UI. You can use it to e.g. render outlines around items
     /// or render items in complex layouts. This is **experimental**.
-    pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
-        #[allow(clippy::used_underscore_items)]
+    #[expect(
+        clippy::used_underscore_items,
+        reason = "We want to use the underscore to indicate that this is a private function"
+    )]
+    pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator<'_>)) -> DragDropResponse {
         self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
     }
 
@@ -208,7 +217,7 @@ impl<'a> Dnd<'a> {
     pub fn show_custom_vec<T: Hash>(
         self,
         items: &mut [T],
-        f: impl FnOnce(&mut Ui, &mut [T], &mut ItemIterator),
+        f: impl FnOnce(&mut Ui, &mut [T], &mut ItemIterator<'_>),
     ) -> DragDropResponse {
         let response = self.show_custom(|ui, iter| f(ui, items, iter));
         response.update_vec(items);

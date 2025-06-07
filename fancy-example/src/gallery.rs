@@ -21,7 +21,7 @@ pub const GALLERY_EXAMPLE: Example = Example {
     get: || Box::new(Gallery::new()),
 };
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "This is used for deserializing the JSON data")]
 #[derive(Debug, Clone, Deserialize)]
 struct GalleryItem {
     id: i32,
@@ -44,6 +44,7 @@ impl Default for Gallery {
 }
 
 impl Gallery {
+    #[must_use]
     pub fn new() -> Gallery {
         let items = include_str!("gallery/index.json");
         let backend = serde_json::from_str::<Vec<GalleryItem>>(items).unwrap();

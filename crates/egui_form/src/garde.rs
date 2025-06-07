@@ -63,6 +63,7 @@ impl GardeReport {
     ///     .get_field_error(field_path!("tags", 1).into_field_path())
     ///     .is_some());
     /// ```
+    #[must_use]
     pub fn new(result: Result<(), garde::Report>) -> Self {
         if let Err(errors) = result {
             GardeReport(errors.iter().cloned().collect())

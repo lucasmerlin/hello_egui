@@ -1,10 +1,10 @@
 [package]
 name = "egui_thumbhash"
 version = "0.7.0"
-edition = "2021"
-authors = ["Lucas Meurer"]
 description = "Easily use thumbhashes in egui"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_thumbhash"
 homepage = "https://lucasmerlin.github.io/hello_egui/"
 keywords = ["egui", "thumbhash", "image", "placeholder"]

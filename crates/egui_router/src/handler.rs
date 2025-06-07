@@ -21,18 +21,18 @@ pub type HandlerResult<T = ()> = Result<T, HandlerError>;
 // The args argument is just so we can implement multiple specializations, like explained here:
 // https://geo-ant.github.io/blog/2021/rust-traits-and-variadic-functions/
 pub trait MakeHandler<State, Args> {
-    fn handle(&mut self, state: Request<State>) -> HandlerResult<Box<dyn Route<State>>>;
+    fn handle(&mut self, state: Request<'_, State>) -> HandlerResult<Box<dyn Route<State>>>;
 }
 
 pub(crate) type Handler<State> =
-    Box<dyn FnMut(Request<State>) -> HandlerResult<Box<dyn Route<State>>>>;
+    Box<dyn FnMut(Request<'_, State>) -> HandlerResult<Box<dyn Route<State>>>>;
 
 impl<F, State, R> MakeHandler<State, (Request<'static, State>, ())> for F
 where
-    F: Fn(Request<State>) -> R,
+    F: Fn(Request<'_, State>) -> R,
     R: Route<State> + 'static,
 {
-    fn handle(&mut self, request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
+    fn handle(&mut self, request: Request<'_, State>) -> HandlerResult<Box<dyn Route<State>>> {
         Ok(Box::new(self(request)))
     }
 }
@@ -42,17 +42,17 @@ where
     F: Fn() -> R,
     R: Route<State> + 'static,
 {
-    fn handle(&mut self, _request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
+    fn handle(&mut self, _request: Request<'_, State>) -> HandlerResult<Box<dyn Route<State>>> {
         Ok(Box::new(self()))
     }
 }
 
 impl<F, State, R> MakeHandler<State, (Request<'static, State>, HandlerResult)> for F
 where
-    F: Fn(Request<State>) -> HandlerResult<R>,
+    F: Fn(Request<'_, State>) -> HandlerResult<R>,
     R: Route<State> + 'static,
 {
-    fn handle(&mut self, request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
+    fn handle(&mut self, request: Request<'_, State>) -> HandlerResult<Box<dyn Route<State>>> {
         Ok(Box::new(self(request)?))
     }
 }
@@ -62,7 +62,7 @@ where
     F: Fn() -> HandlerResult<R>,
     R: Route<State> + 'static,
 {
-    fn handle(&mut self, _request: Request<State>) -> HandlerResult<Box<dyn Route<State>>> {
+    fn handle(&mut self, _request: Request<'_, State>) -> HandlerResult<Box<dyn Route<State>>> {
         Ok(Box::new(self()?))
     }
 }

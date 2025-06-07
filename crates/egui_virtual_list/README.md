@@ -1,4 +1,4 @@
-# egui_virtual_list
+# `egui_virtual_list`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_virtual_list.svg)](https://crates.io/crates/egui_virtual_list)
@@ -26,7 +26,7 @@ This crate has some extra features though:
 There are some limitations though:
 
 - If you want to support a crazy amounts of items (1000000+ items), where you can instantly jump anywhere in the list,
-  I recommend using egui's built in ScrollArea instead.
+  I recommend using egui's built in `ScrollArea` instead.
 - Horizontal scrolling is not supported yet, but it should be easy to add if needed.
 
 If you want to build a infinite scroll list, I recommend using

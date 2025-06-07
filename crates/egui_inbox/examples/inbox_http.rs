@@ -31,7 +31,7 @@ impl MyComponent {
                     let time = match result {
                         Ok(response) => {
                             let json: serde_json::Value = response.json().unwrap();
-                            json["datetime"].as_str().unwrap().to_string()
+                            json["datetime"].as_str().unwrap().to_owned()
                         }
                         Err(err) => format!("Error: {err:?}"),
                     };

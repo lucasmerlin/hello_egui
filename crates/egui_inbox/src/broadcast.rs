@@ -30,11 +30,13 @@ impl<T> Default for Broadcast<T> {
 
 impl<T> Broadcast<T> {
     /// Create a new broadcast channel.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Subscribe to the broadcast channel, receiving a [`BroadcastReceiver`] of type [T].
+    #[must_use]
     pub fn subscribe(&self) -> BroadcastReceiver<T> {
         let (tx, rx) = UiInbox::channel();
         self.senders.lock().push(tx);
@@ -42,7 +44,10 @@ impl<T> Broadcast<T> {
     }
 
     /// Send a message of type [T] to all subscribers.
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "We want to clone the message for each sender"
+    )]
     pub fn send(&self, message: T)
     where
         T: Clone + MaybeSend + 'static,

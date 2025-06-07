@@ -39,7 +39,7 @@ struct ValidateContext<'a> {
 
 fn validate_repeat_password(
     repeat_password: &str,
-    context: &ValidateContext,
+    context: &ValidateContext<'_>,
 ) -> Result<(), ValidationError> {
     if repeat_password == context.password {
         Ok(())
@@ -86,12 +86,12 @@ impl SignupForm {
     }
 }
 
-fn text_edit_singleline(value: &mut String) -> TextEdit {
+fn text_edit_singleline(value: &mut String) -> TextEdit<'_> {
     TextEdit::singleline(value).margin(8.0)
 }
 
 impl ExampleTrait for SignupForm {
-    #[allow(clippy::too_many_lines)] // It's an example
+    #[expect(clippy::too_many_lines, reason = "It's an example")]
     fn ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         demo_area(ui, SIGNUP_FORM_EXAMPLE.name, 400.0, |ui| {
             ScrollArea::vertical().show(ui, |ui| {

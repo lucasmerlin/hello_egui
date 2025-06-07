@@ -3,7 +3,7 @@ use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widge
 use egui_flex::{Flex, FlexAlign, FlexItem};
 use std::num::NonZeroUsize;
 
-#[allow(clippy::too_many_lines)] // It's an example
+#[expect(clippy::too_many_lines, reason = " It's an example")]
 fn main() -> eframe::Result {
     let mut text = "Hello, world!".to_owned();
     eframe::run_simple_native(

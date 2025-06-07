@@ -3,7 +3,7 @@ use egui::{CentralPanel, Label, TextEdit, Widget};
 use egui_flex::{Flex, FlexAlignContent, FlexItem};
 
 fn main() -> eframe::Result {
-    let mut text = "Hello, World!".to_string();
+    let mut text = "Hello, World!".to_owned();
 
     eframe::run_simple_native(file!(), NativeOptions::default(), move |ctx, _frame| {
         CentralPanel::default().show(ctx, |ui| {

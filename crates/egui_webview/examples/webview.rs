@@ -19,7 +19,7 @@ impl WebBrowser {
 
         Self {
             id,
-            url_bar: url.to_string(),
+            url_bar: url.to_owned(),
             view,
         }
     }
@@ -81,7 +81,7 @@ impl WebBrowser {
                             || btn_resp.clicked()
                         {
                             self.view.view.load_url(&self.url_bar).unwrap();
-                        };
+                        }
                     });
                 });
 

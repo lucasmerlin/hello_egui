@@ -1,9 +1,10 @@
 [package]
 name = "hello_egui_utils"
 version = "0.8.0"
-edition = "2021"
 description = "Utilities used by crates from https://github.com/lucasmerlin/hello_egui"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 repository = "https://github.com/lucasmerlin/hello_egui"
 homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/hello_egui_utils"
 

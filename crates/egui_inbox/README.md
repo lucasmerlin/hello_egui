@@ -1,4 +1,4 @@
-# egui_inbox
+# `egui_inbox`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_inbox.svg)](https://crates.io/crates/egui_inbox)
@@ -16,7 +16,7 @@ Will automatically call `request_repaint()` on the `Ui` when a message is receiv
 
 **The goal of this crate** is to make interfacing with egui from asynchronous code as easy as possible.
 Currently it is not optimized for performance, so if you expect to send 1000s of updates per frame you might want to use
-e.g. std::sync::mpsc instead. Performance might still be improved in the future though.
+e.g. `std::sync::mpsc` instead. Performance might still be improved in the future though.
 
 Example:
     

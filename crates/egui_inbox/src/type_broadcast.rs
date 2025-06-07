@@ -21,11 +21,13 @@ pub struct TypeBroadcast {
 
 impl TypeBroadcast {
     /// Create a new [`TypeBroadcast`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Subscribe to a broadcast, receiving a [`BroadcastReceiver`] of type [T].
+    #[must_use]
     pub fn subscribe<T: MaybeSend + 'static>(&self) -> BroadcastReceiver<T> {
         self.broadcasts
             .lock()

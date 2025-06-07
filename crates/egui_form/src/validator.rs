@@ -71,6 +71,7 @@ pub struct ValidatorReport {
 impl ValidatorReport {
     /// Create a new [`ValidatorReport`] from a [`validator::ValidationErrors`].
     /// You can call this function with the result of a call to [`validator::Validate::validate`].
+    #[must_use]
     pub fn new(result: Result<(), ValidationErrors>) -> Self {
         ValidatorReport {
             errors: result.err(),
@@ -86,6 +87,7 @@ impl ValidatorReport {
 
     /// Add a custom translation function to the report.
     /// Pass a function that takes a [`ValidationError`] and returns a translated error message.
+    #[must_use]
     pub fn with_translation<F: Fn(&ValidationError) -> Cow<'static, str> + 'static>(
         mut self,
         get_t: F,
@@ -97,7 +99,7 @@ impl ValidatorReport {
 
 fn get_error_recursively<'a>(
     errors: &'a ValidationErrors,
-    fields: &[PathItem],
+    fields: &[PathItem<'_>],
 ) -> Option<&'a Vec<ValidationError>> {
     if let Some((field, rest)) = fields.split_first() {
         let PathItem::Field(field) = field else {

@@ -46,10 +46,12 @@ impl Default for PerfectCursor {
 }
 
 impl PerfectCursor {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[must_use]
     pub fn should_update(&self) -> bool {
         matches!(self.state, AnimationState::Animating { .. })
     }

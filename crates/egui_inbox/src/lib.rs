@@ -66,6 +66,7 @@ impl RequestRepaintContext {
 
     /// Create a new [`RequestRepaintContext`] from an [`egui::Context`].
     #[cfg(feature = "egui")]
+    #[must_use]
     pub fn from_egui_ctx(ctx: egui::Context) -> Self {
         Self(RequestRepaintInner::Ctx(ctx))
     }
@@ -226,6 +227,7 @@ impl<T> UiInbox<T> {
     /// The context is grabbed from the [Ui] passed to [`UiInbox::read`], so
     /// if you call [`UiInbox::send`] before [`UiInbox::read`], no repaint is requested.
     /// If you want to set the context on creation, use [`UiInbox::new_with_ctx`].
+    #[must_use]
     pub fn new() -> Self {
         Self::_new(None)
     }
@@ -245,6 +247,7 @@ impl<T> UiInbox<T> {
     }
 
     /// Create a inbox and a sender for it.
+    #[must_use]
     pub fn channel() -> (UiInboxSender<T>, Self) {
         let inbox = Self::new();
         let sender = inbox.sender();
@@ -338,6 +341,7 @@ impl<T> UiInbox<T> {
     }
 
     /// Returns a sender for this inbox.
+    #[must_use]
     pub fn sender(&self) -> UiInboxSender<T> {
         UiInboxSender {
             state: self.state.clone(),

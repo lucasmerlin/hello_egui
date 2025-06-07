@@ -101,6 +101,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     InfiniteScroll<T, Cursor>
 {
     /// Create a new infinite scroll.
+    #[must_use]
     pub fn new() -> Self {
         let top_inbox = UiInbox::new();
         let bottom_inbox = UiInbox::new();
@@ -245,7 +246,10 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                         LoadingState::Idle
                     }
                 }
-                state => state,
+                state @ (LoadingState::Loading
+                | LoadingState::Idle
+                | LoadingState::NoMoreItems
+                | LoadingState::Error(_)) => state,
             };
         });
 
@@ -269,7 +273,10 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                         LoadingState::Idle
                     }
                 }
-                state => state,
+                state @ (LoadingState::Loading
+                | LoadingState::Idle
+                | LoadingState::NoMoreItems
+                | LoadingState::Error(_)) => state,
             };
         });
     }
@@ -312,7 +319,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         let items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
         if item_range.end + end_prefetch >= items.len()
-            && matches!(self.bottom_loading_state, LoadingState::Idle { .. })
+            && matches!(self.bottom_loading_state, LoadingState::Idle)
         {
             if let Some(end_loader) = &mut self.end_loader {
                 self.bottom_loading_state = LoadingState::Loading;
@@ -331,9 +338,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             }
         }
 
-        if item_range.start < end_prefetch
-            && matches!(self.top_loading_state, LoadingState::Idle { .. })
-        {
+        if item_range.start < end_prefetch && matches!(self.top_loading_state, LoadingState::Idle) {
             if let Some(start_loader) = &mut self.start_loader {
                 self.top_loading_state = LoadingState::Loading;
                 let sender = self.top_inbox.sender();
@@ -407,10 +412,10 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     #[cfg(feature = "egui_extras")]
     pub fn ui_table(
         &mut self,
-        mut table: TableBody,
+        mut table: TableBody<'_>,
         prefetch_count: usize,
         row_height: f32,
-        mut row_ui: impl FnMut(TableRow, &mut T),
+        mut row_ui: impl FnMut(TableRow<'_, '_>, &mut T),
     ) {
         self.read_inboxes(table.ui_mut());
 

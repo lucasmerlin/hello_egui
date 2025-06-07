@@ -22,6 +22,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
     /// You should pass a [Image] with the configuration you want.
     /// Since the width of the egui Image is currently a bit finicky, you can use
     /// [`Image::fit_to_exact_size`] to make sure the image is the size you want.
+    #[must_use]
     pub fn new(image: Image<'a>, thumbhash: &'h [u8]) -> Self {
         Self {
             id: Id::new(thumbhash),
@@ -35,6 +36,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
 
     /// Set a unique id for this widget, used for the fade animation.
     /// By default, the thumbhash data is used as the id.
+    #[must_use]
     pub fn id(mut self, id: Id) -> Self {
         self.id = id;
         self
@@ -42,6 +44,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
 
     /// Set whether the image should fade in when it's loaded.
     /// Defaults to true.
+    #[must_use]
     pub fn fade(mut self, fade: bool) -> Self {
         self.fade = fade;
         self
@@ -49,6 +52,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
 
     /// Set the exact size the image should be shown at.
     /// This will override the size of the image widget.
+    #[must_use]
     pub fn fit_to_exact_size(mut self, size: egui::Vec2) -> Self {
         self.fit_to_exact_size = Some(size);
         self
@@ -57,6 +61,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
     /// Set the rounding of the image.
     /// Use this instead of [`Image::rounding`] to make sure the rounding is applied to the
     /// thumbhash image as well.
+    #[must_use]
     pub fn rounding(mut self, rounding: impl Into<CornerRadius>) -> Self {
         self.rounding = Some(rounding.into());
         self

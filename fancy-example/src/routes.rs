@@ -1,11 +1,11 @@
-#![allow(clippy::needless_pass_by_value)]
+#![expect(clippy::needless_pass_by_value, reason = "Ok here")]
 use crate::crate_ui::{CrateUi, ALL_CRATES};
 use crate::example::EXAMPLES;
 use crate::shared_state::SharedState;
 use egui::Ui;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
 
-pub fn example_route(req: Request<SharedState>) -> impl Route<SharedState> {
+pub fn example_route(req: Request<'_, SharedState>) -> impl Route<SharedState> {
     let example_slug = req.params.get("slug").unwrap();
 
     let example = EXAMPLES
@@ -21,7 +21,7 @@ pub fn example_route(req: Request<SharedState>) -> impl Route<SharedState> {
     }
 }
 
-pub fn crate_route(req: Request<SharedState>) -> impl Route<SharedState> {
+pub fn crate_route(req: Request<'_, SharedState>) -> impl Route<SharedState> {
     let crate_slug = req.params.get("slug").unwrap();
 
     let item = ALL_CRATES

@@ -134,6 +134,10 @@ pub fn animate_ui_translation(
 /// Creates a repeating animation based on the current time.
 /// Useful for e.g. animating a loading spinner.
 /// It will repeatedly go from 0.0 to 1.0 and jump back to 0.0.
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "We want to use f32 for time calculations"
+)]
 pub fn animate_repeating(ui: &mut Ui, easing: Easing, duration: Duration, offset: f32) -> f32 {
     ui.ctx().request_repaint();
 

@@ -31,8 +31,8 @@ pub struct Stargazer {
 fn example_stargazers() -> Vec<Stargazer> {
     let dir = env!("CARGO_MANIFEST_DIR");
     vec![Stargazer {
-        login: "lucasmerlin".to_string(),
-        html_url: "https://github.com/lucasmerlin".to_string(),
+        login: "lucasmerlin".to_owned(),
+        html_url: "https://github.com/lucasmerlin".to_owned(),
         avatar_url: format!("file://{dir}/src/egui.png",),
     }]
 }
@@ -60,12 +60,16 @@ impl Default for Stargazers {
 }
 
 impl Stargazers {
+    #[must_use]
     pub fn new() -> Self {
         let mut infinite_scroll = InfiniteScroll::new();
         infinite_scroll.virtual_list.hide_on_resize(None);
 
         Self {
-            #[allow(unused_variables)]
+            #[expect(
+                unused_variables,
+                reason = "This is used for deserializing the JSON data"
+            )]
             infinite_scroll: infinite_scroll.end_loader(|cursor, callback| {
                 #[cfg(feature = "mock")]
                 callback(Ok((example_stargazers(), None)));

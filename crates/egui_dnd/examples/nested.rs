@@ -32,38 +32,38 @@ impl Default for MyApp {
         MyApp {
             items: vec![
                 SortableItem {
-                    name: "a".to_string(),
+                    name: "a".to_owned(),
                     ..SortableItem::default()
                 },
                 SortableItem {
-                    name: "b".to_string(),
+                    name: "b".to_owned(),
                     ..SortableItem::default()
                 },
                 SortableItem {
-                    name: "c".to_string(),
+                    name: "c".to_owned(),
                     ..SortableItem::default()
                 },
                 SortableItem {
-                    name: "d".to_string(),
+                    name: "d".to_owned(),
                     ..SortableItem::default()
                 },
                 SortableItem {
-                    name: "e".to_string(),
+                    name: "e".to_owned(),
                     children: Some(vec![
                         SortableItem {
-                            name: "e_a".to_string(),
+                            name: "e_a".to_owned(),
                             ..SortableItem::default()
                         },
                         SortableItem {
-                            name: "e_b".to_string(),
+                            name: "e_b".to_owned(),
                             ..SortableItem::default()
                         },
                         SortableItem {
-                            name: "e_c".to_string(),
+                            name: "e_c".to_owned(),
                             ..SortableItem::default()
                         },
                         SortableItem {
-                            name: "e_d".to_string(),
+                            name: "e_d".to_owned(),
                             ..SortableItem::default()
                         },
                     ]),
@@ -74,7 +74,7 @@ impl Default for MyApp {
 }
 
 impl MyApp {
-    fn draw_item(ui: &mut Ui, item: &mut SortableItem, handle: Handle) {
+    fn draw_item(ui: &mut Ui, item: &mut SortableItem, handle: Handle<'_>) {
         handle.ui(ui, |ui| {
             ui.label(&item.name);
         });
@@ -94,7 +94,7 @@ impl MyApp {
 
                     response.update_vec(children);
                 });
-        };
+        }
     }
 }
 

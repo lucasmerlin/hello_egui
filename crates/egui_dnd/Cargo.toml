@@ -1,14 +1,14 @@
 [package]
 name = "egui_dnd"
 version = "0.12.0"
-edition = "2021"
-authors = ["Lucas Meurer"]
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_dnd"
 homepage = "https://lucasmerlin.github.io/hello_egui/"
 keywords = ["egui", "drag", "drop", "ui", "gui"]
 categories = ["gui"]
 description = "A drag and drop library for egui"
-license = "MIT"
 
 
 [dependencies]

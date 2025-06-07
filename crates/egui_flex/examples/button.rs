@@ -27,7 +27,7 @@ impl Button {
 impl FlexWidget for Button {
     type Response = Response;
 
-    fn flex_ui(self, item: FlexItem, flex_instance: &mut FlexInstance) -> Self::Response {
+    fn flex_ui(self, item: FlexItem<'_>, flex_instance: &mut FlexInstance<'_>) -> Self::Response {
         flex_instance
             .add_ui(
                 item.sense(Sense::click())

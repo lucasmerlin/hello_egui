@@ -130,6 +130,10 @@ pub struct Handle<'a> {
     id: Id,
     idx: usize,
     state: &'a mut DragDropUi,
+    #[expect(
+        clippy::struct_field_names,
+        reason = "There is no better name for this"
+    )]
     hovering_over_any_handle: &'a mut bool,
     item_pos: Pos2,
 
@@ -183,7 +187,12 @@ impl DragDetectionState {
     fn dragged_item(&self) -> Option<Id> {
         match self {
             DragDetectionState::Dragging { id, .. } => Some(*id),
-            _ => None,
+            DragDetectionState::None
+            | DragDetectionState::PressedWaitingForDelay { .. }
+            | DragDetectionState::WaitingForClickThreshold { .. }
+            | DragDetectionState::CouldBeValidDrag
+            | DragDetectionState::Cancelled(_)
+            | DragDetectionState::TransitioningBackAfterDragFinished { .. } => None,
         }
     }
 
@@ -200,7 +209,12 @@ impl DragDetectionState {
             | DragDetectionState::Dragging {
                 dragged_item_size, ..
             } => Some(*dragged_item_size),
-            _ => None,
+            DragDetectionState::TransitioningBackAfterDragFinished { .. }
+            | DragDetectionState::None
+            | DragDetectionState::PressedWaitingForDelay { .. }
+            | DragDetectionState::WaitingForClickThreshold { .. }
+            | DragDetectionState::CouldBeValidDrag
+            | DragDetectionState::Cancelled(_) => None,
         }
     }
 
@@ -209,7 +223,12 @@ impl DragDetectionState {
             DragDetectionState::Dragging {
                 last_pointer_pos, ..
             } => Some(*last_pointer_pos),
-            _ => None,
+            DragDetectionState::None
+            | DragDetectionState::PressedWaitingForDelay { .. }
+            | DragDetectionState::WaitingForClickThreshold { .. }
+            | DragDetectionState::CouldBeValidDrag
+            | DragDetectionState::Cancelled(_)
+            | DragDetectionState::TransitioningBackAfterDragFinished { .. } => None,
         }
     }
 }
@@ -354,7 +373,7 @@ impl<'a> Handle<'a> {
                     self.state.detection_state = DragDetectionState::CouldBeValidDrag;
                 }
             }
-        };
+        }
 
         if response.contains_pointer()
             && matches!(
@@ -469,11 +488,14 @@ impl DragDropUi {
     }
 
     /// Draw the items and handle drag & drop stuff
-    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
+    #[expect(
+        clippy::too_many_lines,
+        reason = "TODO: refactor this to reduce the number of lines"
+    )]
     pub fn ui(
         &mut self,
         ui: &mut Ui,
-        callback: impl FnOnce(&mut Ui, &mut ItemIterator),
+        callback: impl FnOnce(&mut Ui, &mut ItemIterator<'_>),
     ) -> DragDropResponse {
         // During the first frame, we check if the pointer is actually over any of the item handles and cancel the drag if it isn't
         let mut first_frame = false;

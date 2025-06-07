@@ -18,12 +18,16 @@ pub struct EguiWebView {
     id: Id,
     inbox: UiInbox<WebViewEvent>,
     current_image: Option<TextureHandle>,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "this might be used in the future")]
     context: Context,
 
     displayed_last_frame: bool,
 }
 
+#[expect(
+    clippy::missing_fields_in_debug,
+    reason = "This is a temporary struct for webview state"
+)]
 impl Debug for EguiWebView {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("EguiWebView").field("id", &self.id).finish()
@@ -72,7 +76,7 @@ impl EguiWebView {
         ctx: &Context,
         id: impl Into<Id>,
         window: &impl HasWindowHandle,
-        build: impl FnOnce(wry::WebViewBuilder) -> wry::WebViewBuilder,
+        build: impl FnOnce(wry::WebViewBuilder<'_>) -> wry::WebViewBuilder<'_>,
     ) -> Self {
         let (tx, inbox) = UiInbox::channel();
         let id = id.into();
@@ -89,7 +93,10 @@ impl EguiWebView {
 
         builder = build(builder);
 
-        #[allow(clippy::arc_with_non_send_sync)]
+        #[expect(
+            clippy::arc_with_non_send_sync,
+            reason = "This is a webview, which is not Send/Sync"
+        )]
         let view_ref = Arc::new(Mutex::new(None::<Arc<WebView>>));
         let view_ref_weak = view_ref.clone();
         let ctx_clone = ctx.clone();
@@ -105,11 +112,11 @@ impl EguiWebView {
                         if let Some(view) = guard.as_ref() {
                             if let Err(err) = view.evaluate_script(include_str!("webview.js")) {
                                 println!("Error loading webview script: {err}");
-                            };
+                            }
                         }
                     }
                     PageLoadEvent::Finished => {}
-                };
+                }
 
                 tx_clone.send(WebViewEvent::Loaded(url)).ok();
             })
@@ -118,7 +125,10 @@ impl EguiWebView {
                 tx.send(result).ok();
             });
 
-        #[allow(clippy::arc_with_non_send_sync)]
+        #[expect(
+            clippy::arc_with_non_send_sync,
+            reason = "This is a webview, which is not Send/Sync"
+        )]
         let web_view = Arc::new(builder.build().unwrap());
 
         *view_ref.lock() = Some(web_view.clone());
@@ -179,7 +189,10 @@ impl EguiWebView {
         //     .ok();
     }
 
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "We need to send the command as a value"
+    )]
     fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
         let json = serde_json::to_string(&command)?;
         self.view
@@ -210,7 +223,10 @@ impl EguiWebView {
                 WebViewEvent::Focus => {
                     ui.memory_mut(|mem| mem.request_focus(response.id));
                 }
-                _ => {}
+                WebViewEvent::Blur
+                | WebViewEvent::Loading(_)
+                | WebViewEvent::Loaded(_)
+                | WebViewEvent::Ipc(_) => {}
             })
             .collect();
 
@@ -305,9 +321,9 @@ struct GlobalWebViewState {
     rendered_this_frame: HashSet<Id>,
 }
 
-#[allow(unsafe_code)]
+#[expect(unsafe_code, reason = "This is a webview, which is not Send/Sync")]
 unsafe impl Send for GlobalWebViewState {}
-#[allow(unsafe_code)]
+#[expect(unsafe_code, reason = "This is a webview, which is not Send/Sync")]
 unsafe impl Sync for GlobalWebViewState {}
 
 pub const WEBVIEW_ID: &str = "egui_webview";

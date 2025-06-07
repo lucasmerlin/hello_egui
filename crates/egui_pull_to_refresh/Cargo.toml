@@ -1,9 +1,10 @@
 [package]
 name = "egui_pull_to_refresh"
 version = "0.8.0"
-edition = "2021"
 description = "A pull to refresh library for egui"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_pull_to_refresh"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

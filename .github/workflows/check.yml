@@ -22,6 +22,10 @@ jobs:
           version: 1.0
           execute_install_scripts: true
 
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
       - uses: actions/checkout@v4
         with:
           lfs: true
@@ -32,31 +36,19 @@ jobs:
           key: ${{ runner.os }}-cargo-cache
 
       - name: Clippy all-features
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets --all-features --workspace -- -D warnings
+        run: cargo clippy --all-targets --all-features --workspace -- -D warnings
 
       - name: RustFmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all --check
+        run: cargo fmt --all -- --check
 
       - name: Test
-        uses: actions-rs/cargo@v1
         # Snapshot tests currently only work on macos, since they require a gpu
         if: ${{ matrix.os == 'macos-latest' }}
-        with:
-          command: test
-          args: --all-features --workspace
+        run: cargo test --all-features --workspace
 
       - name: Cargo Doc
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --lib --no-deps --all-features
+        run: cargo doc --lib --no-deps --all-features
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

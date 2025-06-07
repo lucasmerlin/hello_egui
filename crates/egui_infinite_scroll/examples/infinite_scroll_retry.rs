@@ -10,7 +10,7 @@ pub fn main() -> eframe::Result<()> {
         let err = rand::random::<f32>();
         let err = err > 0.7;
         callback(if err {
-            Err("Error loading your numbers :( please try again".to_string())
+            Err("Error loading your numbers :( please try again".to_owned())
         } else {
             Ok(((start..end).collect(), Some(end)))
         });
@@ -25,7 +25,7 @@ pub fn main() -> eframe::Result<()> {
                     ui.set_width(ui.available_width());
                     if ui.button("Reset").clicked() {
                         infinite_scroll.reset();
-                    };
+                    }
 
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
                         ui.label(format!("Item {item}"));
@@ -37,12 +37,14 @@ pub fn main() -> eframe::Result<()> {
                             ui.code(err);
                             if ui.button("Retry").clicked() {
                                 infinite_scroll.retry_bottom();
-                            };
+                            }
                         }
                         LoadingState::Loading => {
                             ui.spinner();
                         }
-                        _ => {}
+                        LoadingState::Loaded(..)
+                        | LoadingState::Idle
+                        | LoadingState::NoMoreItems => {}
                     }
                 });
             });

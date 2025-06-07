@@ -36,6 +36,7 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
     }
 
     /// Optionally set a label for the field.
+    #[must_use]
     pub fn label(mut self, label: impl Into<Cow<'a, str>>) -> Self {
         self.label = Some(label.into());
         self
@@ -102,7 +103,7 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
                         widget_id: response.id,
                         errors: vec![],
                     });
-                };
+                }
             }
 
             ui.add_visible(

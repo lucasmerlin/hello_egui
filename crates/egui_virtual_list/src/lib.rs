@@ -65,6 +65,7 @@ impl Default for VirtualList {
 
 impl VirtualList {
     /// Create a new `VirtualList`
+    #[must_use]
     pub fn new() -> Self {
         Self {
             previous_item_range: usize::MAX..usize::MAX,
@@ -120,7 +121,10 @@ impl VirtualList {
     /// The layout closure gets called for each row with the index of the first item that should
     /// be displayed.
     /// It should return the number of items that were displayed in the row.
-    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
+    #[expect(
+        clippy::too_many_lines,
+        reason = "TODO: refactor this to reduce the number of lines"
+    )]
     pub fn ui_custom_layout(
         &mut self,
         ui: &mut Ui,

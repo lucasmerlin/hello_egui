@@ -19,7 +19,7 @@ enum RouterMessage {
 async fn main() -> eframe::Result<()> {
     let init = |ctx: &Context| {
         let mut app_state = AppState {
-            message: "Hello, World!".to_string(),
+            message: "Hello, World!".to_owned(),
             inbox: TypeInbox::new(ctx),
         };
         let mut router = EguiRouter::builder()
@@ -88,7 +88,7 @@ fn home() -> impl Route<AppState> {
             if ui.link("Edit Message").clicked() {
                 state
                     .inbox
-                    .send(RouterMessage::Navigate("/edit".to_string()));
+                    .send(RouterMessage::Navigate("/edit".to_owned()));
             }
 
             ui.label("Navigate to post:");
@@ -96,31 +96,31 @@ fn home() -> impl Route<AppState> {
             if ui.link("Post 1").clicked() {
                 state
                     .inbox
-                    .send(RouterMessage::Navigate("/post/1".to_string()));
+                    .send(RouterMessage::Navigate("/post/1".to_owned()));
             }
 
             if ui.link("Post 2").clicked() {
                 state
                     .inbox
-                    .send(RouterMessage::Navigate("/post/2".to_string()));
+                    .send(RouterMessage::Navigate("/post/2".to_owned()));
             }
 
             if ui.link("Post With Query").clicked() {
                 state
                     .inbox
-                    .send(RouterMessage::Navigate("/post/3?search=test".to_string()));
+                    .send(RouterMessage::Navigate("/post/3?search=test".to_owned()));
             }
 
             if ui.link("Invalid Post").clicked() {
                 state
                     .inbox
-                    .send(RouterMessage::Navigate("/post/".to_string()));
+                    .send(RouterMessage::Navigate("/post/".to_owned()));
             }
 
             if ui.link("Async Route").clicked() {
                 state
                     .inbox
-                    .send(RouterMessage::Navigate("/async".to_string()));
+                    .send(RouterMessage::Navigate("/async".to_owned()));
             }
         });
     }
@@ -139,7 +139,7 @@ fn edit_message() -> impl Route<AppState> {
     }
 }
 
-fn post(mut request: Request<AppState>) -> impl Route<AppState> {
+fn post(mut request: Request<'_, AppState>) -> impl Route<AppState> {
     let id = request.params.get("id").map(ToOwned::to_owned);
 
     let search: Option<String> = request.query.remove("search").map(Cow::into_owned);

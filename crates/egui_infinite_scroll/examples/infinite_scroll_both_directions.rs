@@ -32,7 +32,7 @@ pub fn main() -> eframe::Result<()> {
                     ui.set_width(ui.available_width());
                     if ui.button("Reset").clicked() {
                         infinite_scroll.reset();
-                    };
+                    }
                     ui.vertical_centered(|ui| {
                         ui.add_visible(false, Spinner::new());
                     });

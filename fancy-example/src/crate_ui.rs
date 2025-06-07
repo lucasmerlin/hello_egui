@@ -12,7 +12,10 @@ use crate::{demo_area, FancyMessage};
 
 pub const README_CONTENT_SEPARATOR: &str = "[content]:<>";
 
-#[allow(clippy::enum_variant_names)]
+#[expect(
+    clippy::enum_variant_names,
+    reason = "As all have the prefix `Egui`, this is fine"
+)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Crate {
     EguiAnimation,

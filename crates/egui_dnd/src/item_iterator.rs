@@ -5,6 +5,10 @@ use egui::{Id, Layout, Pos2, Rect, Ui, UiBuilder, Vec2};
 
 /// Calculates some information that is later used to detect in which index the dragged item should be placed.
 /// [`ItemIterator::next`] should be called for each item in the list.
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "We want to keep track of multiple states in the iterator"
+)]
 pub struct ItemIterator<'a> {
     state: &'a mut DragDropUi,
     dragged_item_rect: Option<Rect>,
@@ -21,7 +25,10 @@ pub struct ItemIterator<'a> {
     pub(crate) hovering_over_any_handle: bool,
     pub(crate) source_item: Option<(usize, Id)>,
 
-    #[allow(clippy::type_complexity)]
+    #[expect(
+        clippy::type_complexity,
+        reason = "We want to keep track of the closest item and its distance"
+    )]
     pub(crate) closest_item: Option<(f32, Option<(usize, Id, Pos2)>)>,
 }
 
@@ -35,14 +42,24 @@ impl<'a> ItemIterator<'a> {
             DragDetectionState::Dragging {
                 closest_item: item, ..
             } => Some(item),
-            _ => None,
+            DragDetectionState::None
+            | DragDetectionState::PressedWaitingForDelay { .. }
+            | DragDetectionState::WaitingForClickThreshold { .. }
+            | DragDetectionState::CouldBeValidDrag
+            | DragDetectionState::Cancelled(_)
+            | DragDetectionState::TransitioningBackAfterDragFinished { .. } => None,
         };
 
         let hovering_last_item = match state.detection_state {
             DragDetectionState::Dragging {
                 hovering_last_item, ..
             } => hovering_last_item,
-            _ => false,
+            DragDetectionState::None
+            | DragDetectionState::PressedWaitingForDelay { .. }
+            | DragDetectionState::WaitingForClickThreshold { .. }
+            | DragDetectionState::CouldBeValidDrag
+            | DragDetectionState::Cancelled(_)
+            | DragDetectionState::TransitioningBackAfterDragFinished { .. } => false,
         };
 
         Self {
@@ -74,7 +91,7 @@ impl<'a> ItemIterator<'a> {
         id: Id,
         idx: usize,
         add_surrounding_space_automatically: bool,
-        content: impl FnOnce(&mut Ui, Item) -> ItemResponse,
+        content: impl FnOnce(&mut Ui, Item<'_>) -> ItemResponse,
     ) {
         let is_dragged_item = self.state.detection_state.is_dragging_item(id);
 

@@ -8,6 +8,7 @@ use fancy_example::stargazers::STARGAZERS_EXAMPLE;
 use fancy_example::App;
 use std::time::Duration;
 
+#[must_use]
 pub fn app() -> Harness<'static> {
     let mut app = None;
 
@@ -17,7 +18,7 @@ pub fn app() -> Harness<'static> {
     })
 }
 
-fn open(example: &Example, harness: &mut Harness) {
+fn open(example: &Example, harness: &mut Harness<'_>) {
     harness
         .get_by_role_and_label(Role::Button, example.name)
         .click();
@@ -137,7 +138,10 @@ pub async fn wait_for<'h, 'hl>(
         }
 
         step -= 1;
-        #[allow(clippy::manual_assert)]
+        #[expect(
+            clippy::manual_assert,
+            reason = "This is a test, so we want to panic if the condition is not met"
+        )]
         if step == 0 {
             panic!("Timeout exceeded while waiting for node");
         }

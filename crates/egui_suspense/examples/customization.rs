@@ -39,9 +39,9 @@ pub fn main() -> eframe::Result<()> {
                             std::thread::spawn(move || {
                                 std::thread::sleep(std::time::Duration::from_secs(1));
                                 cb(if rand::random() {
-                                    Ok("Hello".to_string())
+                                    Ok("Hello".to_owned())
                                 } else {
-                                    Err("OOPSIE WOOPSIE!".to_string())
+                                    Err("OOPSIE WOOPSIE!".to_owned())
                                 });
                             });
                         }));

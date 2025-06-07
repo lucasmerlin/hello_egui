@@ -81,7 +81,7 @@ fn main() -> eframe::Result<()> {
     )
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "This is used for deserializing the JSON data")]
 #[derive(Debug, Deserialize)]
 struct GalleryItem {
     id: i32,
