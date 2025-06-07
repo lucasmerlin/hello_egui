@@ -1,4 +1,4 @@
-# hello_egui_utils
+# `hello_egui_utils`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/hello_egui_utils.svg)](https://crates.io/crates/hello_egui_utils)
@@ -11,4 +11,4 @@
 [content]:<>
 
 
-This crate contains helper methods and structs used all over the hello_egui project.
+This crate contains helper methods and structs used all over the `hello_egui` project.

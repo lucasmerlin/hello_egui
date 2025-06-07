@@ -33,6 +33,7 @@ impl<State: 'static, H: History + Default> Default for RouterBuilder<State, H> {
 
 impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     /// Create a new router builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             router: matchit::Router::new(),
@@ -52,6 +53,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     }
 
     /// Set the transition for both forward and backward transitions
+    #[must_use]
     pub fn transition(mut self, transition: TransitionConfig) -> Self {
         self.forward_transition = transition.clone();
         self.backward_transition = transition;
@@ -59,36 +61,42 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     }
 
     /// Set the transition for forward transitions
+    #[must_use]
     pub fn forward_transition(mut self, transition: TransitionConfig) -> Self {
         self.forward_transition = transition;
         self
     }
 
     /// Set the transition for backward transitions
+    #[must_use]
     pub fn backward_transition(mut self, transition: TransitionConfig) -> Self {
         self.backward_transition = transition;
         self
     }
 
     /// Set the transition for replace transitions
+    #[must_use]
     pub fn replace_transition(mut self, transition: TransitionConfig) -> Self {
         self.replace_transition = transition;
         self
     }
 
     /// Set the default duration for transitions
+    #[must_use]
     pub fn default_duration(mut self, duration: f32) -> Self {
         self.default_duration = Some(duration);
         self
     }
 
     /// Set the default route (when using [`history::BrowserHistory`], window.location.pathname will be used instead)
+    #[must_use]
     pub fn default_path(mut self, route: impl Into<String>) -> Self {
         self.default_route = Some(route.into());
         self
     }
 
     /// Set the history implementation
+    #[must_use]
     pub fn history(mut self, history: H) -> Self {
         self.history_kind = Some(history);
         self
@@ -96,6 +104,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
 
     /// Set the error UI
     /// Call this *before* you call `.async_route()`, otherwise the error UI will not be used in async routes.
+    #[must_use]
     pub fn error_ui(
         mut self,
         f: impl Fn(&mut egui::Ui, &State, &crate::handler::HandlerError) + 'static + Send + Sync,
@@ -106,6 +115,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
 
     /// Set the loading UI
     /// Call this *before* you call `.async_route()`, otherwise the loading UI will not be used in async routes.
+    #[must_use]
     pub fn loading_ui(mut self, f: impl Fn(&mut egui::Ui, &State) + 'static + Send + Sync) -> Self {
         self.loading_ui = Arc::new(Box::new(f));
         self
@@ -136,6 +146,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     ///     .route("/", my_handler)
     ///     .route("/:post", my_fallible_handler)
     ///     .build(&mut ());
+    #[must_use]
     pub fn route<HandlerArgs, Han: MakeHandler<State, HandlerArgs> + 'static>(
         mut self,
         route: &str,
@@ -178,6 +189,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     ///    .async_route("/:post", my_fallible_handler)
     ///    .build(&mut ());
     #[cfg(feature = "async")]
+    #[must_use]
     pub fn async_route<HandlerArgs, Han>(mut self, route: &str, handler: Han) -> Self
     where
         Han: crate::handler::AsyncMakeHandler<State, HandlerArgs> + 'static + Clone + Send + Sync,
@@ -196,7 +208,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
                         params: req
                             .params
                             .iter()
-                            .map(|(k, v)| (k.to_string(), v.to_string()))
+                            .map(|(k, v)| (k.to_owned(), v.to_owned()))
                             .collect(),
                         query: req
                             .query
@@ -227,6 +239,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
     }
 
     /// Add a redirect route. Whenever this route matches, it'll redirect to the route you specified.
+    #[must_use]
     pub fn route_redirect(mut self, route: &str, redirect: impl Into<String>) -> Self {
         self.router
             .insert(route, RouteKind::Redirect(redirect.into()))

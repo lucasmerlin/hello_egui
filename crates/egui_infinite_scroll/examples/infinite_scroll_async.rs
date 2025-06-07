@@ -21,7 +21,7 @@ pub async fn main() -> eframe::Result<()> {
                     ui.set_width(ui.available_width());
                     if ui.button("Reset").clicked() {
                         infinite_scroll.reset();
-                    };
+                    }
 
                     infinite_scroll.ui(ui, 10, |ui, _index, item| {
                         ui.label(format!("Item {item}"));

@@ -1,4 +1,4 @@
-#![allow(clippy::too_many_lines)] // It's ok as it is an example
+#![expect(clippy::too_many_lines, reason = "This is an example")]
 use eframe::emath::Align;
 use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Color32, Direction, Frame, Id, Layout, Resize, ScrollArea, Ui};

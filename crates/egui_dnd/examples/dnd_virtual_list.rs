@@ -47,7 +47,12 @@ pub fn main() -> eframe::Result<()> {
     )
 }
 
-fn draw_item(ui: &mut egui::Ui, handle: egui_dnd::Handle, item: i32) {
+#[expect(
+    clippy::cast_sign_loss,
+    clippy::cast_possible_truncation,
+    reason = "We want to cast the height to i8 for the inner margin"
+)]
+fn draw_item(ui: &mut egui::Ui, handle: egui_dnd::Handle<'_>, item: i32) {
     // For the sake of the example we generate a random height based on the item index
     // but if your row height e.g. depends on some text with varying rows this would also work.
     let mut rng = StdRng::seed_from_u64(item as u64);

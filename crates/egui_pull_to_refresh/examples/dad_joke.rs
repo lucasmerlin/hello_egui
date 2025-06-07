@@ -71,10 +71,10 @@ fn load_joke(tx: UiInboxSender<Option<String>>) {
     let mut request = Request::get("https://icanhazdadjoke.com/");
     request
         .headers
-        .insert("Accept".to_string(), "text/plain".to_string());
+        .insert("Accept".to_owned(), "text/plain".to_owned());
     ehttp::fetch(request, move |response| {
         let response = response.unwrap();
         let joke = response.text().unwrap();
-        tx.send(Some(joke.to_string())).ok();
+        tx.send(Some(joke.to_owned())).ok();
     });
 }

@@ -64,19 +64,19 @@ fn home() -> impl Route<AppState> {
 
             if ui.link("Post 1").clicked() {
                 inbox
-                    .send(RouterMessage::Navigate("/post/1".to_string()))
+                    .send(RouterMessage::Navigate("/post/1".to_owned()))
                     .ok();
             }
 
             if ui.link("Post 2").clicked() {
                 inbox
-                    .send(RouterMessage::Navigate("/post/2".to_string()))
+                    .send(RouterMessage::Navigate("/post/2".to_owned()))
                     .ok();
             }
 
             if ui.link("Error Post").clicked() {
                 inbox
-                    .send(RouterMessage::Navigate("/post/error".to_string()))
+                    .send(RouterMessage::Navigate("/post/error".to_owned()))
                     .ok();
             }
         });
@@ -89,7 +89,7 @@ async fn post(request: OwnedRequest<AppState>) -> HandlerResult<impl Route<AppSt
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 
     if id.as_deref() == Some("error") {
-        Err(HandlerError::Message("Error Loading Post!".to_string()))?;
+        Err(HandlerError::Message("Error Loading Post!".to_owned()))?;
     }
 
     Ok(move |ui: &mut Ui, sender: &mut AppState| {

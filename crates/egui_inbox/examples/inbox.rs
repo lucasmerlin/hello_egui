@@ -20,14 +20,14 @@ pub fn main() -> eframe::Result<()> {
 
                 ui.label(format!("State: {state:?}"));
                 if ui.button("Async Task").clicked() {
-                    state = Some("Waiting for async task to complete".to_string());
+                    state = Some("Waiting for async task to complete".to_owned());
                     let tx = inbox.sender();
                     std::thread::spawn(move || {
                         std::thread::sleep(std::time::Duration::from_secs(1));
                         // Send will return an error if the receiver has been dropped
                         // but unless you have a long running task that will send multiple messages
                         // you can just ignore the error
-                        tx.send(Some("Hello from another thread!".to_string())).ok();
+                        tx.send(Some("Hello from another thread!".to_owned())).ok();
                     });
                 }
             });

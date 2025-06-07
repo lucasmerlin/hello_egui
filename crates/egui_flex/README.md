@@ -1,4 +1,4 @@
-# egui_flex
+# `egui_flex`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_flex.svg)](https://crates.io/crates/egui_flex)
@@ -43,7 +43,7 @@ what all the different flex keywords mean.
 
 - flex-wrap
   wrap and no-wrap works, wrap-reverse is not implemented
-    - if `wrap`, items will fill the row and wrap once they reach Ui::available_width()
+    - if `wrap`, items will fill the row and wrap once they reach `Ui::available_width()`
     - else, items will fill the row and overflow if they don't fit
 
 #### The following things aren't implemented yet but should be possible:
@@ -61,23 +61,23 @@ what all the different flex keywords mean.
 
 Here's a demo showing how nice things flow into the next row when resizing the window:
 
-https://github.com/user-attachments/assets/3f8d324e-7e51-4f4b-9415-f2d61e24d322
+<https://github.com/user-attachments/assets/3f8d324e-7e51-4f4b-9415-f2d61e24d322>
 
 ### Real world example
 
 Finally, I wanted to share a real world example how flex can improve the ui by a lot. In
 the [hello_egui demo app](https://lucasmerlin.github.io/hello_egui/) I have a list of crates displayed as small tags in
-the sidebar. When just shown with ui.horizontal_wrapped it looks really weird:
+the sidebar. When just shown with `ui.horizontal_wrapped` it looks really weird:
 
 ![image](https://github.com/user-attachments/assets/5d5c0e59-7eb7-465f-a4a5-580f9d023150)
 
-When updated to use egui_flex it looks much nicer:
+When updated to use `egui_flex` it looks much nicer:
 
 ![image](https://github.com/user-attachments/assets/a36240bf-db08-4046-9d83-2b62f5c512b1)
 
 ### Example
 
-Here is a simple example of how to use egui_flex:
+Here is a simple example of how to use `egui_flex`:
 
 ```rust no_run
 use eframe::NativeOptions;

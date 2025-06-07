@@ -140,6 +140,7 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
     }
 
     /// Use this to customize the loading ui.
+    #[must_use]
     pub fn loading_ui(mut self, f: impl Fn(&mut Ui) + 'static + MaybeSend + MaybeSync) -> Self {
         self.loading_ui = Some(Box::new(f));
         self
@@ -149,6 +150,7 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
     /// Nothing will be shown while the data is loading.
     /// Useful when you want to show a loading indicator somewhere else, e.g. when using
     /// [egui_pull_to_refresh](https://crates.io/crates/egui_pull_to_refresh).
+    #[must_use]
     pub fn no_loading_ui(mut self) -> Self {
         self.loading_ui = None;
         self
@@ -156,6 +158,7 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
 
     /// Use this to customize the error ui.
     /// The closure will be called with the error and a [State] struct.
+    #[must_use]
     pub fn error_ui(
         mut self,
         f: impl Fn(&mut Ui, &E, &mut State<'_>) + 'static + MaybeSend + MaybeSync,
@@ -169,7 +172,7 @@ impl<T: MaybeSend + MaybeSync + 'static, E: Display + Debug + MaybeSend + MaybeS
     pub fn ui<R>(
         &mut self,
         ui: &mut Ui,
-        content: impl FnOnce(&mut Ui, &mut T, &mut State) -> R,
+        content: impl FnOnce(&mut Ui, &mut T, &mut State<'_>) -> R,
     ) -> Option<R> {
         let mut result = None;
 

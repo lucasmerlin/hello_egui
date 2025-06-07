@@ -23,6 +23,7 @@ impl<R: EguiValidationReport> Default for Form<R> {
 
 impl<R: EguiValidationReport> Form<R> {
     /// Create a new form.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             controls: Vec::new(),
@@ -34,6 +35,7 @@ impl<R: EguiValidationReport> Form<R> {
     /// This will be either a [`crate::validator::ValidatorReport`] or a [`crate::garde::GardeReport`].
     /// You can add multiple reports to the form.
     /// You can also pass a custom Report for your own validation logic, if you implement [`EguiValidationReport`] for it.
+    #[must_use]
     pub fn add_report(mut self, value: R) -> Self {
         self.validation_results.push(value);
         self

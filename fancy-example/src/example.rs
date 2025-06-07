@@ -55,7 +55,7 @@ impl PartialEq for Example {
 }
 
 impl Example {
-    pub fn get(&self) -> Box<dyn ExampleTrait> {
+    #[must_use] pub fn get(&self) -> Box<dyn ExampleTrait> {
         (self.get)()
     }
 }

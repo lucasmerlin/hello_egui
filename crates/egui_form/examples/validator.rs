@@ -70,8 +70,8 @@ fn form_ui(ui: &mut egui::Ui, test: &mut Test) {
 
 fn main() -> eframe::Result<()> {
     let mut test = Test {
-        user_name: "testfiwuehfwoi".to_string(),
-        email: "garbage".to_string(),
+        user_name: "testfiwuehfwoi".to_owned(),
+        email: "garbage".to_owned(),
         nested: Nested { test: 0 },
         vec: vec![Nested { test: 0 }],
     };
@@ -96,8 +96,8 @@ mod tests {
     #[test]
     fn test_validate() {
         let test = Test {
-            user_name: "testfiwuehfwoi".to_string(),
-            email: "garbage".to_string(),
+            user_name: "testfiwuehfwoi".to_owned(),
+            email: "garbage".to_owned(),
             nested: Nested { test: 0 },
             vec: vec![Nested { test: 0 }],
         };

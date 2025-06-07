@@ -67,6 +67,7 @@ pub struct PullToRefresh {
 impl PullToRefresh {
     /// Creates a new pull to refresh widget.
     /// If `loading` is true, the widget will show the loading indicator.
+    #[must_use]
     pub fn new(loading: bool) -> Self {
         Self {
             id: Id::new("pull_to_refresh"),
@@ -77,18 +78,21 @@ impl PullToRefresh {
     }
 
     /// Sets the minimum distance the user needs to drag to trigger a refresh.
+    #[must_use]
     pub fn min_refresh_distance(mut self, min_refresh_distance: f32) -> Self {
         self.min_refresh_distance = min_refresh_distance;
         self
     }
 
     /// You need to provide a id if you use multiple pull to refresh widgets at once.
+    #[must_use]
     pub fn id(mut self, id: Id) -> Self {
         self.id = id;
         self
     }
 
     /// If `can_refresh` is false, pulling will not trigger a refresh.
+    #[must_use]
     pub fn can_refresh(mut self, can_refresh: bool) -> Self {
         self.can_refresh = can_refresh;
         self
@@ -140,7 +144,10 @@ impl PullToRefresh {
         }
     }
 
-    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
+    #[expect(
+        clippy::too_many_lines,
+        reason = "TODO: refactor this to reduce the number of lines"
+    )]
     fn internal_ui(
         self,
         ui: &mut Ui,

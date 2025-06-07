@@ -1,7 +1,9 @@
 [package]
 name = "egui_taffy"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 publish = false
 
 [package.metadata.release]

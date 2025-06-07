@@ -1,4 +1,4 @@
-# egui_pull_to_refresh
+# `egui_pull_to_refresh`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_pull_to_refresh.svg)](https://crates.io/crates/egui_pull_to_refresh)

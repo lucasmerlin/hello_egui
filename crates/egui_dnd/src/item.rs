@@ -33,7 +33,7 @@ impl<'a> Item<'a> {
     pub fn ui(
         self,
         ui: &mut Ui,
-        add_content: impl FnOnce(&mut Ui, Handle, ItemState),
+        add_content: impl FnOnce(&mut Ui, Handle<'_>, ItemState),
     ) -> ItemResponse {
         self.drag_source(None, ui, add_content)
     }
@@ -42,17 +42,20 @@ impl<'a> Item<'a> {
         self,
         ui: &mut Ui,
         size: Vec2,
-        add_content: impl FnOnce(&mut Ui, Handle, ItemState),
+        add_content: impl FnOnce(&mut Ui, Handle<'_>, ItemState),
     ) -> ItemResponse {
         self.drag_source(Some(size), ui, add_content)
     }
 
-    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
+    #[expect(
+        clippy::too_many_lines,
+        reason = "TODO: refactor this to reduce the number of lines"
+    )]
     fn drag_source(
         self,
         size: Option<Vec2>,
         ui: &mut Ui,
-        drag_body: impl FnOnce(&mut Ui, Handle, ItemState),
+        drag_body: impl FnOnce(&mut Ui, Handle<'_>, ItemState),
     ) -> ItemResponse {
         let hovering_over_any_handle = self.hovering_over_any_handle;
         let id = self.id;
@@ -250,7 +253,10 @@ impl<'a> Item<'a> {
         ItemResponse(rect)
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "This is a utility function for drawing the item in a specific position"
+    )]
     fn draw_floating_at_position(
         state: ItemState,
         dnd_state: &mut DragDropUi,
@@ -260,7 +266,7 @@ impl<'a> Item<'a> {
         hovering_over_any_handle: &mut bool,
         size: Option<Vec2>,
         layout: Layout,
-        body: impl FnOnce(&mut Ui, Handle, ItemState),
+        body: impl FnOnce(&mut Ui, Handle<'_>, ItemState),
     ) -> InnerResponse<Rect> {
         egui::Area::new(Id::new("draggable_item"))
             .interactable(false)

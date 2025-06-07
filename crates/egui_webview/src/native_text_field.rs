@@ -13,6 +13,7 @@ pub enum TextFieldType {
 }
 
 impl TextFieldType {
+    #[must_use]
     pub fn parameters(&self) -> &'static str {
         match self {
             TextFieldType::Text => "type=\"text\"",
@@ -22,10 +23,11 @@ impl TextFieldType {
         }
     }
 
+    #[must_use]
     pub fn tag(&self) -> &'static str {
         match self {
             TextFieldType::Textarea => "textarea",
-            _ => "input",
+            TextFieldType::Text | TextFieldType::Password | TextFieldType::Email => "input",
         }
     }
 }
@@ -39,9 +41,9 @@ pub struct NativeTextField {
     field_type: TextFieldType,
 }
 
-#[allow(unsafe_code)]
+#[expect(unsafe_code, reason = "This is a webview, which is not Send/Sync")]
 unsafe impl Send for NativeTextField {}
-#[allow(unsafe_code)]
+#[expect(unsafe_code, reason = "This is a webview, which is not Send/Sync")]
 unsafe impl Sync for NativeTextField {}
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -73,6 +75,7 @@ impl NativeTextField {
         }
     }
 
+    #[must_use]
     pub fn field_type(&self) -> &TextFieldType {
         &self.field_type
     }
@@ -115,6 +118,7 @@ impl NativeTextField {
         }
     }
 
+    #[must_use]
     pub fn current_text(&self) -> &str {
         &self.current_text
     }

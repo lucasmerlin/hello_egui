@@ -5,7 +5,7 @@ use egui::{Id, Rect, Ui, UiBuilder, Vec2};
 /// Currently only vertical collapse is supported.
 pub struct Collapse {
     // TODO: Implement horizontal collapse
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "horizontal collapse not implemented yet")]
     horizontal: bool,
     visible: bool,
     id: Id,

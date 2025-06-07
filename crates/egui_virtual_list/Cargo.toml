@@ -1,11 +1,11 @@
 [package]
 name = "egui_virtual_list"
 version = "0.7.0"
-edition = "2021"
-authors = ["Lucas Meurer"]
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 homepage = "https://lucasmerlin.github.io/hello_egui/#/example/gallery"
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_virtual_list"
-license = "MIT"
 description = "A virtual list widget for egui, with support for variable height items."
 keywords = ["egui", "virtual_list", "list", "ui"]
 

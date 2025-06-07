@@ -30,6 +30,7 @@ pub struct EguiRouter<State, History = DefaultHistory> {
 
 impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     /// Create a new [`RouterBuilder`]
+    #[must_use]
     pub fn builder() -> RouterBuilder<State, H> {
         RouterBuilder::new()
     }
@@ -70,7 +71,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.last().map(|r| r.path.as_str())
     }
 
-    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<str>, Cow<str>>) {
+    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<'_, str>, Cow<'_, str>>) {
         path.split_once('?')
             .map(|(path, q)| (path, form_urlencoded::parse(q.as_bytes()).collect()))
             .unwrap_or((path, BTreeMap::new()))
@@ -98,7 +99,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             query,
                         });
                         self.history.push(RouteState {
-                            path: path.to_string(),
+                            path: path.to_owned(),
                             route,
                             id: ID.fetch_add(1, Ordering::SeqCst),
                             state: new_state,
@@ -200,7 +201,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         query,
                     });
                     self.history.push(RouteState {
-                        path: path.to_string(),
+                        path: path.to_owned(),
                         route,
                         id: ID.fetch_add(1, Ordering::SeqCst),
                         state: new_state,

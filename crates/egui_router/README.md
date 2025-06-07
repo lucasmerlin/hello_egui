@@ -1,4 +1,4 @@
-# egui_router
+# `egui_router`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_router.svg)](https://crates.io/crates/egui_router)
@@ -19,4 +19,4 @@ It supports:
 - Axum-like route matching and handler functions
 
 Check out the [hello_egui demo](https://lucasmerlin.github.io/hello_egui/), which internally uses
-egui_router to route between the examples and crates.
+`egui_router` to route between the examples and crates.

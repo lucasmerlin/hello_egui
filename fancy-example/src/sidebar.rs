@@ -33,7 +33,7 @@ impl SideBar {
                     {
                         clicked = true;
                         shared.tx.send(FancyMessage::Navigate(route)).ok();
-                    };
+                    }
                 }
             }
         });
@@ -82,7 +82,7 @@ pub fn crate_list_ui(ui: &mut Ui, shared: &SharedState) -> bool {
                     {
                         shared.tx.send(FancyMessage::Navigate(route)).ok();
                         clicked = true;
-                    };
+                    }
                 }
                 // Add a final grow item to fill the remaining space on the last row
                 flex.add_ui(FlexItem::new().grow(9999.0), |_| {});

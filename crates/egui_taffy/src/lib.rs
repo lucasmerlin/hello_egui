@@ -100,12 +100,18 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         content: impl FnMut(&mut Ui) + Send + 'f,
         f: impl FnMut(&mut TaffyPass<'a, 'f>),
     ) {
-        #[allow(clippy::used_underscore_items)]
+        #[expect(
+            clippy::used_underscore_items,
+            reason = "We are using a private function"
+        )]
         self._add_children(style, Some(Box::new(content)), f);
     }
 
     pub fn add_children(&mut self, style: Style, f: impl FnMut(&mut TaffyPass<'a, 'f>)) {
-        #[allow(clippy::used_underscore_items)]
+        #[expect(
+            clippy::used_underscore_items,
+            reason = "We are using a private function"
+        )]
         self._add_children(style, None, f);
     }
 
@@ -205,7 +211,10 @@ impl<'a, 'f> TaffyPass<'a, 'f> {
         });
     }
 
-    #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
+    #[expect(
+        clippy::too_many_lines,
+        reason = "TODO: refactor this to reduce the number of lines"
+    )]
     pub fn show(mut self) {
         let ctx = self.measure_ctx.clone();
         let (layouts, node) = self.ui.ctx().data_mut(|data: &mut IdTypeMap| {

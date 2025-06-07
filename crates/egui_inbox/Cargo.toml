@@ -1,9 +1,10 @@
 [package]
 name = "egui_inbox"
 version = "0.8.0"
-edition = "2021"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "Utility to send messages to egui views from async functions, callbacks, etc. without having to use interior mutability."
-license = "MIT"
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_inbox"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

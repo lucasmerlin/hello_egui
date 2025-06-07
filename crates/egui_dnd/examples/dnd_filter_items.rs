@@ -11,7 +11,10 @@ use egui_dnd::utils::shift_vec;
 ///
 /// 1. Just skip rendering items
 ///    You will have to set the item spacing to 0 so the hidden items don't cause additional padding.
-#[allow(clippy::ptr_arg)]
+#[expect(
+    clippy::ptr_arg,
+    reason = "We want to pass a mutable reference to the items"
+)]
 fn filter_by_skipping_items(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>) {
     let spacing = mem::replace(&mut ui.spacing_mut().item_spacing.y, 0.0);
 
@@ -29,7 +32,10 @@ fn filter_by_skipping_items(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>
 /// 2. Filter the source list
 ///    This is a bit more complex but will work better if you e.g.
 ///    use a virtual list to improve performance with a lot of items
-#[allow(clippy::ptr_arg)]
+#[expect(
+    clippy::ptr_arg,
+    reason = "We want to pass a mutable reference to the items"
+)]
 fn filter_by_filtering_source_list(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>) {
     let mut filtered = items
         .iter_mut()

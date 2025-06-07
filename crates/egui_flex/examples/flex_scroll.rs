@@ -3,7 +3,7 @@ use egui_flex::{Flex, FlexAlign, FlexItem};
 use hello_egui_utils::run;
 use std::num::NonZeroUsize;
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines, reason = "It's an example")]
 fn main() {
     run!(|ui| {
         ScrollArea::vertical().show(ui, |ui| {

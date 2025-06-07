@@ -17,7 +17,7 @@ const ALIGNS: [Align2; 9] = [
     Align2::RIGHT_BOTTOM,
 ];
 
-#[allow(clippy::too_many_lines)] // It's an example
+#[expect(clippy::too_many_lines, reason = "It's an example")]
 fn main() -> eframe::Result {
     let mut demo_dir = FlexDirection::Horizontal;
 
@@ -49,7 +49,7 @@ fn main() -> eframe::Result {
                         .clicked()
                     {
                         demo_dir = FlexDirection::Horizontal;
-                    };
+                    }
                     if flex
                         .add(
                             FlexItem::new(),
@@ -58,7 +58,7 @@ fn main() -> eframe::Result {
                         .clicked()
                     {
                         demo_dir = FlexDirection::Vertical;
-                    };
+                    }
 
                     flex.add_ui(FlexItem::new(), |ui| ui.checkbox(&mut grow, "Grow"));
                 });
@@ -70,7 +70,7 @@ fn main() -> eframe::Result {
                 };
                 let grow_items = if grow { 1.0 } else { 0.0 };
 
-                let heading = |flex: &mut FlexInstance, heading| {
+                let heading = |flex: &mut FlexInstance<'_>, heading| {
                     flex.add_ui(FlexItem::new().grow(0.0), |ui| {
                         ui.heading(heading);
                     });

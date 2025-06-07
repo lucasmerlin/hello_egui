@@ -14,16 +14,19 @@ fn snapshot_name() -> String {
     thread_name.replace("::", "_")
 }
 
-fn should_be_stable(harness: &mut Harness) {
+fn should_be_stable(harness: &mut Harness<'_>) {
     let first = WgpuTestRenderer::new().render(&harness.ctx, harness.output());
 
     for _ in 0..3 {
         harness.run();
         let second = WgpuTestRenderer::new().render(&harness.ctx, harness.output());
-        #[allow(clippy::manual_assert)]
+        #[expect(
+            clippy::manual_assert,
+            reason = "We want to panic if the snapshots are not stable"
+        )]
         if first != second {
             panic!("Is not stable");
-        };
+        }
     }
 }
 

@@ -1,13 +1,18 @@
 [package]
 name = "hello_egui"
 version = "0.8.0"
-edition = "2021"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "A collection of useful crates for egui."
-authors = ["Lucas Meurer"]
-license = "MIT"
 repository = "https://github.com/lucasmerlin/hello_egui"
 homepage = "https://lucasmerlin.github.io/hello_egui/"
 keywords = ["egui", "gui", "ui", "widgets"]
+
+[workspace.package]
+edition = "2021"
+authors = ["Lucas Meurer"]
+license = "MIT"
 
 [package.metadata.release]
 tag-prefix = "hello_egui-"
@@ -107,27 +112,48 @@ log = "0.4"
 
 [workspace.lints.rust]
 unsafe_code = "deny"
+deprecated = "warn"
+elided_lifetimes_in_paths = "warn"
+rust_2021_prelude_collisions = "warn"
+semicolon_in_expressions_from_macros = "warn"
+trivial_numeric_casts = "warn"
+unsafe_op_in_unsafe_fn = "warn"                         # `unsafe_op_in_unsafe_fn` may become the default in future Rust versions: https://github.com/rust-lang/rust/issues/71668
+unused_extern_crates = "warn"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
 
 [workspace.lints.clippy]
-pedantic = { level = "deny", priority = 1 }
-enum_glob_use = { level = "deny", priority = 2 }
-perf = { level = "warn", priority = 3 }
-style = { level = "warn", priority = 4 }
-# TODO: Uncomment/Deny the following lines when the clippy lints are fixed
-# unwrap_used = { level = "deny", priority = 100 }
-#expect_used = { level = "deny", priority = 101 }
-module_name_repetitions = { level = "allow", priority = 10 }
-cast_precision_loss = { level = "allow", priority = 11 }
-cast_possible_truncation = { level = "allow", priority = 12 }
-cast_sign_loss = { level = "allow", priority = 13 }
-float_cmp = { level = "allow", priority = 14 }
-struct_excessive_bools = { level = "allow", priority = 15 }
-must_use_candidate = { level = "allow", priority = 16 }
-return_self_not_must_use = { level = "allow", priority = 17 }
-missing_panics_doc = { level = "allow", priority = 18 }
-missing_errors_doc = { level = "allow", priority = 19 }
-missing_fields_in_debug = { level = "allow", priority = 20 }
-doc_markdown = { level = "allow", priority = 21 }
+all = { level = "warn", priority = -1 }
+correctness = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# nursery = "warn" # Optionally enable in the future
+
+#######
+float_cmp = "allow"
+cast_sign_loss = "allow"
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+# Additional lints from https://rust-lang.github.io/rust-clippy/master/index.html?groups=restriction
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+assertions_on_result_states = "warn"
+create_dir = "warn"
+# clone_on_ref_ptr = "warn" # might be interesting to enable in the future
+# expect_used = "warn" # Should definitely be enabled in the future
+missing_assert_message = "warn"
+panic_in_result_fn = "warn"
+str_to_string = "warn"
+todo = "warn"
+# unwrap_used = "warn" # Should definitely be enabled in the future
+unimplemented = "warn"
+wildcard_enum_match_arm = "warn"
 
 [patch.crates-io]
 #wry = { path = "../../RustroverProjects/github/wry" }

@@ -1,11 +1,12 @@
 [package]
 name = "egui_material_icons"
 version = "0.3.0"
-edition = "2021"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 categories = ["gui"]
 keywords = ["egui", "icons", "material"]
 description = "Material icons for egui."
-license = "MIT"
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_material_icons"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

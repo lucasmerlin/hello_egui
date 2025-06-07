@@ -97,11 +97,13 @@ impl TransitionConfig {
     }
 
     /// A iOS-like slide transition (Same as [`TransitionConfig::default`])
+    #[must_use]
     pub fn slide() -> Self {
         Self::default()
     }
 
     /// A android-like fade up transition
+    #[must_use]
     pub fn fade_up() -> Self {
         Self::new(
             SlideFadeTransition(
@@ -113,22 +115,26 @@ impl TransitionConfig {
     }
 
     /// A basic fade transition
+    #[must_use]
     pub fn fade() -> Self {
         Self::new(transition::FadeTransition, transition::FadeTransition)
     }
 
     /// No transition
+    #[must_use]
     pub fn none() -> Self {
         Self::new(transition::NoTransition, transition::NoTransition)
     }
 
     /// Customise the easing function
+    #[must_use]
     pub fn with_easing(mut self, easing: fn(f32) -> f32) -> Self {
         self.easing = easing;
         self
     }
 
     /// Customise the duration
+    #[must_use]
     pub fn with_duration(mut self, duration: f32) -> Self {
         self.duration = Some(duration);
         self

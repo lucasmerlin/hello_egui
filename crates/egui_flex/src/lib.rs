@@ -15,47 +15,61 @@ use std::mem;
 
 /// The direction in which the flex container should lay out its children.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[allow(missing_docs)]
 pub enum FlexDirection {
+    /// Lay out children horizontally, from left to right.
     #[default]
     Horizontal,
+    /// Lay out children vertically, from top to bottom.
     Vertical,
 }
 
 /// How to justify the content (alignment in the main axis).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[allow(missing_docs)]
 pub enum FlexJustify {
+    /// Align the content at the start of the main axis.
     #[default]
     Start,
+    /// Align the content at the end of the main axis.
     End,
+    /// Center the content in the main axis.
     Center,
+    /// Stretch the content to fill the available space in the main axis.
     SpaceBetween,
+    /// Distribute the content evenly in the main axis, with equal space around each item.
     SpaceAround,
+    /// Distribute the content evenly in the main axis, with equal space between each item.
     SpaceEvenly,
 }
 
 /// How to align the content in the cross axis on the current line.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[allow(missing_docs)]
 pub enum FlexAlign {
+    /// Align the content at the start of the cross axis.
     Start,
+    /// Align the content at the end of the cross axis.
     End,
+    /// Center the content in the cross axis.
     Center,
+    /// Stretch the content to fill the available space in the cross axis.
     #[default]
     Stretch,
 }
 
 /// How to align the content in the cross axis across the whole container.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[allow(missing_docs)]
 pub enum FlexAlignContent {
+    /// Align the content at the start of the cross axis.
     Start,
+    /// Align the content at the end of the cross axis.
     End,
+    /// Center the content in the cross axis.
     Center,
+    /// Stretch the content to fill the available space in the cross axis.
     #[default]
     Stretch,
+    /// Distribute the content evenly in the cross axis, with equal space between each item.
     SpaceBetween,
+    /// Distribute the content evenly in the cross axis, with equal space around each item.
     SpaceAround,
 }
 
@@ -76,6 +90,7 @@ impl From<f32> for Size {
 
 impl Size {
     /// Get the size in points (pixels) based on the total available space.
+    #[must_use]
     pub fn get(&self, total: f32) -> f32 {
         match self {
             Size::Points(p) => *p,
@@ -177,12 +192,14 @@ impl FlexItemInner {
 }
 
 /// Create a new flex item. Shorthand for [`FlexItem::default`].
+#[must_use]
 pub fn item() -> FlexItem<'static> {
     FlexItem::default()
 }
 
 impl<'a> FlexItem<'a> {
     /// Create a new flex item. You can also use the [`item`] function.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -190,6 +207,7 @@ impl<'a> FlexItem<'a> {
     /// How much should this item grow compared to the other items.
     ///
     /// By default items don't grow.
+    #[must_use]
     pub fn grow(mut self, grow: f32) -> Self {
         self.inner.grow = Some(grow);
         self
@@ -197,6 +215,7 @@ impl<'a> FlexItem<'a> {
 
     /// Set the default size of the item, before it grows.
     /// If this is not set, the items "intrinsic size" will be used.
+    #[must_use]
     pub fn basis(mut self, basis: f32) -> Self {
         self.inner.basis = Some(basis);
         self
@@ -205,6 +224,7 @@ impl<'a> FlexItem<'a> {
     /// How do we align the item in the cross axis?
     ///
     /// Default is `stretch`.
+    #[must_use]
     pub fn align_self(mut self, align_self: FlexAlign) -> Self {
         self.inner.align_self = Some(align_self);
         self
@@ -213,6 +233,7 @@ impl<'a> FlexItem<'a> {
     /// If `align_self` is stretch, how do we align the content?
     ///
     /// Default is `center`.
+    #[must_use]
     pub fn align_self_content(mut self, align_self_content: Align2) -> Self {
         self.inner.align_content = Some(align_self_content);
         self
@@ -221,24 +242,28 @@ impl<'a> FlexItem<'a> {
     /// Shrink this item if there isn't enough space.
     ///
     /// Note: You may only ever set this on a single item in a flex container.
+    #[must_use]
     pub fn shrink(mut self) -> Self {
         self.inner.shrink = true;
         self
     }
 
     /// Set the frame of the item.
+    #[must_use]
     pub fn frame(mut self, frame: Frame) -> Self {
         self.inner.frame = Some(frame);
         self
     }
 
     /// Set the visual transform of the item.
+    #[must_use]
     pub fn transform(mut self, transform: TSTransform) -> Self {
         self.inner.transform = Some(transform);
         self
     }
 
     /// Set the frame of the item using a builder function.
+    #[must_use]
     pub fn frame_builder(
         mut self,
         frame_builder: impl FnOnce(&Ui, &Response) -> (Frame, TSTransform) + 'a,
@@ -250,12 +275,14 @@ impl<'a> FlexItem<'a> {
     /// Egui flex can't always know when the content size of a widget changes (e.g. when a Label
     /// or Button is truncated). If the content id changes, this will force a remeasure of the
     /// widget.
+    #[must_use]
     pub fn content_id(mut self, content_id: Id) -> Self {
         self.inner.content_id = Some(content_id);
         self
     }
 
-    /// Set a sense for the FlexItem. The response will be passed to the FrameBuilder closure.
+    /// Set a sense for the `FlexItem`. The response will be passed to the `FrameBuilder` closure.
+    #[must_use]
     pub fn sense(mut self, sense: Sense) -> Self {
         self.inner.sense = Some(sense);
         self
@@ -263,6 +290,7 @@ impl<'a> FlexItem<'a> {
 
     /// Set the minimum outer (including Frame margin) size
     /// of the item in points (pixels).
+    #[must_use]
     pub fn min_size(mut self, min_size: impl Into<Vec2>) -> Self {
         let min_size = min_size.into();
         self.inner.min_size = [Some(min_size.x), Some(min_size.y)];
@@ -271,6 +299,7 @@ impl<'a> FlexItem<'a> {
 
     /// Set the minimum outer (including Frame margin) width
     /// of the item in points (pixels).
+    #[must_use]
     pub fn min_width(mut self, min_width: impl Into<Option<f32>>) -> Self {
         self.inner.min_size[0] = min_width.into();
         self
@@ -278,6 +307,7 @@ impl<'a> FlexItem<'a> {
 
     /// Set the minimum outer (including Frame margin) height
     /// of the item in points (pixels).
+    #[must_use]
     pub fn min_height(mut self, min_height: impl Into<Option<f32>>) -> Self {
         self.inner.min_size[1] = min_height.into();
         self
@@ -286,21 +316,25 @@ impl<'a> FlexItem<'a> {
 
 impl Flex {
     /// Create a new flex container.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a new horizontal flex container.
+    #[must_use]
     pub fn horizontal() -> Self {
         Self::default().direction(FlexDirection::Horizontal)
     }
 
     /// Create a new vertical flex container.
+    #[must_use]
     pub fn vertical() -> Self {
         Self::default().direction(FlexDirection::Vertical)
     }
 
     /// Set the direction of the flex container.
+    #[must_use]
     pub fn direction(mut self, direction: FlexDirection) -> Self {
         self.direction = direction;
         self
@@ -308,18 +342,21 @@ impl Flex {
 
     /// Set how to justify the content (alignment in the main axis).
     /// This will only have an effect if all items have grow set to 0.
+    #[must_use]
     pub fn justify(mut self, justify: FlexJustify) -> Self {
         self.justify = justify;
         self
     }
 
     /// Set the default configuration for the items in the flex container.
+    #[must_use]
     pub fn align_items(mut self, align_items: FlexAlign) -> Self {
         self.default_item.align_self = Some(align_items);
         self
     }
 
     /// If `align_items` is stretch, how do we align the item content?
+    #[must_use]
     pub fn align_items_content(mut self, align_item_content: Align2) -> Self {
         self.default_item.align_content = Some(align_item_content);
         self
@@ -330,12 +367,14 @@ impl Flex {
     /// This only has an effect if wrap is set to true.
     ///
     /// Default is `stretch`.
+    #[must_use]
     pub fn align_content(mut self, align_content: FlexAlignContent) -> Self {
         self.align_content = align_content;
         self
     }
 
     /// Set the default grow factor for the items in the flex container.
+    #[must_use]
     pub fn grow_items(mut self, grow: impl Into<Option<f32>>) -> Self {
         self.default_item.grow = grow.into();
         self
@@ -344,6 +383,7 @@ impl Flex {
     /// Set the gap between the items in the flex container.
     ///
     /// Default is `item_spacing` of the [`Ui`].
+    #[must_use]
     pub fn gap(mut self, gap: Vec2) -> Self {
         self.gap = Some(gap);
         self
@@ -353,12 +393,14 @@ impl Flex {
     /// If this is set to `false` the content may overflow the [`Ui::max_rect`]
     ///
     /// Default: false
+    #[must_use]
     pub fn wrap(mut self, wrap: bool) -> Self {
         self.wrap = wrap;
         self
     }
 
     /// Customize the id of the flex container to prevent conflicts with other flex containers.
+    #[must_use]
     pub fn id_salt(mut self, id_salt: impl Into<Id>) -> Self {
         self.id_salt = Some(id_salt.into());
         self
@@ -370,6 +412,7 @@ impl Flex {
     /// If `ui.layout().horizontal_justify()` is:
     /// - true, the width will be set to 100%.
     /// - false, the width will depend on the width of the content.
+    #[must_use]
     pub fn width(mut self, width: impl Into<Size>) -> Self {
         self.width = Some(width.into());
         self
@@ -381,6 +424,7 @@ impl Flex {
     /// If `ui.layout().vertical_justify()` is:
     /// - true, the height will be set to 100%.
     /// - false, the height will depend on the height of the content.
+    #[must_use]
     pub fn height(mut self, height: impl Into<Size>) -> Self {
         self.height = Some(height.into());
         self
@@ -390,6 +434,7 @@ impl Flex {
     /// 1.0 means 100%.
     ///
     /// Check [`Self::width`] for more info.
+    #[must_use]
     pub fn width_percent(mut self, width: f32) -> Self {
         self.width = Some(Size::Percent(width));
         self
@@ -399,6 +444,7 @@ impl Flex {
     /// 1.0 means 100%.
     ///
     /// Check [`Self::height`] for more info.
+    #[must_use]
     pub fn height_percent(mut self, height: f32) -> Self {
         self.height = Some(Size::Percent(height));
         self
@@ -407,6 +453,7 @@ impl Flex {
     /// Set the size of the flex container in points (pixels).
     ///
     /// Check [`Self::width`] and [`Self::height`] for more info.
+    #[must_use]
     pub fn size(mut self, size: impl Into<Vec2>) -> Self {
         let size = size.into();
         self.width = Some(Size::Points(size.x));
@@ -415,12 +462,14 @@ impl Flex {
     }
 
     /// Set the width of the flex container to 100%.
+    #[must_use]
     pub fn w_full(mut self) -> Self {
         self.width = Some(Size::Percent(1.0));
         self
     }
 
     /// Set the height of the flex container to 100%.
+    #[must_use]
     pub fn h_full(mut self) -> Self {
         self.height = Some(Size::Percent(1.0));
         self
@@ -430,6 +479,7 @@ impl Flex {
     /// than the available width (unless wrap is set to false).
     ///
     /// This is the default.
+    #[must_use]
     pub fn w_auto(mut self) -> Self {
         self.width = None;
         self
@@ -439,19 +489,20 @@ impl Flex {
     /// than the available height (unless wrap is set to false).
     ///
     /// This is the default.
+    #[must_use]
     pub fn h_auto(mut self) -> Self {
         self.height = None;
         self
     }
 
     #[track_caller]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines, reason = "This is a complex widget")]
     fn show_inside<R>(
         mut self,
         ui: &mut Ui,
         target_size: Option<Vec2>,
         max_item_size: Option<Vec2>,
-        f: impl FnOnce(&mut FlexInstance) -> R,
+        f: impl FnOnce(&mut FlexInstance<'_>) -> R,
     ) -> (Vec2, InnerResponse<R>) {
         let id = if let Some(id_salt) = self.id_salt {
             ui.id().with(id_salt)
@@ -611,7 +662,7 @@ impl Flex {
         (r.inner.0, InnerResponse::new(r.inner.1, r.response))
     }
 
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines, reason = "This is a complex function")]
     fn layout_rows(
         &mut self,
         state: &FlexState,
@@ -706,7 +757,7 @@ impl Flex {
                 extra_cross_gap_start = extra_cross_gap / 2.0;
                 _extra_cross_gap_end = extra_cross_gap / 2.0;
             }
-        };
+        }
 
         let mut row_position = min_position;
 
@@ -772,17 +823,21 @@ impl Flex {
     /// Note: You will likely get weird results when showing this within a `Ui::horizontal` layout,
     /// since it limits the `max_rect` to some small value. Use `Ui::horizontal_top` instead.
     #[track_caller]
-    pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> InnerResponse<R> {
+    pub fn show<R>(
+        self,
+        ui: &mut Ui,
+        f: impl FnOnce(&mut FlexInstance<'_>) -> R,
+    ) -> InnerResponse<R> {
         self.show_inside(ui, None, None, f).1
     }
 
-    /// Show this flex in another Flex. See also [FlexInstance::add_flex].
+    /// Show this flex in another Flex. See also [`FlexInstance::add_flex`].
     #[track_caller]
     pub fn show_in<R>(
         self,
-        flex: &mut FlexInstance,
-        item: FlexItem,
-        f: impl FnOnce(&mut FlexInstance) -> R,
+        flex: &mut FlexInstance<'_>,
+        item: FlexItem<'_>,
+        f: impl FnOnce(&mut FlexInstance<'_>) -> R,
     ) -> InnerResponse<R> {
         flex.add_flex(item, self, f)
     }
@@ -851,31 +906,37 @@ impl FlexInstance<'_> {
     }
 
     /// Get the direction of the flex container.
+    #[must_use]
     pub fn direction(&self) -> FlexDirection {
         self.flex.direction
     }
 
     /// Is the flex container horizontal?
+    #[must_use]
     pub fn is_horizontal(&self) -> bool {
         self.flex.direction == FlexDirection::Horizontal
     }
 
     /// Is the flex container vertical?
+    #[must_use]
     pub fn is_vertical(&self) -> bool {
         self.flex.direction == FlexDirection::Vertical
     }
 
     /// Get the ui of the flex container (e.g. to read the style or access the context).
+    #[must_use]
     pub fn ui(&self) -> &Ui {
         &self.row_ui
     }
 
     /// Access the underlying [`egui::Painter`].
+    #[must_use]
     pub fn painter(&self) -> &egui::Painter {
         self.row_ui.painter()
     }
 
     /// Access the underlying [`egui::Output`].
+    #[must_use]
     pub fn visuals(&self) -> &egui::style::Visuals {
         self.row_ui.visuals()
     }
@@ -886,6 +947,7 @@ impl FlexInstance<'_> {
     }
 
     /// Access the underlying [`egui::style::Style`].
+    #[must_use]
     pub fn style(&self) -> &egui::style::Style {
         self.row_ui.style()
     }
@@ -896,6 +958,7 @@ impl FlexInstance<'_> {
     }
 
     /// Access the underlying [`egui::Spacing`].
+    #[must_use]
     pub fn spacing(&self) -> &egui::Spacing {
         self.row_ui.spacing()
     }
@@ -905,8 +968,15 @@ impl FlexInstance<'_> {
         self.ui.new_child(ui_builder)
     }
 
-    #[allow(clippy::too_many_lines)] // TODO: Refactor this to be more readable
-    fn add_container<R>(&mut self, mut item: FlexItem, content: ContentFn<R>) -> InnerResponse<R> {
+    #[expect(
+        clippy::too_many_lines,
+        reason = "TODO: Refactor this to be more readable"
+    )]
+    fn add_container<R>(
+        &mut self,
+        mut item: FlexItem<'_>,
+        content: ContentFn<'_, R>,
+    ) -> InnerResponse<R> {
         let row = self.rows.get_mut(self.current_row);
 
         if let Some(row) = &row {
@@ -1102,7 +1172,7 @@ impl FlexInstance<'_> {
                             // We are currently shrunken, so we have to return the old size
                             last_frame
                         }
-                    };
+                    }
 
                     (inner_size, res, row.items.len())
                 } else {
@@ -1190,10 +1260,10 @@ impl FlexInstance<'_> {
     }
 
     /// Add a child ui to the flex container.
-    /// It will be positioned based on [FlexItem::align_self_content].
+    /// It will be positioned based on [`FlexItem::align_self_content`].
     pub fn add_ui<R>(
         &mut self,
-        item: FlexItem,
+        item: FlexItem<'_>,
         content: impl FnOnce(&mut Ui) -> R,
     ) -> InnerResponse<R> {
         self.add_container(
@@ -1205,7 +1275,7 @@ impl FlexInstance<'_> {
     /// Add a [`FlexWidget`] to the flex container.
     /// [`FlexWidget`] is implemented for all default egui widgets.
     /// If you use a custom third party widget you can use [`Self::add_widget`] instead.
-    pub fn add<W: FlexWidget>(&mut self, item: FlexItem, widget: W) -> W::Response {
+    pub fn add<W: FlexWidget>(&mut self, item: FlexItem<'_>, widget: W) -> W::Response {
         widget.flex_ui(item, self)
     }
 
@@ -1213,7 +1283,11 @@ impl FlexInstance<'_> {
     /// The default egui widgets implement [`FlexWidget`] Also you can just use [`Self::add`] instead.
     /// If the widget reports it's intrinsic size via the [`Response`] it will be able to
     /// grow it's frame according to the flex layout.
-    pub fn add_widget<W: Widget>(&mut self, item: FlexItem, widget: W) -> InnerResponse<Response> {
+    pub fn add_widget<W: Widget>(
+        &mut self,
+        item: FlexItem<'_>,
+        widget: W,
+    ) -> InnerResponse<Response> {
         self.add_container(
             item,
             Box::new(|ui, container| container.content_widget(ui, widget)),
@@ -1225,9 +1299,9 @@ impl FlexInstance<'_> {
     #[track_caller]
     pub fn add_flex<R>(
         &mut self,
-        item: FlexItem,
+        item: FlexItem<'_>,
         mut flex: Flex,
-        content: impl FnOnce(&mut FlexInstance) -> R,
+        content: impl FnOnce(&mut FlexInstance<'_>) -> R,
     ) -> InnerResponse<R> {
         // TODO: Is this correct behavior?
         if item
@@ -1332,7 +1406,7 @@ impl FlexContainerUi {
         self,
         ui: &mut Ui,
         mut flex: Flex,
-        content: impl FnOnce(&mut FlexInstance) -> R,
+        content: impl FnOnce(&mut FlexInstance<'_>) -> R,
     ) -> FlexContainerResponse<R> {
         let Self {
             frame_rect,
@@ -1353,15 +1427,12 @@ impl FlexContainerUi {
 
         // Make sure the container actually grows if grow is set.
         if item.grow.is_some_and(|g| g > 0.0) {
-            #[allow(clippy::collapsible_else_if)]
             if self.direction == 0 {
                 if flex.width.is_none() {
                     flex = flex.w_full();
                 }
-            } else {
-                if flex.height.is_none() {
-                    flex = flex.h_full();
-                }
+            } else if flex.height.is_none() {
+                flex = flex.h_full();
             }
         }
 

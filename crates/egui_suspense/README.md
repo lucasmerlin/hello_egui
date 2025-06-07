@@ -1,4 +1,4 @@
-# egui_suspense
+# `egui_suspense`
 
 [![egui_ver](https://img.shields.io/badge/egui-0.31.0-blue)](https://github.com/emilk/egui)
 [![Latest version](https://img.shields.io/crates/v/egui_suspense.svg)](https://crates.io/crates/egui_suspense)

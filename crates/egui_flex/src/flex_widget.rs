@@ -14,14 +14,14 @@ pub trait FlexWidget {
 
     /// Returns the default [`FlexItem`] for this widget.
     /// Implement this to allow overriding the item config.
-    fn default_item() -> FlexItem<'static> {
+    #[must_use] fn default_item() -> FlexItem<'static> {
         FlexItem::new()
     }
 
     /// Show your widget here. Use the provided [`FlexItem`] to set the flex properties.
     /// Usually you only want to add a single thing to the [`FlexInstance`], as this is what
     /// the user expects.
-    fn flex_ui(self, item: FlexItem, flex_instance: &mut FlexInstance) -> Self::Response;
+    fn flex_ui(self, item: FlexItem<'_>, flex_instance: &mut FlexInstance<'_>) -> Self::Response;
 }
 
 mod egui_widgets {
@@ -38,7 +38,7 @@ mod egui_widgets {
                 impl FlexWidget for $widget {
                     type Response = egui::Response;
 
-                    fn flex_ui(self, item: FlexItem, instance: &mut FlexInstance) -> Self::Response {
+                    fn flex_ui(self, item: FlexItem<'_>, instance: &mut FlexInstance<'_>) -> Self::Response {
                         instance.add_widget(item, self).inner
                     }
                 }

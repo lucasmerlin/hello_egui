@@ -52,7 +52,7 @@ pub fn main() -> eframe::Result<()> {
     let mut items = TEXT
         .replace('\n', "")
         .split(' ')
-        .map(|i| i.trim().to_string())
+        .map(|i| i.trim().to_owned())
         // Store the index so we can use it as id, since there are duplicate words
         .enumerate()
         .collect::<Vec<_>>();

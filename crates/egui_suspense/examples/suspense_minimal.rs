@@ -9,9 +9,9 @@ pub fn main() -> eframe::Result<()> {
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs(1));
             cb(if rand::random() {
-                Ok("Hello".to_string())
+                Ok("Hello".to_owned())
             } else {
-                Err("OOPSIE WOOPSIE!".to_string())
+                Err("OOPSIE WOOPSIE!".to_owned())
             });
         });
     });
@@ -21,16 +21,16 @@ pub fn main() -> eframe::Result<()> {
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs(1));
             cb(if rand::random() {
-                Ok("Hello".to_string())
+                Ok("Hello".to_owned())
             } else {
-                Err("OOPSIE WOOPSIE!".to_string())
+                Err("OOPSIE WOOPSIE!".to_owned())
             });
         });
     });
 
     // You can also initialize a suspense with data already loaded.
     let mut already_loaded_suspense: EguiSuspense<String, String> =
-        EguiSuspense::loaded("Hello".to_string());
+        EguiSuspense::loaded("Hello".to_owned());
 
     eframe::run_simple_native(
         "DnD Simple Example",
