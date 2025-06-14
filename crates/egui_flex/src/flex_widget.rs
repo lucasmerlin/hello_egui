@@ -54,7 +54,7 @@ mod egui_widgets {
         Hyperlink,
         ImageButton<'_>,
         ProgressBar,
-        RadioButton,
+        RadioButton<'_>,
         Link,
         SelectableLabel,
         Slider<'_>,

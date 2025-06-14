@@ -140,7 +140,8 @@ doc_markdown = { level = "allow", priority = 21 }
 #winit = { path = "../winit" }
 
 
- egui = { git = "https://github.com/emilk/egui", branch = "lucas/experiments/widget_layout_with_preferred_size" }
- eframe = { git = "https://github.com/emilk/egui", branch = "lucas/experiments/widget_layout_with_preferred_size" }
- egui_extras = { git = "https://github.com/emilk/egui", branch = "lucas/experiments/widget_layout_with_preferred_size" }
- egui_kittest = { git = "https://github.com/emilk/egui", branch = "lucas/experiments/widget_layout_with_preferred_size" }
+ egui = { git = "https://github.com/emilk/egui", branch = "lucas/atoms-preferred-size" }
+ eframe = { git = "https://github.com/emilk/egui", branch = "lucas/atoms-preferred-size" }
+ egui_extras = { git = "https://github.com/emilk/egui", branch = "lucas/atoms-preferred-size" }
+ egui_glow = { git = "https://github.com/emilk/egui", branch = "lucas/atoms-preferred-size" }
+ egui_kittest = { git = "https://github.com/emilk/egui", branch = "lucas/atoms-preferred-size" }
