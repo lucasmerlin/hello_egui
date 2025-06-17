@@ -70,10 +70,12 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.last().map(|r| r.path.as_str())
     }
 
+    /// How many history entries are there?
     pub fn history_len(&self) -> usize {
         self.history.len()
     }
-
+    
+    /// Iterate over the paths in the history
     pub fn history(&self) -> impl Iterator<Item = &str> {
         self.history.iter().map(|s| s.path.as_str())
     }
