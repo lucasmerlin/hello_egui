@@ -65,23 +65,31 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
                 widgets.open.bg_stroke.width = 1.0;
             }
 
-            if let Some(label) = self.label {
+            let label_response = if let Some(label) = self.label {
                 let mut rich_text = RichText::new(label);
                 if show_error {
                     rich_text = rich_text.color(error_color);
                 }
-                ui.label(
-                    rich_text.size(
-                        ui.style()
-                            .text_styles
-                            .get(&TextStyle::Body)
-                            .map_or(16.0, |s| s.size)
-                            * 0.9,
+                Some(
+                    ui.label(
+                        rich_text.size(
+                            ui.style()
+                                .text_styles
+                                .get(&TextStyle::Body)
+                                .map_or(16.0, |s| s.size)
+                                * 0.9,
+                        ),
                     ),
-                );
-            }
+                )
+            } else {
+                None
+            };
 
-            let response = content.ui(ui);
+            let mut response = content.ui(ui);
+
+            if let Some(label_response) = label_response {
+                response = response.labelled_by(label_response.id);
+            }
 
             if response.lost_focus() {
                 ui.memory_mut(|mem| {
