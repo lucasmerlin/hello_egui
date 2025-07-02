@@ -132,16 +132,12 @@ impl<'a> Dnd<'a> {
     /// `item_ui` is called for each item. Display your item there.
     /// `item_ui` gets a [Handle] that can be used to display the drag handle.
     /// Only the handle can be used to drag the item. If you want the whole item to be draggable, put everything in the handle.
-    #[expect(
-        clippy::used_underscore_items,
-        reason = "We want to use the underscore to indicate that this is a private function"
-    )]
     pub fn show<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
         mut item_ui: impl FnMut(&mut Ui, T, Handle<'_>, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner(|_id, ui, drag_drop_ui| {
+        self.show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
                     iter.next(ui, item.id(), i, true, |ui, item_handle| {
@@ -157,17 +153,13 @@ impl<'a> Dnd<'a> {
     /// For more info, look at the [horizontal example](https://github.com/lucasmerlin/hello_egui/blob/main/crates/egui_dnd/examples/horizontal.rs).
     /// If you need even more control over the size, use [`Dnd::show_custom`] instead, where you
     /// can individually size each item. See the `sort_words` example for an example.
-    #[expect(
-        clippy::used_underscore_items,
-        reason = "We want to use the underscore to indicate that this is a private function"
-    )]
     pub fn show_sized<T: DragDropItem>(
         self,
         items: impl Iterator<Item = T>,
         size: egui::Vec2,
         mut item_ui: impl FnMut(&mut Ui, T, Handle<'_>, ItemState),
     ) -> DragDropResponse {
-        self._show_with_inner(|_id, ui, drag_drop_ui| {
+        self.show_with_inner(|_id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
                     iter.next(ui, item.id(), i, true, |ui, item_handle| {
@@ -205,12 +197,8 @@ impl<'a> Dnd<'a> {
 
     /// This will allow for very flexible UI. You can use it to e.g. render outlines around items
     /// or render items in complex layouts. This is **experimental**.
-    #[expect(
-        clippy::used_underscore_items,
-        reason = "We want to use the underscore to indicate that this is a private function"
-    )]
     pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator<'_>)) -> DragDropResponse {
-        self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
+        self.show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
     }
 
     /// Same as [`Dnd::show_custom`], but automatically sorts the items.
@@ -224,7 +212,7 @@ impl<'a> Dnd<'a> {
         response
     }
 
-    fn _show_with_inner(
+    fn show_with_inner(
         self,
         inner_fn: impl FnOnce(Id, &mut Ui, &mut DragDropUi) -> DragDropResponse,
     ) -> DragDropResponse {
