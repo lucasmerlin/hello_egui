@@ -612,6 +612,7 @@ impl Flex {
 
                 instance.rows.iter().for_each(|row| {
                     if let Some(final_rect) = row.final_rect {
+                        // instance.ui.allocate_rect(final_rect, Sense::hover(), final_rect.size());
                         instance.ui.allocate_rect(final_rect, Sense::hover());
                     }
                 });
@@ -826,7 +827,6 @@ struct ItemState {
     config: FlexItemState,
     inner_size: Vec2,
     inner_min_size: Vec2,
-    remeasure_widget: bool,
 }
 
 impl ItemState {
@@ -1082,13 +1082,6 @@ impl FlexInstance<'_> {
                         .with_visual_transform(transform, |ui| {
                             frame
                                 .show(ui, |ui| {
-                                    let max_item_size_changed = self.max_item_size[self.direction]
-                                        != self.last_max_item_size[self.direction];
-                                    let content_id_changed =
-                                        item.content_id != item_state.config.content_id;
-                                    let remeasure_widget = item_state.remeasure_widget
-                                        || max_item_size_changed
-                                        || content_id_changed;
                                     content(
                                         ui,
                                         FlexContainerUi {
@@ -1097,9 +1090,6 @@ impl FlexInstance<'_> {
                                             frame_rect,
                                             margin: item_state.config.margin,
                                             max_item_size: max_content_size,
-                                            // If the available space grows we want to remeasure the widget, in case
-                                            // it's wrapped so it can un-wrap
-                                            remeasure_widget,
                                             last_inner_size: Some(item_state.inner_size),
                                             target_inner_size,
                                             item,
@@ -1109,6 +1099,7 @@ impl FlexInstance<'_> {
                                 .inner
                         })
                         .inner;
+                    // let (_, _r) = ui.allocate_space(child_ui.min_rect().size(), child_ui.min_rect().size());
                     let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
                     let mut inner_size = res.child_rect.size();
@@ -1140,7 +1131,6 @@ impl FlexInstance<'_> {
                             frame_rect: rect,
                             margin: Margin::ZERO,
                             max_item_size: self.max_item_size,
-                            remeasure_widget: false,
                             last_inner_size: None,
                             target_inner_size: rect.size(),
                             item,
@@ -1168,7 +1158,6 @@ impl FlexInstance<'_> {
                     )
                     .round_ui(),
                     config: item.into_state(),
-                    remeasure_widget: res.remeasure_widget,
                 };
 
                 (res.inner, item, row_len)
@@ -1283,7 +1272,6 @@ pub struct FlexContainerUi {
     frame_rect: Rect,
     margin: Margin,
     max_item_size: Vec2,
-    remeasure_widget: bool,
     last_inner_size: Option<Vec2>,
     target_inner_size: Vec2,
     item: FlexItemInner,
@@ -1296,7 +1284,6 @@ pub struct FlexContainerResponse<T> {
     /// The response from the inner content.
     pub inner: T,
     max_size: Vec2,
-    remeasure_widget: bool,
 }
 
 impl<T> FlexContainerResponse<T> {
@@ -1306,7 +1293,6 @@ impl<T> FlexContainerResponse<T> {
             child_rect: self.child_rect,
             inner: f(self.inner),
             max_size: self.max_size,
-            remeasure_widget: self.remeasure_widget,
         }
     }
 }
@@ -1344,7 +1330,6 @@ impl FlexContainerUi {
             inner: r,
             child_rect: child_min_rect,
             max_size: ui.available_size(),
-            remeasure_widget: false,
         }
     }
 
@@ -1360,7 +1345,6 @@ impl FlexContainerUi {
             frame_rect,
             margin: _,
             mut max_item_size,
-            remeasure_widget: _,
             last_inner_size: _,
             item,
             target_inner_size,
@@ -1405,7 +1389,6 @@ impl FlexContainerUi {
             inner: res.inner,
             child_rect: Rect::from_min_size(frame_rect.min, min_size),
             max_size: ui.available_size(),
-            remeasure_widget: false,
         }
     }
 
@@ -1419,17 +1402,9 @@ impl FlexContainerUi {
         let mut builder = UiBuilder::new()
             .id_salt(id_salt)
             .layout(Layout::centered_and_justified(Direction::TopDown));
-        let response = if self.remeasure_widget {
-            ui.ctx().request_discard("Flex item remeasure");
-            builder = builder.max_rect(self.content_rect).invisible();
-            // We use last frame's size as to not blow up everything
-            ui.allocate_space(self.last_inner_size.unwrap_or_default());
-            ui.new_child(builder).add(widget)
-        } else {
             ui.set_width(ui.available_width());
             ui.set_height(ui.available_height());
-            ui.scope_builder(builder, |ui| widget.ui(ui)).inner
-        };
+        let response = ui.scope_builder(builder, |ui| widget.ui(ui)).inner;
 
         let intrinsic_size = response.intrinsic_size.map_or(
             Vec2::new(ui.spacing().interact_size.x, ui.spacing().interact_size.y),
@@ -1437,23 +1412,10 @@ impl FlexContainerUi {
             |s| s + Vec2::X * 1.0,
         );
 
-        // If the size changed in the cross direction the widget might have grown in the main direction
-        // and wrapped, we need to remeasure the widget (draw it once with full available size)
-        let remeasure_widget = self.last_inner_size.is_some_and(|last_size| {
-            last_size[1 - self.direction].round_ui()
-                != intrinsic_size[1 - self.direction].round_ui()
-        }) && !self.remeasure_widget;
-
-        if remeasure_widget {
-            ui.ctx().request_repaint();
-            ui.ctx().request_discard("Triggering flex item remeasure");
-        }
-
         FlexContainerResponse {
             child_rect: Rect::from_min_size(self.frame_rect.min, intrinsic_size),
             inner: response,
             max_size: ui.available_size(),
-            remeasure_widget,
         }
     }
 }
