@@ -29,7 +29,7 @@ mod egui_widgets {
     use crate::{FlexInstance, FlexItem};
     use egui::widgets::{
         Button, Checkbox, DragValue, Hyperlink, Image, ImageButton, Label, Link, ProgressBar,
-        RadioButton, SelectableLabel, Slider, Spinner, TextEdit,
+        RadioButton, Slider, Spinner, TextEdit,
     };
 
     macro_rules! impl_widget {
@@ -56,7 +56,6 @@ mod egui_widgets {
         ProgressBar,
         RadioButton<'_>,
         Link,
-        SelectableLabel,
         Slider<'_>,
         TextEdit<'_>,
         Spinner
