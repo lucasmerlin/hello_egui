@@ -235,14 +235,13 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     if has_cursor {
                         self.end_cursor = cursor;
                     }
-                    let empty = items.is_empty();
                     self.items.extend(items);
 
                     ui.ctx().request_repaint();
-                    if empty || !has_cursor {
-                        LoadingState::NoMoreItems
-                    } else {
+                    if has_cursor {
                         LoadingState::Idle
+                    } else {
+                        LoadingState::NoMoreItems
                     }
                 }
                 state => state,
@@ -257,16 +256,15 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     if has_cursor {
                         self.start_cursor = cursor;
                     }
-                    let empty = items.is_empty();
                     let mut old_items = mem::take(&mut self.items);
                     self.items = items;
                     self.items.append(&mut old_items);
 
                     ui.ctx().request_repaint();
-                    if empty || !has_cursor {
-                        LoadingState::NoMoreItems
-                    } else {
+                    if has_cursor {
                         LoadingState::Idle
+                    } else {
+                        LoadingState::NoMoreItems
                     }
                 }
                 state => state,
