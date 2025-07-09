@@ -1,6 +1,6 @@
 use egui::accesskit::Role;
-use egui_kittest::kittest::{Node, Queryable};
-use egui_kittest::Harness;
+use egui_kittest::kittest::{Queryable};
+use egui_kittest::{Harness, Node};
 use fancy_example::chat::CHAT_EXAMPLE;
 use fancy_example::example::{Example, EXAMPLES};
 use fancy_example::gallery::GALLERY_EXAMPLE;
