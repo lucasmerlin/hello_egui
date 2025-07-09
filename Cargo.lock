@@ -1320,7 +1320,7 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "ecolor"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "bytemuck",
  "color-hex",
@@ -1330,7 +1330,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1367,7 +1367,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "accesskit",
  "ahash",
@@ -1385,7 +1385,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1404,7 +1404,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "accesskit_winit",
  "ahash",
@@ -1434,8 +1434,7 @@ dependencies = [
 [[package]]
 name = "egui_commonmark"
 version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a1e5d9a91b1b7a320c9b7f56d1878416d7c9bab3eaf337b036e0ddfabf58623"
+source = "git+https://github.com/lucasmerlin/egui_commonmark?branch=egui-update#0ae95c2d40faf83f2a0c3bc22a7cff7e4d58a345"
 dependencies = [
  "egui",
  "egui_commonmark_backend",
@@ -1446,8 +1445,7 @@ dependencies = [
 [[package]]
 name = "egui_commonmark_backend"
 version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efb41b6833a6aaa99ca5c4f8e75b2410d69a7b3e30148d413f541147404a0dfa"
+source = "git+https://github.com/lucasmerlin/egui_commonmark?branch=egui-update#0ae95c2d40faf83f2a0c3bc22a7cff7e4d58a345"
 dependencies = [
  "egui",
  "egui_extras",
@@ -1485,7 +1483,7 @@ dependencies = [
 [[package]]
 name = "egui_extras"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "ahash",
  "egui",
@@ -1523,7 +1521,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1572,7 +1570,7 @@ dependencies = [
 [[package]]
 name = "egui_kittest"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "dify",
  "eframe",
@@ -1710,7 +1708,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 [[package]]
 name = "emath"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "bytemuck",
 ]
@@ -1797,7 +1795,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 dependencies = [
  "ab_glyph",
  "ahash",
@@ -1814,7 +1812,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.31.1"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fatoms-preferred-size#6ddac6ac662c2c0ad6d9e8c0d9ee1db3d9aaa2d8"
+source = "git+https://github.com/emilk/egui?branch=main#9fd0ad36e0640b2df24312d945862507e38aa8a3"
 
 [[package]]
 name = "equator"
@@ -4588,9 +4586,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.12.2"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
+checksum = "1e8bbe1a966bd2f362681a44f6edce3c2310ac21e4d5067a6e7ec396297a6ea0"
 dependencies = [
  "bitflags 2.9.1",
  "memchr",
