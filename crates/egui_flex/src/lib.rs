@@ -707,7 +707,7 @@ impl Flex {
                 extra_cross_gap_start = extra_cross_gap / 2.0;
                 _extra_cross_gap_end = extra_cross_gap / 2.0;
             }
-        };
+        }
 
         let mut row_position = min_position;
 
@@ -1080,9 +1080,9 @@ impl FlexInstance<'_> {
                     // let (_, _r) = ui.allocate_space(child_ui.min_rect().size(), child_ui.min_rect().size());
                     let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
-                    let mut inner_size = res.child_rect.size();
+                    let mut inner_size = res.intrinsic_size;
                     if do_shrink {
-                        let this_frame = res.child_rect.size()[self.direction];
+                        let this_frame = res.intrinsic_size[self.direction];
                         let last_frame = item_state.inner_size[self.direction];
                         let target_size_this_frame = target_inner_size[self.direction];
                         inner_size[self.direction] = if this_frame < target_size_this_frame - 10.0 {
@@ -1093,7 +1093,7 @@ impl FlexInstance<'_> {
                             // We are currently shrunken, so we have to return the old size
                             last_frame
                         }
-                    };
+                    }
 
                     (inner_size, res, row.items.len())
                 } else {
@@ -1115,7 +1115,7 @@ impl FlexInstance<'_> {
                         },
                     );
 
-                    (res.child_rect.size(), res, 0)
+                    (res.intrinsic_size, res, 0)
                 };
 
                 let (mut inner_size, res, row_len) = res;
@@ -1258,7 +1258,7 @@ pub struct FlexContainerUi {
 /// The response of the inner content of a container, should be passed as a return value from the
 /// closure.
 pub struct FlexContainerResponse<T> {
-    child_rect: Rect,
+    intrinsic_size: Vec2,
     /// The response from the inner content.
     pub inner: T,
     max_size: Vec2,
@@ -1268,7 +1268,7 @@ impl<T> FlexContainerResponse<T> {
     /// Map the inner value of the response.
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> FlexContainerResponse<U> {
         FlexContainerResponse {
-            child_rect: self.child_rect,
+            intrinsic_size: self.intrinsic_size,
             inner: f(self.inner),
             max_size: self.max_size,
         }
@@ -1297,8 +1297,6 @@ impl FlexContainerUi {
 
         let r = content(&mut child);
 
-        let child_min_rect = child.min_rect();
-
         ui.allocate_exact_size(
             Vec2::max(frame_rect.size() - margin.sum(), Vec2::ZERO),
             Sense::hover(),
@@ -1306,7 +1304,7 @@ impl FlexContainerUi {
 
         FlexContainerResponse {
             inner: r,
-            child_rect: child_min_rect,
+            intrinsic_size: child.min_rect().size(),
             max_size: ui.available_size(),
         }
     }
@@ -1365,7 +1363,7 @@ impl FlexContainerUi {
 
         FlexContainerResponse {
             inner: res.inner,
-            child_rect: Rect::from_min_size(frame_rect.min, min_size),
+            intrinsic_size: min_size,
             max_size: ui.available_size(),
         }
     }
@@ -1377,11 +1375,11 @@ impl FlexContainerUi {
         widget: impl Widget,
     ) -> FlexContainerResponse<Response> {
         let id_salt = ui.id().with("flex_widget");
-        let mut builder = UiBuilder::new()
+        let builder = UiBuilder::new()
             .id_salt(id_salt)
             .layout(Layout::centered_and_justified(Direction::TopDown));
-            ui.set_width(ui.available_width());
-            ui.set_height(ui.available_height());
+        ui.set_width(ui.available_width());
+        ui.set_height(ui.available_height());
         let response = ui.scope_builder(builder, |ui| widget.ui(ui)).inner;
 
         let intrinsic_size = response.intrinsic_size.map_or(
@@ -1391,7 +1389,7 @@ impl FlexContainerUi {
         );
 
         FlexContainerResponse {
-            child_rect: Rect::from_min_size(self.frame_rect.min, intrinsic_size),
+            intrinsic_size,
             inner: response,
             max_size: ui.available_size(),
         }
