@@ -248,8 +248,6 @@ impl EguiWebView {
 
         let should_display = is_my_layer_top && !Popup::is_any_open(ui.ctx());
 
-        dbg!(should_display);
-
         if !should_display && self.displayed_last_frame {
             self.current_image = None;
             Self::take_screenshot();
