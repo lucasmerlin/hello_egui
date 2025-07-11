@@ -6,7 +6,7 @@ use crate::{FlexInstance, FlexItem};
 /// of the frame size. (The content will stay at it's intrinsic size while the frame will be
 /// stretched according to the flex layout.)
 ///
-/// If your widget has no frmae you don't need to implement this trait and can use
+/// If your widget has no frame you don't need to implement this trait and can use
 /// [`crate::FlexInstance::add_widget`] to add any [`egui::Widget`].
 pub trait FlexWidget {
     /// The response type of the widget

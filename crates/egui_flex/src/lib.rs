@@ -129,6 +129,7 @@ struct FlexItemInner {
     align_self: Option<FlexAlign>,
     align_content: Option<Align2>,
     shrink: bool,
+    disabled: bool,
     frame: Option<Frame>,
     transform: Option<TSTransform>,
     content_id: Option<Id>,
@@ -154,6 +155,7 @@ impl FlexItemInner {
             align_self: self.align_self.or(b.align_self),
             align_content: self.align_content.or(b.align_content),
             shrink: self.shrink || b.shrink,
+            disabled: self.disabled || b.disabled,
             frame: self.frame.or(b.frame),
             transform: self.transform.or(b.transform),
             content_id: self.content_id.or(b.content_id),
@@ -223,6 +225,22 @@ impl<'a> FlexItem<'a> {
     /// Note: You may only ever set this on a single item in a flex container.
     pub fn shrink(mut self) -> Self {
         self.inner.shrink = true;
+        self
+    }
+
+    /// Set the enabled state of the item.
+    ///
+    /// See [`egui::UiBuilder::disabled`].
+    pub fn enabled(mut self, enabled: bool) -> Self {
+        self.inner.disabled = !enabled;
+        self
+    }
+
+    /// Disable the item.
+    ///
+    /// Equivalent to `self.enabled(false)`.
+    pub fn disabled(mut self) -> Self {
+        self.inner.disabled = true;
         self
     }
 
@@ -817,13 +835,26 @@ impl ItemState {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 struct FlexState {
     items: Vec<ItemState>,
     max_item_size: Vec2,
     // We use this to keep track if there is a id clash.
     frame_time: f64,
     passes: u64,
+}
+
+impl Default for FlexState {
+    fn default() -> Self {
+        Self {
+            items: vec![],
+            max_item_size: Vec2::ZERO,
+            // frame_time is 0 on first frame for some eugi integrations which triggers the
+            // frame_time debug assert. We set it to f64::MAX to prevent this.
+            frame_time: f64::MAX,
+            passes: 0,
+        }
+    }
 }
 
 /// An instance of a flex container, used to add items to the container.
@@ -923,7 +954,11 @@ impl FlexInstance<'_> {
         item.inner = item.inner.or(self.flex.default_item);
 
         let res = self.row_ui.scope_builder(
-            UiBuilder::new().sense(item.inner.sense.unwrap_or(Sense::hover())),
+            UiBuilder {
+                disabled: item.inner.disabled,
+                sense: item.inner.sense.or(Some(Sense::hover())),
+                ..Default::default()
+            },
             |ui| {
                 let item = item.build_into_inner(ui, &ui.response());
 

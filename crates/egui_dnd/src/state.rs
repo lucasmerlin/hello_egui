@@ -1,4 +1,3 @@
-use std::hash::Hash;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
@@ -16,7 +15,7 @@ pub trait DragDropItem {
     fn id(&self) -> Id;
 }
 
-impl<T: Hash> DragDropItem for T {
+impl<T: std::hash::Hash> DragDropItem for T {
     fn id(&self) -> Id {
         Id::new(self)
     }
@@ -130,6 +129,7 @@ pub struct Handle<'a> {
     id: Id,
     idx: usize,
     state: &'a mut DragDropUi,
+    #[allow(clippy::struct_field_names)]
     hovering_over_any_handle: &'a mut bool,
     item_pos: Pos2,
 
@@ -354,7 +354,7 @@ impl<'a> Handle<'a> {
                     self.state.detection_state = DragDetectionState::CouldBeValidDrag;
                 }
             }
-        };
+        }
 
         if response.contains_pointer()
             && matches!(

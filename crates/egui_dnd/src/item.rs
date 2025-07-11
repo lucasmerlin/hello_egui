@@ -262,12 +262,17 @@ impl<'a> Item<'a> {
         layout: Layout,
         body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> InnerResponse<Rect> {
+        let transform = ui.ctx().layer_transform_to_global(ui.layer_id());
         egui::Area::new(Id::new("draggable_item"))
             .interactable(false)
             .fixed_pos(pos)
             .order(Order::Tooltip)
             .constrain(false)
             .show(ui.ctx(), |ui| {
+                if let Some(transform) = transform {
+                    ui.ctx().set_transform_layer(ui.layer_id(), transform);
+                }
+
                 ui.with_layout(layout, |ui| {
                     if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {
                         ui.set_max_size(size);

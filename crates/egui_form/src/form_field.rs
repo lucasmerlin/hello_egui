@@ -110,7 +110,7 @@ impl<'a, 'f, Errors: EguiValidationReport> FormField<'a, 'f, Errors> {
                         widget_id: response.id,
                         errors: vec![],
                     });
-                };
+                }
             }
 
             ui.add_visible(
