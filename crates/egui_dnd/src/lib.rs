@@ -175,23 +175,29 @@ impl<'a> Dnd<'a> {
     }
 
     /// Same as [`Dnd::show`], but automatically sorts the items.
-    pub fn show_vec<T: Hash>(
+    pub fn show_vec<T>(
         self,
         items: &mut [T],
         item_ui: impl FnMut(&mut Ui, &mut T, Handle, ItemState),
-    ) -> DragDropResponse {
+    ) -> DragDropResponse
+    where
+        for<'b> &'b mut T: DragDropItem,
+    {
         let response = self.show(items.iter_mut(), item_ui);
         response.update_vec(items);
         response
     }
 
     /// Same as [`Dnd::show_sized`], but automatically sorts the items.
-    pub fn show_vec_sized<T: Hash>(
+    pub fn show_vec_sized<T: DragDropItem>(
         self,
         items: &mut [T],
         size: egui::Vec2,
         item_ui: impl FnMut(&mut Ui, &mut T, Handle, ItemState),
-    ) -> DragDropResponse {
+    ) -> DragDropResponse
+    where
+        for<'b> &'b mut T: DragDropItem,
+    {
         let response = self.show_sized(items.iter_mut(), size, item_ui);
         response.update_vec(items);
         response
@@ -205,7 +211,7 @@ impl<'a> Dnd<'a> {
     }
 
     /// Same as [`Dnd::show_custom`], but automatically sorts the items.
-    pub fn show_custom_vec<T: Hash>(
+    pub fn show_custom_vec<T: DragDropItem>(
         self,
         items: &mut [T],
         f: impl FnOnce(&mut Ui, &mut [T], &mut ItemIterator),
