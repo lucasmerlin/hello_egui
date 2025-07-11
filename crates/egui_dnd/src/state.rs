@@ -130,6 +130,7 @@ pub struct Handle<'a> {
     id: Id,
     idx: usize,
     state: &'a mut DragDropUi,
+    #[allow(clippy::struct_field_names)]
     hovering_over_any_handle: &'a mut bool,
     item_pos: Pos2,
 

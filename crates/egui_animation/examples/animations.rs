@@ -64,6 +64,7 @@ pub fn main() -> eframe::Result<()> {
                 ui.horizontal_wrapped(|ui| {
                     ComboBox::new("easing", "Select Easing")
                         .selected_text(
+                            #[allow(unpredictable_function_pointer_comparisons)]
                             EASINGS
                                 .iter()
                                 .find(|(val, _name)| *val == easing)

@@ -17,8 +17,9 @@ fn snapshot_name() -> String {
 fn should_be_stable(harness: &mut Harness) {
     let first = WgpuTestRenderer::new().render(&harness.ctx, harness.output());
 
-    for _ in 0..3 {
-        harness.run();
+    for _ in 0..6 {
+        harness.run_ok();
+        // harness.run();
         let second = WgpuTestRenderer::new().render(&harness.ctx, harness.output());
         #[allow(clippy::manual_assert)]
         if first != second {
@@ -150,7 +151,7 @@ fn test_size(
 }
 
 #[test]
-#[ignore]
+#[ignore = "Not stable :("]
 fn basis_stabilize() {
     let mut harness = Harness::new_ui(|ui| {
         Flex::horizontal()
