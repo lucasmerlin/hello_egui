@@ -567,7 +567,6 @@ impl Flex {
                     ui,
                     rows,
                     max_item_size,
-                    last_max_item_size: previous_state.max_item_size,
                     item_spacing: original_item_spacing,
                     size,
                 };
@@ -868,7 +867,6 @@ pub struct FlexInstance<'a> {
     direction: usize,
     row_ui: Ui,
     max_item_size: Vec2,
-    last_max_item_size: Vec2,
     // Original item spacing to store when showing children
     item_spacing: Vec2,
     size: [Option<f32>; 2],
@@ -1103,7 +1101,6 @@ impl FlexInstance<'_> {
                                             frame_rect,
                                             margin: item_state.config.margin,
                                             max_item_size: max_content_size,
-                                            last_inner_size: Some(item_state.inner_size),
                                             target_inner_size,
                                             item,
                                         },
@@ -1144,7 +1141,6 @@ impl FlexInstance<'_> {
                             frame_rect: rect,
                             margin: Margin::ZERO,
                             max_item_size: self.max_item_size,
-                            last_inner_size: None,
                             target_inner_size: rect.size(),
                             item,
                         },
@@ -1285,7 +1281,6 @@ pub struct FlexContainerUi {
     frame_rect: Rect,
     margin: Margin,
     max_item_size: Vec2,
-    last_inner_size: Option<Vec2>,
     target_inner_size: Vec2,
     item: FlexItemInner,
 }
@@ -1353,10 +1348,9 @@ impl FlexContainerUi {
         content: impl FnOnce(&mut FlexInstance) -> R,
     ) -> FlexContainerResponse<R> {
         let Self {
-            frame_rect,
+            frame_rect: _,
             margin: _,
             mut max_item_size,
-            last_inner_size: _,
             item,
             target_inner_size,
             ..

@@ -1,5 +1,5 @@
 use eframe::NativeOptions;
-use egui::{Button, CentralPanel, Checkbox, Frame, Label, Sense, Slider, TextEdit, Widget};
+use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
 use egui_flex::{item, Flex, FlexAlign, FlexItem};
 use std::num::NonZeroUsize;
 
@@ -78,7 +78,7 @@ fn main() -> eframe::Result {
                             // });
                             if response.inner.clicked() {
                                 toggle = !toggle;
-                            };
+                            }
 
                             flex.add_ui(
                                 FlexItem::default()
