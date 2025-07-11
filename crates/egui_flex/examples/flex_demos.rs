@@ -1,7 +1,7 @@
 use eframe::NativeOptions;
 use egui::{Align2, Button, CentralPanel, ComboBox, Frame, Label};
 use egui_flex::{
-    item, Flex, FlexAlign, FlexAlignContent, FlexDirection, FlexInstance, FlexItem, FlexJustify,
+    Flex, FlexAlign, FlexAlignContent, FlexDirection, FlexInstance, FlexItem, FlexJustify, item,
 };
 use std::num::NonZeroUsize;
 
