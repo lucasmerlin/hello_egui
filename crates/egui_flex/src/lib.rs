@@ -835,13 +835,26 @@ impl ItemState {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 struct FlexState {
     items: Vec<ItemState>,
     max_item_size: Vec2,
     // We use this to keep track if there is a id clash.
     frame_time: f64,
     passes: u64,
+}
+
+impl Default for FlexState {
+    fn default() -> Self {
+        Self {
+            items: vec![],
+            max_item_size: Vec2::ZERO,
+            // frame_time is 0 on first frame for some eugi integrations which triggers the
+            // frame_time debug assert. We set it to f64::MAX to prevent this.
+            frame_time: f64::MAX,
+            passes: 0,
+        }
+    }
 }
 
 /// An instance of a flex container, used to add items to the container.
