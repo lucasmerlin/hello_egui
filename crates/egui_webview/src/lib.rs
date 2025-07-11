@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
 use egui::mutex::Mutex;
-use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui::{Context, Id, Image, Popup, Sense, TextureHandle, Ui, Vec2, Widget};
 use egui_inbox::UiInbox;
 use serde::{Deserialize, Serialize};
 use wry::dpi::{LogicalPosition, LogicalSize, Position, Size};
@@ -246,7 +246,7 @@ impl EguiWebView {
             Image::new(image).paint_at(ui, response.rect);
         }
 
-        let should_display = ui.memory(|mem| (is_my_layer_top && !mem.any_popup_open()));
+        let should_display = is_my_layer_top && !Popup::is_any_open(ui.ctx());
 
         dbg!(should_display);
 
