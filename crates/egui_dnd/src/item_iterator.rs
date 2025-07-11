@@ -114,10 +114,7 @@ impl<'a> ItemIterator<'a> {
                     ui.new_child(UiBuilder::new().max_rect(ui.available_rect_before_wrap()));
                 let start = ui.next_widget_position();
                 let rect = child
-                    .allocate_new_ui(
-                        UiBuilder::new().max_rect(Rect::from_min_size(pos, child.available_size())),
-                        |ui| content(ui, item),
-                    )
+                    .scope_builder(UiBuilder::new().max_rect(Rect::from_min_size(pos, child.available_size())), |ui| content(ui, item))
                     .inner
                     .0;
                 Rect::from_min_size(start, rect.size())
