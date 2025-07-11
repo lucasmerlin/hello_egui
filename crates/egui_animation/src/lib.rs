@@ -118,7 +118,7 @@ pub fn animate_ui_translation(
     let mut child = ui.new_child(UiBuilder::new().max_rect(rect).layout(*ui.layout()));
 
     let _response = child
-        .allocate_new_ui(
+        .scope_builder(
             UiBuilder::new().max_rect(Rect::from_min_size(current_pos, rect.size())),
             |ui| {
                 ui.allocate_ui(size, |ui| {

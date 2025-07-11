@@ -1,8 +1,5 @@
 use eframe::{emath::Align, NativeOptions};
-use egui::{
-    popup_above_or_below_widget, AboveOrBelow, CentralPanel, Context, Id, Layout,
-    PopupCloseBehavior, TextEdit, Widget, Window,
-};
+use egui::{CentralPanel, Context, Id, Layout, Popup, TextEdit, Widget, Window};
 use wry::raw_window_handle::HasWindowHandle;
 
 use egui_webview::{init_webview, webview_end_frame, EguiWebView, WebViewEvent};
@@ -42,35 +39,19 @@ impl WebBrowser {
                     ui.label("URL:");
 
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        let popup_id = Id::new("Browser Menu").with(self.id);
-                        let mut menu_button = ui.button("☰");
-                        if menu_button.clicked() {
-                            ui.memory_mut(|mem| {
-                                mem.toggle_popup(popup_id);
-                            });
-                        }
+                        let menu_button = ui.button("☰");
 
-                        // Hack to move the popup origin so it is aligned with the right side of the button.
-                        menu_button.rect = menu_button.rect.translate(egui::vec2(-200.0, 4.0));
-
-                        popup_above_or_below_widget(
-                            ui,
-                            popup_id,
-                            &menu_button,
-                            AboveOrBelow::Below,
-                            PopupCloseBehavior::CloseOnClickOutside,
-                            |ui| {
-                                ui.set_width(ui.min_size().x + 200.0);
-                                let _ = ui.button("I have no function");
-                                let _ = ui.button("My existence is meaningless");
-                                if ui.button("Why did you click me?").clicked() {
-                                    self.view
-                                        .view
-                                        .load_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-                                        .unwrap();
-                                }
-                            },
-                        );
+                        Popup::menu(&menu_button).show(|ui| {
+                            ui.set_width(ui.min_size().x + 200.0);
+                            let _ = ui.button("I have no function");
+                            let _ = ui.button("My existence is meaningless");
+                            if ui.button("Why did you click me?").clicked() {
+                                self.view
+                                    .view
+                                    .load_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+                                    .unwrap();
+                            }
+                        });
 
                         let btn_resp = ui.button("Open");
                         let text_resp = TextEdit::singleline(&mut self.url_bar)

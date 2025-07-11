@@ -40,7 +40,7 @@ serde_json.workspace = true
 
 casey = "0.4.2"
 
-egui_commonmark = { version = "0.20.0", features = [] }
+egui_commonmark = { version = "0.21.0", features = [] }
 
 validator = { version = "0.20.0", features = ["derive"] }
 env_logger = "0.11"
