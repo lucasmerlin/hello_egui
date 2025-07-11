@@ -1,5 +1,9 @@
 # egui_pull_to_refresh changelog
 
+## 0.9.0
+
+- Update egui to 0.32
+
 ## 0.8.0
 
 - Update egui to 0.31
