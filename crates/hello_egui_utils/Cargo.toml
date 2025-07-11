@@ -11,7 +11,6 @@ homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/hello_egu
 
 [dependencies]
 egui.workspace = true
-eframe = { workspace = true, optional = true, features = [] }
 
 tokio = { workspace = true, optional = true, features = ["rt"] }
 
@@ -23,10 +22,6 @@ wasm-bindgen-futures = { version = "0.4", optional = true }
 [features]
 async = ["dep:wasm-bindgen-futures"]
 tokio = ["async", "dep:tokio"]
-
-example_util = ["dep:eframe"]
-
-default = ["eframe?/default"]
 
 [lints]
 workspace = true

@@ -65,12 +65,6 @@ egui_thumbhash = { workspace = true, optional = true }
 egui_virtual_list = { workspace = true, optional = true }
 egui_material_icons = { workspace = true, optional = true }
 
-[dev-dependencies]
-hello_egui_utils = { workspace = true, features = ["example_util"] }
-egui.workspace = true
-
-
-
 [workspace]
 members = ["fancy-example", "crates/*", "scripts"]
 resolver = "2"
@@ -79,6 +73,7 @@ resolver = "2"
 egui_dnd = { path = "./crates/egui_dnd", version = "0.12.0" }
 egui_animation = { path = "./crates/egui_animation", version = "0.8.0" }
 hello_egui_utils = { path = "./crates/hello_egui_utils", version = "0.8.0" }
+hello_egui_utils_dev = { path = "./crates/hello_egui_utils_dev", version = "0.1.0" }
 egui_flex = { path = "./crates/egui_flex", version = "0.3.0" }
 egui_form = { path = "./crates/egui_form", version = "0.5.0" }
 egui_inbox = { path = "./crates/egui_inbox", version = "0.8.0" }

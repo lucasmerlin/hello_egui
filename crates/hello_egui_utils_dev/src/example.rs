@@ -25,6 +25,6 @@ pub fn run(name: &str, mut f: impl FnMut(&mut Ui) + 'static) {
 #[macro_export]
 macro_rules! run {
     ($content:expr) => {
-        $crate::example::run(file!(), $content);
+        $crate::run(file!(), $content);
     };
 }

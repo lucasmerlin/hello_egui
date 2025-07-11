@@ -1550,7 +1550,7 @@ dependencies = [
  "egui 0.32.0",
  "egui_inbox",
  "egui_kittest",
- "hello_egui_utils",
+ "hello_egui_utils_dev",
  "rstest",
 ]
 
@@ -1712,7 +1712,7 @@ version = "0.7.0"
 dependencies = [
  "eframe",
  "egui 0.32.0",
- "hello_egui_utils",
+ "hello_egui_utils_dev",
  "rand 0.9.1",
  "web-time",
 ]
@@ -2787,7 +2787,6 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 name = "hello_egui"
 version = "0.8.0"
 dependencies = [
- "egui 0.32.0",
  "egui_animation",
  "egui_dnd",
  "egui_flex",
@@ -2800,7 +2799,6 @@ dependencies = [
  "egui_suspense",
  "egui_thumbhash",
  "egui_virtual_list",
- "hello_egui_utils",
 ]
 
 [[package]]
@@ -2808,10 +2806,17 @@ name = "hello_egui_utils"
 version = "0.8.0"
 dependencies = [
  "concat-idents",
- "eframe",
  "egui 0.32.0",
  "tokio",
  "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "hello_egui_utils_dev"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui 0.32.0",
 ]
 
 [[package]]

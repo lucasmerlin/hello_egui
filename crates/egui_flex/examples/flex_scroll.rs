@@ -1,6 +1,6 @@
 use egui::{Button, Checkbox, Color32, Frame, Label, ScrollArea, Slider, TextEdit, Widget};
 use egui_flex::{Flex, FlexAlign, FlexItem};
-use hello_egui_utils::run;
+use hello_egui_utils_dev::run;
 use std::num::NonZeroUsize;
 
 #[allow(clippy::too_many_lines)]

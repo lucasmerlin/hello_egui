@@ -17,7 +17,7 @@ egui.workspace = true
 eframe = { workspace = true, default-features = true, features = ["wgpu"] }
 egui = { workspace = true, features = ["callstack"] }
 egui_inbox.workspace = true
-hello_egui_utils = { workspace = true, features = ["example_util"] }
+hello_egui_utils_dev = { workspace = true }
 
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
 rstest = "0.24.0"

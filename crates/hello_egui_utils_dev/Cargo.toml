@@ -1,0 +1,11 @@
+[package]
+name = "hello_egui_utils_dev"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = { workspace = true, default-features = true }
+egui = { workspace = true, default-features = false }
+
+[lints]
+workspace = true
