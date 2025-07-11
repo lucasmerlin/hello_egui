@@ -81,7 +81,7 @@ macro_rules! async_fn_def {
         // The path to the callback fn (e.g. Self::callback)
         $callback_fn_path:path,
         // The parameters of the async fn. The semicolon in front of the mutt is a hack to circumvent ambiguity
-        ($($(;$mutt:ident)? $arg:ident: $typ:ty,)*)
+        ($($(;$mutt:ident)? $arg:ident: $_type:ty,)*)
         // The parameters of the call to the callback fn
         ($($call_args:ident,)*)
         // The generics of the async fn
@@ -98,7 +98,7 @@ macro_rules! async_fn_def {
             #[allow(unused_mut)]
             pub fn fn_name$($gen)*(
                 $($callback_body_self)*
-                $($($mutt)? $arg: $typ,)*
+                $($($mutt)? $arg: $_type,)*
             ) -> $($return_type)* {
                 let callback = $body;
 
@@ -124,7 +124,7 @@ macro_rules! fn_def {
         // The name of the callback fn
         $name:ident,
         // The parameters of the callback fn
-        $($arg:ident: $typ:ty,)*
+        $($arg:ident: $_type:ty,)*
         // The generics of the callback fn
         ($($gen:tt)*),
         // The return type
@@ -135,7 +135,7 @@ macro_rules! fn_def {
         $(#[$docs])*
         pub fn $name $($gen)*(
             $($callback_body_self)*
-            $($arg: $typ,)*
+            $($arg: $_type,)*
         ) -> $($return_type)* {
             $body
         }
@@ -149,9 +149,9 @@ macro_rules! fnify {
         $(#[$docs:meta])*
         $name:ident,
         body: $body:block,
-        parameters: ($($arg:ident: $typ:ty,)*),
+        parameters: ($($arg:ident: $_type:ty,)*),
         async_body: $async_body:block,
-        async_parameters: ($(;$async_mutt:ident)? $($async_arg:ident: $async_typ:ty,)*),
+        async_parameters: ($(;$async_mutt:ident)? $($async_arg:ident: $async_type:ty,)*),
         call_args: ($($call_args:ident,)*),
         generics: ($($gen:tt)*),
         async_generics: ($($async_gen:tt)*),
@@ -163,7 +163,7 @@ macro_rules! fnify {
             $(#[$docs])*
             $body,
             $name,
-            $($arg: $typ,)*
+            $($arg: $_type,)*
             ($($gen)*),
             ($($return_type)*),
             ($($callback_body_self)*),
@@ -175,7 +175,7 @@ macro_rules! fnify {
             $async_body,
             $name,
             $($call_prefix)*$name,
-            ($(;$async_mutt)? $($async_arg: $async_typ,)*)
+            ($(;$async_mutt)? $($async_arg: $async_type,)*)
             ($($call_args,)*)
             ($($async_gen)*),
             ($($return_type)*),
@@ -194,7 +194,7 @@ macro_rules! asyncify {
         call_prefix: ($($call_prefix:tt)*),
         generics: ($($gen:tt)*),
         async_generics: ($($async_gen:tt)*),
-        parameters: ($($arg:ident: $typ:ty,)*),
+        parameters: ($($arg:ident: $_type:ty,)*),
         future: $future:ty,
         return_type: ($($return_type:tt)*),
         body: |($($callback_body_self:tt)*)| $body:block,
@@ -203,7 +203,7 @@ macro_rules! asyncify {
             $(#[$docs])*
             $name,
             body: $body,
-            parameters: ($($arg: $typ,)* $callback_name: impl FnMut($($closure_arg,)* $callback_type) $($bounds)*,),
+            parameters: ($($arg: $_type,)* $callback_name: impl FnMut($($closure_arg,)* $callback_type) $($bounds)*,),
             async_body: {
                 Box::new(move |$($closure_arg_name: $closure_arg,)* callback: $callback_type| {
                     let fut = future_fn($($closure_arg_name,)*);
@@ -213,7 +213,7 @@ macro_rules! asyncify {
                     })
                 })
             },
-            async_parameters: ($($arg: $typ,)* ;mut future_fn: $future,),
+            async_parameters: ($($arg: $_type,)* ;mut future_fn: $future,),
             call_args: ($($arg,)*),
             generics: ($($gen)*),
             async_generics: ($($async_gen)*),
@@ -229,7 +229,7 @@ macro_rules! asyncify {
         call_prefix: ($($call_prefix:tt)*),
         generics: ($($gen:tt)*),
         async_generics: ($($async_gen:tt)*),
-        parameters: ($($arg:ident: $typ:ty,)*),
+        parameters: ($($arg:ident: $_type:ty,)*),
         future: $future:ty,
         return_type: ($($return_type:tt)*),
         body: |($($callback_body_self:tt)*)| $body:block,
@@ -238,7 +238,7 @@ macro_rules! asyncify {
             $(#[$docs])*
             $name,
             body: $body,
-            parameters: ($($arg: $typ,)* $callback_name: impl FnOnce($callback_type) $($bounds)*,),
+            parameters: ($($arg: $_type,)* $callback_name: impl FnOnce($callback_type) $($bounds)*,),
             async_body: {
                 Box::new(move |callback: $callback_type| {
                     let fut = future;
@@ -248,7 +248,7 @@ macro_rules! asyncify {
                     })
                 })
             },
-            async_parameters: ($($arg: $typ,)* ;mut future: $future,),
+            async_parameters: ($($arg: $_type,)* ;mut future: $future,),
             call_args: ($($arg,)*),
             generics: ($($gen)*),
             async_generics: ($($async_gen)*),

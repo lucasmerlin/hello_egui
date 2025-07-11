@@ -94,7 +94,7 @@ impl MyApp {
 
                     response.update_vec(children);
                 });
-        };
+        }
     }
 }
 

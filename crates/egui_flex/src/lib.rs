@@ -724,7 +724,7 @@ impl Flex {
                 extra_cross_gap_start = extra_cross_gap / 2.0;
                 _extra_cross_gap_end = extra_cross_gap / 2.0;
             }
-        };
+        }
 
         let mut row_position = min_position;
 
@@ -1124,7 +1124,7 @@ impl FlexInstance<'_> {
                             // We are currently shrunken, so we have to return the old size
                             last_frame
                         }
-                    };
+                    }
 
                     (inner_size, res, row.items.len())
                 } else {

@@ -89,8 +89,8 @@ impl ImageLoader for ThumbhashImageLoader {
     fn byte_size(&self) -> usize {
         let images = self.images.lock();
         images
-            .iter()
-            .map(|(_, image)| image.width() * image.height() * 4)
+            .values()
+            .map(|image| image.width() * image.height() * 4)
             .sum()
     }
 }

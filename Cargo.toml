@@ -130,17 +130,17 @@ missing_fields_in_debug = { level = "allow", priority = 20 }
 doc_markdown = { level = "allow", priority = 21 }
 
 [patch.crates-io]
-#wry = { path = "../../RustroverProjects/github/wry" }
+#wry = { path = "../wry" }
 #
-#egui = { path = "../../IdeaProjects/egui/crates/egui" }
-#eframe = { path = "../../IdeaProjects/egui/crates/eframe" }
-#egui-wgpu = { path = "../../IdeaProjects/egui/crates/egui-wgpu" }
-#egui_extras = { path = "../../IdeaProjects/egui/crates/egui_extras" }
-#egui_kittest = { path = "../../IdeaProjects/egui/crates/egui_kittest" }
-#winit = { path = "../../IdeaProjects/github/winit" }
+#egui = { path = "../egui/crates/egui" }
+#eframe = { path = "../egui/crates/eframe" }
+#egui-wgpu = { path = "../egui/crates/egui-wgpu" }
+#egui_extras = { path = "../egui/crates/egui_extras" }
+#egui_kittest = { path = "../egui/crates/egui_kittest" }
+#winit = { path = "../winit" }
 
 
-# egui = { git = "https://github.com/emilk/egui", branch = "master" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
-# egui_extras = { git = "https://github.com/emilk/egui", branch = "master" }
-# egui_kittest = { git = "https://github.com/emilk/egui", branch = "master" }
+# egui = { git = "https://github.com/emilk/egui", branch = "main" }
+# eframe = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui_extras = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }

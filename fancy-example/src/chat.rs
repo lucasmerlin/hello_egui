@@ -1,4 +1,3 @@
-use std::iter::repeat;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -60,8 +59,7 @@ impl HistoryLoader {
             .collect();
 
         // Repeat the history 5 times to make it longer.
-        let history = repeat(history)
-            .take(5)
+        let history = std::iter::repeat_n(history, 5)
             .flat_map(|history| history.clone())
             .collect();
 

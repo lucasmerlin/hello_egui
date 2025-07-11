@@ -105,11 +105,11 @@ impl EguiWebView {
                         if let Some(view) = guard.as_ref() {
                             if let Err(err) = view.evaluate_script(include_str!("webview.js")) {
                                 println!("Error loading webview script: {err}");
-                            };
+                            }
                         }
                     }
                     PageLoadEvent::Finished => {}
-                };
+                }
 
                 tx_clone.send(WebViewEvent::Loaded(url)).ok();
             })
