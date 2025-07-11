@@ -1,5 +1,10 @@
 # egui_virtual_list changelog
 
+## 0.8.0
+
+- Update egui to 0.32
+- Ensure stable ids in virtual list and properly handle resized rows
+
 ## 0.7.0
 
 - Update egui to 0.31

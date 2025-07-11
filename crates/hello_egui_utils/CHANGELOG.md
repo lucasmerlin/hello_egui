@@ -1,5 +1,10 @@
 # hello_egui_utils changelog
 
+## 0.9.0
+
+- Update egui to 0.32
+- Add hello_egui_utils_dev to remove optional eframe dependency from hello_egui
+
 ## 0.8.0
 
 - Update egui to 0.31

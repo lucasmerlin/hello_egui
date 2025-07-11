@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+- Update egui to 0.32
+- Fix current layer transform not applied to dragged item
+- Make `dnd` functions work on any DragDropItem
+
 ## 0.12.0
 
 - Update egui to 0.31

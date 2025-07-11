@@ -1,5 +1,10 @@
 # egui_infinite_scroll changelog
 
+## 0.8.0
+
+- Update egui to 0.32
+- Don't stop on empty list, only stop on empty cursor
+
 ## 0.7.0
 
 - Update egui to 0.31

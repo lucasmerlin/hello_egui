@@ -1,5 +1,26 @@
 # hello_egui changelog
 
+## 0.9.0
+
+- update all crates for egui 0.32 support
+- many improvements to egui_flex:
+  - Fix shrinking items not growing other items in cross size
+  - Add `FlexItem` disabled/enabled control methods
+  - Simplify egui_flex based on new egui atoms and intrinsic size
+  - Fix frame_time debug assert with bevy_egui
+- improvements to egui_dnd:
+  - Fix current layer transform not applied to dragged item
+  - Make `dnd` functions work on any DragDropItem
+- improvements to egui_animation:
+  - Make animation time editable in egui_animation::Collapse
+- improvements to egui_virtual_list:
+  - Ensure stable ids in virtual list and properly handle resized rows
+- improvements to egui_infinite_scroll:
+  - Don't stop on empty list, only stop on empty cursor
+- improvements to egui_router:
+  - Add history and history_len to egui_router
+- Add hello_egui_utils_dev to remove optional eframe dependency from hello_egui
+
 ## 0.8.0
 
 - update all crates for egui 0.31 support (thanks to @bircni)

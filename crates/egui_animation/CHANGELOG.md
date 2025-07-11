@@ -1,5 +1,10 @@
 # egui_animation changelog
 
+## 0.9.0
+
+- Update egui to 0.32
+- Make animation time editable in egui_animation::Collapse
+
 ## 0.8.0
 
 - Update egui to 0.31

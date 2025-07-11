@@ -1,5 +1,14 @@
 # egui_flex changelog
 
+## 0.4.0
+
+- Update egui to 0.32
+- Fix shrinking items not growing other items in cross size
+- Add `FlexItem` disabled/enabled control methods
+- Simplify egui_flex based on new egui atoms and intrinsic size
+- Fix frame_time debug assert with bevy_egui
+- Don't freak out during remeasure_widget (allocate last frame's size)
+
 ## 0.3.0
 
 - Update egui to 0.31

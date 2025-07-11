@@ -1,5 +1,10 @@
 # egui_router changelog
 
+## 0.5.0
+
+- Update egui to 0.32
+- Add history and history_len to egui_router
+
 ## 0.4.0
 
 - Update egui to 0.31
