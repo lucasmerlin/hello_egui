@@ -1602,7 +1602,7 @@ dependencies = [
 
 [[package]]
 name = "egui_infinite_scroll"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "eframe",
  "egui 0.32.0",
