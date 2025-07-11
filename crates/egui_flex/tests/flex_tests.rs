@@ -23,7 +23,7 @@ fn should_be_stable(harness: &mut Harness) {
         #[allow(clippy::manual_assert)]
         if first != second {
             panic!("Is not stable");
-        };
+        }
     }
 }
 

@@ -49,7 +49,7 @@ fn main() -> eframe::Result {
                         .clicked()
                     {
                         demo_dir = FlexDirection::Horizontal;
-                    };
+                    }
                     if flex
                         .add(
                             FlexItem::new(),
@@ -58,7 +58,7 @@ fn main() -> eframe::Result {
                         .clicked()
                     {
                         demo_dir = FlexDirection::Vertical;
-                    };
+                    }
 
                     flex.add_ui(FlexItem::new(), |ui| ui.checkbox(&mut grow, "Grow"));
                 });

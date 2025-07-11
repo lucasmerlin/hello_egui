@@ -81,7 +81,7 @@ impl WebBrowser {
                             || btn_resp.clicked()
                         {
                             self.view.view.load_url(&self.url_bar).unwrap();
-                        };
+                        }
                     });
                 });
 

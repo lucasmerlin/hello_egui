@@ -33,10 +33,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 changelog = changelog.replace(
                     "## Unreleased",
                     &format!(
-                        "## {}
+                        "## {version}
 
-{}",
-                        version, text
+{text}"
                     ),
                 );
                 std::fs::write(changelog_path, changelog)?;

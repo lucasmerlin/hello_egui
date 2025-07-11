@@ -354,7 +354,7 @@ impl<'a> Handle<'a> {
                     self.state.detection_state = DragDetectionState::CouldBeValidDrag;
                 }
             }
-        };
+        }
 
         if response.contains_pointer()
             && matches!(

@@ -312,7 +312,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         let items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
         if item_range.end + end_prefetch >= items.len()
-            && matches!(self.bottom_loading_state, LoadingState::Idle { .. })
+            && matches!(self.bottom_loading_state, LoadingState::Idle)
         {
             if let Some(end_loader) = &mut self.end_loader {
                 self.bottom_loading_state = LoadingState::Loading;
@@ -331,9 +331,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             }
         }
 
-        if item_range.start < end_prefetch
-            && matches!(self.top_loading_state, LoadingState::Idle { .. })
-        {
+        if item_range.start < end_prefetch && matches!(self.top_loading_state, LoadingState::Idle) {
             if let Some(start_loader) = &mut self.start_loader {
                 self.top_loading_state = LoadingState::Loading;
                 let sender = self.top_inbox.sender();

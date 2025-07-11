@@ -18,7 +18,7 @@ pub fn main() -> eframe::Result<()> {
             CentralPanel::default().show(ctx, |ui| {
                 if ui.button("Reset").clicked() {
                     infinite_scroll.reset();
-                };
+                }
 
                 ui.set_width(ui.available_width());
                 egui_extras::TableBuilder::new(ui)
