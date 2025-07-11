@@ -849,9 +849,9 @@ impl Default for FlexState {
         Self {
             items: vec![],
             max_item_size: Vec2::ZERO,
-            // frame_time is 0 on first frame for some eugi integrations which triggers the 
+            // frame_time is 0 on first frame for some eugi integrations which triggers the
             // frame_time debug assert. We set it to f64::MAX to prevent this.
-            frame_time: f64::MAX, 
+            frame_time: f64::MAX,
             passes: 0,
         }
     }
