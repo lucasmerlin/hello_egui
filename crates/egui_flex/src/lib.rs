@@ -22,6 +22,15 @@ pub enum FlexDirection {
     Vertical,
 }
 
+impl From<FlexDirection> for usize {
+    fn from(direction: FlexDirection) -> Self {
+        match direction {
+            FlexDirection::Horizontal => 0,
+            FlexDirection::Vertical => 1,
+        }
+    }
+}
+
 /// How to justify the content (alignment in the main axis).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[allow(missing_docs)]
@@ -470,7 +479,7 @@ impl Flex {
         target_size: Option<Vec2>,
         max_item_size: Option<Vec2>,
         f: impl FnOnce(&mut FlexInstance) -> R,
-    ) -> (Vec2, InnerResponse<R>) {
+    ) -> (Vec2, FlexState, InnerResponse<R>) {
         let id = if let Some(id_salt) = self.id_salt {
             ui.id().with(id_salt)
         } else {
@@ -561,6 +570,7 @@ impl Flex {
                         max_item_size,
                         frame_time,
                         passes,
+                        shrunk_item_cross_size: None,
                     },
                     direction,
                     row_ui: FlexInstance::row_ui(ui, rows.first()),
@@ -599,14 +609,25 @@ impl Flex {
                 //     current
                 // });
 
-                if (&previous_state.items, &previous_state.max_item_size)
-                    != (&instance.state.items, &instance.state.max_item_size)
-                {
+                if (
+                    &previous_state.items,
+                    &previous_state.max_item_size,
+                    &previous_state.shrunk_item_cross_size,
+                ) != (
+                    &instance.state.items,
+                    &instance.state.max_item_size,
+                    &instance.state.shrunk_item_cross_size,
+                ) {
                     state_changed = true;
+                    // Since this prevents the shrunk item from shrinking, we need to reset it on
+                    // state changes, to allow shrinking in cross direction
+                    if previous_state.shrunk_item_cross_size.is_some() {
+                        instance.state.shrunk_item_cross_size = None;
+                    }
                 }
 
                 instance.ui.ctx().memory_mut(|mem| {
-                    mem.data.insert_temp(id, instance.state);
+                    mem.data.insert_temp(id, instance.state.clone());
                 });
 
                 instance.rows.iter().for_each(|row| {
@@ -615,7 +636,7 @@ impl Flex {
                         instance.ui.allocate_rect(final_rect, Sense::hover());
                     }
                 });
-                (min_size, r)
+                (min_size, instance.state, r)
             },
         );
 
@@ -626,7 +647,11 @@ impl Flex {
             ui.ctx().request_repaint();
         }
 
-        (r.inner.0, InnerResponse::new(r.inner.1, r.response))
+        (
+            r.inner.0,
+            r.inner.1,
+            InnerResponse::new(r.inner.2, r.response),
+        )
     }
 
     #[allow(clippy::too_many_lines)]
@@ -644,6 +669,7 @@ impl Flex {
         let available_length = size[direction].unwrap_or(available_size[direction]);
         let gap_direction = gap[direction];
 
+        // If direction is vertical, these would be columns
         let mut rows = vec![];
         let mut current_row = RowData::default();
 
@@ -680,6 +706,11 @@ impl Flex {
             current_row.items.push(item.clone());
             if item.min_size_with_margin()[cross_direction] > current_row.cross_size {
                 current_row.cross_size = item.min_size_with_margin()[cross_direction];
+            }
+            if item.config.shrink
+                && let Some(shrunk_item_cross_size) = state.shrunk_item_cross_size
+            {
+                current_row.cross_size = f32::max(current_row.cross_size, shrunk_item_cross_size);
             }
         }
 
@@ -791,7 +822,7 @@ impl Flex {
     /// since it limits the `max_rect` to some small value. Use `Ui::horizontal_top` instead.
     #[track_caller]
     pub fn show<R>(self, ui: &mut Ui, f: impl FnOnce(&mut FlexInstance) -> R) -> InnerResponse<R> {
-        self.show_inside(ui, None, None, f).1
+        self.show_inside(ui, None, None, f).2
     }
 
     /// Show this flex in another Flex. See also [FlexInstance::add_flex].
@@ -841,6 +872,8 @@ struct FlexState {
     // We use this to keep track if there is a id clash.
     frame_time: f64,
     passes: u64,
+    // If an item shrunk it might grow in cross size. We need to expand other items to match this.
+    shrunk_item_cross_size: Option<f32>,
 }
 
 impl Default for FlexState {
@@ -852,6 +885,7 @@ impl Default for FlexState {
             // frame_time debug assert. We set it to f64::MAX to prevent this.
             frame_time: f64::MAX,
             passes: 0,
+            shrunk_item_cross_size: None,
         }
     }
 }
@@ -1103,6 +1137,7 @@ impl FlexInstance<'_> {
                                             max_item_size: max_content_size,
                                             target_inner_size,
                                             item,
+                                            shrunk: do_shrink,
                                         },
                                     )
                                 })
@@ -1127,6 +1162,10 @@ impl FlexInstance<'_> {
                         }
                     }
 
+                    if do_shrink && let Some(shrunk_item_cross_size) = res.shrunk_item_cross_size {
+                        self.state.shrunk_item_cross_size = Some(shrunk_item_cross_size);
+                    }
+
                     (inner_size, res, row.items.len())
                 } else {
                     ui.set_invisible();
@@ -1143,6 +1182,7 @@ impl FlexInstance<'_> {
                             max_item_size: self.max_item_size,
                             target_inner_size: rect.size(),
                             item,
+                            shrunk: false,
                         },
                     );
 
@@ -1283,6 +1323,7 @@ pub struct FlexContainerUi {
     max_item_size: Vec2,
     target_inner_size: Vec2,
     item: FlexItemInner,
+    shrunk: bool,
 }
 
 /// The response of the inner content of a container, should be passed as a return value from the
@@ -1292,6 +1333,7 @@ pub struct FlexContainerResponse<T> {
     /// The response from the inner content.
     pub inner: T,
     max_size: Vec2,
+    shrunk_item_cross_size: Option<f32>,
 }
 
 impl<T> FlexContainerResponse<T> {
@@ -1301,6 +1343,7 @@ impl<T> FlexContainerResponse<T> {
             intrinsic_size: self.intrinsic_size,
             inner: f(self.inner),
             max_size: self.max_size,
+            shrunk_item_cross_size: self.shrunk_item_cross_size,
         }
     }
 }
@@ -1336,6 +1379,7 @@ impl FlexContainerUi {
             inner: r,
             intrinsic_size: child.min_rect().size(),
             max_size: ui.available_size(),
+            shrunk_item_cross_size: None,
         }
     }
 
@@ -1361,6 +1405,7 @@ impl FlexContainerUi {
 
         // We set wrap to false since we currently don't support wrapping in nested flexes
         flex = flex.wrap(false);
+        let child_direction: usize = flex.direction.into();
 
         // Make sure the container actually grows if grow is set.
         if item.grow.is_some_and(|g| g > 0.0) {
@@ -1385,15 +1430,16 @@ impl FlexContainerUi {
 
         target_size = Vec2::min(target_size, max_item_size);
 
-        let (min_size, res) =
-            flex.show_inside(ui, Some(target_size), Some(max_item_size), |instance| {
-                content(instance)
-            });
+        let (min_size, state, res) =
+            flex.show_inside(ui, Some(target_size), Some(max_item_size), content);
+
+        let shrunk_item_cross_size = state.shrunk_item_cross_size.filter(|_| self.shrunk && child_direction == self.direction);
 
         FlexContainerResponse {
             inner: res.inner,
             intrinsic_size: min_size,
             max_size: ui.available_size(),
+            shrunk_item_cross_size,
         }
     }
 
@@ -1417,10 +1463,17 @@ impl FlexContainerUi {
             |s| s + Vec2::X * 1.0,
         );
 
+        let shrunk_item_cross_size = if self.shrunk {
+            Some(response.rect.size()[1 - self.direction])
+        } else {
+            None
+        };
+
         FlexContainerResponse {
             intrinsic_size,
             inner: response,
             max_size: ui.available_size(),
+            shrunk_item_cross_size,
         }
     }
 }
