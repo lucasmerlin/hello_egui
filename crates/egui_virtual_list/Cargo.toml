@@ -16,7 +16,7 @@ web-time = "1"
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 rand.workspace = true
-hello_egui_utils = { workspace = true, features = ["example_util"] }
+hello_egui_utils_dev = { workspace = true }
 
 [lints]
 workspace = true
