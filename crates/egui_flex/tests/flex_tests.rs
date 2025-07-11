@@ -74,7 +74,7 @@ fn test_justify(
 
     let mut harness = Harness::new_ui(app);
 
-    harness.snapshot(&snapshot_name());
+    harness.snapshot(snapshot_name());
 }
 
 #[test]
@@ -147,7 +147,7 @@ fn test_size(
         });
     });
 
-    harness.snapshot(&snapshot_name());
+    harness.snapshot(snapshot_name());
 }
 
 #[test]

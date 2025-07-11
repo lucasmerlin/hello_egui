@@ -1,6 +1,6 @@
 use egui::accesskit::Role;
-use egui_kittest::kittest::{Queryable};
-use egui_kittest::{Harness, Node};
+use egui_kittest::Harness;
+use egui_kittest::{kittest::Queryable, Node};
 use fancy_example::chat::CHAT_EXAMPLE;
 use fancy_example::example::{Example, EXAMPLES};
 use fancy_example::gallery::GALLERY_EXAMPLE;
@@ -60,7 +60,7 @@ pub async fn test_pages() {
 
             harness.run_ok();
 
-            let res = harness.try_snapshot(&format!("example/{}", example.slug));
+            let res = harness.try_snapshot(format!("example/{}", example.slug));
             if let Err(e) = res {
                 errors.push(e);
             }

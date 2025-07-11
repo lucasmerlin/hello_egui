@@ -178,7 +178,7 @@ impl<'a> Item<'a> {
 
             let mut child = ui.new_child(UiBuilder::new().max_rect(rect));
 
-            child.allocate_new_ui(
+            child.scope_builder(
                 UiBuilder::new().max_rect(Rect::from_min_size(position, rect.size())),
                 |ui| {
                     drag_body(
@@ -217,7 +217,7 @@ impl<'a> Item<'a> {
             let size = ui.available_size();
 
             let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
-            let response = child.allocate_new_ui(
+            let response = child.scope_builder(
                 UiBuilder::new().max_rect(Rect::from_min_size(position, size)),
                 |ui| {
                     drag_body(
