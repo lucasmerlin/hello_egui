@@ -2,7 +2,7 @@ use eframe::emath::Vec2;
 use egui::{
     Align, Button, Checkbox, DragValue, Frame, Id, Label, Layout, ScrollArea, TextEdit, Ui,
 };
-use egui_flex::{item, Flex, FlexAlign, FlexAlignContent, FlexItem, FlexJustify, Size};
+use egui_flex::{Flex, FlexAlign, FlexAlignContent, FlexItem, FlexJustify, Size, item};
 use egui_kittest::wgpu::WgpuTestRenderer;
 use egui_kittest::{Harness, TestRenderer};
 use rstest::rstest;

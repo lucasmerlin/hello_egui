@@ -1433,7 +1433,9 @@ impl FlexContainerUi {
         let (min_size, state, res) =
             flex.show_inside(ui, Some(target_size), Some(max_item_size), content);
 
-        let shrunk_item_cross_size = state.shrunk_item_cross_size.filter(|_| self.shrunk && child_direction == self.direction);
+        let shrunk_item_cross_size = state
+            .shrunk_item_cross_size
+            .filter(|_| self.shrunk && child_direction == self.direction);
 
         FlexContainerResponse {
             inner: res.inner,

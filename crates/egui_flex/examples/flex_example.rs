@@ -1,6 +1,6 @@
 use eframe::NativeOptions;
 use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
-use egui_flex::{item, Flex, FlexAlign, FlexItem};
+use egui_flex::{Flex, FlexAlign, FlexItem, item};
 use std::num::NonZeroUsize;
 
 #[allow(clippy::too_many_lines)] // It's an example
