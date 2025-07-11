@@ -2,7 +2,10 @@
 name = "hello_egui_utils_dev"
 version = "0.1.0"
 edition = "2024"
-publish = false
+description = "Utilities used by crates from https://github.com/lucasmerlin/hello_egui"
+license = "MIT"
+repository = "https://github.com/lucasmerlin/hello_egui"
+homepage = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/hello_egui_utils_dev"
 
 [dependencies]
 eframe = { workspace = true, default-features = true }
