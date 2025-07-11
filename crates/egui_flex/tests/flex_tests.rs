@@ -151,7 +151,6 @@ fn test_size(
 }
 
 #[test]
-#[ignore = "Not stable :("]
 fn basis_stabilize() {
     let mut harness = Harness::new_ui(|ui| {
         Flex::horizontal()

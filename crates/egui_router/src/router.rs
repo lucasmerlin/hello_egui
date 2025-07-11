@@ -70,6 +70,16 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.last().map(|r| r.path.as_str())
     }
 
+    /// How many history entries are there?
+    pub fn history_len(&self) -> usize {
+        self.history.len()
+    }
+
+    /// Iterate over the paths in the history
+    pub fn history(&self) -> impl Iterator<Item = &str> {
+        self.history.iter().map(|s| s.path.as_str())
+    }
+
     fn parse_path(path: &str) -> (&str, BTreeMap<Cow<str>, Cow<str>>) {
         path.split_once('?')
             .map(|(path, q)| (path, form_urlencoded::parse(q.as_bytes()).collect()))

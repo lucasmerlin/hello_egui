@@ -1,11 +1,14 @@
 use eframe::NativeOptions;
 use egui::{Button, CentralPanel, Checkbox, Frame, Label, Slider, TextEdit, Widget};
-use egui_flex::{Flex, FlexAlign, FlexItem};
+use egui_flex::{item, Flex, FlexAlign, FlexItem};
 use std::num::NonZeroUsize;
 
 #[allow(clippy::too_many_lines)] // It's an example
 fn main() -> eframe::Result {
     let mut text = "Hello, world!".to_owned();
+
+    let mut toggle = false;
+
     eframe::run_simple_native(
         "flex example",
         NativeOptions::default(),
@@ -55,6 +58,26 @@ fn main() -> eframe::Result {
                                         Label::new(item).wrap().ui(ui);
                                     },
                                 );
+                            }
+
+                            let response = flex.add_widget(
+                                item().grow(1.0),
+                                Button::new(if toggle {
+                                    "short"
+                                } else {
+                                    "You can toggle my size"
+                                }),
+                            );
+                            // let response = flex.add_ui(item().grow(1.0), |ui| {
+                            //     Button::new(if toggle {
+                            //         "short"
+                            //     } else {
+                            //         "You can toggle my size"
+                            //     })
+                            //     .ui(ui)
+                            // });
+                            if response.inner.clicked() {
+                                toggle = !toggle;
                             }
 
                             flex.add_ui(
@@ -118,6 +141,7 @@ fn main() -> eframe::Result {
                                         FlexItem::default().grow(1.0),
                                         Flex::horizontal()
                                             .align_content(egui_flex::FlexAlignContent::Stretch)
+                                            .w_full()
                                             .grow_items(1.0),
                                         |flex| {
                                             flex.add(
