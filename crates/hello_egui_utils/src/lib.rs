@@ -151,7 +151,7 @@ macro_rules! fnify {
         body: $body:block,
         parameters: ($($arg:ident: $_type:ty,)*),
         async_body: $async_body:block,
-        async_parameters: ($(;$async_mutt:ident)? $($async_arg:ident: $async_typ:ty,)*),
+        async_parameters: ($(;$async_mutt:ident)? $($async_arg:ident: $async_type:ty,)*),
         call_args: ($($call_args:ident,)*),
         generics: ($($gen:tt)*),
         async_generics: ($($async_gen:tt)*),
@@ -175,7 +175,7 @@ macro_rules! fnify {
             $async_body,
             $name,
             $($call_prefix)*$name,
-            ($(;$async_mutt)? $($async_arg: $async_typ,)*)
+            ($(;$async_mutt)? $($async_arg: $async_type,)*)
             ($($call_args,)*)
             ($($async_gen)*),
             ($($return_type)*),
