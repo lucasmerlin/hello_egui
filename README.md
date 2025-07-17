@@ -78,7 +78,7 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
 
 - [egui_taffy](crates/egui_taffy)
     - Experiment to add flexbox layout to egui using [taffy](https://github.com/DioxusLabs/taffy)
-    - Made into a proper crate by @PPakalns, check out [egui_taffy](https://github.com/PPakalns/egui_taffy)!
+    - Made into a proper crate by [@PPakalns](https://github.com/PPakalns), check out [egui_taffy](https://github.com/PPakalns/egui_taffy)!
 
 - [egui_webview](crates/egui_webview)
     - WebView widget for egui, based on wry
