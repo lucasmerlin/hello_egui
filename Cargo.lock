@@ -1682,16 +1682,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui_taffy"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui 0.32.0",
- "rand 0.9.1",
- "taffy",
-]
-
-[[package]]
 name = "egui_thumbhash"
 version = "0.8.0"
 dependencies = [
@@ -2667,12 +2657,6 @@ checksum = "fdf242682df893b86f33a73828fb09ca4b2d3bb6cc95249707fc684d27484b91"
 dependencies = [
  "bitflags 2.9.1",
 ]
-
-[[package]]
-name = "grid"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36119f3a540b086b4e436bb2b588cf98a68863470e0e880f4d0842f112a3183a"
 
 [[package]]
 name = "gtk"
@@ -5707,18 +5691,6 @@ dependencies = [
  "pkg-config",
  "toml",
  "version-compare",
-]
-
-[[package]]
-name = "taffy"
-version = "0.7.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab4f4d046dd956a47a7e1a2947083d7ac3e6aa3cfaaead36173ceaa5ab11878c"
-dependencies = [
- "arrayvec",
- "grid",
- "serde",
- "slotmap",
 ]
 
 [[package]]

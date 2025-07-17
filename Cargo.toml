@@ -67,6 +67,7 @@ egui_material_icons = { workspace = true, optional = true }
 
 [workspace]
 members = ["fancy-example", "crates/*", "scripts"]
+exclude = ["crates/egui_taffy"]
 resolver = "2"
 
 [workspace.dependencies]
