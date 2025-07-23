@@ -73,6 +73,7 @@ impl RequestRepaintContext {
 
 impl RequestRepaintContext {
     /// Request a repaint.
+    #[track_caller]
     pub fn request_repaint(&self) {
         match &self.0 {
             #[cfg(feature = "egui")]
@@ -436,11 +437,13 @@ mod async_impl {
 
 impl<T> UiInboxSender<T> {
     /// Send an item to the inbox.
+    ///
     /// Calling this will request a repaint from egui.
     /// If this is called before a call to `UiInbox::read` was done, no repaint is requested
     /// (Since we didn't have a chance to get a reference to [Context] yet).
     ///
     /// This returns an error if the inbox was dropped.
+    #[track_caller]
     pub fn send(&self, item: T) -> Result<(), SendError<T>> {
         let mut state = self.state.lock();
         if state.dropped {
@@ -450,6 +453,19 @@ impl<T> UiInboxSender<T> {
             if let Some(ctx) = &state.ctx {
                 ctx.request_repaint();
             }
+            Ok(())
+        }
+    }
+
+    /// Send an item without requesting a repaint.
+    ///
+    /// This returns an error if the inbox was dropped.
+    pub fn send_without_request_repaint(&self, item: T) -> Result<(), SendError<T>> {
+        let mut state = self.state.lock();
+        if state.dropped {
+            Err(SendError(item))
+        } else {
+            state.queue.push(item);
             Ok(())
         }
     }
