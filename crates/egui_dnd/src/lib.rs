@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use egui::{Id, Ui};
+use egui::{Id, Ui, UiBuilder};
 pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
 
 pub use crate::item_iterator::ItemIterator;
@@ -138,11 +138,16 @@ impl<'a> Dnd<'a> {
         mut item_ui: impl FnMut(&mut Ui, T, Handle, ItemState),
     ) -> DragDropResponse {
         #[allow(clippy::used_underscore_items)]
-        self._show_with_inner(|_id, ui, drag_drop_ui| {
+        self._show_with_inner(|id, ui, drag_drop_ui| {
             drag_drop_ui.ui(ui, |ui, iter| {
                 items.enumerate().for_each(|(i, item)| {
-                    iter.next(ui, item.id(), i, true, |ui, item_handle| {
-                        item_handle.ui(ui, |ui, handle, state| item_ui(ui, item, handle, state))
+                    let item_id = item.id().with(id);
+                    iter.next(ui, item_id, i, true, |ui, item_handle| {
+                        item_handle.ui(ui, |ui, handle, state| {
+                            ui.scope_builder(UiBuilder::new().id(item_id), |ui| {
+                                item_ui(ui, item, handle, state)
+                            });
+                        })
                     });
                 });
             })
