@@ -49,10 +49,13 @@ impl TypeInbox {
     /// A repaint will be requested.
     #[track_caller]
     pub fn send<T: MaybeSend + 'static>(&self, message: T) {
-        let mut guard = self.0.lock();
-        let entry = guard.map.entry().or_insert_with(TypeInboxEntry::<T>::new);
-        entry.sender.send(message).ok();
-        guard.ctx.request_repaint();
+        let ctx = {
+            let mut guard = self.0.lock();
+            let entry = guard.map.entry().or_insert_with(TypeInboxEntry::<T>::new);
+            entry.sender.send(message).ok();
+            guard.ctx.clone()
+        };
+        ctx.request_repaint();
     }
 
     /// Send a message of type [T] without requesting a repaint.
