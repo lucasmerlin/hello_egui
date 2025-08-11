@@ -33,7 +33,7 @@ pub fn main() -> eframe::Result<()> {
     )
 }
 
-fn list(ui: &mut Ui, dnd_id: Id, items: &mut Vec<String>) {
+fn list(ui: &mut Ui, dnd_id: Id, items: &mut [String]) {
     dnd(ui, dnd_id)
         //increased animation time to test return animation
         .with_animation_time(1.0)
@@ -47,7 +47,7 @@ fn list(ui: &mut Ui, dnd_id: Id, items: &mut Vec<String>) {
                     }
                 });
 
-                CollapsingHeader::new(item.to_string()).show_unindented(ui, |ui| {
+                CollapsingHeader::new((*item).to_string()).show_unindented(ui, |ui| {
                     for i in 1..=5 {
                         ui.label(format!("{i} {item}"));
                     }
