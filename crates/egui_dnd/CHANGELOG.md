@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Ensure that the `Ui`s `Id` of the dragged item stays consistent, so it doesn't mess with e.g. `CollapsingHeader`s
+
 ## 0.13.0
 
 - Update egui to 0.32
