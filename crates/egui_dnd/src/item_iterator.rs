@@ -101,6 +101,7 @@ impl<'a> ItemIterator<'a> {
 
         let item = Item::new(
             id,
+            ui.unique_id(),
             ItemState {
                 dragged: is_dragged_item,
                 index: idx,
