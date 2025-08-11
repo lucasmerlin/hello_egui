@@ -1,13 +1,14 @@
-use egui::{
-    CursorIcon, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Sense, Ui, UiBuilder, Vec2,
-};
+use egui::{CursorIcon, Id, InnerResponse, Layout, Order, Pos2, Rect, Sense, Ui, UiBuilder, Vec2};
 use egui_animation::animate_position;
 
 use crate::state::DragDetectionState;
 use crate::{DragDropUi, Handle, ItemState};
 
 pub struct Item<'a> {
+    // Id of the dragged item
     id: Id,
+    // Id of the ui all items are contained in
+    ui_id: Id,
     pub state: ItemState,
     dnd_state: &'a mut DragDropUi,
     hovering_over_any_handle: &'a mut bool,
@@ -17,12 +18,14 @@ pub struct Item<'a> {
 impl<'a> Item<'a> {
     pub fn new(
         id: Id,
+        ui_id: Id,
         state: ItemState,
         dnd_state: &'a mut DragDropUi,
         hovering_over_any_handle: &'a mut bool,
     ) -> Self {
         Self {
             id,
+            ui_id,
             state,
             dnd_state,
             hovering_over_any_handle,
@@ -47,6 +50,10 @@ impl<'a> Item<'a> {
         self.drag_source(Some(size), ui, add_content)
     }
 
+    pub fn unique_id(id: Id, ui_id: Id) -> Id {
+        id.with(ui_id).with("egui_dnd_item_ui")
+    }
+
     #[allow(clippy::too_many_lines)] // TODO: refactor this to reduce the number of lines
     fn drag_source(
         self,
@@ -56,6 +63,7 @@ impl<'a> Item<'a> {
     ) -> ItemResponse {
         let hovering_over_any_handle = self.hovering_over_any_handle;
         let id = self.id;
+        let unique_id = Self::unique_id(id, self.ui_id);
         let index = self.state.index;
         let last_pointer_pos = self.dnd_state.detection_state.last_pointer_pos();
         if let DragDetectionState::Dragging {
@@ -68,8 +76,6 @@ impl<'a> Item<'a> {
             if id == *dragging_id {
                 ui.output_mut(|o| o.cursor_icon = CursorIcon::Grabbing);
 
-                let _layer_id = LayerId::new(Order::Tooltip, id);
-
                 let pointer_pos = ui
                     .ctx()
                     .pointer_hover_pos()
@@ -80,7 +86,7 @@ impl<'a> Item<'a> {
                 // We animate so the animated position is updated, even though we don't use it here.
                 animate_position(
                     ui,
-                    id,
+                    unique_id,
                     position,
                     self.dnd_state.swap_animation_time,
                     self.easing,
@@ -92,6 +98,7 @@ impl<'a> Item<'a> {
                     self.dnd_state,
                     ui,
                     id,
+                    unique_id,
                     position,
                     hovering_over_any_handle,
                     size,
@@ -119,7 +126,7 @@ impl<'a> Item<'a> {
 
                 let position = animate_position(
                     ui,
-                    id,
+                    unique_id,
                     end_pos,
                     self.dnd_state.return_animation_time,
                     self.easing,
@@ -131,6 +138,7 @@ impl<'a> Item<'a> {
                     self.dnd_state,
                     ui,
                     id,
+                    unique_id,
                     position,
                     hovering_over_any_handle,
                     size,
@@ -163,7 +171,7 @@ impl<'a> Item<'a> {
 
             let animated_position = animate_position(
                 ui,
-                id,
+                unique_id,
                 rect.min,
                 self.dnd_state.swap_animation_time,
                 self.easing,
@@ -179,7 +187,9 @@ impl<'a> Item<'a> {
             let mut child = ui.new_child(UiBuilder::new().max_rect(rect));
 
             child.scope_builder(
-                UiBuilder::new().max_rect(Rect::from_min_size(position, rect.size())),
+                UiBuilder::new()
+                    .id(unique_id)
+                    .max_rect(Rect::from_min_size(position, rect.size())),
                 |ui| {
                     drag_body(
                         ui,
@@ -201,7 +211,7 @@ impl<'a> Item<'a> {
 
             let animated_position = animate_position(
                 ui,
-                id,
+                unique_id,
                 position,
                 self.dnd_state.swap_animation_time,
                 self.easing,
@@ -218,7 +228,9 @@ impl<'a> Item<'a> {
 
             let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
             let response = child.scope_builder(
-                UiBuilder::new().max_rect(Rect::from_min_size(position, size)),
+                UiBuilder::new()
+                    .id(unique_id)
+                    .max_rect(Rect::from_min_size(position, size)),
                 |ui| {
                     drag_body(
                         ui,
@@ -256,6 +268,7 @@ impl<'a> Item<'a> {
         dnd_state: &mut DragDropUi,
         ui: &mut Ui,
         id: Id,
+        unique_id: Id,
         pos: Pos2,
         hovering_over_any_handle: &mut bool,
         size: Option<Vec2>,
@@ -273,7 +286,7 @@ impl<'a> Item<'a> {
                     ui.ctx().set_transform_layer(ui.layer_id(), transform);
                 }
 
-                ui.with_layout(layout, |ui| {
+                ui.scope_builder(UiBuilder::new().layout(layout).id(unique_id), |ui| {
                     if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {
                         ui.set_max_size(size);
                     }
