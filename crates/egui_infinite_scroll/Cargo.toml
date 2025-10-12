@@ -1,6 +1,6 @@
 [package]
 name = "egui_infinite_scroll"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
 authors = ["Lucas Meurer"]
 homepage = "https://lucasmerlin.github.io/hello_egui/"
