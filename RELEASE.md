@@ -16,7 +16,7 @@ cargo release --execute -p hello_egui_utils_dev
 cargo release --execute -p egui_virtual_list
 cargo release --execute -p egui_inbox
 cargo release --execute -p egui_infinite_scroll
-cargo release --workspace --execute  --exclude egui_inbox --exclude egui_virtual_list --exclude egui_infinite_scroll  --exclude hello_egui_utils --exclude egui_animation
+cargo release --workspace --execute --exclude hello_egui_utils_dev --exclude egui_inbox --exclude egui_virtual_list --exclude egui_infinite_scroll  --exclude hello_egui_utils --exclude egui_animation
 ```
   - `cargo release -p <crate_name> <patch|minor|major>` to release a new version for a single crate
 - Confirm that all listed crates have a updated changelog with matching versions
