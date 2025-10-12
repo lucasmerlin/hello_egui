@@ -1,6 +1,8 @@
 # egui_inbox changelog
 
-## Unreleased
+## 0.10.0
+
+- Update egui to 0.33.0
 
 - Fixed a potential deadlock in `TypeInbox`
 

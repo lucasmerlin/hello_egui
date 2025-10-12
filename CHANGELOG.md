@@ -1,5 +1,9 @@
 # hello_egui changelog
 
+## 0.10.0
+
+- Update egui to 0.33.0
+
 ## 0.9.0
 
 - update all crates for egui 0.32 support

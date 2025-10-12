@@ -1,5 +1,9 @@
 # egui_animation changelog
 
+## 0.10.0
+
+- Update egui to 0.33.0
+
 ## 0.9.0
 
 - Update egui to 0.32

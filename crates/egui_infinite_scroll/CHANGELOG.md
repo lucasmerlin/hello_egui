@@ -1,5 +1,9 @@
 # egui_infinite_scroll changelog
 
+## 0.9.0
+
+- Update egui to 0.33.0
+
 ## 0.8.0
 
 - Update egui to 0.32
