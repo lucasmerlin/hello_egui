@@ -67,7 +67,7 @@ impl App {
             }
         });
 
-        let width = ctx.screen_rect().width();
+        let width = ctx.content_rect().width();
         let collapsible_sidebar = width < 800.0;
         let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
 
