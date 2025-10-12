@@ -264,7 +264,7 @@ impl EguiWebView {
             });
         }
 
-        let screen_rect = ui.ctx().screen_rect();
+        let screen_rect = ui.ctx().content_rect();
         let wv_height = screen_rect.height() * ui.ctx().zoom_factor();
         let wv_rect = response.rect * ui.ctx().zoom_factor();
 

@@ -24,6 +24,7 @@ pub trait FlexWidget {
     fn flex_ui(self, item: FlexItem, flex_instance: &mut FlexInstance) -> Self::Response;
 }
 
+#[expect(deprecated)]
 mod egui_widgets {
     use super::FlexWidget;
     use crate::{FlexInstance, FlexItem};
