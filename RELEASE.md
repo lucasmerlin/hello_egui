@@ -12,6 +12,7 @@ How to release:
 ```bash
 # https://github.com/crate-ci/cargo-release/issues/829 should fix this
 cargo release minor --workspace --execute # *fails*
+cargo release --execute -p hello_egui_utils_dev
 cargo release --execute -p egui_virtual_list
 cargo release --execute -p egui_inbox
 cargo release --execute -p egui_infinite_scroll
