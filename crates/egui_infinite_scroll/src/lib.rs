@@ -227,8 +227,9 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.virtual_list.reset();
     }
 
-    fn read_inboxes(&mut self, ui: &mut Ui) {
-        self.bottom_inbox.read(ui).for_each(|state| {
+    /// Update the data (check if anything has been loaded) without showing the ui.
+    pub fn update(&mut self, ctx: &egui::Context) {
+        self.bottom_inbox.read(ctx).for_each(|state| {
             self.bottom_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
                     let has_cursor = cursor.is_some();
@@ -237,7 +238,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     }
                     self.items.extend(items);
 
-                    ui.ctx().request_repaint();
+                    ctx.request_repaint();
                     if has_cursor {
                         LoadingState::Idle
                     } else {
@@ -248,7 +249,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             };
         });
 
-        self.top_inbox.read(ui).for_each(|state| {
+        self.top_inbox.read(ctx).for_each(|state| {
             self.top_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
                     self.virtual_list.items_inserted_at_start(items.len());
@@ -260,7 +261,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     self.items = items;
                     self.items.append(&mut old_items);
 
-                    ui.ctx().request_repaint();
+                    ctx.request_repaint();
                     if has_cursor {
                         LoadingState::Idle
                     } else {
@@ -291,7 +292,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         end_prefetch: usize,
         mut layout: impl FnMut(&mut Ui, usize, &mut [&mut T]) -> usize,
     ) -> VirtualListResponse {
-        self.read_inboxes(ui);
+        self.update(ui.ctx());
 
         let mut items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
@@ -408,7 +409,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         row_height: f32,
         mut row_ui: impl FnMut(TableRow, &mut T),
     ) {
-        self.read_inboxes(table.ui_mut());
+        self.update(table.ui_mut().ctx());
 
         let mut min_item = 0;
         let mut max_item = 0;
