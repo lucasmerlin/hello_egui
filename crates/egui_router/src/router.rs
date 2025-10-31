@@ -192,12 +192,12 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let mut redirect = None;
 
         let path = path.into();
+        let (path, query) = Self::parse_path(&path);
+
         let result = self.router.at_mut(&path);
 
         let current_state = self.history.last().map_or(0, |r| r.state);
         let new_state = current_state;
-
-        let (path, query) = Self::parse_path(&path);
 
         let result = match result {
             Ok(match_) => match match_.value {
