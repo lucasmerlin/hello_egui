@@ -5,6 +5,7 @@
 use std::ops::Range;
 
 use egui::{Align, Pos2, Rect, Ui, UiBuilder, Vec2};
+use egui::style::ScrollAnimation;
 use web_time::{Duration, SystemTime};
 
 /// The response from a call to [`VirtualList::ui_custom_layout`]
@@ -184,7 +185,7 @@ impl VirtualList {
 
                 let added_height = end_height.y - start_height.y;
 
-                ui.scroll_with_delta(Vec2::new(0.0, -added_height));
+                ui.scroll_with_delta_animation(Vec2::new(0.0, -added_height), ScrollAnimation::none());
 
                 index_offset = scroll_top_items;
 
