@@ -184,11 +184,7 @@ impl VirtualList {
 
                 let added_height = end_height.y - start_height.y + ui.spacing().item_spacing.y;
 
-                // TODO: Ideally we should be able to use scroll_with_delta here but that doesn't work
-                // until https://github.com/emilk/egui/issues/2783 is fixed. Before, scroll_to_rect
-                // only works when the mouse is over the scroll area.
-                // ui.scroll_with_delta(Vec2::new(0.0, -added_height));
-                ui.scroll_to_rect(ui.clip_rect().translate(Vec2::new(0.0, added_height)), None);
+                ui.scroll_with_delta(Vec2::new(0.0, -added_height));
 
                 index_offset = scroll_top_items;
 
