@@ -182,7 +182,7 @@ impl VirtualList {
                 }
                 let end_height = measure_ui.next_widget_position();
 
-                let added_height = end_height.y - start_height.y + ui.spacing().item_spacing.y;
+                let added_height = end_height.y - start_height.y;
 
                 ui.scroll_with_delta(Vec2::new(0.0, -added_height));
 
