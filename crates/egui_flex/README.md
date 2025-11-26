@@ -10,6 +10,12 @@
 
 [content]:<>
 
+## When should I use egui_flex?
+I recomment you to use this lightly, and prefer using egui's built-in layout features where possible.
+I only use this crate in places where I need something that is impossible using egui's built-in layout features, or 
+where a lot of custom math would be required.
+
+## Overview
 
 I was curious how much of flexbox I could implement in egui in a single-pass layout, by just remembering the sizes
 of widgets from the previous frame. Turns out it's quite a lot!
