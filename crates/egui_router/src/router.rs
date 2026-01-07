@@ -202,7 +202,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let result = match result {
             Ok(match_) => match match_.value {
                 RouteKind::Route(handler) => {
-                    self.history_kind.replace(path, new_state)?;
+                    self.history_kind.replace(&path_with_query, new_state)?;
                     let leaving_route = self.history.pop();
                     let route = handler(Request {
                         state,
