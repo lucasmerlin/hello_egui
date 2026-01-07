@@ -40,7 +40,7 @@ impl<F: FnMut(&mut Ui, &mut State), State> Route<State> for F {
 static ID: AtomicUsize = AtomicUsize::new(0);
 
 struct RouteState<State> {
-    path: String,
+    path_with_query: String,
     route: HandlerResult<Box<dyn Route<State>>>,
     id: usize,
     state: u32,
