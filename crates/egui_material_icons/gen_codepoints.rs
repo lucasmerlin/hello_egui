@@ -21,11 +21,12 @@ pub fn main() {
                 let addr = split_point[1];
 
                 if !names.contains(&name) {
-                    let token = Some(format!(
-                        "pub const ICON_{name}: &str = \"\\u{{{addr}}}\";\n"
-                    ));
-                    names.insert(name);
-                    token
+                    names.insert(name.clone());
+                    Some(format!(
+                        "pub const ICON_{name}: &str = \"\\u{{{addr}}}\";\n\
+                         #[cfg(feature = \"outline\")]\n\
+                         pub const ICON_OUTLINE_{name}: crate::OutlinedIcon = crate::OutlinedIcon(\"\\u{{{addr}}}\");\n"
+                    ))
                 } else {
                     None
                 }

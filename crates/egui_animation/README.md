@@ -6,8 +6,4 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_animation.svg)](https://crates.io/crates/egui_animation)
 
-
-
 [content]:<>
-
-
