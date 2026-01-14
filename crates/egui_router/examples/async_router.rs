@@ -26,6 +26,7 @@ async fn main() -> eframe::Result<()> {
             });
             let router = router.get_or_insert_with(|| {
                 EguiRouter::builder()
+                    .swipe_back_gesture(true)
                     .error_ui(|ui, state: &AppState, error| {
                         ui.label(format!("Error: {error}"));
                         if ui.button("back").clicked() {
