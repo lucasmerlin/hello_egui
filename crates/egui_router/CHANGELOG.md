@@ -1,5 +1,10 @@
 # egui_router changelog
 
+## 0.6.1
+
+- Fix `router.replace` ignoring query params
+- Fix navigating back in the browser to a route with query params
+
 ## 0.6.0
 
 - Update egui to 0.33.0
