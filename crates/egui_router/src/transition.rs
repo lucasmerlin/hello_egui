@@ -237,22 +237,22 @@ impl ActiveTransition {
 
         if self.backward {
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut out_ui = self.out.create_child_ui(
+                let mut in_ui = self.in_.create_child_ui(
                     ui,
                     (self.easing)(t),
                     Id::new("router_child").with(in_id),
                 );
-                content_in(&mut out_ui, state);
+                content_in(&mut in_ui, state);
             });
 
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
-                    let mut in_ui = self.in_.create_child_ui(
+                    let mut out_ui = self.out.create_child_ui(
                         ui,
                         (self.easing)(1.0 - t),
                         Id::new("router_child").with(out_id),
                     );
-                    content_out(&mut in_ui, state);
+                    content_out(&mut out_ui, state);
                 });
             }
         } else {
