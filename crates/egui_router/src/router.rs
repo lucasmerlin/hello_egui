@@ -91,7 +91,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
     /// Get the active route
     pub fn active_route(&self) -> Option<&str> {
-        self.history.last().map(|r| r.path.as_str())
+        self.history.last().map(|r| r.path_with_query.as_str())
     }
 
     /// How many history entries are there?
@@ -101,7 +101,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
     /// Iterate over the paths in the history
     pub fn history(&self) -> impl Iterator<Item = &str> {
-        self.history.iter().map(|s| s.path.as_str())
+        self.history.iter().map(|s| s.path_with_query.as_str())
     }
 
     fn parse_path(path: &str) -> (&str, BTreeMap<Cow<str>, Cow<str>>) {
@@ -113,11 +113,11 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     fn navigate_impl(
         &mut self,
         state: &mut State,
-        path: &str,
+        path_with_query: &str,
         transition_config: TransitionConfig,
         new_state: u32,
     ) -> RouterResult {
-        let (path, query) = Self::parse_path(path);
+        let (path, query) = Self::parse_path(path_with_query);
 
         let mut redirect = None;
         let result = self.router.at_mut(path);
@@ -132,7 +132,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             query,
                         });
                         self.history.push(RouteState {
-                            path: path.to_string(),
+                            path_with_query: path_with_query.to_string(),
                             route,
                             id: ID.fetch_add(1, Ordering::SeqCst),
                             state: new_state,
@@ -215,18 +215,18 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     ) -> RouterResult {
         let mut redirect = None;
 
-        let path = path.into();
-        let result = self.router.at_mut(&path);
+        let path_with_query = path.into();
+        let (path, query) = Self::parse_path(&path_with_query);
+
+        let result = self.router.at_mut(path);
 
         let current_state = self.history.last().map_or(0, |r| r.state);
         let new_state = current_state;
 
-        let (path, query) = Self::parse_path(&path);
-
         let result = match result {
             Ok(match_) => match match_.value {
                 RouteKind::Route(handler) => {
-                    self.history_kind.replace(path, new_state)?;
+                    self.history_kind.replace(&path_with_query, new_state)?;
                     let leaving_route = self.history.pop();
                     let route = handler(Request {
                         state,
@@ -234,7 +234,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         query,
                     });
                     self.history.push(RouteState {
-                        path: path.to_string(),
+                        path_with_query: path_with_query.to_string(),
                         route,
                         id: ID.fetch_add(1, Ordering::SeqCst),
                         state: new_state,
@@ -283,7 +283,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             if let Some(route_state) = self
                 .history
                 .iter()
-                .find(|r| r.path == path && r.state == state_index)
+                .find(|r| r.path_with_query == path && r.state == state_index)
                 .map(|r| r.state)
             {
                 let active_state = self.history.last().map_or(0, |r| r.state);
