@@ -5,7 +5,7 @@ use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
     CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
 };
-use egui::{scroll_area, Id, Sense, Ui};
+use egui::{scroll_area, Id, NumExt, Sense, Ui};
 use matchit::MatchError;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -396,13 +396,16 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
                                 // Start a manual backward transition
                                 if self.current_transition.is_none() {
-                                    self.current_transition = Some(CurrentTransition {
-                                        active_transition: ActiveTransition::backward_manual(
+                                    let mut transition = CurrentTransition {
+                                        active_transition: ActiveTransition::manual(
                                             self.backward_transition.clone(),
                                         )
                                         .with_default_duration(self.default_duration),
                                         leaving_route: None,
-                                    });
+                                    };
+                                    // Initialize progress to 1.0 (fully showing current page)
+                                    transition.active_transition.set_progress(1.0);
+                                    self.current_transition = Some(transition);
                                 }
                             }
                         }
@@ -422,7 +425,8 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         // Update the transition progress
                         if let Some(transition) = &mut self.current_transition {
                             let screen_width = content_rect.width();
-                            let progress = (new_distance / screen_width).min(1.0);
+                            // let progress = 1.0 - (new_distance / screen_width).at_most(1.0);
+                            let progress = 1.0 - (new_distance / screen_width).at_most(1.0);
                             transition.active_transition.set_progress(progress);
                         }
                     }
@@ -442,15 +446,17 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         || velocity >= FLICK_VELOCITY_THRESHOLD;
 
                     if should_navigate_back {
+                        let popped = self.history.pop();
                         // Complete the back navigation
                         if let Some(transition) = &mut self.current_transition {
-                            transition.active_transition.resume_automatic();
+                            let progress = transition.active_transition.progress();
+                            transition.active_transition =
+                                ActiveTransition::backward(self.backward_transition.clone());
+                            transition.active_transition.set_progress(1.0 - progress);
+                            transition.leaving_route = popped;
                         }
                         // Actually perform the back navigation
                         self.history_kind.back().ok();
-                        if self.history.len() > 1 {
-                            self.history.pop();
-                        }
                     } else {
                         // Cancel the gesture - animate back to the current page
                         self.current_transition = None;

@@ -193,24 +193,24 @@ impl ActiveTransition {
         }
     }
 
-    pub fn backward_manual(config: TransitionConfig) -> Self {
+    pub fn manual(config: TransitionConfig) -> Self {
         Self {
             duration: config.duration,
             easing: config.easing,
             progress: 0.0,
             in_: config.in_,
             out: config.out,
-            backward: true,
+            backward: false,
             manual_control: true,
         }
     }
 
-    pub fn set_progress(&mut self, progress: f32) {
-        self.progress = progress.clamp(0.0, 1.0);
+    pub fn progress(&self) -> f32 {
+        self.progress
     }
 
-    pub fn resume_automatic(&mut self) {
-        self.manual_control = false;
+    pub fn set_progress(&mut self, progress: f32) {
+        self.progress = progress.clamp(0.0, 1.0);
     }
 
     pub fn with_default_duration(mut self, duration: Option<f32>) -> Self {
@@ -242,32 +242,36 @@ impl ActiveTransition {
             (self.easing)(t)
         };
 
+        let eased_t_rev = if self.manual_control {
+            1.0 - t
+        } else {
+            (self.easing)(1.0 - t)
+        };
+
         if self.backward {
-            // Render previous page first (underneath, revealed as current slides away)
+            with_temp_auto_id(ui, in_id, |ui| {
+                let mut out_ui =
+                    self.out
+                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
+                content_in(&mut out_ui, state);
+            });
+
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
-                    let mut out_ui =
-                        self.out
-                            .create_child_ui(ui, eased_t, Id::new("router_child").with(out_id));
-                    content_out(&mut out_ui, state);
+                    let mut in_ui = self.in_.create_child_ui(
+                        ui,
+                        eased_t_rev,
+                        Id::new("router_child").with(out_id),
+                    );
+                    content_out(&mut in_ui, state);
                 });
             }
-
-            // Render current page second (on top, sliding to the right)
-            with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui = self.in_.create_child_ui(
-                    ui,
-                    1.0 - eased_t,
-                    Id::new("router_child").with(in_id),
-                );
-                content_in(&mut in_ui, state);
-            });
         } else {
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
                         ui,
-                        1.0 - eased_t,
+                        eased_t_rev,
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut out_ui, state);
@@ -282,7 +286,7 @@ impl ActiveTransition {
             });
         }
 
-        if self.progress >= 1.0 {
+        if self.progress >= 1.0 && !self.manual_control {
             ActiveTransitionResult::Done
         } else {
             ActiveTransitionResult::Continue
