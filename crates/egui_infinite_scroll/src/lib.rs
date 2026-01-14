@@ -310,8 +310,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     fn update_items(&mut self, item_range: &Range<usize>, end_prefetch: usize) {
         let items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
-        if item_range.end + end_prefetch >= items.len()
-        {
+        if item_range.end + end_prefetch >= items.len() {
             self.load_more_end();
         }
 
