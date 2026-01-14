@@ -422,10 +422,14 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             velocity: new_velocity,
                         };
 
+                        if new_distance > 10.0 {
+                            // Steal the drag in case a scroll area is also detecting it
+                            ui.ctx().set_dragged_id(gesture_id);
+                        }
+
                         // Update the transition progress
                         if let Some(transition) = &mut self.current_transition {
                             let screen_width = content_rect.width();
-                            // let progress = 1.0 - (new_distance / screen_width).at_most(1.0);
                             let progress = 1.0 - (new_distance / screen_width).at_most(1.0);
                             transition.active_transition.set_progress(progress);
                         }
