@@ -3,7 +3,7 @@
 ## 0.9.1
 
 - Fix size mismatch
-- Disable scroll animation by default
+- Remove ugly scroll workaround
 
 ## 0.9.0
 
