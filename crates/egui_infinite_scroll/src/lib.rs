@@ -227,8 +227,9 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         self.virtual_list.reset();
     }
 
-    fn read_inboxes(&mut self, ui: &mut Ui) {
-        self.bottom_inbox.read(ui).for_each(|state| {
+    /// Update the data (check if anything has been loaded) without showing the ui.
+    pub fn update(&mut self, ctx: &egui::Context) {
+        self.bottom_inbox.read(ctx).for_each(|state| {
             self.bottom_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
                     let has_cursor = cursor.is_some();
@@ -237,7 +238,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     }
                     self.items.extend(items);
 
-                    ui.ctx().request_repaint();
+                    ctx.request_repaint();
                     if has_cursor {
                         LoadingState::Idle
                     } else {
@@ -248,7 +249,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
             };
         });
 
-        self.top_inbox.read(ui).for_each(|state| {
+        self.top_inbox.read(ctx).for_each(|state| {
             self.top_loading_state = match state {
                 LoadingState::Loaded(items, cursor) => {
                     self.virtual_list.items_inserted_at_start(items.len());
@@ -260,7 +261,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                     self.items = items;
                     self.items.append(&mut old_items);
 
-                    ui.ctx().request_repaint();
+                    ctx.request_repaint();
                     if has_cursor {
                         LoadingState::Idle
                     } else {
@@ -291,7 +292,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         end_prefetch: usize,
         mut layout: impl FnMut(&mut Ui, usize, &mut [&mut T]) -> usize,
     ) -> VirtualListResponse {
-        self.read_inboxes(ui);
+        self.update(ui.ctx());
 
         let mut items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
@@ -309,9 +310,18 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
     fn update_items(&mut self, item_range: &Range<usize>, end_prefetch: usize) {
         let items = Self::filtered_items(&mut self.items, self.filter.as_ref());
 
-        if item_range.end + end_prefetch >= items.len()
-            && matches!(self.bottom_loading_state, LoadingState::Idle)
-        {
+        if item_range.end + end_prefetch >= items.len() {
+            self.load_more_end();
+        }
+
+        if item_range.start < end_prefetch {
+            self.load_more_start();
+        }
+    }
+
+    /// Load more items at the end (if idle).
+    pub fn load_more_end(&mut self) {
+        if matches!(self.bottom_loading_state, LoadingState::Idle) {
             if let Some(end_loader) = &mut self.end_loader {
                 self.bottom_loading_state = LoadingState::Loading;
                 let sender = self.bottom_inbox.sender();
@@ -328,8 +338,11 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                 );
             }
         }
+    }
 
-        if item_range.start < end_prefetch && matches!(self.top_loading_state, LoadingState::Idle) {
+    /// Load more items at the start (if idle).
+    pub fn load_more_start(&mut self) {
+        if matches!(self.top_loading_state, LoadingState::Idle) {
             if let Some(start_loader) = &mut self.start_loader {
                 self.top_loading_state = LoadingState::Loading;
                 let sender = self.top_inbox.sender();
@@ -408,7 +421,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         row_height: f32,
         mut row_ui: impl FnMut(TableRow, &mut T),
     ) {
-        self.read_inboxes(table.ui_mut());
+        self.update(table.ui_mut().ctx());
 
         let mut min_item = 0;
         let mut max_item = 0;
