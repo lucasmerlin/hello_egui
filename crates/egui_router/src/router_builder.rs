@@ -23,6 +23,10 @@ pub struct RouterBuilder<State, H> {
 
     pub(crate) error_ui: ErrorUi<State>,
     pub(crate) loading_ui: LoadingUi<State>,
+
+    pub(crate) swipe_back_gesture_enabled: bool,
+    pub(crate) swipe_back_edge_width: f32,
+    pub(crate) swipe_back_threshold: f32,
 }
 
 impl<State: 'static, H: History + Default> Default for RouterBuilder<State, H> {
@@ -48,6 +52,9 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
             loading_ui: Arc::new(Box::new(|ui, _| {
                 ui.spinner();
             })),
+            swipe_back_gesture_enabled: true,
+            swipe_back_edge_width: 40.0,
+            swipe_back_threshold: 0.4,
         }
     }
 
@@ -231,6 +238,24 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
         self.router
             .insert(route, RouteKind::Redirect(redirect.into()))
             .unwrap();
+        self
+    }
+
+    /// Enable or disable the iOS-style swipe-to-go-back gesture (enabled by default)
+    pub fn swipe_back_gesture(mut self, enabled: bool) -> Self {
+        self.swipe_back_gesture_enabled = enabled;
+        self
+    }
+
+    /// Set the edge width in pixels where the swipe gesture can be initiated (default: 40.0)
+    pub fn swipe_back_edge_width(mut self, width: f32) -> Self {
+        self.swipe_back_edge_width = width;
+        self
+    }
+
+    /// Set the threshold (as a fraction of screen width) for completing the back navigation (default: 0.4)
+    pub fn swipe_back_threshold(mut self, threshold: f32) -> Self {
+        self.swipe_back_threshold = threshold;
         self
     }
 
