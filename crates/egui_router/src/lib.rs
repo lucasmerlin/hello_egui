@@ -96,12 +96,12 @@ impl TransitionConfig {
         }
     }
 
-    /// A iOS-like slide transition (Same as [`TransitionConfig::default`])
+    /// An iOS-like slide transition (Same as [`TransitionConfig::default`])
     pub fn slide() -> Self {
         Self::default()
     }
 
-    /// A android-like fade up transition
+    /// An Android-like fade up transition
     pub fn fade_up() -> Self {
         Self::new(
             SlideFadeTransition(

@@ -159,6 +159,8 @@ pub(crate) struct ActiveTransition {
     in_: Transition,
     out: Transition,
     backward: bool,
+    /// If true, the transition is controlled manually (e.g., by a gesture)
+    manual_control: bool,
 }
 
 pub(crate) enum ActiveTransitionResult {
@@ -175,6 +177,7 @@ impl ActiveTransition {
             in_: config.in_,
             out: config.out,
             backward: false,
+            manual_control: false,
         }
     }
 
@@ -186,7 +189,28 @@ impl ActiveTransition {
             in_: config.in_,
             out: config.out,
             backward: true,
+            manual_control: false,
         }
+    }
+
+    pub fn backward_manual(config: TransitionConfig) -> Self {
+        Self {
+            duration: config.duration,
+            easing: config.easing,
+            progress: 0.0,
+            in_: config.in_,
+            out: config.out,
+            backward: true,
+            manual_control: true,
+        }
+    }
+
+    pub fn set_progress(&mut self, progress: f32) {
+        self.progress = progress.clamp(0.0, 1.0);
+    }
+
+    pub fn resume_automatic(&mut self) {
+        self.manual_control = false;
     }
 
     pub fn with_default_duration(mut self, duration: Option<f32>) -> Self {
@@ -203,39 +227,47 @@ impl ActiveTransition {
         (in_id, content_in): (usize, impl FnOnce(&mut Ui, &mut State)),
         content_out: Option<(usize, impl FnOnce(&mut Ui, &mut State))>,
     ) -> ActiveTransitionResult {
-        let dt = ui.input(|i| i.stable_dt);
-
-        self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
+        if !self.manual_control {
+            let dt = ui.input(|i| i.stable_dt);
+            self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
+        }
 
         let t = self.progress.min(1.0);
         ui.ctx().request_repaint();
 
-        if self.backward {
-            with_temp_auto_id(ui, in_id, |ui| {
-                let mut out_ui = self.out.create_child_ui(
-                    ui,
-                    (self.easing)(t),
-                    Id::new("router_child").with(in_id),
-                );
-                content_in(&mut out_ui, state);
-            });
+        // Apply easing only when not manually controlled (for gestures, use linear)
+        let eased_t = if self.manual_control {
+            t
+        } else {
+            (self.easing)(t)
+        };
 
+        if self.backward {
+            // Render previous page first (underneath, revealed as current slides away)
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
-                    let mut in_ui = self.in_.create_child_ui(
-                        ui,
-                        (self.easing)(1.0 - t),
-                        Id::new("router_child").with(out_id),
-                    );
-                    content_out(&mut in_ui, state);
+                    let mut out_ui =
+                        self.out
+                            .create_child_ui(ui, eased_t, Id::new("router_child").with(out_id));
+                    content_out(&mut out_ui, state);
                 });
             }
+
+            // Render current page second (on top, sliding to the right)
+            with_temp_auto_id(ui, in_id, |ui| {
+                let mut in_ui = self.in_.create_child_ui(
+                    ui,
+                    1.0 - eased_t,
+                    Id::new("router_child").with(in_id),
+                );
+                content_in(&mut in_ui, state);
+            });
         } else {
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
                         ui,
-                        (self.easing)(1.0 - t),
+                        1.0 - eased_t,
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut out_ui, state);
@@ -243,11 +275,9 @@ impl ActiveTransition {
             }
 
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui = self.in_.create_child_ui(
-                    ui,
-                    (self.easing)(t),
-                    Id::new("router_child").with(in_id),
-                );
+                let mut in_ui =
+                    self.in_
+                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
                 content_in(&mut in_ui, state);
             });
         }

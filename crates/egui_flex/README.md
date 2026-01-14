@@ -11,7 +11,7 @@
 [content]:<>
 
 ## When should I use egui_flex?
-I recomment you to use this lightly, and prefer using egui's built-in layout features where possible.
+I recommend you to use this lightly, and prefer using egui's built-in layout features where possible.
 I only use this crate in places where I need something that is impossible using egui's built-in layout features, or 
 where a lot of custom math would be required.
 
