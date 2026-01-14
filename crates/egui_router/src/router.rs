@@ -20,6 +20,8 @@ enum SwipeBackGestureState {
     Swiping {
         /// Distance swiped in pixels
         distance: f32,
+        /// Horizontal velocity in pixels per second
+        velocity: f32,
     },
 }
 
@@ -365,7 +367,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             && !ui.ctx().is_being_dragged(gesture_id);
 
         if sense.contains_pointer() && !is_something_blocking_drag {
-            let (pointer_pos, delta, any_released) = ui.input(|input| {
+            let (pointer_pos, delta, any_released, dt) = ui.input(|input| {
                 (
                     input.pointer.interact_pos(),
                     if input.pointer.is_decidedly_dragging() {
@@ -374,6 +376,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         None
                     },
                     input.pointer.any_released(),
+                    input.stable_dt,
                 )
             });
 
@@ -384,7 +387,10 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         if let Some(pos) = pointer_pos {
                             if pos.x <= content_rect.min.x + self.swipe_back_edge_width {
                                 // Start the gesture
-                                gesture_state = SwipeBackGestureState::Swiping { distance: 0.0 };
+                                gesture_state = SwipeBackGestureState::Swiping {
+                                    distance: 0.0,
+                                    velocity: 0.0,
+                                };
 
                                 // Start a manual backward transition
                                 if self.current_transition.is_none() {
@@ -399,11 +405,20 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             }
                         }
                     }
-                    SwipeBackGestureState::Swiping { distance } => {
+                    SwipeBackGestureState::Swiping { distance, .. } => {
                         // Update the gesture distance (only positive horizontal movement)
                         let new_distance = (distance + delta.x).max(0.0);
+
+                        // Calculate velocity (pixels per second)
+                        let new_velocity = if dt > 0.0 {
+                            delta.x / dt
+                        } else {
+                            0.0
+                        };
+
                         gesture_state = SwipeBackGestureState::Swiping {
                             distance: new_distance,
+                            velocity: new_velocity,
                         };
 
                         // Update the transition progress
@@ -417,12 +432,18 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             }
 
             if any_released {
-                if let SwipeBackGestureState::Swiping { distance } = gesture_state {
+                if let SwipeBackGestureState::Swiping { distance, velocity } = gesture_state {
                     let screen_width = content_rect.width();
                     let progress = distance / screen_width;
 
-                    // Check if we've swiped far enough to trigger back navigation
-                    if progress >= self.swipe_back_threshold {
+                    // Velocity threshold for flick gesture (pixels per second)
+                    const FLICK_VELOCITY_THRESHOLD: f32 = 500.0;
+
+                    // Check if we've swiped far enough OR flicked fast enough to trigger back navigation
+                    let should_navigate_back = progress >= self.swipe_back_threshold
+                        || velocity >= FLICK_VELOCITY_THRESHOLD;
+
+                    if should_navigate_back {
                         // Complete the back navigation
                         if let Some(transition) = &mut self.current_transition {
                             transition.active_transition.resume_automatic();
