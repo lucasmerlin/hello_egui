@@ -366,8 +366,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let is_something_blocking_drag = ui.ctx().dragged_id().is_some_and(|id| {
             // Ignore if the dragged id is a scroll area
             scroll_area::State::load(ui.ctx(), id).is_some()
-        })
-            && !ui.ctx().is_being_dragged(gesture_id);
+        }) && !ui.ctx().is_being_dragged(gesture_id);
 
         if sense.contains_pointer() && !is_something_blocking_drag {
             let (pointer_pos, delta, any_released, dt) = ui.input(|input| {
@@ -399,7 +398,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                                 if self.current_transition.is_none() {
                                     self.current_transition = Some(CurrentTransition {
                                         active_transition: ActiveTransition::backward_manual(
-                                            self.backward_transition.clone()
+                                            self.backward_transition.clone(),
                                         )
                                         .with_default_duration(self.default_duration),
                                         leaving_route: None,
@@ -413,11 +412,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         let new_distance = (distance + delta.x).max(0.0);
 
                         // Calculate velocity (pixels per second)
-                        let new_velocity = if dt > 0.0 {
-                            delta.x / dt
-                        } else {
-                            0.0
-                        };
+                        let new_velocity = if dt > 0.0 { delta.x / dt } else { 0.0 };
 
                         gesture_state = SwipeBackGestureState::Swiping {
                             distance: new_distance,
