@@ -208,13 +208,9 @@ impl ActiveTransition {
     pub fn progress(&self) -> f32 {
         self.progress
     }
-    
+
     pub fn set_progress(&mut self, progress: f32) {
         self.progress = progress.clamp(0.0, 1.0);
-    }
-
-    pub fn resume_automatic(&mut self) {
-        self.manual_control = false;
     }
 
     pub fn with_default_duration(mut self, duration: Option<f32>) -> Self {
@@ -254,11 +250,9 @@ impl ActiveTransition {
 
         if self.backward {
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut out_ui = self.out.create_child_ui(
-                    ui,
-                    eased_t,
-                    Id::new("router_child").with(in_id),
-                );
+                let mut out_ui =
+                    self.out
+                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
                 content_in(&mut out_ui, state);
             });
 
@@ -285,11 +279,9 @@ impl ActiveTransition {
             }
 
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui = self.in_.create_child_ui(
-                    ui,
-                    eased_t,
-                    Id::new("router_child").with(in_id),
-                );
+                let mut in_ui =
+                    self.in_
+                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
                 content_in(&mut in_ui, state);
             });
         }
