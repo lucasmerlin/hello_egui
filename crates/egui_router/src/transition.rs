@@ -236,25 +236,27 @@ impl ActiveTransition {
         ui.ctx().request_repaint();
 
         if self.backward {
-            with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui = self.in_.create_child_ui(
-                    ui,
-                    (self.easing)(t),
-                    Id::new("router_child").with(in_id),
-                );
-                content_in(&mut in_ui, state);
-            });
-
+            // Render previous page first (underneath, revealed as current slides away)
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
                         ui,
-                        (self.easing)(1.0 - t),
+                        (self.easing)(t),
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut out_ui, state);
                 });
             }
+
+            // Render current page second (on top, sliding to the right)
+            with_temp_auto_id(ui, in_id, |ui| {
+                let mut in_ui = self.in_.create_child_ui(
+                    ui,
+                    (self.easing)(1.0 - t),
+                    Id::new("router_child").with(in_id),
+                );
+                content_in(&mut in_ui, state);
+            });
         } else {
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
