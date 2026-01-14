@@ -159,6 +159,8 @@ pub(crate) struct ActiveTransition {
     in_: Transition,
     out: Transition,
     backward: bool,
+    /// If true, the transition is controlled manually (e.g., by a gesture)
+    manual_control: bool,
 }
 
 pub(crate) enum ActiveTransitionResult {
@@ -175,6 +177,7 @@ impl ActiveTransition {
             in_: config.in_,
             out: config.out,
             backward: false,
+            manual_control: false,
         }
     }
 
@@ -186,7 +189,28 @@ impl ActiveTransition {
             in_: config.in_,
             out: config.out,
             backward: true,
+            manual_control: false,
         }
+    }
+
+    pub fn backward_manual(config: TransitionConfig) -> Self {
+        Self {
+            duration: config.duration,
+            easing: config.easing,
+            progress: 0.0,
+            in_: config.in_,
+            out: config.out,
+            backward: true,
+            manual_control: true,
+        }
+    }
+
+    pub fn set_progress(&mut self, progress: f32) {
+        self.progress = progress.clamp(0.0, 1.0);
+    }
+
+    pub fn resume_automatic(&mut self) {
+        self.manual_control = false;
     }
 
     pub fn with_default_duration(mut self, duration: Option<f32>) -> Self {
@@ -203,9 +227,10 @@ impl ActiveTransition {
         (in_id, content_in): (usize, impl FnOnce(&mut Ui, &mut State)),
         content_out: Option<(usize, impl FnOnce(&mut Ui, &mut State))>,
     ) -> ActiveTransitionResult {
-        let dt = ui.input(|i| i.stable_dt);
-
-        self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
+        if !self.manual_control {
+            let dt = ui.input(|i| i.stable_dt);
+            self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
+        }
 
         let t = self.progress.min(1.0);
         ui.ctx().request_repaint();

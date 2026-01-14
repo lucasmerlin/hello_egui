@@ -5,11 +5,23 @@ use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
     CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
 };
-use egui::Ui;
+use egui::{Id, Sense, Ui};
 use matchit::MatchError;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::atomic::Ordering;
+
+/// The state of the iOS-style swipe-to-go-back gesture
+#[derive(Debug, Clone)]
+enum SwipeBackGestureState {
+    /// No gesture is happening
+    Idle,
+    /// User is actively swiping
+    Swiping {
+        /// Distance swiped in pixels
+        distance: f32,
+    },
+}
 
 /// A router instance
 pub struct EguiRouter<State, History = DefaultHistory> {
@@ -26,6 +38,13 @@ pub struct EguiRouter<State, History = DefaultHistory> {
     default_duration: Option<f32>,
 
     error_ui: ErrorUi<State>,
+
+    /// Enable iOS-style swipe-to-go-back gesture
+    swipe_back_gesture_enabled: bool,
+    /// Minimum distance from left edge to start the gesture (in pixels)
+    swipe_back_edge_width: f32,
+    /// Minimum swipe distance to trigger navigation (as fraction of screen width)
+    swipe_back_threshold: f32,
 }
 
 impl<State: 'static, H: History + Default> EguiRouter<State, H> {
@@ -45,6 +64,9 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             replace_transition: builder.replace_transition,
             default_duration: builder.default_duration,
             error_ui: builder.error_ui,
+            swipe_back_gesture_enabled: builder.swipe_back_gesture_enabled,
+            swipe_back_edge_width: builder.swipe_back_edge_width,
+            swipe_back_threshold: builder.swipe_back_threshold,
         };
 
         if let Some((r, state_index)) = router
@@ -247,6 +269,11 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
     /// Render the router
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
+        // Handle iOS-style swipe-to-go-back gesture
+        if self.swipe_back_gesture_enabled && self.history.len() > 1 {
+            self.handle_swipe_gesture(ui);
+        }
+
         for e in self.history_kind.update(ui.ctx()) {
             let state_index = e.state.unwrap_or(0);
             let path = e.location;
@@ -316,5 +343,116 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                 Some(ActiveTransitionResult::Continue) | None => {}
             }
         }
+    }
+
+    fn handle_swipe_gesture(&mut self, ui: &mut Ui) {
+        let gesture_id = Id::new("router_swipe_back_gesture");
+
+        // Get or create gesture state
+        let last_state = ui.data_mut(|data| {
+            data.get_temp_mut_or(gesture_id, SwipeBackGestureState::Idle)
+                .clone()
+        });
+
+        let mut gesture_state = last_state;
+
+        // Get the content rect for interaction
+        let content_rect = ui.available_rect_before_wrap();
+        let sense = ui.interact(content_rect, gesture_id, Sense::hover());
+
+        // Check if there's something blocking the drag (e.g., scroll area)
+        let is_something_blocking_drag = ui.ctx().dragged_id().is_some()
+            && !ui.ctx().is_being_dragged(gesture_id);
+
+        if sense.contains_pointer() && !is_something_blocking_drag {
+            let (pointer_pos, delta, any_released) = ui.input(|input| {
+                (
+                    input.pointer.interact_pos(),
+                    if input.pointer.is_decidedly_dragging() {
+                        Some(input.pointer.delta())
+                    } else {
+                        None
+                    },
+                    input.pointer.any_released(),
+                )
+            });
+
+            if let Some(delta) = delta {
+                match gesture_state {
+                    SwipeBackGestureState::Idle => {
+                        // Check if the gesture started from the left edge
+                        if let Some(pos) = pointer_pos {
+                            if pos.x <= content_rect.min.x + self.swipe_back_edge_width {
+                                // Start the gesture
+                                gesture_state = SwipeBackGestureState::Swiping { distance: 0.0 };
+
+                                // Start a manual backward transition
+                                if self.current_transition.is_none() {
+                                    self.current_transition = Some(CurrentTransition {
+                                        active_transition: ActiveTransition::backward_manual(
+                                            self.backward_transition.clone()
+                                        )
+                                        .with_default_duration(self.default_duration),
+                                        leaving_route: None,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    SwipeBackGestureState::Swiping { distance } => {
+                        // Update the gesture distance (only positive horizontal movement)
+                        let new_distance = (distance + delta.x).max(0.0);
+                        gesture_state = SwipeBackGestureState::Swiping {
+                            distance: new_distance,
+                        };
+
+                        // Update the transition progress
+                        if let Some(transition) = &mut self.current_transition {
+                            let screen_width = content_rect.width();
+                            let progress = (new_distance / screen_width).min(1.0);
+                            transition.active_transition.set_progress(progress);
+                        }
+                    }
+                }
+            }
+
+            if any_released {
+                if let SwipeBackGestureState::Swiping { distance } = gesture_state {
+                    let screen_width = content_rect.width();
+                    let progress = distance / screen_width;
+
+                    // Check if we've swiped far enough to trigger back navigation
+                    if progress >= self.swipe_back_threshold {
+                        // Complete the back navigation
+                        if let Some(transition) = &mut self.current_transition {
+                            transition.active_transition.resume_automatic();
+                        }
+                        // Actually perform the back navigation
+                        self.history_kind.back().ok();
+                        if self.history.len() > 1 {
+                            self.history.pop();
+                        }
+                    } else {
+                        // Cancel the gesture - animate back to the current page
+                        self.current_transition = None;
+                    }
+
+                    gesture_state = SwipeBackGestureState::Idle;
+                } else {
+                    gesture_state = SwipeBackGestureState::Idle;
+                }
+            }
+        } else {
+            // Pointer left the area, cancel the gesture
+            if matches!(gesture_state, SwipeBackGestureState::Swiping { .. }) {
+                self.current_transition = None;
+            }
+            gesture_state = SwipeBackGestureState::Idle;
+        }
+
+        // Save the gesture state
+        ui.data_mut(|data| {
+            data.insert_temp(gesture_id, gesture_state);
+        });
     }
 }
