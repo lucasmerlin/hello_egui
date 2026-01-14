@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_inbox.svg)](https://crates.io/crates/egui_inbox)
 
-
-
 [content]:<>
-
 
 Channel to send messages to egui views from async functions, callbacks, etc. without having to use interior mutability.
 Will automatically call `request_repaint()` on the `Ui` when a message is received.
@@ -19,7 +16,7 @@ Currently it is not optimized for performance, so if you expect to send 1000s of
 e.g. std::sync::mpsc instead. Performance might still be improved in the future though.
 
 Example:
-    
+
 ```rust no_run
 use eframe::egui;
 use egui::CentralPanel;

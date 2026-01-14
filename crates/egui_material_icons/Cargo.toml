@@ -10,8 +10,22 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_ma
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["compressed"]
+## Compress embedded fonts with DEFLATE. Reduces binary size significantly.
+compressed = ["dep:include-flate"]
+## Include both filled and outline fonts. `initialize()` registers both.
+## Adds `ICON_OUTLINE_*` constants usable directly in widgets: `ui.button(ICON_OUTLINE_ADD)`
+outline = []
+## Use the outline font instead of the filled font. The default `ICON_*` constants
+## will render as outline icons. Saves binary size if you only need outline icons.
+## Can be combined with `outline` (both features behave the same as `outline-only` alone,
+## but `ICON_OUTLINE_*` constants are also available).
+outline-only = []
+
 [dependencies]
 egui.workspace = true
+include-flate = { version = "0.3", optional = true }
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }

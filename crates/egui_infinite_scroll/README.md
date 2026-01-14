@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_infinite_scroll.svg)](https://crates.io/crates/egui_infinite_scroll)
 
-
-
 [content]:<>
-
 
 Infinite scroll widget for [egui](https://github.com/emilk/egui).
 
@@ -19,4 +16,3 @@ Check the [Gallery](https://lucasmerlin.github.io/hello_egui/#/example/gallery)
 and [Chat](https://lucasmerlin.github.io/hello_egui/#/example/chat) example for a demo.
 
 Internally this uses the [egui_virtual_list](https://crates.io/crates/egui_virtual_list) crate as a virtual list.
-

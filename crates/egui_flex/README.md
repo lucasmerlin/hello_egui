@@ -6,13 +6,12 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_flex.svg)](https://crates.io/crates/egui_flex)
 
-
-
 [content]:<>
 
 ## When should I use egui_flex?
+
 I recomment you to use this lightly, and prefer using egui's built-in layout features where possible.
-I only use this crate in places where I need something that is impossible using egui's built-in layout features, or 
+I only use this crate in places where I need something that is impossible using egui's built-in layout features, or
 where a lot of custom math would be required.
 
 ## Overview
@@ -49,8 +48,8 @@ what all the different flex keywords mean.
 
 - flex-wrap
   wrap and no-wrap works, wrap-reverse is not implemented
-    - if `wrap`, items will fill the row and wrap once they reach Ui::available_width()
-    - else, items will fill the row and overflow if they don't fit
+  - if `wrap`, items will fill the row and wrap once they reach Ui::available_width()
+  - else, items will fill the row and overflow if they don't fit
 
 #### The following things aren't implemented yet but should be possible:
 

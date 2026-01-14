@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_form.svg)](https://crates.io/crates/egui_form)
 
-
-
 [content]:<>
-
 
 egui_form adds form validation to egui.
 It can either use [validator](https://crates.io/crates/validator)

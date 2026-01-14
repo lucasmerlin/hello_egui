@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_router.svg)](https://crates.io/crates/egui_router)
 
-
-
 [content]:<>
-
 
 A single-page application router for [egui](https://github.com/emilk/egui).
 

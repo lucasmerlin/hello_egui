@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/perfect_cursors.svg)](https://crates.io/crates/perfect_cursors)
 
-
-
 [content]:<>
-
 
 # perfect_cursors
 
