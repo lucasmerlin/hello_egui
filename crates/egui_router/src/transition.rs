@@ -235,13 +235,20 @@ impl ActiveTransition {
         let t = self.progress.min(1.0);
         ui.ctx().request_repaint();
 
+        // Apply easing only when not manually controlled (for gestures, use linear)
+        let eased_t = if self.manual_control {
+            t
+        } else {
+            (self.easing)(t)
+        };
+
         if self.backward {
             // Render previous page first (underneath, revealed as current slides away)
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
                         ui,
-                        (self.easing)(t),
+                        eased_t,
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut out_ui, state);
@@ -252,7 +259,7 @@ impl ActiveTransition {
             with_temp_auto_id(ui, in_id, |ui| {
                 let mut in_ui = self.in_.create_child_ui(
                     ui,
-                    (self.easing)(1.0 - t),
+                    1.0 - eased_t,
                     Id::new("router_child").with(in_id),
                 );
                 content_in(&mut in_ui, state);
@@ -262,7 +269,7 @@ impl ActiveTransition {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
                         ui,
-                        (self.easing)(1.0 - t),
+                        1.0 - eased_t,
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut out_ui, state);
@@ -272,7 +279,7 @@ impl ActiveTransition {
             with_temp_auto_id(ui, in_id, |ui| {
                 let mut in_ui = self.in_.create_child_ui(
                     ui,
-                    (self.easing)(t),
+                    eased_t,
                     Id::new("router_child").with(in_id),
                 );
                 content_in(&mut in_ui, state);
