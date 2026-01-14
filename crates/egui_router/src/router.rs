@@ -5,7 +5,7 @@ use crate::transition::{ActiveTransition, ActiveTransitionResult};
 use crate::{
     CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
 };
-use egui::{Id, Sense, Ui};
+use egui::{scroll_area, Id, Sense, Ui};
 use matchit::MatchError;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -363,7 +363,10 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         let sense = ui.interact(content_rect, gesture_id, Sense::hover());
 
         // Check if there's something blocking the drag (e.g., scroll area)
-        let is_something_blocking_drag = ui.ctx().dragged_id().is_some()
+        let is_something_blocking_drag = ui.ctx().dragged_id().is_some_and(|id| {
+            // Ignore if the dragged id is a scroll area
+            scroll_area::State::load(ui.ctx(), id).is_some()
+        })
             && !ui.ctx().is_being_dragged(gesture_id);
 
         if sense.contains_pointer() && !is_something_blocking_drag {
