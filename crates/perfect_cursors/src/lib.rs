@@ -32,10 +32,12 @@ pub struct PerfectCursor {
     spline: Spline,
 }
 
+const MAX_QUEUE_SIZE: usize = 5;
+
 impl Default for PerfectCursor {
     fn default() -> Self {
         Self {
-            max_interval: web_time::Duration::from_millis(300),
+            max_interval: web_time::Duration::from_millis(200),
             state: AnimationState::Idle,
             timestamp: web_time::Instant::now(),
             current_point: None,
@@ -60,7 +62,8 @@ impl PerfectCursor {
         }
         let point = Vec2::new(point.0, point.1);
         let now = web_time::Instant::now();
-        let duration = Ord::min(now - self.timestamp, self.max_interval);
+        // Shorten duration slightly to prevent gradual lag accumulation
+        let duration = Ord::min(now - self.timestamp, self.max_interval).mul_f32(0.9);
 
         if self.prev_point.is_none() {
             self.spline.clear();
@@ -114,6 +117,9 @@ impl PerfectCursor {
             }
             AnimationState::Animating { ref mut queue, .. } => {
                 queue.push(animation);
+                if queue.len() > MAX_QUEUE_SIZE {
+                    queue.drain(..queue.len() - MAX_QUEUE_SIZE);
+                }
             }
             AnimationState::Stopped => {}
         }
