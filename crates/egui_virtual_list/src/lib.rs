@@ -130,9 +130,9 @@ impl VirtualList {
     ) -> VirtualListResponse {
         let mut scroll_to_item_index_visibility = None;
         {
-            let available_width_rounded = (ui.available_width() * 10.0).round() / 10.0;
+            let available_width_rounded = (ui.max_rect().width() * 10.0).round() / 10.0;
             if let Some(last_width) = self.last_width {
-                if available_width_rounded != last_width {
+                if (available_width_rounded - last_width).abs() > 1.0 {
                     self.last_width = Some(available_width_rounded);
                     if self.check_for_resize {
                         self.last_known_row_index = None;

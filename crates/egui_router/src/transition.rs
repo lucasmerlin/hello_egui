@@ -94,6 +94,8 @@ impl TransitionTrait for SlideTransition {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
         let available_size = ui.available_size();
         let offset = available_size * (1.0 - t) * self.amount;
+        // Round to pixels to prevent sub-pixel jitter and flickering in child components
+        let offset = Vec2::new(offset.x.round(), offset.y.round());
         let child_rect = ui.max_rect().translate(offset);
 
         ui.new_child(UiBuilder::new().max_rect(child_rect).id_salt(with_id))
