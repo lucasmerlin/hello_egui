@@ -16,13 +16,6 @@ use std::sync::atomic::Ordering;
 enum SwipeBackGestureState {
     /// No gesture is happening
     Idle,
-    /// Detecting initial drag direction
-    Detecting {
-        /// Accumulated horizontal distance
-        horizontal: f32,
-        /// Accumulated vertical distance
-        vertical: f32,
-    },
     /// User is actively swiping
     Swiping {
         /// Distance swiped in pixels
@@ -393,28 +386,9 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         // Check if the gesture started from the left edge
                         if let Some(pos) = pointer_pos {
                             if pos.x <= content_rect.min.x + self.swipe_back_edge_width {
-                                // Start detecting the drag direction
-                                gesture_state = SwipeBackGestureState::Detecting {
-                                    horizontal: delta.x,
-                                    vertical: delta.y.abs(),
-                                };
-                            }
-                        }
-                    }
-                    SwipeBackGestureState::Detecting { horizontal, vertical } => {
-                        let new_horizontal = horizontal + delta.x;
-                        let new_vertical = vertical + delta.y.abs();
-
-                        // Threshold to determine direction (in pixels)
-                        const DIRECTION_THRESHOLD: f32 = 10.0;
-
-                        // Check if we have enough movement to determine direction
-                        if new_horizontal.abs().max(new_vertical) >= DIRECTION_THRESHOLD {
-                            // Check if the gesture is primarily horizontal and to the right
-                            if new_horizontal > new_vertical && new_horizontal > 0.0 {
-                                // Commit to horizontal swipe-back gesture
+                                // Start the gesture
                                 gesture_state = SwipeBackGestureState::Swiping {
-                                    distance: new_horizontal,
+                                    distance: 0.0,
                                     velocity: 0.0,
                                 };
 
@@ -428,23 +402,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                                         leaving_route: None,
                                     });
                                 }
-
-                                // Update the transition progress
-                                if let Some(transition) = &mut self.current_transition {
-                                    let screen_width = content_rect.width();
-                                    let progress = (new_horizontal / screen_width).min(1.0);
-                                    transition.active_transition.set_progress(progress);
-                                }
-                            } else {
-                                // Not a horizontal right swipe, give up
-                                gesture_state = SwipeBackGestureState::Idle;
                             }
-                        } else {
-                            // Keep detecting
-                            gesture_state = SwipeBackGestureState::Detecting {
-                                horizontal: new_horizontal,
-                                vertical: new_vertical,
-                            };
                         }
                     }
                     SwipeBackGestureState::Swiping { distance, .. } => {
@@ -474,56 +432,43 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             }
 
             if any_released {
-                match gesture_state {
-                    SwipeBackGestureState::Swiping { distance, velocity } => {
-                        let screen_width = content_rect.width();
-                        let progress = distance / screen_width;
+                if let SwipeBackGestureState::Swiping { distance, velocity } = gesture_state {
+                    let screen_width = content_rect.width();
+                    let progress = distance / screen_width;
 
-                        // Velocity threshold for flick gesture (pixels per second)
-                        const FLICK_VELOCITY_THRESHOLD: f32 = 500.0;
+                    // Velocity threshold for flick gesture (pixels per second)
+                    const FLICK_VELOCITY_THRESHOLD: f32 = 500.0;
 
-                        // Check if we've swiped far enough OR flicked fast enough to trigger back navigation
-                        let should_navigate_back = progress >= self.swipe_back_threshold
-                            || velocity >= FLICK_VELOCITY_THRESHOLD;
+                    // Check if we've swiped far enough OR flicked fast enough to trigger back navigation
+                    let should_navigate_back = progress >= self.swipe_back_threshold
+                        || velocity >= FLICK_VELOCITY_THRESHOLD;
 
-                        if should_navigate_back {
-                            // Complete the back navigation
-                            if let Some(transition) = &mut self.current_transition {
-                                transition.active_transition.resume_automatic();
-                            }
-                            // Actually perform the back navigation
-                            self.history_kind.back().ok();
-                            if self.history.len() > 1 {
-                                self.history.pop();
-                            }
-                        } else {
-                            // Cancel the gesture - animate back to the current page
-                            self.current_transition = None;
+                    if should_navigate_back {
+                        // Complete the back navigation
+                        if let Some(transition) = &mut self.current_transition {
+                            transition.active_transition.resume_automatic();
                         }
+                        // Actually perform the back navigation
+                        self.history_kind.back().ok();
+                        if self.history.len() > 1 {
+                            self.history.pop();
+                        }
+                    } else {
+                        // Cancel the gesture - animate back to the current page
+                        self.current_transition = None;
+                    }
 
-                        gesture_state = SwipeBackGestureState::Idle;
-                    }
-                    SwipeBackGestureState::Detecting { .. } => {
-                        // Released before we determined direction - just cancel
-                        gesture_state = SwipeBackGestureState::Idle;
-                    }
-                    _ => {
-                        gesture_state = SwipeBackGestureState::Idle;
-                    }
+                    gesture_state = SwipeBackGestureState::Idle;
+                } else {
+                    gesture_state = SwipeBackGestureState::Idle;
                 }
             }
         } else {
             // Pointer left the area, cancel the gesture
-            match gesture_state {
-                SwipeBackGestureState::Swiping { .. } => {
-                    self.current_transition = None;
-                    gesture_state = SwipeBackGestureState::Idle;
-                }
-                SwipeBackGestureState::Detecting { .. } => {
-                    gesture_state = SwipeBackGestureState::Idle;
-                }
-                SwipeBackGestureState::Idle => {}
+            if matches!(gesture_state, SwipeBackGestureState::Swiping { .. }) {
+                self.current_transition = None;
             }
+            gesture_state = SwipeBackGestureState::Idle;
         }
 
         // Save the gesture state
