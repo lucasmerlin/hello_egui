@@ -436,11 +436,11 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
             if any_released {
                 if let SwipeBackGestureState::Swiping { distance, velocity } = gesture_state {
-                    let screen_width = content_rect.width();
-                    let progress = distance / screen_width;
-
                     // Velocity threshold for flick gesture (pixels per second)
                     const FLICK_VELOCITY_THRESHOLD: f32 = 500.0;
+
+                    let screen_width = content_rect.width();
+                    let progress = distance / screen_width;
 
                     // Check if we've swiped far enough OR flicked fast enough to trigger back navigation
                     let should_navigate_back = progress >= self.swipe_back_threshold
