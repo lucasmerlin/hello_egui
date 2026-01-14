@@ -4,8 +4,8 @@
 
 use std::ops::Range;
 
-use egui::{Align, Pos2, Rect, Ui, UiBuilder, Vec2};
 use egui::style::ScrollAnimation;
+use egui::{Align, Pos2, Rect, Ui, UiBuilder, Vec2};
 use web_time::{Duration, SystemTime};
 
 /// The response from a call to [`VirtualList::ui_custom_layout`]
@@ -170,31 +170,32 @@ impl VirtualList {
 
         // Calculate the added_height for items that were added at the top and scroll by that amount
         // to maintain the scroll position
-        let scroll_items_top_step_2 =
-            if let Some(scroll_top_items) = self.items_inserted_at_start.take() {
-                let mut measure_ui = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
-                measure_ui.set_invisible();
+        let scroll_items_top_step_2 = if let Some(scroll_top_items) =
+            self.items_inserted_at_start.take()
+        {
+            let mut measure_ui = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
+            measure_ui.set_invisible();
 
-                let start_height = measure_ui.next_widget_position();
-                for i in 0..scroll_top_items {
-                    measure_ui.scope_builder(UiBuilder::new().id_salt(i), |ui| {
-                        layout(ui, i);
-                    });
-                }
-                let end_height = measure_ui.next_widget_position();
+            let start_height = measure_ui.next_widget_position();
+            for i in 0..scroll_top_items {
+                measure_ui.scope_builder(UiBuilder::new().id_salt(i), |ui| {
+                    layout(ui, i);
+                });
+            }
+            let end_height = measure_ui.next_widget_position();
 
-                let added_height = end_height.y - start_height.y;
+            let added_height = end_height.y - start_height.y;
 
-                ui.scroll_with_delta_animation(Vec2::new(0.0, -added_height), ScrollAnimation::none());
+            ui.scroll_with_delta_animation(Vec2::new(0.0, -added_height), ScrollAnimation::none());
 
-                index_offset = scroll_top_items;
+            index_offset = scroll_top_items;
 
-                ui.ctx().request_repaint();
+            ui.ctx().request_repaint();
 
-                Some(added_height)
-            } else {
-                None
-            };
+            Some(added_height)
+        } else {
+            None
+        };
 
         // Find the first row that is visible
         loop {
