@@ -1,5 +1,10 @@
 # egui_virtual_list changelog
 
+## 0.9.1
+
+- Fix size mismatch
+- Remove ugly scroll workaround
+
 ## 0.9.0
 
 - Update egui to 0.33.0
