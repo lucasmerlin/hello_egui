@@ -52,7 +52,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
             loading_ui: Arc::new(Box::new(|ui, _| {
                 ui.spinner();
             })),
-            swipe_back_gesture_enabled: true,
+            swipe_back_gesture_enabled: false,
             swipe_back_edge_width: 40.0,
             swipe_back_threshold: 0.4,
         }
@@ -241,7 +241,7 @@ impl<State: 'static, H: History + Default> RouterBuilder<State, H> {
         self
     }
 
-    /// Enable or disable the iOS-style swipe-to-go-back gesture (enabled by default)
+    /// Enable or disable the iOS-style swipe-to-go-back gesture (disabled by default)
     pub fn swipe_back_gesture(mut self, enabled: bool) -> Self {
         self.swipe_back_gesture_enabled = enabled;
         self
