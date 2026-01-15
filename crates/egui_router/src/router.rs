@@ -21,6 +21,8 @@ enum SwipeBackGestureState {
         /// Distance swiped in pixels
         distance: f32,
     },
+    /// Gesture was cancelled due to vertical movement, wait for release
+    Cancelled,
 }
 
 /// A router instance
@@ -345,6 +347,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn handle_swipe_gesture(&mut self, ui: &mut Ui) {
         let gesture_id = Id::new("router_swipe_back_gesture");
 
@@ -386,44 +389,64 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         // Check if the gesture started from the left edge
                         if let Some(pos) = pointer_pos {
                             if pos.x <= content_rect.min.x + self.swipe_back_edge_width {
-                                // Start the gesture
-                                gesture_state = SwipeBackGestureState::Swiping { distance: 0.0 };
+                                // Cancel if velocity is more vertical than horizontal
+                                if velocity.y.abs() > velocity.x.abs() && velocity.y.abs() > 0.0 {
+                                    // Vertical movement dominates, don't start the gesture
+                                    gesture_state = SwipeBackGestureState::Cancelled;
+                                } else {
+                                    // Start the gesture
+                                    gesture_state =
+                                        SwipeBackGestureState::Swiping { distance: 0.0 };
 
-                                // Start a manual backward transition
-                                if self.current_transition.is_none() {
-                                    let mut transition = CurrentTransition {
-                                        active_transition: ActiveTransition::manual(
-                                            self.backward_transition.clone(),
-                                        )
-                                        .with_default_duration(self.default_duration),
-                                        leaving_route: None,
-                                    };
-                                    // Initialize progress to 1.0 (fully showing current page)
-                                    transition.active_transition.set_progress(1.0);
-                                    self.current_transition = Some(transition);
+                                    // Start a manual backward transition
+                                    if self.current_transition.is_none() {
+                                        let mut transition = CurrentTransition {
+                                            active_transition: ActiveTransition::manual(
+                                                self.backward_transition.clone(),
+                                            )
+                                            .with_default_duration(self.default_duration),
+                                            leaving_route: None,
+                                        };
+                                        // Initialize progress to 1.0 (fully showing current page)
+                                        transition.active_transition.set_progress(1.0);
+                                        self.current_transition = Some(transition);
+                                    }
                                 }
                             }
                         }
                     }
                     SwipeBackGestureState::Swiping { distance, .. } => {
-                        // Update the gesture distance (only positive horizontal movement)
-                        let new_distance = (distance + delta.x).max(0.0);
+                        // Cancel if velocity becomes too vertical before we've committed
+                        if distance < 10.0
+                            && velocity.y.abs() > velocity.x.abs()
+                            && velocity.y.abs() > 0.0
+                        {
+                            // Vertical movement dominates, cancel the gesture
+                            self.current_transition = None;
+                            gesture_state = SwipeBackGestureState::Cancelled;
+                        } else {
+                            // Update the gesture distance (only positive horizontal movement)
+                            let new_distance = (distance + delta.x).max(0.0);
 
-                        gesture_state = SwipeBackGestureState::Swiping {
-                            distance: new_distance,
-                        };
+                            gesture_state = SwipeBackGestureState::Swiping {
+                                distance: new_distance,
+                            };
 
-                        if new_distance > 10.0 {
-                            // Steal the drag in case a scroll area is also detecting it
-                            ui.ctx().set_dragged_id(gesture_id);
+                            if new_distance > 10.0 {
+                                // Steal the drag in case a scroll area is also detecting it
+                                ui.ctx().set_dragged_id(gesture_id);
+                            }
+
+                            // Update the transition progress
+                            if let Some(transition) = &mut self.current_transition {
+                                let screen_width = content_rect.width();
+                                let progress = 1.0 - (new_distance / screen_width).at_most(1.0);
+                                transition.active_transition.set_progress(progress);
+                            }
                         }
-
-                        // Update the transition progress
-                        if let Some(transition) = &mut self.current_transition {
-                            let screen_width = content_rect.width();
-                            let progress = 1.0 - (new_distance / screen_width).at_most(1.0);
-                            transition.active_transition.set_progress(progress);
-                        }
+                    }
+                    SwipeBackGestureState::Cancelled => {
+                        // Wait for release before allowing new gestures
                     }
                 }
             }
