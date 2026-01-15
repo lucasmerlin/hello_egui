@@ -387,9 +387,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         if let Some(pos) = pointer_pos {
                             if pos.x <= content_rect.min.x + self.swipe_back_edge_width {
                                 // Start the gesture
-                                gesture_state = SwipeBackGestureState::Swiping {
-                                    distance: 0.0,
-                                };
+                                gesture_state = SwipeBackGestureState::Swiping { distance: 0.0 };
 
                                 // Start a manual backward transition
                                 if self.current_transition.is_none() {
