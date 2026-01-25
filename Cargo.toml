@@ -87,10 +87,10 @@ egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.9.0" }
 egui_material_icons = { path = "./crates/egui_material_icons", version = "0.5.0" }
 hello_egui = { path = ".", version = "0.10.0" }
 
-egui = { version = "0.33.0", default-features = false }
-egui_kittest = { version = "0.33.0" }
-eframe = { version = "0.33.0", default-features = false }
-egui_extras = { version = "0.33.0", default-features = false }
+egui = { version = "0.33.3", default-features = false }
+egui_kittest = { version = "0.33.3" }
+eframe = { version = "0.33.3", default-features = false }
+egui_extras = { version = "0.33.3", default-features = false }
 rand = "0.9.0"
 simple-easing = "1"
 serde_json = "1"
@@ -136,10 +136,10 @@ doc_markdown = { level = "allow", priority = 21 }
 #winit = { path = "../winit" }
 
 
-# egui = { git = "https://github.com/emilk/egui", branch = "main" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "main" }
-# egui_extras = { git = "https://github.com/emilk/egui", branch = "main" }
-# egui_glow = { git = "https://github.com/emilk/egui", branch = "main" }
-# egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
-# egui_demo_lib = { git = "https://github.com/emilk/egui", branch = "main" }
+ egui = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+ eframe = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+ egui_extras = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+ egui_glow = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+ egui_kittest = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+ egui_demo_lib = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
 # egui_commonmark = { git = "https://github.com/lucasmerlin/egui_commonmark", branch = "egui-update" }

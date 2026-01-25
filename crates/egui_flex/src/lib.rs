@@ -1142,8 +1142,7 @@ impl FlexInstance<'_> {
                                     )
                                 })
                                 .inner
-                        })
-                        .inner;
+                        });
                     // let (_, _r) = ui.allocate_space(child_ui.min_rect().size(), child_ui.min_rect().size());
                     let (_, _r) = ui.allocate_space(child_ui.min_rect().size());
 
