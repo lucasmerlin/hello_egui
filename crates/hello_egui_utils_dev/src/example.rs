@@ -4,16 +4,16 @@ use egui::{CentralPanel, Ui};
 /// Run an example with the given name and content.
 pub fn run(name: &str, mut f: impl FnMut(&mut Ui) + 'static) {
     let mut initialized = false;
-    eframe::run_simple_native(name, NativeOptions::default(), move |ctx, _frame| {
+    eframe::run_ui_native(name, NativeOptions::default(), move |ui, _frame| {
         if !initialized {
             initialized = true;
             return;
         }
-        CentralPanel::default().show(ctx, |ui| {
-            let mut style = (*ctx.style()).clone();
+        CentralPanel::default().show_inside(ui, |ui| {
+            let mut style = (*ui.ctx().global_style()).clone();
             ui.checkbox(&mut style.debug.debug_on_hover, "Debug on hover");
             ui.checkbox(&mut style.visuals.dark_mode, "Dark mode");
-            ctx.set_style(style);
+            ui.ctx().set_global_style(style);
 
             f(ui);
         });

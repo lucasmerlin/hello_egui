@@ -87,7 +87,7 @@ impl Stargazers {
                             }
                         } else {
                             callback(Err("Failed to fetch stargazers".to_string()));
-                        };
+                        }
                     },
                 );
             }),

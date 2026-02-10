@@ -332,7 +332,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                             sender.send(LoadingState::Loaded(items, cursor)).ok();
                         }
                         Err(err) => {
-                            sender.send(LoadingState::Error(err.to_string())).ok();
+                            sender.send(LoadingState::Error(err.clone())).ok();
                         }
                     }),
                 );
@@ -353,7 +353,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
                             sender.send(LoadingState::Loaded(items, cursor)).ok();
                         }
                         Err(err) => {
-                            sender.send(LoadingState::Error(err.to_string())).ok();
+                            sender.send(LoadingState::Error(err.clone())).ok();
                         }
                     }),
                 );

@@ -51,7 +51,7 @@ pub struct Dnd<'a> {
 ///     })
 /// }
 /// ```
-pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd {
+pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd<'_> {
     let id = Id::new(id_source).with("dnd");
     let mut dnd_ui: DragDropUi =
         ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());

@@ -86,7 +86,7 @@ impl SignupForm {
     }
 }
 
-fn text_edit_singleline(value: &mut String) -> TextEdit {
+fn text_edit_singleline(value: &mut String) -> TextEdit<'_> {
     TextEdit::singleline(value).margin(8.0)
 }
 

@@ -104,7 +104,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.iter().map(|s| s.path_with_query.as_str())
     }
 
-    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<str>, Cow<str>>) {
+    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<'_, str>, Cow<'_, str>>) {
         path.split_once('?')
             .map(|(path, q)| (path, form_urlencoded::parse(q.as_bytes()).collect()))
             .unwrap_or((path, BTreeMap::new()))
@@ -272,7 +272,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         query,
                     });
                     self.history.push(RouteState {
-                        path_with_query: path_with_query.to_string(),
+                        path_with_query: path_with_query.clone(),
                         route,
                         id: ID.fetch_add(1, Ordering::SeqCst),
                         state: new_state,
@@ -315,6 +315,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     }
 
     /// Render the router
+    #[allow(clippy::too_many_lines)]
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
         // Handle iOS-style swipe-to-go-back gesture
         // The active route can override the router's default via enable_swipe()
@@ -436,7 +437,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn handle_swipe_gesture(&mut self, ui: &mut Ui, state: &mut State) {
+    fn handle_swipe_gesture(&mut self, ui: &mut Ui, _state: &mut State) {
         let gesture_id = Id::new("router_swipe_back_gesture");
 
         // Get or create gesture state

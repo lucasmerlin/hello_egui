@@ -1,7 +1,7 @@
 use eframe::egui::Color32;
 use eframe::emath::lerp;
 use eframe::{egui, Frame};
-use egui::{Context, Id, SidePanel, Ui};
+use egui::{Context, Id, Panel, Ui};
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
@@ -59,8 +59,9 @@ impl App {
         }
     }
 
-    pub fn show(&mut self, ctx: &Context) {
-        self.inbox.set_ctx(ctx);
+    pub fn show(&mut self, ui: &mut Ui) {
+        let ctx = ui.ctx().clone();
+        self.inbox.set_ctx(&ctx);
         self.inbox.read_without_ctx().for_each(|msg| match msg {
             FancyMessage::Navigate(route) => {
                 self.router.navigate(&mut self.shared_state, route).unwrap();
@@ -71,18 +72,18 @@ impl App {
         let collapsible_sidebar = width < 800.0;
         let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
 
-        SidePanel::left("sidebar")
+        Panel::left("sidebar")
             .resizable(false)
-            .exact_width(170.0)
-            .show_animated(ctx, is_expanded, |ui| {
+            .exact_size(170.0)
+            .show_animated_inside(ui, is_expanded, |ui| {
                 if SideBar::ui(ui, &mut self.shared_state) {
                     self.sidebar_expanded = false;
                 }
             });
 
         egui::CentralPanel::default()
-            .frame(egui::Frame::NONE.fill(ctx.style().visuals.panel_fill.gamma_multiply(0.7)))
-            .show(ctx, |ui| {
+            .frame(egui::Frame::NONE.fill(ctx.global_style().visuals.panel_fill.gamma_multiply(0.7)))
+            .show_inside(ui, |ui| {
                 vertex_gradient(
                     ui,
                     &Gradient(
@@ -112,8 +113,8 @@ impl App {
 }
 
 impl eframe::App for App {
-    fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        self.show(ctx);
+    fn ui(&mut self, ui: &mut Ui, _frame: &mut Frame) {
+        self.show(ui);
     }
 }
 
