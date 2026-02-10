@@ -138,6 +138,14 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             state: new_state,
                         });
 
+                        // Fire on_hiding on the previous top-of-stack (now second-to-last)
+                        if self.history.len() >= 2 {
+                            let idx = self.history.len() - 2;
+                            if let Ok(route) = &mut self.history[idx].route {
+                                route.on_hiding(state);
+                            }
+                        }
+
                         self.current_transition = Some(CurrentTransition {
                             active_transition: ActiveTransition::forward(transition_config.clone())
                                 .with_default_duration(self.default_duration),
@@ -183,9 +191,24 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.navigate_transition(state, route, self.forward_transition.clone())
     }
 
-    fn back_impl(&mut self, transition_config: TransitionConfig) {
+    fn back_impl(&mut self, state: &mut State, transition_config: TransitionConfig) {
         if self.history.len() > 1 {
-            let leaving_route = self.history.pop();
+            let mut leaving_route = self.history.pop();
+
+            // Fire on_hiding on the leaving route
+            if let Some(ref mut leaving) = leaving_route {
+                if let Ok(route) = &mut leaving.route {
+                    route.on_hiding(state);
+                }
+            }
+
+            // Fire on_showing on the route that is now being revealed
+            if let Some(last) = self.history.last_mut() {
+                if let Ok(route) = &mut last.route {
+                    route.on_showing(state);
+                }
+            }
+
             self.current_transition = Some(CurrentTransition {
                 active_transition: ActiveTransition::backward(transition_config)
                     .with_default_duration(self.default_duration),
@@ -195,15 +218,19 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     }
 
     /// Go back with a custom transition
-    pub fn back_transition(&mut self, transition_config: TransitionConfig) -> RouterResult {
+    pub fn back_transition(
+        &mut self,
+        state: &mut State,
+        transition_config: TransitionConfig,
+    ) -> RouterResult {
         self.history_kind.back()?;
-        self.back_impl(transition_config);
+        self.back_impl(state, transition_config);
         Ok(())
     }
 
     /// Go back with the default transition
-    pub fn back(&mut self) -> RouterResult {
-        self.back_transition(self.backward_transition.clone())
+    pub fn back(&mut self, state: &mut State) -> RouterResult {
+        self.back_transition(state, self.backward_transition.clone())
     }
 
     /// Replace the current route with a custom transition
@@ -227,7 +254,15 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             Ok(match_) => match match_.value {
                 RouteKind::Route(handler) => {
                     self.history_kind.replace(&path_with_query, new_state)?;
-                    let leaving_route = self.history.pop();
+                    let mut leaving_route = self.history.pop();
+
+                    // Fire on_hiding on the leaving route
+                    if let Some(ref mut leaving) = leaving_route {
+                        if let Ok(route) = &mut leaving.route {
+                            route.on_hiding(state);
+                        }
+                    }
+
                     let route = handler(Request {
                         state,
                         params: match_.params,
@@ -273,7 +308,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
         // Handle iOS-style swipe-to-go-back gesture
         if self.swipe_back_gesture_enabled && self.history.len() > 1 {
-            self.handle_swipe_gesture(ui);
+            self.handle_swipe_gesture(ui, state);
         }
 
         for e in self.history_kind.update(ui.ctx()) {
@@ -293,7 +328,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     .retain(|r| r.state <= route_state || r.state == active_state);
 
                 if route_state < active_state {
-                    self.back_impl(self.backward_transition.clone());
+                    self.back_impl(state, self.backward_transition.clone());
                 }
             } else {
                 self.navigate_impl(state, &path, self.forward_transition.clone(), state_index)
@@ -340,7 +375,37 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
             match result {
                 Some(ActiveTransitionResult::Done) => {
-                    self.current_transition = None;
+                    if let Some(mut transition) = self.current_transition.take() {
+                        let is_backward = transition.active_transition.is_backward();
+                        if is_backward {
+                            // Leaving route is fully hidden
+                            if let Some(ref mut leaving) = transition.leaving_route {
+                                if let Ok(route) = &mut leaving.route {
+                                    route.on_hide(state);
+                                }
+                            }
+                            // Current top is fully shown again
+                            if let Some(last) = self.history.last_mut() {
+                                if let Ok(route) = &mut last.route {
+                                    route.on_shown(state);
+                                }
+                            }
+                        } else {
+                            // Forward/replace completed
+                            if let Some(ref mut leaving) = transition.leaving_route {
+                                // Replace: leaving route is fully hidden
+                                if let Ok(route) = &mut leaving.route {
+                                    route.on_hide(state);
+                                }
+                            } else if self.history.len() >= 2 {
+                                // Forward: previous top is now fully hidden
+                                let idx = self.history.len() - 2;
+                                if let Ok(route) = &mut self.history[idx].route {
+                                    route.on_hide(state);
+                                }
+                            }
+                        }
+                    }
                 }
                 Some(ActiveTransitionResult::Continue) | None => {}
             }
@@ -348,7 +413,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn handle_swipe_gesture(&mut self, ui: &mut Ui) {
+    fn handle_swipe_gesture(&mut self, ui: &mut Ui, state: &mut State) {
         let gesture_id = Id::new("router_swipe_back_gesture");
 
         // Get or create gesture state
@@ -464,7 +529,22 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         || velocity.x >= FLICK_VELOCITY_THRESHOLD;
 
                     if should_navigate_back {
-                        let popped = self.history.pop();
+                        let mut popped = self.history.pop();
+
+                        // Fire on_hiding on the popped route
+                        if let Some(ref mut leaving) = popped {
+                            if let Ok(route) = &mut leaving.route {
+                                route.on_hiding(state);
+                            }
+                        }
+
+                        // Fire on_showing on the route being revealed
+                        if let Some(last) = self.history.last_mut() {
+                            if let Ok(route) = &mut last.route {
+                                route.on_showing(state);
+                            }
+                        }
+
                         // Complete the back navigation
                         if let Some(transition) = &mut self.current_transition {
                             let progress = transition.active_transition.progress();

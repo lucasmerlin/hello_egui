@@ -211,6 +211,10 @@ impl ActiveTransition {
         self.progress
     }
 
+    pub fn is_backward(&self) -> bool {
+        self.backward
+    }
+
     pub fn set_progress(&mut self, progress: f32) {
         self.progress = progress.clamp(0.0, 1.0);
     }
