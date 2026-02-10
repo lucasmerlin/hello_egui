@@ -47,7 +47,7 @@ async fn main() -> eframe::Result<()> {
                     router.navigate(state, route).ok();
                 }
                 RouterMessage::Back => {
-                    router.back(state).ok();
+                    router.back().ok();
                 }
             });
 
@@ -103,19 +103,19 @@ impl Route<AppState> for HomePage {
         });
     }
 
-    fn on_showing(&mut self, _state: &mut AppState) {
+    fn on_showing(&mut self) {
         self.events.push("on_showing (transition back started)");
     }
 
-    fn on_shown(&mut self, _state: &mut AppState) {
+    fn on_shown(&mut self) {
         self.events.push("on_shown (fully visible)");
     }
 
-    fn on_hiding(&mut self, _state: &mut AppState) {
+    fn on_hiding(&mut self) {
         self.events.push("on_hiding (transition away started)");
     }
 
-    fn on_hide(&mut self, _state: &mut AppState) {
+    fn on_hide(&mut self) {
         self.events.push("on_hide (fully hidden)");
     }
 }
@@ -154,19 +154,19 @@ impl Route<AppState> for DetailPage {
         });
     }
 
-    fn on_showing(&mut self, _state: &mut AppState) {
+    fn on_showing(&mut self) {
         self.events.push("on_showing (transition back started)");
     }
 
-    fn on_shown(&mut self, _state: &mut AppState) {
+    fn on_shown(&mut self) {
         self.events.push("on_shown (fully visible)");
     }
 
-    fn on_hiding(&mut self, _state: &mut AppState) {
+    fn on_hiding(&mut self) {
         self.events.push("on_hiding (transition away started)");
     }
 
-    fn on_hide(&mut self, _state: &mut AppState) {
+    fn on_hide(&mut self) {
         self.events.push("on_hide (fully hidden)");
     }
 }
@@ -210,19 +210,19 @@ impl Route<AppState> for NoSwipePage {
         Some(false)
     }
 
-    fn on_showing(&mut self, _state: &mut AppState) {
+    fn on_showing(&mut self) {
         self.events.push("on_showing (transition back started)");
     }
 
-    fn on_shown(&mut self, _state: &mut AppState) {
+    fn on_shown(&mut self) {
         self.events.push("on_shown (fully visible)");
     }
 
-    fn on_hiding(&mut self, _state: &mut AppState) {
+    fn on_hiding(&mut self) {
         self.events.push("on_hiding (transition away started)");
     }
 
-    fn on_hide(&mut self, _state: &mut AppState) {
+    fn on_hide(&mut self) {
         self.events.push("on_hide (fully hidden)");
     }
 }

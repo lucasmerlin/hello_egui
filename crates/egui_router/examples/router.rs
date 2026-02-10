@@ -56,7 +56,7 @@ async fn main() -> eframe::Result<()> {
                             state.0.navigate(&mut state.1, route).unwrap();
                         }
                         RouterMessage::Back => {
-                            state.0.back(&mut state.1).unwrap();
+                            state.0.back().unwrap();
                         }
                     });
             }

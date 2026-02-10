@@ -142,14 +142,14 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         if self.history.len() >= 2 {
                             let idx = self.history.len() - 2;
                             if let Ok(route) = &mut self.history[idx].route {
-                                route.on_hiding(state);
+                                route.on_hiding();
                             }
                         }
 
                         // Fire on_showing on the newly created route
                         if let Some(last) = self.history.last_mut() {
                             if let Ok(route) = &mut last.route {
-                                route.on_showing(state);
+                                route.on_showing();
                             }
                         }
 
@@ -198,21 +198,21 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.navigate_transition(state, route, self.forward_transition.clone())
     }
 
-    fn back_impl(&mut self, state: &mut State, transition_config: TransitionConfig) {
+    fn back_impl(&mut self, transition_config: TransitionConfig) {
         if self.history.len() > 1 {
             let mut leaving_route = self.history.pop();
 
             // Fire on_hiding on the leaving route
             if let Some(ref mut leaving) = leaving_route {
                 if let Ok(route) = &mut leaving.route {
-                    route.on_hiding(state);
+                    route.on_hiding();
                 }
             }
 
             // Fire on_showing on the route that is now being revealed
             if let Some(last) = self.history.last_mut() {
                 if let Ok(route) = &mut last.route {
-                    route.on_showing(state);
+                    route.on_showing();
                 }
             }
 
@@ -225,19 +225,15 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     }
 
     /// Go back with a custom transition
-    pub fn back_transition(
-        &mut self,
-        state: &mut State,
-        transition_config: TransitionConfig,
-    ) -> RouterResult {
+    pub fn back_transition(&mut self, transition_config: TransitionConfig) -> RouterResult {
         self.history_kind.back()?;
-        self.back_impl(state, transition_config);
+        self.back_impl(transition_config);
         Ok(())
     }
 
     /// Go back with the default transition
-    pub fn back(&mut self, state: &mut State) -> RouterResult {
-        self.back_transition(state, self.backward_transition.clone())
+    pub fn back(&mut self) -> RouterResult {
+        self.back_transition(self.backward_transition.clone())
     }
 
     /// Replace the current route with a custom transition
@@ -266,7 +262,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     // Fire on_hiding on the leaving route
                     if let Some(ref mut leaving) = leaving_route {
                         if let Ok(route) = &mut leaving.route {
-                            route.on_hiding(state);
+                            route.on_hiding();
                         }
                     }
 
@@ -285,7 +281,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     // Fire on_showing on the newly created route
                     if let Some(last) = self.history.last_mut() {
                         if let Ok(route) = &mut last.route {
-                            route.on_showing(state);
+                            route.on_showing();
                         }
                     }
 
@@ -349,7 +345,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     .retain(|r| r.state <= route_state || r.state == active_state);
 
                 if route_state < active_state {
-                    self.back_impl(state, self.backward_transition.clone());
+                    self.back_impl(self.backward_transition.clone());
                 }
             } else {
                 self.navigate_impl(state, &path, self.forward_transition.clone(), state_index)
@@ -402,13 +398,13 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             // Leaving route is fully hidden
                             if let Some(ref mut leaving) = transition.leaving_route {
                                 if let Ok(route) = &mut leaving.route {
-                                    route.on_hide(state);
+                                    route.on_hide();
                                 }
                             }
                             // Current top is fully shown again
                             if let Some(last) = self.history.last_mut() {
                                 if let Ok(route) = &mut last.route {
-                                    route.on_shown(state);
+                                    route.on_shown();
                                 }
                             }
                         } else {
@@ -416,19 +412,19 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             if let Some(ref mut leaving) = transition.leaving_route {
                                 // Replace: leaving route is fully hidden
                                 if let Ok(route) = &mut leaving.route {
-                                    route.on_hide(state);
+                                    route.on_hide();
                                 }
                             } else if self.history.len() >= 2 {
                                 // Forward: previous top is now fully hidden
                                 let idx = self.history.len() - 2;
                                 if let Ok(route) = &mut self.history[idx].route {
-                                    route.on_hide(state);
+                                    route.on_hide();
                                 }
                             }
                             // The new top route is now fully shown
                             if let Some(last) = self.history.last_mut() {
                                 if let Ok(route) = &mut last.route {
-                                    route.on_shown(state);
+                                    route.on_shown();
                                 }
                             }
                         }
@@ -561,14 +557,14 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         // Fire on_hiding on the popped route
                         if let Some(ref mut leaving) = popped {
                             if let Ok(route) = &mut leaving.route {
-                                route.on_hiding(state);
+                                route.on_hiding();
                             }
                         }
 
                         // Fire on_showing on the route being revealed
                         if let Some(last) = self.history.last_mut() {
                             if let Ok(route) = &mut last.route {
-                                route.on_showing(state);
+                                route.on_showing();
                             }
                         }
 

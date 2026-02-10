@@ -48,7 +48,7 @@ async fn main() -> eframe::Result<()> {
                     router.navigate(&mut sender, route).ok();
                 }
                 RouterMessage::Back => {
-                    router.back(&mut sender).ok();
+                    router.back().ok();
                 }
             });
 
