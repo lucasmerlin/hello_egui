@@ -45,6 +45,13 @@ pub trait Route<State = ()> {
     /// Called when this route is fully hidden (transition completes).
     /// E.g., when a forward navigation finishes and another route is now on top.
     fn on_hide(&mut self, _state: &mut State) {}
+
+    /// Override the router's swipe-back gesture setting for this route.
+    /// Return `Some(true)` to enable, `Some(false)` to disable, or `None` to
+    /// use the router's default setting.
+    fn enable_swipe(&self) -> Option<bool> {
+        None
+    }
 }
 
 impl<F: FnMut(&mut Ui, &mut State), State> Route<State> for F {

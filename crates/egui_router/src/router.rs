@@ -146,6 +146,13 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                             }
                         }
 
+                        // Fire on_showing on the newly created route
+                        if let Some(last) = self.history.last_mut() {
+                            if let Ok(route) = &mut last.route {
+                                route.on_showing(state);
+                            }
+                        }
+
                         self.current_transition = Some(CurrentTransition {
                             active_transition: ActiveTransition::forward(transition_config.clone())
                                 .with_default_duration(self.default_duration),
@@ -275,6 +282,13 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         state: new_state,
                     });
 
+                    // Fire on_showing on the newly created route
+                    if let Some(last) = self.history.last_mut() {
+                        if let Ok(route) = &mut last.route {
+                            route.on_showing(state);
+                        }
+                    }
+
                     self.current_transition = Some(CurrentTransition {
                         active_transition: ActiveTransition::forward(transition_config.clone())
                             .with_default_duration(self.default_duration),
@@ -307,7 +321,14 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
     /// Render the router
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
         // Handle iOS-style swipe-to-go-back gesture
-        if self.swipe_back_gesture_enabled && self.history.len() > 1 {
+        // The active route can override the router's default via enable_swipe()
+        let swipe_enabled = self
+            .history
+            .last()
+            .and_then(|r| r.route.as_ref().ok())
+            .and_then(|route| route.enable_swipe())
+            .unwrap_or(self.swipe_back_gesture_enabled);
+        if swipe_enabled && self.history.len() > 1 {
             self.handle_swipe_gesture(ui, state);
         }
 
@@ -402,6 +423,12 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                                 let idx = self.history.len() - 2;
                                 if let Ok(route) = &mut self.history[idx].route {
                                     route.on_hide(state);
+                                }
+                            }
+                            // The new top route is now fully shown
+                            if let Some(last) = self.history.last_mut() {
+                                if let Ok(route) = &mut last.route {
+                                    route.on_shown(state);
                                 }
                             }
                         }
