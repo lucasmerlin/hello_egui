@@ -3,6 +3,7 @@ use egui::{CentralPanel, Color32, Context, Frame, ScrollArea, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
 use std::borrow::Cow;
+use dioxus_devtools::subsecond;
 
 #[derive(Debug, Clone)]
 struct AppState {
@@ -17,6 +18,32 @@ enum RouterMessage {
 
 #[tokio::main]
 async fn main() -> eframe::Result<()> {
+    // This example supports hot reloading via dioxus subsecond. To make it work, call
+    // `dx serve --example router -p egui_router --features async,subsecond --hot-patch`
+    // with an up-to-date version of dioxus cli.
+    #[cfg(feature = "subsecond")]
+    dioxus_devtools::connect_subsecond();
+
+    let mut router: RouterType = None;
+    let mut window_router: RouterType = None;
+
+    eframe::run_simple_native(
+        "Router Example",
+        NativeOptions::default(),
+        move |ctx, _frame| {
+            #[cfg(not(feature = "subsecond"))]
+            app(ctx, &mut router, &mut window_router);
+            #[cfg(feature = "subsecond")]
+            subsecond::call(|| {
+                app(ctx, &mut router, &mut window_router);
+            });
+        },
+    )
+}
+
+type RouterType = Option<(EguiRouter<AppState>, AppState)>;
+
+fn app(ctx: &Context, router: &mut RouterType, window_router: &mut RouterType) {
     let init = |ctx: &Context| {
         let mut app_state = AppState {
             message: "Hello, World!".to_string(),
@@ -36,44 +63,35 @@ async fn main() -> eframe::Result<()> {
         (router.build(&mut app_state), app_state)
     };
 
-    let mut router: Option<(EguiRouter<AppState>, AppState)> = None;
-    let mut window_router: Option<(EguiRouter<AppState>, AppState)> = None;
+    let mut router = router.get_or_insert_with(|| init(ctx));
+    let mut window_router = window_router.get_or_insert_with(|| init(ctx));
 
-    eframe::run_simple_native(
-        "Router Example",
-        NativeOptions::default(),
-        move |ctx, _frame| {
-            let mut router = router.get_or_insert_with(|| init(ctx));
-            let mut window_router = window_router.get_or_insert_with(|| init(ctx));
-
-            for state in &mut [&mut router, &mut window_router] {
-                state
-                    .1
-                    .inbox
-                    .read()
-                    .for_each(|msg: RouterMessage| match msg {
-                        RouterMessage::Navigate(route) => {
-                            state.0.navigate(&mut state.1, route).unwrap();
-                        }
-                        RouterMessage::Back => {
-                            state.0.back().unwrap();
-                        }
-                    });
-            }
-
-            CentralPanel::default().show(ctx, |ui| {
-                router.0.ui(ui, &mut router.1);
+    for state in &mut [&mut router, &mut window_router] {
+        state
+            .1
+            .inbox
+            .read()
+            .for_each(|msg: RouterMessage| match msg {
+                RouterMessage::Navigate(route) => {
+                    state.0.navigate(&mut state.1, route).unwrap();
+                }
+                RouterMessage::Back => {
+                    state.0.back().unwrap();
+                }
             });
+    }
 
-            Window::new("Router Window")
-                .frame(Frame::window(&ctx.style()).inner_margin(0.0))
-                .show(ctx, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.set_height(ui.available_height());
-                    window_router.0.ui(ui, &mut window_router.1);
-                });
-        },
-    )
+    CentralPanel::default().show(ctx, |ui| {
+        router.0.ui(ui, &mut router.1);
+    });
+
+    Window::new("Router Window")
+        .frame(Frame::window(&ctx.style()).inner_margin(0.0))
+        .show(ctx, |ui| {
+            ui.set_width(ui.available_width());
+            ui.set_height(ui.available_height());
+            window_router.0.ui(ui, &mut window_router.1);
+        });
 }
 
 fn home() -> impl Route<AppState> {

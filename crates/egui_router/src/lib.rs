@@ -25,10 +25,29 @@ pub use handler::{HandlerError, HandlerResult};
 pub use router::EguiRouter;
 pub use router_builder::RouterBuilder;
 
+/// Ensure we always have a ui_subsecond fn to call but don't expose it
+#[cfg(not(feature = "subsecond"))]
+trait SubsecondMockRoute<State>: Route<State> {
+    fn ui_subsecond(&mut self, ui: &mut Ui, state: &mut State) {
+        self.ui(ui, state);
+    }
+}
+#[cfg(not(feature = "subsecond"))]
+impl<T: ?Sized + Route<State>, State> SubsecondMockRoute<State> for T {}
+
 /// A route instance created by a [`handler::Handler`]
 pub trait Route<State = ()> {
     /// Render the route ui
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State);
+
+    /// Helper to make egui_router work with subsecond automatically. Since it stores the routes
+    /// in a Box<dyn Route>, we need to have a subsecond::call _within_ the route.
+    #[cfg(feature = "subsecond")]
+    fn ui_subsecond(&mut self, ui: &mut Ui, state: &mut State) {
+        subsecond::call(|| {
+            self.ui(ui, state);
+        });
+    }
 
     /// Called when this route starts becoming visible again (transition starts).
     /// E.g., when a back navigation begins and this route starts animating in.

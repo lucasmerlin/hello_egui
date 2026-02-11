@@ -13,6 +13,7 @@ license = "MIT"
 
 [features]
 async = ["egui_suspense/async"]
+subsecond = ["dep:subsecond"]
 
 [[example]]
 name = "async_router"
@@ -31,6 +32,8 @@ matchit = "0.8"
 thiserror = "2"
 form_urlencoded = "1"
 
+subsecond = { git = "https://github.com/DioxusLabs/dioxus", optional = true }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3", features = [
     "History",
@@ -46,6 +49,8 @@ eframe = { workspace = true, default-features = true }
 egui_animation = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 egui_suspense = { workspace = true, features = ["async", "tokio"] }
+
+dioxus-devtools = { git = "https://github.com/DioxusLabs/dioxus" }
 
 [lints]
 workspace = true

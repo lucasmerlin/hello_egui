@@ -2,6 +2,8 @@ use crate::handler::HandlerError;
 use crate::Route;
 use egui::Ui;
 use egui_suspense::EguiSuspense;
+#[cfg(not(feature = "subsecond"))]
+use crate::SubsecondMockRoute;
 
 pub(crate) struct AsyncRoute<State> {
     pub suspense: EguiSuspense<Box<dyn Route<State> + Send + Sync>, HandlerError>,
@@ -10,7 +12,7 @@ pub(crate) struct AsyncRoute<State> {
 impl<State: 'static> AsyncRoute<State> {
     pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut State) {
         self.suspense.ui(ui, |ui, data, _state| {
-            data.ui(ui, state);
+            data.ui_subsecond(ui, state);
         });
     }
 }

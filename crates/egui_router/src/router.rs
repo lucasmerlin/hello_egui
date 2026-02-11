@@ -2,14 +2,14 @@ use crate::history::{DefaultHistory, History};
 use crate::route_kind::RouteKind;
 use crate::router_builder::{ErrorUi, RouterBuilder};
 use crate::transition::{ActiveTransition, ActiveTransitionResult};
-use crate::{
-    CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID,
-};
+use crate::{CurrentTransition, Request, RouteState, RouterError, RouterResult, TransitionConfig, ID};
 use egui::{scroll_area, Id, NumExt, Sense, Ui};
 use matchit::MatchError;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::atomic::Ordering;
+#[cfg(not(feature = "subsecond"))]
+use crate::SubsecondMockRoute;
 
 /// The state of the iOS-style swipe-to-go-back gesture
 #[derive(Debug, Clone)]
@@ -362,7 +362,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     state,
                     (last.id, |ui, state| match &mut last.route {
                         Ok(route) => {
-                            route.ui(ui, state);
+                            route.ui_subsecond(ui, state);
                         }
                         Err(err) => {
                             (self.error_ui)(ui, state, err);
@@ -371,7 +371,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                     leaving_route_state.map(|r| {
                         (r.id, |ui: &mut Ui, state: &mut _| match &mut r.route {
                             Ok(route) => {
-                                route.ui(ui, state);
+                                route.ui_subsecond(ui, state);
                             }
                             Err(err) => {
                                 (self.error_ui)(ui, state, err);
@@ -382,7 +382,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             } else {
                 ActiveTransition::show_default(ui, last.id, |ui| match &mut last.route {
                     Ok(route) => {
-                        route.ui(ui, state);
+                        route.ui_subsecond(ui, state);
                     }
                     Err(err) => {
                         (self.error_ui)(ui, state, err);
