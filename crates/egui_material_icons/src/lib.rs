@@ -1,6 +1,9 @@
 #![doc = include_str!("../README.md")]
 #![forbid(unsafe_code)]
 
+#[cfg(not(any(feature = "filled", feature = "outline")))]
+compile_error!("At least one of `filled` or `outline` features must be enabled.");
+
 #[cfg(feature = "compressed")]
 use include_flate::flate;
 
@@ -13,19 +16,20 @@ pub mod icons;
 // Font data (uncompressed)
 // =============================================================================
 
-#[cfg(all(not(feature = "outline-only"), not(feature = "compressed")))]
+// When both filled and outline are enabled, or only filled
+#[cfg(all(feature = "filled", not(feature = "compressed")))]
 pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Filled-Regular.ttf");
 
-#[cfg(all(feature = "outline-only", not(feature = "compressed")))]
-pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded-Regular.ttf");
-
-// Only need separate outline font data when outline is enabled WITHOUT outline-only
-// (when outline-only is set, FONT_DATA already IS the outline font)
+// When only outline is enabled (no filled), use outline as the default font
 #[cfg(all(
     feature = "outline",
-    not(feature = "outline-only"),
+    not(feature = "filled"),
     not(feature = "compressed")
 ))]
+pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded-Regular.ttf");
+
+// Separate outline font data when both are enabled
+#[cfg(all(feature = "filled", feature = "outline", not(feature = "compressed")))]
 pub(crate) const FONT_DATA_OUTLINED: &[u8] =
     include_bytes!("../MaterialSymbolsRounded-Regular.ttf");
 
@@ -33,17 +37,13 @@ pub(crate) const FONT_DATA_OUTLINED: &[u8] =
 // Font data (compressed)
 // =============================================================================
 
-#[cfg(all(not(feature = "outline-only"), feature = "compressed"))]
+#[cfg(all(feature = "filled", feature = "compressed"))]
 flate!(pub(crate) static FONT_DATA: [u8] from "MaterialSymbolsRounded_Filled-Regular.ttf");
 
-#[cfg(all(feature = "outline-only", feature = "compressed"))]
+#[cfg(all(feature = "outline", not(feature = "filled"), feature = "compressed"))]
 flate!(pub(crate) static FONT_DATA: [u8] from "MaterialSymbolsRounded-Regular.ttf");
 
-#[cfg(all(
-    feature = "outline",
-    not(feature = "outline-only"),
-    feature = "compressed"
-))]
+#[cfg(all(feature = "filled", feature = "outline", feature = "compressed"))]
 flate!(pub(crate) static FONT_DATA_OUTLINED: [u8] from "MaterialSymbolsRounded-Regular.ttf");
 
 // =============================================================================
@@ -92,65 +92,47 @@ impl OutlinedIcon {
 // =============================================================================
 
 /// Creates a [`FontInsert`] for the material icons font.
-#[cfg(not(all(feature = "outline", feature = "outline-only")))]
 pub fn font_insert() -> FontInsert {
     let mut data = FontData::from_static(&FONT_DATA);
     data.tweak.y_offset_factor = 0.05;
 
-    FontInsert::new(
-        FONT_FAMILY,
-        data,
-        vec![
-            // Add as fallback to Proportional for inline icon usage
-            InsertFontFamily {
-                family: FontFamily::Proportional,
-                priority: FontPriority::Lowest,
-            },
-            // Also register as its own named family for explicit usage
-            InsertFontFamily {
-                family: FontFamily::Name(FONT_FAMILY.into()),
-                priority: FontPriority::Highest,
-            },
-        ],
-    )
-}
+    // When only outline is enabled, also register under the outlined family name
+    #[cfg(all(feature = "outline", not(feature = "filled")))]
+    let families = vec![
+        InsertFontFamily {
+            family: FontFamily::Proportional,
+            priority: FontPriority::Lowest,
+        },
+        InsertFontFamily {
+            family: FontFamily::Name(FONT_FAMILY.into()),
+            priority: FontPriority::Highest,
+        },
+        // Also register as outlined family so ICON_OUTLINE_* works
+        InsertFontFamily {
+            family: FontFamily::Name(FONT_FAMILY_OUTLINED.into()),
+            priority: FontPriority::Highest,
+        },
+    ];
 
-/// Creates a [`FontInsert`] for the material icons font.
-/// When both `outline` and `outline-only` are enabled, also registers under
-/// the outlined family name so `ICON_OUTLINE_*` constants work.
-#[cfg(all(feature = "outline", feature = "outline-only"))]
-pub fn font_insert() -> FontInsert {
-    let mut data = FontData::from_static(&FONT_DATA);
-    data.tweak.y_offset_factor = 0.05;
+    #[cfg(feature = "filled")]
+    let families = vec![
+        InsertFontFamily {
+            family: FontFamily::Proportional,
+            priority: FontPriority::Lowest,
+        },
+        InsertFontFamily {
+            family: FontFamily::Name(FONT_FAMILY.into()),
+            priority: FontPriority::Highest,
+        },
+    ];
 
-    FontInsert::new(
-        FONT_FAMILY,
-        data,
-        vec![
-            // Add as fallback to Proportional for inline icon usage
-            InsertFontFamily {
-                family: FontFamily::Proportional,
-                priority: FontPriority::Lowest,
-            },
-            // Register as default family
-            InsertFontFamily {
-                family: FontFamily::Name(FONT_FAMILY.into()),
-                priority: FontPriority::Highest,
-            },
-            // Also register as outlined family (same font, but ICON_OUTLINE_* needs this)
-            InsertFontFamily {
-                family: FontFamily::Name(FONT_FAMILY_OUTLINED.into()),
-                priority: FontPriority::Highest,
-            },
-        ],
-    )
+    FontInsert::new(FONT_FAMILY, data, families)
 }
 
 /// Creates a [`FontInsert`] for the outlined material icons font.
 ///
-/// This is only available when the `outline` feature is enabled without `outline-only`.
-/// When `outline-only` is set, the default font is already outline.
-#[cfg(all(feature = "outline", not(feature = "outline-only")))]
+/// This is only available when both `filled` and `outline` features are enabled.
+#[cfg(all(feature = "filled", feature = "outline"))]
 pub fn font_insert_outlined() -> FontInsert {
     let mut data = FontData::from_static(&FONT_DATA_OUTLINED);
     data.tweak.y_offset_factor = 0.05;
@@ -159,12 +141,10 @@ pub fn font_insert_outlined() -> FontInsert {
         FONT_FAMILY_OUTLINED,
         data,
         vec![
-            // Add as fallback to Proportional for inline icon usage
             InsertFontFamily {
                 family: FontFamily::Proportional,
                 priority: FontPriority::Lowest,
             },
-            // Also register as its own named family for explicit usage
             InsertFontFamily {
                 family: FontFamily::Name(FONT_FAMILY_OUTLINED.into()),
                 priority: FontPriority::Highest,
@@ -175,13 +155,12 @@ pub fn font_insert_outlined() -> FontInsert {
 
 /// Initializes the material icons font(s).
 ///
-/// - By default, registers the filled font.
-/// - With `outline` feature, registers both filled and outline fonts.
-/// - With `outline-only` feature, registers only the outline font.
-/// - With both `outline` and `outline-only`, registers outline font under both family names.
+/// - With `filled` feature (default), registers the filled font.
+/// - With `outline` feature, registers the outline font.
+/// - With both, registers both fonts.
 pub fn initialize(ctx: &egui::Context) {
     ctx.add_font(font_insert());
-    #[cfg(all(feature = "outline", not(feature = "outline-only")))]
+    #[cfg(all(feature = "filled", feature = "outline"))]
     ctx.add_font(font_insert_outlined());
 }
 

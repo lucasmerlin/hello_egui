@@ -24,20 +24,24 @@ Currently, this provides the rounded icons. By default, the filled variant is us
 
 ## Features
 
-- **`compressed`** (default) - Compress embedded fonts with DEFLATE, reducing binary size significantly.
+| Features                                            | Fonts Included     |
+| --------------------------------------------------- | ------------------ |
+| default (`filled`, `compressed`)                    | Filled only        |
+| `--features outline`                                | Filled + Outline   |
+| `--no-default-features --features outline`          | Outline only       |
+| `--no-default-features --features "filled outline"` | Both, uncompressed |
 
-- **`outline`** - Include both filled and outline fonts. Adds `ICON_OUTLINE_*` constants:
+- **`filled`** (default) - Include the filled font variant.
+
+- **`outline`** - Include the outline font variant. Adds `ICON_OUTLINE_*` constants:
 
   ```rust
   use egui_material_icons::icons::*;
 
-  egui_material_icons::initialize(&cc.egui_ctx); // registers both fonts
+  egui_material_icons::initialize(&cc.egui_ctx);
 
-  // Use filled (default)
-  ui.button(ICON_ADD);
-
-  // Use outlined
-  ui.button(ICON_OUTLINE_ADD);
+  ui.button(ICON_ADD);          // filled
+  ui.button(ICON_OUTLINE_ADD);  // outlined
   ```
 
-- **`outline-only`** - Use the outline font instead of the filled font. The default `ICON_*` constants will render as outline icons. Saves binary size if you only need outline icons.
+- **`compressed`** (default) - Compress embedded fonts with DEFLATE, reducing binary size significantly.
