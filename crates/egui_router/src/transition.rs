@@ -94,6 +94,8 @@ impl TransitionTrait for SlideTransition {
     fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
         let available_size = ui.available_size();
         let offset = available_size * (1.0 - t) * self.amount;
+        // Round to pixels to prevent sub-pixel jitter and flickering in child components
+        let offset = Vec2::new(offset.x.round(), offset.y.round());
         let child_rect = ui.max_rect().translate(offset);
 
         ui.new_child(UiBuilder::new().max_rect(child_rect).id_salt(with_id))
@@ -159,6 +161,8 @@ pub(crate) struct ActiveTransition {
     in_: Transition,
     out: Transition,
     backward: bool,
+    /// If true, the transition is controlled manually (e.g., by a gesture)
+    manual_control: bool,
 }
 
 pub(crate) enum ActiveTransitionResult {
@@ -175,6 +179,7 @@ impl ActiveTransition {
             in_: config.in_,
             out: config.out,
             backward: false,
+            manual_control: false,
         }
     }
 
@@ -186,7 +191,28 @@ impl ActiveTransition {
             in_: config.in_,
             out: config.out,
             backward: true,
+            manual_control: false,
         }
+    }
+
+    pub fn manual(config: TransitionConfig) -> Self {
+        Self {
+            duration: config.duration,
+            easing: config.easing,
+            progress: 0.0,
+            in_: config.in_,
+            out: config.out,
+            backward: false,
+            manual_control: true,
+        }
+    }
+
+    pub fn progress(&self) -> f32 {
+        self.progress
+    }
+
+    pub fn set_progress(&mut self, progress: f32) {
+        self.progress = progress.clamp(0.0, 1.0);
     }
 
     pub fn with_default_duration(mut self, duration: Option<f32>) -> Self {
@@ -203,20 +229,32 @@ impl ActiveTransition {
         (in_id, content_in): (usize, impl FnOnce(&mut Ui, &mut State)),
         content_out: Option<(usize, impl FnOnce(&mut Ui, &mut State))>,
     ) -> ActiveTransitionResult {
-        let dt = ui.input(|i| i.stable_dt);
-
-        self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
+        if !self.manual_control {
+            let dt = ui.input(|i| i.stable_dt);
+            self.progress += dt / self.duration.unwrap_or_else(|| ui.style().animation_time);
+        }
 
         let t = self.progress.min(1.0);
         ui.ctx().request_repaint();
 
+        // Apply easing only when not manually controlled (for gestures, use linear)
+        let eased_t = if self.manual_control {
+            t
+        } else {
+            (self.easing)(t)
+        };
+
+        let eased_t_rev = if self.manual_control {
+            1.0 - t
+        } else {
+            (self.easing)(1.0 - t)
+        };
+
         if self.backward {
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut out_ui = self.out.create_child_ui(
-                    ui,
-                    (self.easing)(t),
-                    Id::new("router_child").with(in_id),
-                );
+                let mut out_ui =
+                    self.out
+                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
                 content_in(&mut out_ui, state);
             });
 
@@ -224,7 +262,7 @@ impl ActiveTransition {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut in_ui = self.in_.create_child_ui(
                         ui,
-                        (self.easing)(1.0 - t),
+                        eased_t_rev,
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut in_ui, state);
@@ -235,7 +273,7 @@ impl ActiveTransition {
                 with_temp_auto_id(ui, out_id, |ui| {
                     let mut out_ui = self.out.create_child_ui(
                         ui,
-                        (self.easing)(1.0 - t),
+                        eased_t_rev,
                         Id::new("router_child").with(out_id),
                     );
                     content_out(&mut out_ui, state);
@@ -243,16 +281,14 @@ impl ActiveTransition {
             }
 
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui = self.in_.create_child_ui(
-                    ui,
-                    (self.easing)(t),
-                    Id::new("router_child").with(in_id),
-                );
+                let mut in_ui =
+                    self.in_
+                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
                 content_in(&mut in_ui, state);
             });
         }
 
-        if self.progress >= 1.0 {
+        if self.progress >= 1.0 && !self.manual_control {
             ActiveTransitionResult::Done
         } else {
             ActiveTransitionResult::Continue

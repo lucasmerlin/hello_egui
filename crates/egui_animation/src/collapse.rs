@@ -67,10 +67,12 @@ impl Collapse {
 
         let current_size = last_size * x;
 
-        child.set_clip_rect(Rect::from_min_size(
+        let clip_rect = ui.clip_rect().intersect(Rect::from_min_size(
             child.next_widget_position(),
             Vec2::new(child.available_size().x, current_size),
         ));
+
+        child.set_clip_rect(clip_rect);
 
         content(&mut child);
 
