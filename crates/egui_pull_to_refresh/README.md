@@ -6,7 +6,10 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_pull_to_refresh.svg)](https://crates.io/crates/egui_pull_to_refresh)
 
+
+
 [content]:<>
+
 
 ... adds pull to refresh functionality to egui.
 It works by wrapping a widget in a `PullToRefresh` widget, which will
@@ -19,7 +22,6 @@ display a refresh indicator when the user pulls down the widget.
 <https://github.com/lucasmerlin/hello_egui/assets/8009393/c76e778e-6362-43cd-bef4-2d6e51eaf8d1>
 
 ## Usage
-
 ```rust
 use egui::{Ui};
 use egui_pull_to_refresh::PullToRefresh;
