@@ -1,5 +1,5 @@
 use eframe::egui;
-use egui::{FontFamily, Label, RichText, Widget};
+use egui::{Label, Widget};
 use egui_material_icons::{
     icon_button,
     icons::{ICON_ADD, ICON_FAVORITE, ICON_IMAGE, ICON_REMOVE},
@@ -37,12 +37,7 @@ impl eframe::App for MyEguiApp {
 
             ui.group(|ui| {
                 ui.horizontal(|ui| {
-                    Label::new(
-                        RichText::new(ICON_FAVORITE)
-                            .size(16.0)
-                            .family(FontFamily::Proportional),
-                    )
-                    .ui(ui);
+                    Label::new(ICON_FAVORITE.rich_text().size(16.0)).ui(ui);
                     Label::new("2").ui(ui);
                 });
             });

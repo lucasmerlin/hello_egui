@@ -16,11 +16,9 @@ pub mod icons;
 // Font data (uncompressed)
 // =============================================================================
 
-// When both filled and outline are enabled, or only filled
 #[cfg(all(feature = "filled", not(feature = "compressed")))]
 pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Filled-Regular.ttf");
 
-// When only outline is enabled (no filled), use outline as the default font
 #[cfg(all(
     feature = "outline",
     not(feature = "filled"),
@@ -28,7 +26,6 @@ pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Fi
 ))]
 pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded-Regular.ttf");
 
-// Separate outline font data when both are enabled
 #[cfg(all(feature = "filled", feature = "outline", not(feature = "compressed")))]
 pub(crate) const FONT_DATA_OUTLINED: &[u8] =
     include_bytes!("../MaterialSymbolsRounded-Regular.ttf");
@@ -50,40 +47,109 @@ flate!(pub(crate) static FONT_DATA_OUTLINED: [u8] from "MaterialSymbolsRounded-R
 // Font family names
 // =============================================================================
 
-/// The font family name used for material icons.
+/// The font family name used for filled material icons.
 pub const FONT_FAMILY: &str = "material-icons";
 
-/// The font family name used for outlined material icons (requires `outline` feature).
-#[cfg(feature = "outline")]
+/// The font family name used for outlined material icons.
 pub const FONT_FAMILY_OUTLINED: &str = "material-icons-outlined";
 
 // =============================================================================
-// OutlinedIcon type
+// IconStyle & MaterialIcon
 // =============================================================================
 
-/// An outlined icon that renders with the outline font family.
-///
-/// Use directly with widgets: `ui.button(ICON_OUTLINE_ADD)`
-///
-/// This type is only available when the `outline` feature is enabled.
-#[cfg(feature = "outline")]
-#[derive(Clone, Copy, Debug)]
-pub struct OutlinedIcon(pub &'static str);
+/// The style of a material icon.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum IconStyle {
+    Filled,
+    Outlined,
+}
 
-#[cfg(feature = "outline")]
-impl From<OutlinedIcon> for egui::WidgetText {
-    fn from(icon: OutlinedIcon) -> Self {
-        RichText::new(icon.0)
-            .family(FontFamily::Name(FONT_FAMILY_OUTLINED.into()))
-            .into()
+/// A material icon that can be rendered as filled or outlined.
+///
+/// Use directly with widgets: `ui.button(ICON_ADD)` (filled by default),
+/// or `ui.button(ICON_ADD.outlined())` for the outline variant.
+#[derive(Clone, Copy, Debug)]
+pub struct MaterialIcon {
+    pub codepoint: &'static str,
+    pub style: IconStyle,
+}
+
+impl MaterialIcon {
+    /// Creates a new icon with the default style based on enabled features.
+    ///
+    /// - If `filled` is enabled, defaults to [`IconStyle::Filled`].
+    /// - If only `outline` is enabled, defaults to [`IconStyle::Outlined`].
+    pub const fn new(codepoint: &'static str) -> Self {
+        #[cfg(feature = "filled")]
+        {
+            Self {
+                codepoint,
+                style: IconStyle::Filled,
+            }
+        }
+        #[cfg(not(feature = "filled"))]
+        {
+            Self {
+                codepoint,
+                style: IconStyle::Outlined,
+            }
+        }
+    }
+
+    /// Returns this icon with the outlined style.
+    #[cfg(feature = "outline")]
+    pub const fn outlined(self) -> Self {
+        Self {
+            codepoint: self.codepoint,
+            style: IconStyle::Outlined,
+        }
+    }
+
+    /// Returns this icon with the filled style.
+    #[cfg(feature = "filled")]
+    pub const fn filled(self) -> Self {
+        Self {
+            codepoint: self.codepoint,
+            style: IconStyle::Filled,
+        }
+    }
+
+    /// Returns the [`FontFamily`] for this icon's style.
+    pub fn font_family(&self) -> FontFamily {
+        match self.style {
+            IconStyle::Filled => FontFamily::Name(FONT_FAMILY.into()),
+            IconStyle::Outlined => FontFamily::Name(FONT_FAMILY_OUTLINED.into()),
+        }
+    }
+
+    /// Returns the icon as a [`RichText`] with the appropriate font family.
+    pub fn rich_text(self) -> RichText {
+        RichText::new(self.codepoint).family(self.font_family())
     }
 }
 
-#[cfg(feature = "outline")]
-impl OutlinedIcon {
-    /// Returns the icon as a [`RichText`] with the outline font family.
-    pub fn rich_text(self) -> RichText {
-        RichText::new(self.0).family(FontFamily::Name(FONT_FAMILY_OUTLINED.into()))
+impl From<MaterialIcon> for RichText {
+    fn from(icon: MaterialIcon) -> Self {
+        icon.rich_text()
+    }
+}
+
+impl From<MaterialIcon> for egui::WidgetText {
+    fn from(icon: MaterialIcon) -> Self {
+        icon.rich_text().into()
+    }
+}
+
+impl From<MaterialIcon> for &str {
+    fn from(icon: MaterialIcon) -> Self {
+        icon.codepoint
+    }
+}
+
+impl From<MaterialIcon> for String {
+    fn from(icon: MaterialIcon) -> Self {
+        icon.codepoint.to_string()
     }
 }
 
@@ -96,7 +162,6 @@ pub fn font_insert() -> FontInsert {
     let mut data = FontData::from_static(&FONT_DATA);
     data.tweak.y_offset_factor = 0.05;
 
-    // When only outline is enabled, also register under the outlined family name
     #[cfg(all(feature = "outline", not(feature = "filled")))]
     let families = vec![
         InsertFontFamily {
@@ -107,7 +172,6 @@ pub fn font_insert() -> FontInsert {
             family: FontFamily::Name(FONT_FAMILY.into()),
             priority: FontPriority::Highest,
         },
-        // Also register as outlined family so ICON_OUTLINE_* works
         InsertFontFamily {
             family: FontFamily::Name(FONT_FAMILY_OUTLINED.into()),
             priority: FontPriority::Highest,
@@ -169,17 +233,15 @@ pub fn initialize(ctx: &egui::Context) {
 // =============================================================================
 
 /// Creates a frameless icon button.
-pub fn icon_button(ui: &mut egui::Ui, icon: &str) -> Response {
+pub fn icon_button(ui: &mut egui::Ui, icon: MaterialIcon) -> Response {
     Frame::new()
         .show(ui, |ui| {
-            Button::new(RichText::new(icon).size(18.0))
-                .frame(false)
-                .ui(ui)
+            Button::new(icon.rich_text().size(18.0)).frame(false).ui(ui)
         })
         .inner
 }
 
 /// Creates a [`RichText`] from an icon.
-pub fn icon_text(icon: &str) -> RichText {
-    RichText::new(icon)
+pub fn icon_text(icon: MaterialIcon) -> RichText {
+    icon.rich_text()
 }

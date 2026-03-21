@@ -23,9 +23,7 @@ pub fn main() {
                 if !names.contains(&name) {
                     names.insert(name.clone());
                     Some(format!(
-                        "pub const ICON_{name}: &str = \"\\u{{{addr}}}\";\n\
-                         #[cfg(feature = \"outline\")]\n\
-                         pub const ICON_OUTLINE_{name}: crate::OutlinedIcon = crate::OutlinedIcon(\"\\u{{{addr}}}\");\n"
+                        "pub const ICON_{name}: crate::MaterialIcon = crate::MaterialIcon::new(\"\\u{{{addr}}}\");\n"
                     ))
                 } else {
                     None
