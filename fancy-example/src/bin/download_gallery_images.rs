@@ -32,7 +32,7 @@ mod run {
             .call()
             .unwrap();
 
-        let string = response.into_string().unwrap();
+        let string = response.into_body().read_to_string().unwrap();
 
         let mut items: Vec<GalleryItem> = serde_json::from_str(&string).unwrap();
 
@@ -59,10 +59,18 @@ mod run {
             .call()
             .unwrap();
 
-            let len = response.header("Content-Length").unwrap().parse().unwrap();
+            let len: usize = response
+                .headers()
+                .get("Content-Length")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .parse()
+                .unwrap();
 
             let mut bytes: Vec<u8> = Vec::with_capacity(len);
             response
+                .into_body()
                 .into_reader()
                 .take(10_000_000)
                 .read_to_end(&mut bytes)

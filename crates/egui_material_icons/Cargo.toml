@@ -21,8 +21,7 @@ compressed = ["dep:include-flate"]
 
 [dependencies]
 egui.workspace = true
-include-flate = { version = "0.3", optional = true }
+include-flate = { version = "0.3.2", optional = true }
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-egui_demo_lib = "0.31"
