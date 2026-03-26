@@ -5,11 +5,11 @@ use egui_dnd::dnd;
 pub fn main() -> eframe::Result<()> {
     let mut items = vec!["alfred", "bernhard", "christian"];
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ui.vertical_centered_justified(|ui| {
                     dnd(ui, "dnd_example").show_vec(&mut items, |ui, item, handle, state| {
                         handle.ui(ui, |ui| {

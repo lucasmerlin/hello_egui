@@ -27,7 +27,7 @@ egui.workspace = true
 egui_inbox.workspace = true
 egui_suspense = { workspace = true, optional = true }
 
-matchit = "0.8"
+matchit = "0.9"
 thiserror = "2"
 form_urlencoded = "1"
 

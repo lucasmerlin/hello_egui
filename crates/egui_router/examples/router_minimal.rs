@@ -17,10 +17,10 @@ async fn main() -> eframe::Result<()> {
 
     let mut inbox = UiInbox::new();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
+        move |ui, _frame| {
             let router = router.get_or_insert_with(|| {
                 EguiRouter::builder()
                     .route("/", home)
@@ -29,7 +29,7 @@ async fn main() -> eframe::Result<()> {
                     .build(&mut inbox)
             });
 
-            inbox.read(ctx).for_each(|msg| match msg {
+            inbox.read(ui).for_each(|msg| match msg {
                 RouterMessage::Navigate(route) => {
                     router.navigate(&mut inbox, route).ok();
                 }
@@ -38,7 +38,7 @@ async fn main() -> eframe::Result<()> {
                 }
             });
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 router.ui(ui, &mut inbox);
             });
         },

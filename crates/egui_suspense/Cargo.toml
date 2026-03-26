@@ -26,7 +26,7 @@ required-features = ["async", "tokio"]
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 rand.workspace = true
-reqwest = { version = "0.12.12", features = ["json"] }
+reqwest = { version = "0.13.2", features = ["json"] }
 tokio = { workspace = true, features = ["full"] }
 futures.workspace = true
 

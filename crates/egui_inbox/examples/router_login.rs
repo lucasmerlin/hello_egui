@@ -249,13 +249,13 @@ impl Router {
 fn main() -> eframe::Result<()> {
     let mut state = None;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
+        move |ui, _frame| {
             let (state, auth, router, auth_rx) = state.get_or_insert_with(|| {
                 let state = AppState {
-                    inbox: TypeInbox::new(ctx),
+                    inbox: TypeInbox::new(ui.ctx()),
                     auth: Arc::new(Mutex::new(None)),
                     broadcast: TypeBroadcast::new(),
                 };
@@ -271,7 +271,7 @@ fn main() -> eframe::Result<()> {
             });
 
             // Update our global auth state, based on the auth events
-            auth_rx.read(ctx).for_each(|event| match event {
+            auth_rx.read(ui.ctx()).for_each(|event| match event {
                 AuthEvent::LoggedIn { user } => {
                     *state.auth.lock() = Some(user);
                 }
@@ -281,9 +281,9 @@ fn main() -> eframe::Result<()> {
             });
 
             // Show the login dialog (Since it's a popup window, it is not part of the router)
-            auth.dialog_ui(ctx);
+            auth.dialog_ui(ui.ctx());
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 Area::new(Id::new("Centered"))
                     .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
                     .show(ui.ctx(), |ui| {

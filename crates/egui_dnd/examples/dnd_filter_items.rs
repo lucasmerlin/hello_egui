@@ -72,29 +72,25 @@ fn main() -> eframe::Result<()> {
 
     let mut filter_type = "skip";
 
-    eframe::run_simple_native(
-        "dnd filter demo",
-        NativeOptions::default(),
-        move |ctx, _| {
-            CentralPanel::default().show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("Filter:");
-                    ui.text_edit_singleline(&mut filter);
+    eframe::run_ui_native("dnd filter demo", NativeOptions::default(), move |ui, _| {
+        CentralPanel::default().show_inside(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Filter:");
+                ui.text_edit_singleline(&mut filter);
 
-                    ui.label("Filter type:");
-                    ui.selectable_value(&mut filter_type, "skip", "skip");
-                    ui.selectable_value(&mut filter_type, "filter", "filter");
-                });
-                ScrollArea::vertical().show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-
-                    if filter_type == "skip" {
-                        filter_by_skipping_items(ui, &filter, &mut items);
-                    } else {
-                        filter_by_filtering_source_list(ui, &filter, &mut items);
-                    }
-                })
+                ui.label("Filter type:");
+                ui.selectable_value(&mut filter_type, "skip", "skip");
+                ui.selectable_value(&mut filter_type, "filter", "filter");
             });
-        },
-    )
+            ScrollArea::vertical().show(ui, |ui| {
+                ui.set_width(ui.available_width());
+
+                if filter_type == "skip" {
+                    filter_by_skipping_items(ui, &filter, &mut items);
+                } else {
+                    filter_by_filtering_source_list(ui, &filter, &mut items);
+                }
+            })
+        });
+    })
 }

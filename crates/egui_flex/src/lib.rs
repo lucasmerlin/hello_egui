@@ -1459,7 +1459,7 @@ impl FlexContainerUi {
         ui.set_height(ui.available_height());
         let response = ui.scope_builder(builder, |ui| widget.ui(ui)).inner;
 
-        let intrinsic_size = response.intrinsic_size.map_or(
+        let intrinsic_size = response.intrinsic_size().map_or(
             Vec2::new(ui.spacing().interact_size.x, ui.spacing().interact_size.y),
             // Add some horizontal space to prevent edge cases where text might wrap
             |s| s + Vec2::X * 1.0,

@@ -22,15 +22,8 @@ egui_extras = { workspace = true, default-features = true, features = [
     "http",
 ] }
 
-oxhttp = { version = "0.2.2", default-features = false, features = [
-    "client",
-    "rustls",
-    "webpki-roots",
-    "rustls-pki-types",
-] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
-image.workspace = true
 
 [lints]
 workspace = true

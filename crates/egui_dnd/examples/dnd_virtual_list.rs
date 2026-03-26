@@ -10,11 +10,11 @@ pub fn main() -> eframe::Result<()> {
     let mut items: Vec<_> = (0..100_000).collect();
     let mut virtual_list = VirtualList::new();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Virtual List Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     let response = dnd(ui, "dnd").show_custom(|ui, iter| {
                         virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {

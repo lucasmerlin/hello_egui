@@ -35,11 +35,11 @@ pub fn main() -> eframe::Result<()> {
         Item::new("alfred"),
     ];
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 let response = dnd(ui, "dnd_example")
                     // Since egui_dnd's animations rely on the ids not
                     // changing after the drag finished we need to disable animations

@@ -9,11 +9,11 @@ pub fn main() -> eframe::Result<()> {
         "christian".to_string(),
     ];
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD with CollapsingHeader Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 if ui.button("Add Item").clicked() {
                     //adds an item to test if ui state it preserved
                     items.push(format!("new item {}", items.len()).to_string());
@@ -47,7 +47,7 @@ fn list(ui: &mut Ui, dnd_id: Id, items: &mut [String]) {
                     }
                 });
 
-                CollapsingHeader::new((*item).to_string()).show_unindented(ui, |ui| {
+                CollapsingHeader::new((*item).clone()).show_unindented(ui, |ui| {
                     for i in 1..=5 {
                         ui.label(format!("{i} {item}"));
                     }
