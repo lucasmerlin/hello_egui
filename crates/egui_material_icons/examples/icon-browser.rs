@@ -1,8 +1,9 @@
 use eframe::egui;
 use egui::{Label, Widget};
+use egui_material_icons::icons::ICON_RECTANGLE;
 use egui_material_icons::{
     icon_button,
-    icons::{ICON_ADD, ICON_FAVORITE, ICON_IMAGE, ICON_REMOVE},
+    icons::{ICON_FAVORITE, ICON_IMAGE},
 };
 
 fn main() -> Result<(), eframe::Error> {
@@ -29,10 +30,15 @@ impl eframe::App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-                icon_button(ui, ICON_ADD);
-                icon_button(ui, ICON_REMOVE);
+                ui.label("Filled:");
                 icon_button(ui, ICON_IMAGE);
-                ui.label("Ayyy")
+                icon_button(ui, ICON_RECTANGLE);
+                #[cfg(feature = "outline")]
+                {
+                    ui.label("Outlined:");
+                    icon_button(ui, ICON_IMAGE.outlined());
+                    icon_button(ui, ICON_RECTANGLE.outlined());
+                }
             });
 
             ui.group(|ui| {

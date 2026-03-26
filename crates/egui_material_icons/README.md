@@ -33,7 +33,7 @@ Currently, this provides the rounded icons. By default, the filled variant is us
 
 - **`filled`** (default) - Include the filled font variant.
 
-- **`outline`** - Include the outline font variant. Adds `ICON_OUTLINE_*` constants:
+- **`outline`** - Include the outline font variant.
 
   ```rust
   use egui_material_icons::icons::*;
@@ -41,7 +41,7 @@ Currently, this provides the rounded icons. By default, the filled variant is us
   egui_material_icons::initialize(&cc.egui_ctx);
 
   ui.button(ICON_ADD);          // filled
-  ui.button(ICON_OUTLINE_ADD);  // outlined
+  ui.button(ICON_ADD.outlined());  // outlined
   ```
 
 - **`compressed`** (default) - Compress embedded fonts with DEFLATE, reducing binary size significantly.
