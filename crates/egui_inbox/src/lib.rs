@@ -131,11 +131,11 @@ mod egui_impl {
 ///     let mut inbox = UiInbox::new();
 ///     let mut state = None;
 ///
-///     eframe::run_simple_native(
+///     eframe::run_ui_native(
 ///         "DnD Simple Example",
 ///         Default::default(),
-///         move |ctx, _frame| {
-///             CentralPanel::default().show(ctx, |ui| {
+///         move |ui, _frame| {
+///             CentralPanel::default().show_inside(ui, |ui| {
 ///                 inbox.replace(ui, &mut state);
 ///
 ///                 ui.label(format!("State: {:?}", state));

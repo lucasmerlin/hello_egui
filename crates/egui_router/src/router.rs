@@ -104,7 +104,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.history.iter().map(|s| s.path_with_query.as_str())
     }
 
-    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<str>, Cow<str>>) {
+    fn parse_path(path: &str) -> (&str, BTreeMap<Cow<'_, str>, Cow<'_, str>>) {
         path.split_once('?')
             .map(|(path, q)| (path, form_urlencoded::parse(q.as_bytes()).collect()))
             .unwrap_or((path, BTreeMap::new()))
@@ -234,7 +234,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                         query,
                     });
                     self.history.push(RouteState {
-                        path_with_query: path_with_query.to_string(),
+                        path_with_query: path_with_query.clone(),
                         route,
                         id: ID.fetch_add(1, Ordering::SeqCst),
                         state: new_state,

@@ -57,21 +57,23 @@ pub fn main() -> eframe::Result<()> {
         .enumerate()
         .collect::<Vec<_>>();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
+        move |ui, _frame| {
             CentralPanel::default()
-                .frame(Frame::NONE.inner_margin(8.0).fill(
-                    ctx.style().visuals.panel_fill.gamma_multiply(
-                        if ctx.style().visuals.dark_mode {
-                            1.5
-                        } else {
-                            0.8
-                        },
+                .frame(
+                    Frame::NONE.inner_margin(8.0).fill(
+                        ui.style().visuals.panel_fill.gamma_multiply(
+                            if ui.style().visuals.dark_mode {
+                                1.5
+                            } else {
+                                0.8
+                            },
+                        ),
                     ),
-                ))
-                .show(ctx, |ui| {
+                )
+                .show_inside(ui, |ui| {
                     ui.style_mut().animation_time = 0.5;
                     ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
 

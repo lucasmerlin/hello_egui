@@ -6,11 +6,11 @@ use egui_dnd::{dnd, DragDropItem};
 pub fn main() -> eframe::Result<()> {
     let mut items = vec!["alfred", "bernhard", "christian"];
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ui.label("Drag and drop the items below");
 
                 dnd(ui, "custom").show_custom_vec(&mut items, |ui, items, iter| {

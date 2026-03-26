@@ -39,12 +39,12 @@ async fn main() -> eframe::Result<()> {
     let mut router: Option<(EguiRouter<AppState>, AppState)> = None;
     let mut window_router: Option<(EguiRouter<AppState>, AppState)> = None;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            let mut router = router.get_or_insert_with(|| init(ctx));
-            let mut window_router = window_router.get_or_insert_with(|| init(ctx));
+        move |ui, _frame| {
+            let mut router = router.get_or_insert_with(|| init(ui.ctx()));
+            let mut window_router = window_router.get_or_insert_with(|| init(ui.ctx()));
 
             for state in &mut [&mut router, &mut window_router] {
                 state
@@ -61,13 +61,13 @@ async fn main() -> eframe::Result<()> {
                     });
             }
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 router.0.ui(ui, &mut router.1);
             });
 
             Window::new("Router Window")
-                .frame(Frame::window(&ctx.style()).inner_margin(0.0))
-                .show(ctx, |ui| {
+                .frame(Frame::window(ui.style()).inner_margin(0.0))
+                .show(ui.ctx(), |ui| {
                     ui.set_width(ui.available_width());
                     ui.set_height(ui.available_height());
                     window_router.0.ui(ui, &mut window_router.1);

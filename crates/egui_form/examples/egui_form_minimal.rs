@@ -25,11 +25,11 @@ fn form_ui(ui: &mut Ui, fields: &mut Fields) {
 fn main() -> eframe::Result<()> {
     let mut fields = Fields::default();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "egui_form minimal example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            egui::CentralPanel::default().show_inside(ui, |ui| {
                 form_ui(ui, &mut fields);
             });
         },

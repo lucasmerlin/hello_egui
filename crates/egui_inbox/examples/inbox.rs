@@ -6,11 +6,11 @@ pub fn main() -> eframe::Result<()> {
     let inbox = UiInbox::new();
     let mut state = None;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 // `read` will return an iterator over all pending messages
                 if let Some(last) = inbox.read(ui).last() {
                     state = last;

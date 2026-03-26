@@ -21,11 +21,11 @@ pub fn main() -> eframe::Result<()> {
 
     let mut slider_value = 0.0;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Pull to refresh minimal example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 // Disable text selection, so it doesn't interfere with the drag gesture
                 ui.style_mut().interaction.selectable_labels = false;
                 ui.style_mut().interaction.multi_widget_text_select = false;

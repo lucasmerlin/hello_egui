@@ -32,11 +32,11 @@ pub fn main() -> eframe::Result<()> {
     let mut already_loaded_suspense: EguiSuspense<String, String> =
         EguiSuspense::loaded("Hello".to_string());
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 suspense.ui(ui, |ui, data, state| {
                     ui.label(format!("Data: {data:?}"));
 

@@ -42,16 +42,16 @@ fn main() -> eframe::Result<()> {
     let items = include_str!("../../../fancy-example/src/gallery/index.json");
     let items = serde_json::from_str::<Vec<GalleryItem>>(items).unwrap();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Thumbhash Demo",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            egui_extras::install_image_loaders(ctx);
-            egui_thumbhash::register(ctx);
+        move |ui, _frame| {
+            egui_extras::install_image_loaders(ui.ctx());
+            egui_thumbhash::register(ui.ctx());
 
             CentralPanel::default()
-                .frame(Frame::central_panel(&ctx.style()).inner_margin(16.0))
-                .show(ctx, |ui| {
+                .frame(Frame::central_panel(&ui.ctx().global_style()).inner_margin(16.0))
+                .show_inside(ui, |ui| {
                     if ui.button("Reload").clicked() {
                         ui.ctx().forget_all_images();
                         ui.ctx().clear_animations();

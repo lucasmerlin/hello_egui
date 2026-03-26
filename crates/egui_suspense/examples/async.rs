@@ -13,11 +13,11 @@ async fn main() -> eframe::Result<()> {
         reqwest::get("https://worldtimeapi.org/api/ip").and_then(reqwest::Response::text)
     });
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Suspense Async Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 timezones.ui(ui, |ui, data, state| {
                     ui.label(format!("Timezones: {data:?}"));
                     if ui.button("Reload").clicked() {

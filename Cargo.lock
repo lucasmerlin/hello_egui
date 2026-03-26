@@ -1340,23 +1340,25 @@ dependencies = [
 
 [[package]]
 name = "ecolor"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb993f120d46ca077a18f166175b94c6edeb994d812cbd07a4a03cfced2713c"
 dependencies = [
  "bytemuck",
  "color-hex",
- "emath 0.33.3",
+ "emath 0.34.0",
 ]
 
 [[package]]
 name = "eframe"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fd6562766ec6b921232ceb960acdb405f91971f59c17604840fd9485fee0dc3"
 dependencies = [
  "ahash",
  "bytemuck",
  "document-features",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui-wgpu",
  "egui-winit",
  "egui_glow",
@@ -1399,15 +1401,16 @@ dependencies = [
 
 [[package]]
 name = "egui"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b71aaacbe69e214aebf7b8d5eacd6256d0d2ca5ff9525c28d1dd7f377f430a9"
 dependencies = [
  "accesskit",
  "ahash",
  "backtrace",
  "bitflags 2.9.4",
- "emath 0.33.3",
- "epaint 0.33.3",
+ "emath 0.34.0",
+ "epaint 0.34.0",
  "log",
  "nohash-hasher",
  "profiling",
@@ -1417,14 +1420,15 @@ dependencies = [
 
 [[package]]
 name = "egui-wgpu"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "111e54ac54bf9d767ce8970a454f720878875bca1f2e63f781c722e98f466971"
 dependencies = [
  "ahash",
  "bytemuck",
  "document-features",
- "egui 0.33.3",
- "epaint 0.33.3",
+ "egui 0.34.0",
+ "epaint 0.34.0",
  "log",
  "profiling",
  "thiserror 2.0.17",
@@ -1436,13 +1440,14 @@ dependencies = [
 
 [[package]]
 name = "egui-winit"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ed6af7dad7dd045b77731fe6dc291b835489a104d3cd2428a945e71e2265df3"
 dependencies = [
  "accesskit_winit",
  "arboard",
  "bytemuck",
- "egui 0.33.3",
+ "egui 0.34.0",
  "log",
  "objc2 0.6.4",
  "objc2-foundation 0.3.2",
@@ -1460,7 +1465,7 @@ name = "egui_animation"
 version = "0.10.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "hello_egui_utils",
  "rand 0.9.1",
  "simple-easing",
@@ -1469,23 +1474,21 @@ dependencies = [
 [[package]]
 name = "egui_commonmark"
 version = "0.22.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5246a4e9b83c345ec8230933bd0dca16d1c3c11db0edd4fd9c1a90683240b49"
+source = "git+https://github.com/rerun-io/egui_commonmark?branch=emilk%2Fegui-0.34#62ab7b63c84a5b65542bf313c5f53c735f54bee3"
 dependencies = [
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_commonmark_backend",
- "egui_extras 0.33.3",
+ "egui_extras 0.34.0",
  "pulldown-cmark",
 ]
 
 [[package]]
 name = "egui_commonmark_backend"
 version = "0.22.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3cff846279556f57af8ea606f2e4ceaf83e60b81db014c126dfb926fa06c75b"
+source = "git+https://github.com/rerun-io/egui_commonmark?branch=emilk%2Fegui-0.34#62ab7b63c84a5b65542bf313c5f53c735f54bee3"
 dependencies = [
- "egui 0.33.3",
- "egui_extras 0.33.3",
+ "egui 0.34.0",
+ "egui_extras 0.34.0",
  "pulldown-cmark",
 ]
 
@@ -1506,9 +1509,9 @@ version = "0.14.0"
 dependencies = [
  "color-hex",
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_animation",
- "egui_extras 0.33.3",
+ "egui_extras 0.34.0",
  "egui_infinite_scroll",
  "egui_virtual_list",
  "hello_egui_utils",
@@ -1533,11 +1536,12 @@ dependencies = [
 
 [[package]]
 name = "egui_extras"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8844ef47969c00cc186e06e9721ac952758c0e5cd5f579468037f19c7f49566d"
 dependencies = [
  "ahash",
- "egui 0.33.3",
+ "egui 0.34.0",
  "ehttp 0.7.1",
  "enum-map",
  "image",
@@ -1552,7 +1556,7 @@ name = "egui_flex"
 version = "0.5.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_inbox",
  "egui_kittest",
  "hello_egui_utils_dev",
@@ -1564,18 +1568,19 @@ name = "egui_form"
 version = "0.7.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "garde",
  "validator",
 ]
 
 [[package]]
 name = "egui_glow"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91c5dea15932abd0a953fefc8d8490002204808a2e087147aac48608eea9ef79"
 dependencies = [
  "bytemuck",
- "egui 0.33.3",
+ "egui 0.34.0",
  "glow",
  "log",
  "memoffset",
@@ -1591,7 +1596,7 @@ version = "0.10.0"
 dependencies = [
  "derive-new",
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "ehttp 0.5.0",
  "futures",
  "futures-channel",
@@ -1608,8 +1613,8 @@ name = "egui_infinite_scroll"
 version = "0.9.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
- "egui_extras 0.33.3",
+ "egui 0.34.0",
+ "egui_extras 0.34.0",
  "egui_inbox",
  "egui_virtual_list",
  "hello_egui_utils",
@@ -1619,12 +1624,13 @@ dependencies = [
 
 [[package]]
 name = "egui_kittest"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1077ec995dbc754f22afcca9bbab1329071737d749a953e7b430d9b825d40c32"
 dependencies = [
  "dify",
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui-wgpu",
  "image",
  "kittest",
@@ -1641,7 +1647,7 @@ name = "egui_material_icons"
 version = "0.5.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_demo_lib",
 ]
 
@@ -1650,7 +1656,7 @@ name = "egui_pull_to_refresh"
 version = "0.10.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_inbox",
  "ehttp 0.5.0",
 ]
@@ -1660,7 +1666,7 @@ name = "egui_router"
 version = "0.6.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_animation",
  "egui_inbox",
  "egui_suspense",
@@ -1678,7 +1684,7 @@ name = "egui_suspense"
 version = "0.10.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_inbox",
  "futures",
  "hello_egui_utils",
@@ -1693,8 +1699,8 @@ version = "0.9.0"
 dependencies = [
  "base64",
  "eframe",
- "egui 0.33.3",
- "egui_extras 0.33.3",
+ "egui 0.34.0",
+ "egui_extras 0.34.0",
  "image",
  "oxhttp",
  "serde",
@@ -1707,7 +1713,7 @@ name = "egui_virtual_list"
 version = "0.9.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "hello_egui_utils_dev",
  "rand 0.9.1",
  "web-time",
@@ -1718,8 +1724,8 @@ name = "egui_webview"
 version = "0.1.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
- "egui_extras 0.33.3",
+ "egui 0.34.0",
+ "egui_extras 0.34.0",
  "egui_inbox",
  "image",
  "serde",
@@ -1771,8 +1777,9 @@ checksum = "9e4cadcff7a5353ba72b7fea76bf2122b5ebdbc68e8155aa56dfdea90083fe1b"
 
 [[package]]
 name = "emath"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8490360fc83eb3a2b20aba120457f7d91c3042d7c628e4f90b43a97b6adf1255"
 dependencies = [
  "bytemuck",
 ]
@@ -1874,13 +1881,14 @@ dependencies = [
 
 [[package]]
 name = "epaint"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d76f9fdbf72eaf0dc3198d90e7bff267b45866f660f8cf49caeb9dcab93342e0"
 dependencies = [
  "ahash",
  "bytemuck",
- "ecolor 0.33.3",
- "emath 0.33.3",
+ "ecolor 0.34.0",
+ "emath 0.34.0",
  "epaint_default_fonts",
  "font-types",
  "log",
@@ -1891,14 +1899,13 @@ dependencies = [
  "skrifa",
  "smallvec",
  "vello_cpu",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
 name = "epaint_default_fonts"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"
+version = "0.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a1a65f42685d25419a67fd3175e11dfecdd268b0478aaba76785b0a896884e0"
 
 [[package]]
 name = "equator"
@@ -1993,11 +2000,11 @@ version = "0.1.0"
 dependencies = [
  "casey",
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
  "egui_animation",
  "egui_commonmark",
  "egui_dnd",
- "egui_extras 0.33.3",
+ "egui_extras 0.34.0",
  "egui_flex",
  "egui_form",
  "egui_inbox",
@@ -2840,7 +2847,7 @@ name = "hello_egui_utils"
 version = "0.10.0"
 dependencies = [
  "concat-idents",
- "egui 0.33.3",
+ "egui 0.34.0",
  "tokio",
  "wasm-bindgen-futures",
 ]
@@ -2850,7 +2857,7 @@ name = "hello_egui_utils_dev"
 version = "0.2.0"
 dependencies = [
  "eframe",
- "egui 0.33.3",
+ "egui 0.34.0",
 ]
 
 [[package]]
@@ -3652,9 +3659,9 @@ dependencies = [
 
 [[package]]
 name = "naga"
-version = "29.0.0"
+version = "29.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85b4372fed0bd362d646d01b6926df0e837859ccc522fed720c395e0460f29c8"
+checksum = "aa2630921705b9b01dcdd0b6864b9562ca3c1951eecd0f0c4f5f04f61e412647"
 dependencies = [
  "arrayvec",
  "bit-set",
@@ -7046,9 +7053,9 @@ dependencies = [
 
 [[package]]
 name = "wgpu-types"
-version = "29.0.0"
+version = "29.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d15ece45db77dd5451f11c0ce898334317ce8502d304a20454b531fdc0652fae"
+checksum = "ec2675540fb1a5cfa5ef122d3d5f390e2c75711a0b946410f2d6ac3a0f77d1f6"
 dependencies = [
  "bitflags 2.9.4",
  "bytemuck",
@@ -8134,8 +8141,3 @@ dependencies = [
  "syn 2.0.104",
  "winnow 0.7.11",
 ]
-
-[[patch.unused]]
-name = "egui_demo_lib"
-version = "0.33.3"
-source = "git+https://github.com/emilk/egui?branch=lucas%2Fmalmal%2Fmain#73271a6362d2e98e52e7695c8f23e64beb7bb19a"

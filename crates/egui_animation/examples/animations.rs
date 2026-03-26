@@ -56,11 +56,11 @@ pub fn main() -> eframe::Result<()> {
 
     let mut visible = true;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     ComboBox::new("easing", "Select Easing")
                         .selected_text(

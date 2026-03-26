@@ -11,9 +11,9 @@ use std::time::Duration;
 pub fn app() -> Harness<'static> {
     let mut app = None;
 
-    Harness::new(move |ctx| {
-        let app = app.get_or_insert_with(|| App::new(ctx));
-        app.show(ctx);
+    Harness::new_ui(move |ui| {
+        let app = app.get_or_insert_with(|| App::new(ui.ctx()));
+        app.show(ui);
     })
 }
 

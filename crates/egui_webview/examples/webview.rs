@@ -1,3 +1,4 @@
+#![allow(clippy::needless_pass_by_value)] // It's ok here as it is an example
 use eframe::{emath::Align, NativeOptions};
 use egui::{CentralPanel, Context, Id, Layout, Popup, TextEdit, Widget, Window};
 use wry::raw_window_handle::HasWindowHandle;
@@ -93,20 +94,20 @@ pub fn main() -> eframe::Result<()> {
 
     let mut count = 0;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Dnd Example App",
         NativeOptions::default(),
-        move |ctx, frame| {
-            egui_extras::install_image_loaders(ctx);
+        move |ui, frame| {
+            egui_extras::install_image_loaders(ui.ctx());
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 if windows.is_empty() || ui.button("New Window").clicked() {
-                    init_webview(ctx);
+                    init_webview(ui.ctx());
 
                     let url = default_urls[count % default_urls.len()];
 
                     windows.push(WebBrowser::new(
-                        ctx,
+                        ui.ctx(),
                         Id::new(format!("Window {count}")),
                         url,
                         frame,
@@ -115,9 +116,9 @@ pub fn main() -> eframe::Result<()> {
                 }
             });
 
-            windows.retain_mut(|w| w.ui(ctx));
+            windows.retain_mut(|w| w.ui(ui.ctx()));
 
-            webview_end_frame(ctx);
+            webview_end_frame(ui.ctx());
         },
     )
 }

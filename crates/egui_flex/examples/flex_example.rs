@@ -9,12 +9,12 @@ fn main() -> eframe::Result {
 
     let mut toggle = false;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "flex example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
-                ctx.options_mut(|opts| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
+                ui.ctx().options_mut(|opts| {
                     opts.max_passes = NonZeroUsize::new(3).unwrap();
                 });
 

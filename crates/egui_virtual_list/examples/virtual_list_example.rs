@@ -10,11 +10,11 @@ pub fn main() -> eframe::Result<()> {
     // Since the list stores state that is expensive to calculate, we have to store it somewhere in our application.
     let mut virtual_list = VirtualList::new();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Virtual List Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {
