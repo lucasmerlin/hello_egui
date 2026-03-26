@@ -1,9 +1,10 @@
 # egui_infinite_scroll changelog
 
-## 0.9.1
+## 0.10.0
 
 - Make `InfiniteScroll::update` public
 - Add `load_more_end` and `load_more_start` methods
+- Update egui to 0.34
 
 ## 0.9.0
 

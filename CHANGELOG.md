@@ -1,5 +1,14 @@
 # hello_egui changelog
 
+## 0.11.0
+
+- Update egui to 0.34
+- egui_router: Add swipe back gesture, lifecycle events, improved query param handling
+- egui_material_icons: Add outline icon variants and DEFLATE compression
+- egui_virtual_list: Fix flicker during router animations, fix size mismatch
+- egui_infinite_scroll: Make `InfiniteScroll::update` public, add `load_more_end` and `load_more_start`
+- egui_animation: Fix `Collapse` clip rect ignoring existing clip rect
+
 ## 0.10.0
 
 - Update egui to 0.33.0
