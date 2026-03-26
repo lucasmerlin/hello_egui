@@ -33,9 +33,9 @@ async fn main() -> eframe::Result<()> {
                 let router = EguiRouter::builder()
                     .transition(TransitionConfig::slide().with_duration(0.5))
                     .swipe_back_gesture(true)
-                    .route("/", || HomePage::new())
-                    .route("/detail", || DetailPage::new())
-                    .route("/no-swipe", || NoSwipePage::new())
+                    .route("/", HomePage::new)
+                    .route("/detail", DetailPage::new)
+                    .route("/no-swipe", NoSwipePage::new)
                     .default_path("/")
                     .build(&mut state);
 
