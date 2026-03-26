@@ -38,10 +38,14 @@ Currently, this provides the rounded icons. By default, the filled variant is us
   ```rust
   use egui_material_icons::icons::*;
 
-  egui_material_icons::initialize(&cc.egui_ctx);
-
-  ui.button(ICON_ADD);          // filled
-  ui.button(ICON_ADD.outlined());  // outlined
+  fn init(ctx: &egui::Context) {
+    egui_material_icons::initialize(ctx);
+  }
+  
+  fn my_ui(ui: &mut egui::Ui) {
+    ui.button(ICON_ADD);          // filled
+    ui.button(ICON_ADD.outlined());  // outlined
+  }
   ```
 
 - **`compressed`** (default) - Compress embedded fonts with DEFLATE, reducing binary size significantly.
