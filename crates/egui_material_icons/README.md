@@ -6,10 +6,7 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![License](https://img.shields.io/crates/l/egui_material_icons.svg)](https://crates.io/crates/egui_material_icons)
 
-
-
 [content]:<>
-
 
 Provides material icons (now material symbols) for egui.
 
@@ -23,5 +20,32 @@ egui_material_icons::initialize(&cc.egui_ctx);
 ui.button(egui_material_icons::icons::ICON_ADD);
 ```
 
-Currently, this provides the rounded icons, I could also add a feature to enable different variants.
-If you need this just open an issue.
+Currently, this provides the rounded icons. By default, the filled variant is used.
+
+## Features
+
+| Features                                            | Fonts Included     |
+| --------------------------------------------------- | ------------------ |
+| default (`filled`, `compressed`)                    | Filled only        |
+| `--features outline`                                | Filled + Outline   |
+| `--no-default-features --features outline`          | Outline only       |
+| `--no-default-features --features "filled outline"` | Both, uncompressed |
+
+- **`filled`** (default) - Include the filled font variant.
+
+- **`outline`** - Include the outline font variant.
+
+  ```rust
+  use egui_material_icons::icons::*;
+
+  fn init(ctx: &egui::Context) {
+    egui_material_icons::initialize(ctx);
+  }
+  
+  fn my_ui(ui: &mut egui::Ui) {
+    ui.button(ICON_ADD);          // filled
+    ui.button(ICON_ADD.outlined());  // outlined
+  }
+  ```
+
+- **`compressed`** (default) - Compress embedded fonts with DEFLATE, reducing binary size significantly.
