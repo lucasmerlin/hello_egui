@@ -29,6 +29,29 @@ pub use router_builder::RouterBuilder;
 pub trait Route<State = ()> {
     /// Render the route ui
     fn ui(&mut self, ui: &mut egui::Ui, state: &mut State);
+
+    /// Called when this route starts becoming visible again (transition starts).
+    /// E.g., when a back navigation begins and this route starts animating in.
+    fn on_showing(&mut self) {}
+
+    /// Called when this route is fully visible (transition completes).
+    /// E.g., when a back navigation finishes and this route is fully shown.
+    fn on_shown(&mut self) {}
+
+    /// Called when this route starts being hidden (transition starts).
+    /// E.g., when a forward navigation begins and this route starts animating out.
+    fn on_hiding(&mut self) {}
+
+    /// Called when this route is fully hidden (transition completes).
+    /// E.g., when a forward navigation finishes and another route is now on top.
+    fn on_hide(&mut self) {}
+
+    /// Override the router's swipe-back gesture setting for this route.
+    /// Return `Some(true)` to enable, `Some(false)` to disable, or `None` to
+    /// use the router's default setting.
+    fn enable_swipe(&self) -> Option<bool> {
+        None
+    }
 }
 
 impl<F: FnMut(&mut Ui, &mut State), State> Route<State> for F {
