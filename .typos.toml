@@ -9,3 +9,4 @@ files.extend-exclude = [
 [default.extend-words]
 # From lorem
 "facilisi" = "facilisi"
+"flate" = "flate"
