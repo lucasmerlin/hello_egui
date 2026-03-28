@@ -55,11 +55,11 @@ fn main() -> eframe::Result<()> {
         vec: vec![Nested { test: 0 }],
     };
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Egui Garde Validation",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 form_ui(ui, &mut test);
             });
         },

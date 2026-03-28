@@ -1,6 +1,6 @@
 use eframe::{egui, NativeOptions};
 
-use egui::{CentralPanel, Frame, Label, ScrollArea, TopBottomPanel, Ui, Vec2, Widget};
+use egui::{CentralPanel, Frame, Label, Panel, ScrollArea, Ui, Vec2, Widget};
 use egui_dnd::dnd;
 
 pub fn main() -> eframe::Result<()> {
@@ -8,11 +8,11 @@ pub fn main() -> eframe::Result<()> {
 
     let mut example = "wrapping";
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+        move |ui, _frame| {
+            Panel::bottom("bottom_panel").show_inside(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label(format!(
                         "Sorted: {:?}",
@@ -24,7 +24,7 @@ pub fn main() -> eframe::Result<()> {
                 });
             });
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ui.style_mut().animation_time = 0.15;
 
                 ui.spacing_mut().item_spacing.y = ui.spacing().item_spacing.x;

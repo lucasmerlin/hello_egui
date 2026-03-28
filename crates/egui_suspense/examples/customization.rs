@@ -25,11 +25,11 @@ fn custom_suspense<T: Debug + Send + Sync + 'static>(sus: EguiSuspense<T>) -> Eg
 pub fn main() -> eframe::Result<()> {
     let mut suspenses = Vec::new();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Custom Suspense Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 Window::new("Main Window").show(ui.ctx(), |ui| {
                     ui.label("Hello World!");
                     if ui.button("Load").clicked() {

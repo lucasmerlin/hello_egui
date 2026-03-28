@@ -53,11 +53,11 @@ impl MyComponent {
 pub fn main() -> eframe::Result<()> {
     let mut my_component = MyComponent::new();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 my_component.ui(ui);
             });
         },

@@ -99,8 +99,8 @@ impl MyApp {
 }
 
 impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             let response =
                 dnd(ui, "dnd_example").show(self.items.iter_mut(), |ui, item, handle, _pressed| {
                     MyApp::draw_item(ui, item, handle);

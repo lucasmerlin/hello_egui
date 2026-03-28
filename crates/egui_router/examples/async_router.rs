@@ -17,11 +17,11 @@ async fn main() -> eframe::Result<()> {
     let inbox = UiInbox::new();
     let mut sender = inbox.sender();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            ctx.all_styles_mut(|style| {
+        move |ui, _frame| {
+            ui.ctx().all_styles_mut(|style| {
                 style.interaction.selectable_labels = false;
             });
             let router = router.get_or_insert_with(|| {
@@ -43,7 +43,7 @@ async fn main() -> eframe::Result<()> {
                     .build(&mut sender)
             });
 
-            inbox.read(ctx).for_each(|msg| match msg {
+            inbox.read(ui).for_each(|msg| match msg {
                 RouterMessage::Navigate(route) => {
                     router.navigate(&mut sender, route).ok();
                 }
@@ -52,7 +52,7 @@ async fn main() -> eframe::Result<()> {
                 }
             });
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 router.ui(ui, &mut sender);
             });
         },

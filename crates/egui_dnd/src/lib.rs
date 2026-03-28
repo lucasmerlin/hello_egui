@@ -36,8 +36,8 @@ pub struct Dnd<'a> {
 /// pub fn main() -> eframe::Result<()> {
 ///     let mut items = vec!["alfred", "bernhard", "christian"];
 ///
-///     eframe::run_simple_native("DnD Simple Example", Default::default(), move |ctx, _frame| {
-///         CentralPanel::default().show(ctx, |ui| {
+///     eframe::run_ui_native("DnD Simple Example", Default::default(), move |ui, _frame| {
+///         CentralPanel::default().show_inside(ui, |ui| {
 ///
 ///             dnd(ui, "dnd_example")
 ///                 .show_vec(&mut items, |ui, item, handle, state| {

@@ -1,5 +1,9 @@
 # hello_egui_utils changelog
 
+## 0.11.0
+
+- Update egui to 0.34
+
 ## 0.10.0
 
 - Update egui to 0.33.0

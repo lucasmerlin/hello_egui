@@ -10,11 +10,11 @@ pub fn main() -> eframe::Result<()> {
         callback(Ok(((start..end).collect(), Some(end))));
     });
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Infinite Scroll Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     let response = dnd(ui, "dnd").show_custom(|ui, iter| {
                         infinite_scroll.ui(ui, 10, |ui, index, item| {

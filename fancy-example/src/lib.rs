@@ -60,15 +60,14 @@ impl App {
     }
 
     pub fn show(&mut self, ui: &mut Ui) {
-        let ctx = ui.ctx().clone();
-        self.inbox.set_ctx(&ctx);
+        self.inbox.set_ctx(ui.ctx());
         self.inbox.read_without_ctx().for_each(|msg| match msg {
             FancyMessage::Navigate(route) => {
                 self.router.navigate(&mut self.shared_state, route).unwrap();
             }
         });
 
-        let width = ctx.content_rect().width();
+        let width = ui.ctx().content_rect().width();
         let collapsible_sidebar = width < 800.0;
         let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
 
@@ -82,7 +81,7 @@ impl App {
             });
 
         egui::CentralPanel::default()
-            .frame(egui::Frame::NONE.fill(ctx.global_style().visuals.panel_fill.gamma_multiply(0.7)))
+            .frame(egui::Frame::NONE.fill(ui.visuals().panel_fill.gamma_multiply(0.7)))
             .show_inside(ui, |ui| {
                 vertex_gradient(
                     ui,

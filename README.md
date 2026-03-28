@@ -1,7 +1,7 @@
 # Hello Egui!
 
 This project contains a collection of egui tools I've created during
-development of the native app for <https://hellopaint.io> (still unreleased, stay tuned!).
+development of the native app for <https://malmal.app>.
 
 The crates have varying levels of maturity, some are ready for use in production
 while others are highly experimental.

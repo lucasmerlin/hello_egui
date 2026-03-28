@@ -7,11 +7,11 @@ pub fn main() -> eframe::Result<()> {
 
     let mut rect = Rect::ZERO;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "DnD Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 Scene::new().show(ui, &mut rect, |ui| {
                     dnd(ui, "dnd_example").show_vec(&mut items, |ui, item, handle, state| {
                         ui.horizontal(|ui| {

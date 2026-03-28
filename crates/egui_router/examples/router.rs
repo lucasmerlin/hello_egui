@@ -3,7 +3,6 @@ use egui::{CentralPanel, Color32, Context, Frame, ScrollArea, Ui, Window};
 use egui_inbox::type_inbox::TypeInbox;
 use egui_router::{EguiRouter, Request, Route, TransitionConfig};
 use std::borrow::Cow;
-use dioxus_devtools::subsecond;
 
 #[derive(Debug, Clone)]
 struct AppState {
@@ -27,15 +26,15 @@ async fn main() -> eframe::Result<()> {
     let mut router: RouterType = None;
     let mut window_router: RouterType = None;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Router Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
+        move |ui, _frame| {
             #[cfg(not(feature = "subsecond"))]
-            app(ctx, &mut router, &mut window_router);
+            app(ui, &mut router, &mut window_router);
             #[cfg(feature = "subsecond")]
             subsecond::call(|| {
-                app(ctx, &mut router, &mut window_router);
+                app(ui, &mut router, &mut window_router);
             });
         },
     )
@@ -43,7 +42,7 @@ async fn main() -> eframe::Result<()> {
 
 type RouterType = Option<(EguiRouter<AppState>, AppState)>;
 
-fn app(ctx: &Context, router: &mut RouterType, window_router: &mut RouterType) {
+fn app(ui: &mut Ui, router: &mut RouterType, window_router: &mut RouterType) {
     let init = |ctx: &Context| {
         let mut app_state = AppState {
             message: "Hello, World!".to_string(),
@@ -63,8 +62,8 @@ fn app(ctx: &Context, router: &mut RouterType, window_router: &mut RouterType) {
         (router.build(&mut app_state), app_state)
     };
 
-    let mut router = router.get_or_insert_with(|| init(ctx));
-    let mut window_router = window_router.get_or_insert_with(|| init(ctx));
+    let mut router = router.get_or_insert_with(|| init(ui));
+    let mut window_router = window_router.get_or_insert_with(|| init(ui));
 
     for state in &mut [&mut router, &mut window_router] {
         state
@@ -81,13 +80,13 @@ fn app(ctx: &Context, router: &mut RouterType, window_router: &mut RouterType) {
             });
     }
 
-    CentralPanel::default().show(ctx, |ui| {
+    CentralPanel::default().show_inside(ui, |ui| {
         router.0.ui(ui, &mut router.1);
     });
 
     Window::new("Router Window")
-        .frame(Frame::window(&ctx.style()).inner_margin(0.0))
-        .show(ctx, |ui| {
+        .frame(Frame::window(ui.style()).inner_margin(0.0))
+        .show(ui.ctx(), |ui| {
             ui.set_width(ui.available_width());
             ui.set_height(ui.available_height());
             window_router.0.ui(ui, &mut window_router.1);

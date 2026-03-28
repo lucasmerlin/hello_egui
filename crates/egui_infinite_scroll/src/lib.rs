@@ -127,7 +127,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         generics: (),
         async_generics: (<F: std::future::Future<Output = CallbackResult<T, Cursor>> + Send + 'static>),
         parameters: (),
-        future: (impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static),
+        future: impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static,
         return_type: (Self),
         body: |(mut self,)| {
             self.start_loader = Some(Box::new(f));
@@ -143,7 +143,7 @@ impl<T: Debug + Send + Sync + 'static, Cursor: Clone + Debug + Send + 'static>
         generics: (),
         async_generics: (<F: std::future::Future<Output = CallbackResult<T, Cursor>> + Send + 'static>),
         parameters: (),
-        future: (impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static),
+        future: impl FnMut(Option<Cursor>) -> F + Send + Sync + 'static,
         return_type: (Self),
         body: |(mut self,)| {
             self.end_loader = Some(Box::new(f));

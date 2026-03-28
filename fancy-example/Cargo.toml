@@ -40,7 +40,7 @@ serde_json.workspace = true
 
 casey = "0.4.2"
 
-egui_commonmark = { version = "0.22.0", features = [] }
+egui_commonmark = { version = "0.23.0", features = [] }
 
 validator = { version = "0.20.0", features = ["derive"] }
 env_logger = "0.11"
@@ -52,11 +52,11 @@ eframe = { workspace = true, features = ["wgpu"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["time", "rt", "macros"] }
-ureq = "2"
+ureq = "3"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4.50"
-gloo-timers = { version = "0.3.0", features = ["futures"] }
+gloo-timers = { version = "0.4.0", features = ["futures"] }
 
 [lints]
 workspace = true

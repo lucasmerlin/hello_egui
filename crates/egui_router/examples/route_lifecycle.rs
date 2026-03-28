@@ -21,10 +21,10 @@ enum RouterMessage {
 async fn main() -> eframe::Result<()> {
     let mut router: Option<(EguiRouter<AppState>, AppState)> = None;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Route Lifecycle Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
+        move |ui, _frame| {
             let (router, state) = router.get_or_insert_with(|| {
                 let mut state = AppState {
                     inbox: UiInbox::new(),
@@ -33,16 +33,16 @@ async fn main() -> eframe::Result<()> {
                 let router = EguiRouter::builder()
                     .transition(TransitionConfig::slide().with_duration(0.5))
                     .swipe_back_gesture(true)
-                    .route("/", || HomePage::new())
-                    .route("/detail", || DetailPage::new())
-                    .route("/no-swipe", || NoSwipePage::new())
+                    .route("/", HomePage::new)
+                    .route("/detail", DetailPage::new)
+                    .route("/no-swipe", NoSwipePage::new)
                     .default_path("/")
                     .build(&mut state);
 
                 (router, state)
             });
 
-            state.inbox.read(ctx).for_each(|msg| match msg {
+            state.inbox.read(ui).for_each(|msg| match msg {
                 RouterMessage::Navigate(route) => {
                     router.navigate(state, route).ok();
                 }
@@ -51,7 +51,7 @@ async fn main() -> eframe::Result<()> {
                 }
             });
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 router.ui(ui, state);
             });
         },

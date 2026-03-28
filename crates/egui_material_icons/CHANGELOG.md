@@ -1,5 +1,11 @@
 # egui_material_icons changelog
 
+## 0.6.0
+
+- Add outline icon variants
+- Add DEFLATE compression for icon data
+- Update egui to 0.34
+
 ## 0.5.0
 
 - Update egui to 0.33.0

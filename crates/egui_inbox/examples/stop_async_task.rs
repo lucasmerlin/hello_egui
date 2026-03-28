@@ -13,11 +13,11 @@ fn main() -> eframe::Result<()> {
     let mut id_idx = 0;
     let mut windows: Vec<MyWindow> = Vec::new();
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Inbox Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 if ui.button("New Window").clicked() {
                     id_idx += 1;
                     let inbox = UiInbox::new();

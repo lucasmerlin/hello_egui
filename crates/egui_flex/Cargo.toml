@@ -1,6 +1,6 @@
 [package]
 name = "egui_flex"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_flex"
 homepage = "https://lucasmerlin.github.io/hello_egui/#/example/flex"
@@ -20,7 +20,7 @@ egui_inbox.workspace = true
 hello_egui_utils_dev = { workspace = true }
 
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
-rstest = "0.24.0"
+rstest = "0.26.1"
 
 [lints]
 workspace = true

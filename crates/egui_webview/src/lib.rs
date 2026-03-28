@@ -85,7 +85,7 @@ impl EguiWebView {
                 .clone()
         });
 
-        let mut builder = wry::WebViewBuilder::new_as_child(window);
+        let mut builder = wry::WebViewBuilder::new();
 
         builder = build(builder);
 
@@ -113,13 +113,13 @@ impl EguiWebView {
 
                 tx_clone.send(WebViewEvent::Loaded(url)).ok();
             })
-            .with_ipc_handler(move |msg| {
-                let result = Self::handle_js_event(msg.into_body(), &ctx_clone);
+            .with_ipc_handler(move |msg: http::Request<String>| {
+                let result = Self::handle_js_event(msg.body().clone(), &ctx_clone);
                 tx.send(result).ok();
             });
 
         #[allow(clippy::arc_with_non_send_sync)]
-        let web_view = Arc::new(builder.build().unwrap());
+        let web_view = Arc::new(builder.build_as_child(window).unwrap());
 
         *view_ref.lock() = Some(web_view.clone());
 

@@ -1,9 +1,11 @@
 # egui_virtual_list changelog
 
-## 0.9.1
+## 0.10.0
 
+- Fix flicker when in an egui_router animation
 - Fix size mismatch
 - Remove ugly scroll workaround
+- Update egui to 0.34
 
 ## 0.9.0
 

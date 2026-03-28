@@ -25,15 +25,15 @@ fn main() -> eframe::Result {
 
     let mut align_self_content: usize = 0;
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "egui_flex demos",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            ctx.options_mut(|opts| {
+        move |ui, _frame| {
+            ui.ctx().options_mut(|opts| {
                 opts.max_passes = NonZeroUsize::new(3).unwrap();
             });
 
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 let frame = Frame::group(ui.style());
 
                 Flex::new().w_full().show(ui, |flex| {

@@ -1,9 +1,13 @@
 # egui_router changelog
 
-## 0.6.1
+## 0.7.0
 
+- Add swipe back gesture
+- Add router lifecycle events
+- Improved query param handling
 - Fix `router.replace` ignoring query params
 - Fix navigating back in the browser to a route with query params
+- Update egui to 0.34
 
 ## 0.6.0
 

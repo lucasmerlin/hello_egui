@@ -12,11 +12,11 @@ pub fn main() -> eframe::Result<()> {
 
     load_joke(inbox.sender());
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Pull to refresh dad jokes",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 // Disable text selection, so it doesn't interfere with the drag gesture
                 ui.style_mut().interaction.selectable_labels = false;
                 ui.style_mut().interaction.multi_widget_text_select = false;
@@ -57,7 +57,7 @@ pub fn main() -> eframe::Result<()> {
 
             Area::new(Id::new("attribution"))
                 .anchor(Align2::LEFT_BOTTOM, Vec2::new(8.0, -8.0))
-                .show(ctx, |ui| {
+                .show(ui.ctx(), |ui| {
                     ui.hyperlink_to(
                         "Jokes from icanhazdadjoke.com",
                         "https://icanhazdadjoke.com/",

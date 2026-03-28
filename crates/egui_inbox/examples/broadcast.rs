@@ -105,11 +105,11 @@ fn main() {
         auth_rx: state.auth_broadcast.subscribe(),
     };
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Broadcast Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            egui::CentralPanel::default().show_inside(ui, |ui| {
                 ui.vertical(|ui| {
                     ui.group(|ui| {
                         ui.heading("Auth");

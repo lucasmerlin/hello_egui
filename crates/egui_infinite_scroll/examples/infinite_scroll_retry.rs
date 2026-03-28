@@ -16,11 +16,11 @@ pub fn main() -> eframe::Result<()> {
         });
     });
 
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "Infinite Scroll Simple Example",
         NativeOptions::default(),
-        move |ctx, _frame| {
-            CentralPanel::default().show(ctx, |ui| {
+        move |ui, _frame| {
+            CentralPanel::default().show_inside(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     if ui.button("Reset").clicked() {

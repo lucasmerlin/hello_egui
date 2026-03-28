@@ -4,13 +4,13 @@ use egui::{Area, Frame, Id, Vec2};
 use egui_flex::{Flex, FlexItem};
 
 fn main() -> eframe::Result {
-    eframe::run_simple_native(
+    eframe::run_ui_native(
         "flex debug example",
         NativeOptions::default(),
-        |ctx, _frame| {
+        |ui, _frame| {
             Area::new(Id::new("area"))
                 .anchor(egui::Align2::LEFT_TOP, [0.0, 0.0])
-                .show(ctx, |ui| {
+                .show(ui.ctx(), |ui| {
                     ui.set_width(500.0);
                     ui.set_height(200.0);
                     ui.spacing_mut().item_spacing = Vec2::splat(10.0);
