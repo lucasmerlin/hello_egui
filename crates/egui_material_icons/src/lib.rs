@@ -19,11 +19,7 @@ pub mod icons;
 #[cfg(all(feature = "filled", not(feature = "compressed")))]
 pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded_Filled-Regular.ttf");
 
-#[cfg(all(
-    feature = "outline",
-    not(feature = "filled"),
-    not(feature = "compressed")
-))]
+#[cfg(all(feature = "outline", not(feature = "filled"), not(feature = "compressed")))]
 pub(crate) const FONT_DATA: &[u8] = include_bytes!("../MaterialSymbolsRounded-Regular.ttf");
 
 #[cfg(all(feature = "filled", feature = "outline", not(feature = "compressed")))]
