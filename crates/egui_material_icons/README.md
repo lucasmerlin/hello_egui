@@ -27,12 +27,12 @@ Currently, this provides the rounded icons. By default, the filled variant is us
 
 ## Features
 
-| Features                                            | Fonts Included     |
-| --------------------------------------------------- | ------------------ |
-| default (`filled`, `compressed`)                    | Filled only        |
-| `--features outline`                                | Filled + Outline   |
-| `--no-default-features --features outline`          | Outline only       |
-| `--no-default-features --features "filled outline"` | Both, uncompressed |
+| Features                                            | Fonts Included   |
+| --------------------------------------------------- | ---------------- |
+| default (`filled`)                                  | Filled only      |
+| `--features outline`                                | Filled + Outline |
+| `--no-default-features --features outline`          | Outline only     |
+| `--no-default-features --features "filled outline"` | Both             |
 
 - **`filled`** (default) - Include the filled font variant.
 
@@ -44,11 +44,14 @@ Currently, this provides the rounded icons. By default, the filled variant is us
   fn init(ctx: &egui::Context) {
     egui_material_icons::initialize(ctx);
   }
-  
+
   fn my_ui(ui: &mut egui::Ui) {
     ui.button(ICON_ADD);          // filled
     ui.button(ICON_ADD.outlined());  // outlined
   }
   ```
 
-- **`compressed`** (default) - Compress embedded fonts with DEFLATE, reducing binary size significantly.
+- **`compressed`** - Compress embedded fonts with DEFLATE at compile time, decompressing at runtime.
+  This can reduce binary size for native targets, but is **not recommended for wasm**: transport
+  compression (gzip/brotli) is more effective and the decompression runtime (zstd + libflate) adds
+  ~250 KB of code to the wasm binary, resulting in a larger final download.

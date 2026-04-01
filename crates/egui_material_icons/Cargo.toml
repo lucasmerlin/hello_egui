@@ -11,12 +11,15 @@ repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/egui_ma
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["filled", "compressed"]
+default = ["filled"]
 ## Include the filled font variant.
 filled = []
 ## Include the outline font variant.
 outline = []
-## Compress embedded fonts with DEFLATE. Reduces binary size significantly.
+## Compress embedded fonts with DEFLATE at compile time, decompressing at runtime.
+## This reduces the binary size for native targets but is counterproductive for wasm,
+## where transport compression (gzip/brotli) is more effective and the decompression
+## runtime (zstd + libflate) adds significant overhead.
 compressed = ["dep:include-flate"]
 
 [dependencies]
