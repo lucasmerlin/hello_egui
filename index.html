@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Egui DnD Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+<script type="module">
+import init, * as bindings from '/hello_egui/fancy-example-c250fec90ca5b808.js';
+const wasm = await init({ module_or_path: '/hello_egui/fancy-example-c250fec90ca5b808_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+    <base href="/test">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body, #canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+<link rel="modulepreload" href="/hello_egui/fancy-example-c250fec90ca5b808.js" crossorigin="anonymous" integrity="sha384-HQ7O0HBlCHu/nJSQ0AX4m4mbVK2pCUgwqdwJE1t0q6F1+Hjm9GaAfcECSn9Llf4Q"><link rel="preload" href="/hello_egui/fancy-example-c250fec90ca5b808_bg.wasm" crossorigin="anonymous" integrity="sha384-EUC4Oorli8pmVncg6WpQgPxo+cG0hJujNDKw5FuE0gLplQUcZ9CUInRYaZSrdib2" as="fetch" type="application/wasm"></head>
+<body>
+<canvas id="canvas"></canvas>
+</body>
+</html>
