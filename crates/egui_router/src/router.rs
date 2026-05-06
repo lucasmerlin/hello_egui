@@ -316,6 +316,21 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
         self.replace_transition(state, path, self.replace_transition.clone())
     }
 
+    /// Update the URL of the currently active route in place, preserving its
+    /// state index, without re-running the route handler. Use this to mirror
+    /// UI state (camera position, scroll offset, selected tab) into query
+    /// params; calling `history.replaceState` directly will desync the
+    /// router's history from the browser's and break back/forward navigation.
+    pub fn replace_url(&mut self, path: impl Into<String>) -> RouterResult {
+        let path_with_query = path.into();
+        let current_state = self.history.last().map_or(0, |r| r.state);
+        self.history_kind.replace(&path_with_query, current_state)?;
+        if let Some(last) = self.history.last_mut() {
+            last.path_with_query = path_with_query;
+        }
+        Ok(())
+    }
+
     /// Render the router
     #[allow(clippy::too_many_lines)]
     pub fn ui(&mut self, ui: &mut Ui, state: &mut State) {
@@ -335,12 +350,19 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
             let state_index = e.state.unwrap_or(0);
             let path = e.location;
 
-            if let Some(route_state) = self
+            // Prefer an exact path-and-state match. If the path differs (a
+            // route mirrored UI state into query params via `replace_url`
+            // after pushing) fall back to matching on the state index alone
+            // so we still recognise this as a back/forward navigation.
+            let matched = self
                 .history
                 .iter()
-                .find(|r| r.path_with_query == path && r.state == state_index)
-                .map(|r| r.state)
-            {
+                .position(|r| r.path_with_query == path && r.state == state_index)
+                .or_else(|| self.history.iter().position(|r| r.state == state_index));
+
+            if let Some(idx) = matched {
+                self.history[idx].path_with_query = path.clone();
+                let route_state = self.history[idx].state;
                 let active_state = self.history.last().map_or(0, |r| r.state);
 
                 // Retain all routes with a state less than or equal to the new state and the active state so that we can animate them out
