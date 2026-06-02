@@ -22,7 +22,7 @@ pub const COLOR_SORT_WRAPPED_EXAMPLE: Example = Example {
     get: || Box::new(ColorSort::wrapped()),
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Color {
     #[allow(clippy::struct_field_names)]
     pub color: Color32,

@@ -69,12 +69,12 @@ impl App {
 
         let width = ui.ctx().content_rect().width();
         let collapsible_sidebar = width < 800.0;
-        let is_expanded = !collapsible_sidebar || self.sidebar_expanded;
+        let mut is_expanded = !collapsible_sidebar || self.sidebar_expanded;
 
         Panel::left("sidebar")
             .resizable(false)
             .exact_size(170.0)
-            .show_animated_inside(ui, is_expanded, |ui| {
+            .show_collapsible(ui, &mut is_expanded, |ui| {
                 if SideBar::ui(ui, &mut self.shared_state) {
                     self.sidebar_expanded = false;
                 }
@@ -82,7 +82,7 @@ impl App {
 
         egui::CentralPanel::default()
             .frame(egui::Frame::NONE.fill(ui.visuals().panel_fill.gamma_multiply(0.7)))
-            .show_inside(ui, |ui| {
+            .show(ui, |ui| {
                 vertex_gradient(
                     ui,
                     &Gradient(

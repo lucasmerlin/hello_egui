@@ -7,7 +7,6 @@ pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Hand
 
 pub use crate::item_iterator::ItemIterator;
 use crate::state::DragDropUi;
-use std::hash::Hash;
 
 mod item;
 mod item_iterator;
@@ -51,7 +50,7 @@ pub struct Dnd<'a> {
 ///     })
 /// }
 /// ```
-pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd<'_> {
+pub fn dnd(ui: &mut Ui, id_source: impl egui::AsId) -> Dnd<'_> {
     let id = Id::new(id_source).with("dnd");
     let mut dnd_ui: DragDropUi =
         ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());
@@ -68,7 +67,7 @@ pub fn dnd(ui: &mut Ui, id_source: impl Hash) -> Dnd<'_> {
 
 impl<'a> Dnd<'a> {
     /// Initialize the drag and drop UI. Same as [dnd].
-    pub fn new(ui: &'a mut Ui, id_source: impl Hash) -> Self {
+    pub fn new(ui: &'a mut Ui, id_source: impl egui::AsId) -> Self {
         dnd(ui, id_source)
     }
 

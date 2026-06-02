@@ -136,10 +136,11 @@ doc_markdown = { level = "allow", priority = 21 }
 #winit = { path = "../winit" }
 
 
-# egui = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_extras = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_glow = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_kittest = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_demo_lib = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+egui = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+eframe = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+egui_extras = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+egui_glow = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+egui_kittest = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+egui_demo_lib = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
+egui_commonmark = { git = "https://github.com/rerun-io/egui_commonmark", branch = "lucas/update-egui-0.35" }
 # egui_commonmark = { git = "https://github.com/rerun-io/egui_commonmark", branch = "emilk/egui-0.34" }
