@@ -1870,6 +1870,7 @@ dependencies = [
 name = "egui_thumbhash"
 version = "0.10.0"
 dependencies = [
+ "ahash",
  "base64",
  "eframe",
  "egui",

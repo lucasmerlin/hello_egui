@@ -10,6 +10,7 @@ homepage = "https://lucasmerlin.github.io/hello_egui/"
 keywords = ["egui", "thumbhash", "image", "placeholder"]
 
 [dependencies]
+ahash = "0.8"
 thumbhash = "0.1.0"
 egui = { workspace = true }
 base64 = "0.22.1"

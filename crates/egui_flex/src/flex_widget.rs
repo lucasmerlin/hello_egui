@@ -29,7 +29,7 @@ mod egui_widgets {
     use super::FlexWidget;
     use crate::{FlexInstance, FlexItem};
     use egui::widgets::{
-        Button, Checkbox, DragValue, Hyperlink, Image, ImageButton, Label, Link, ProgressBar,
+        Button, Checkbox, DragValue, Hyperlink, Image, Label, Link, ProgressBar,
         RadioButton, Slider, Spinner, TextEdit,
     };
 
@@ -53,7 +53,6 @@ mod egui_widgets {
         Image<'_>,
         DragValue<'_>,
         Hyperlink,
-        ImageButton<'_>,
         ProgressBar,
         RadioButton<'_>,
         Link,

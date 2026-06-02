@@ -7,10 +7,10 @@ use std::sync::Arc;
 
 use base64::prelude::BASE64_STANDARD_NO_PAD;
 use base64::Engine;
-use egui::ahash::HashMap;
+use ahash::HashMap;
 use egui::load::{ImageLoadResult, ImageLoader, ImagePoll, LoadError};
 use egui::mutex::Mutex;
-use egui::{ahash, ColorImage, Context, SizeHint};
+use egui::{ColorImage, Context, SizeHint};
 
 pub use image::ThumbhashImage;
 

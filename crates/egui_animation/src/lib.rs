@@ -28,7 +28,7 @@ type Easing = fn(f32) -> f32;
 /// Same as [`Context::animate_bool_with_time`] but with an easing function.
 pub fn animate_bool_eased(
     ctx: &Context,
-    id: impl Hash + Sized,
+    id: impl Hash + Debug + Sized,
     bool: bool,
     easing: Easing,
     time: f32,
@@ -40,7 +40,7 @@ pub fn animate_bool_eased(
 /// Same as [`Context::animate_value_with_time`] but with an easing function.
 pub fn animate_eased(
     ctx: &Context,
-    id: impl Hash + Sized,
+    id: impl Hash + Debug + Sized,
     value: f32,
     time: f32,
     easing: Easing,
@@ -75,7 +75,7 @@ pub fn animate_eased(
 /// It will try to correct for scrolling, since in egui, scroll will change a widgets y position.
 pub fn animate_position(
     ui: &mut Ui,
-    id: impl Hash + Sized,
+    id: impl Hash + Debug + Sized,
     value: Pos2,
     time: f32,
     easing: Easing,
