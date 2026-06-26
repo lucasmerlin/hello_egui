@@ -1,5 +1,9 @@
 # egui_virtual_list changelog
 
+## Unreleased
+
+- Update egui to 0.35
+
 ## 0.10.0
 
 - Fix flicker when in an egui_router animation

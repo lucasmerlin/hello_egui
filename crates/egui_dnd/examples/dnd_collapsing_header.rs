@@ -13,7 +13,7 @@ pub fn main() -> eframe::Result<()> {
         "DnD with CollapsingHeader Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 if ui.button("Add Item").clicked() {
                     //adds an item to test if ui state it preserved
                     items.push(format!("new item {}", items.len()).to_string());

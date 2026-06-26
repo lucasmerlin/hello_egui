@@ -29,7 +29,7 @@ pub fn main() -> eframe::Result<()> {
         "Custom Suspense Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 Window::new("Main Window").show(ui.ctx(), |ui| {
                     ui.label("Hello World!");
                     if ui.button("Load").clicked() {

@@ -17,7 +17,7 @@ async fn main() -> eframe::Result<()> {
         "Suspense Async Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 timezones.ui(ui, |ui, data, state| {
                     ui.label(format!("Timezones: {data:?}"));
                     if ui.button("Reload").clicked() {

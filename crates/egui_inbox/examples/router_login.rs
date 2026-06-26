@@ -283,7 +283,7 @@ fn main() -> eframe::Result<()> {
             // Show the login dialog (Since it's a popup window, it is not part of the router)
             auth.dialog_ui(ui.ctx());
 
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 Area::new(Id::new("Centered"))
                     .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
                     .show(ui.ctx(), |ui| {

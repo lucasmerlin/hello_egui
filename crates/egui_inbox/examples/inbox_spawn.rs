@@ -26,7 +26,7 @@ async fn main() -> eframe::Result<()> {
         "Inbox Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 if ui.button("New Window").clicked() {
                     id_idx += 1;
                     let mut inbox = UiInbox::new();

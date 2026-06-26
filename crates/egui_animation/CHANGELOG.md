@@ -1,5 +1,9 @@
 # egui_animation changelog
 
+## Unreleased
+
+- Update egui to 0.35
+
 ## 0.11.0
 
 - Fix `Collapse` clip rect ignoring existing clip rect

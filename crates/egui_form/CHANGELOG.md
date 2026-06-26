@@ -1,5 +1,10 @@
 # egui_form changelog
 
+## Unreleased
+
+- Update egui to 0.35
+- Update garde to 0.23
+
 ## 0.8.0
 
 - Update egui to 0.34

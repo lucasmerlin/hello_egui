@@ -55,6 +55,7 @@ fn filter_by_filtering_source_list(ui: &mut Ui, filter: &str, items: &mut Vec<It
     }
 }
 
+#[derive(Debug)]
 struct ItemType {
     number: u32,
 }
@@ -73,7 +74,7 @@ fn main() -> eframe::Result<()> {
     let mut filter_type = "skip";
 
     eframe::run_ui_native("dnd filter demo", NativeOptions::default(), move |ui, _| {
-        CentralPanel::default().show_inside(ui, |ui| {
+        CentralPanel::default().show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.label("Filter:");
                 ui.text_edit_singleline(&mut filter);

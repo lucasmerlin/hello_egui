@@ -100,7 +100,7 @@ pub fn main() -> eframe::Result<()> {
         move |ui, frame| {
             egui_extras::install_image_loaders(ui.ctx());
 
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 if windows.is_empty() || ui.button("New Window").clicked() {
                     init_webview(ui.ctx());
 

@@ -52,7 +52,7 @@ async fn main() -> eframe::Result<()> {
                 }
             });
 
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 router.ui(ui, &mut sender);
             });
         },

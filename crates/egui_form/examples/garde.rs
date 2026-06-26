@@ -59,7 +59,7 @@ fn main() -> eframe::Result<()> {
         "Egui Garde Validation",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 form_ui(ui, &mut test);
             });
         },

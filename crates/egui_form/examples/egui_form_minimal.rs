@@ -29,7 +29,7 @@ fn main() -> eframe::Result<()> {
         "egui_form minimal example",
         NativeOptions::default(),
         move |ui, _frame| {
-            egui::CentralPanel::default().show_inside(ui, |ui| {
+            egui::CentralPanel::default().show(ui, |ui| {
                 form_ui(ui, &mut fields);
             });
         },

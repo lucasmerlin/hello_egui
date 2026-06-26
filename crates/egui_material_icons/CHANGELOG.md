@@ -1,5 +1,9 @@
 # egui_material_icons changelog
 
+## Unreleased
+
+- Update egui to 0.35
+
 ## 0.6.0
 
 - Add outline icon variants

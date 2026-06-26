@@ -53,7 +53,7 @@ pub fn main() -> eframe::Result<()> {
         "Perfect Cursors Egui Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut show_update_events, "Show update events");
                     ui.checkbox(&mut use_perfect_cursors, "Use Perfect Cursors");

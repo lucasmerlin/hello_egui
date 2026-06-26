@@ -1,5 +1,9 @@
 # egui_infinite_scroll changelog
 
+## Unreleased
+
+- Update egui to 0.35
+
 ## 0.10.0
 
 - Make `InfiniteScroll::update` public

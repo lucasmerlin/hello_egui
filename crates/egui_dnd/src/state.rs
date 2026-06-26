@@ -1,7 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
-use egui::{CursorIcon, Id, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{AsId, CursorIcon, Id, Pos2, Rect, Sense, Ui, Vec2};
 
 #[cfg(target_arch = "wasm32")]
 use web_time::{Duration, SystemTime};
@@ -15,7 +15,7 @@ pub trait DragDropItem {
     fn id(&self) -> Id;
 }
 
-impl<T: std::hash::Hash> DragDropItem for T {
+impl<T: AsId> DragDropItem for T {
     fn id(&self) -> Id {
         Id::new(self)
     }

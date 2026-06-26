@@ -24,13 +24,12 @@ pub trait FlexWidget {
     fn flex_ui(self, item: FlexItem, flex_instance: &mut FlexInstance) -> Self::Response;
 }
 
-#[expect(deprecated)]
 mod egui_widgets {
     use super::FlexWidget;
     use crate::{FlexInstance, FlexItem};
     use egui::widgets::{
-        Button, Checkbox, DragValue, Hyperlink, Image, ImageButton, Label, Link, ProgressBar,
-        RadioButton, Slider, Spinner, TextEdit,
+        Button, Checkbox, DragValue, Hyperlink, Image, Label, Link, ProgressBar, RadioButton,
+        Slider, Spinner, TextEdit,
     };
 
     macro_rules! impl_widget {
@@ -53,7 +52,6 @@ mod egui_widgets {
         Image<'_>,
         DragValue<'_>,
         Hyperlink,
-        ImageButton<'_>,
         ProgressBar,
         RadioButton<'_>,
         Link,

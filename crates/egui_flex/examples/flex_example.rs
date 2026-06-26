@@ -13,7 +13,7 @@ fn main() -> eframe::Result {
         "flex example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ui.ctx().options_mut(|opts| {
                     opts.max_passes = NonZeroUsize::new(3).unwrap();
                 });

@@ -15,7 +15,7 @@ pub fn main() -> eframe::Result<()> {
         "Infinite Scroll Simple Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 if ui.button("Reset").clicked() {
                     infinite_scroll.reset();
                 }

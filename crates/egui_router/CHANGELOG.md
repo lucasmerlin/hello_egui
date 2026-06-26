@@ -4,6 +4,7 @@
 
 - Add `EguiRouter::replace_url` for in-place URL updates that preserve the history state index
 - Fall back to matching by state index alone when the popstate path doesn't match a known entry, recovering from external `history.replaceState` calls
+- Update egui to 0.35
 
 ## 0.7.0
 

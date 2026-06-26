@@ -33,7 +33,7 @@ fn main() -> eframe::Result {
                 opts.max_passes = NonZeroUsize::new(3).unwrap();
             });
 
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 let frame = Frame::group(ui.style());
 
                 Flex::new().w_full().show(ui, |flex| {

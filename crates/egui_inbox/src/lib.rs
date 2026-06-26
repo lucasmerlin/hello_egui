@@ -135,7 +135,7 @@ mod egui_impl {
 ///         "DnD Simple Example",
 ///         Default::default(),
 ///         move |ui, _frame| {
-///             CentralPanel::default().show_inside(ui, |ui| {
+///             CentralPanel::default().show(ui, |ui| {
 ///                 inbox.replace(ui, &mut state);
 ///
 ///                 ui.label(format!("State: {:?}", state));

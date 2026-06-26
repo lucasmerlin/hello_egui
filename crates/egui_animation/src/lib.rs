@@ -4,8 +4,6 @@
 
 mod collapse;
 
-use std::fmt::Debug;
-use std::hash::Hash;
 use std::time::Duration;
 
 /// Re-export of [simple_easing](https://crates.io/crates/simple_easing)
@@ -14,7 +12,7 @@ pub mod easing {
 }
 
 pub use collapse::*;
-use egui::{Context, Id, Pos2, Rect, Sense, Ui, UiBuilder, Vec2};
+use egui::{AsId, Context, Id, Pos2, Rect, Sense, Ui, UiBuilder, Vec2};
 use hello_egui_utils::current_scroll_delta;
 
 #[derive(Debug, Clone)]
@@ -28,7 +26,7 @@ type Easing = fn(f32) -> f32;
 /// Same as [`Context::animate_bool_with_time`] but with an easing function.
 pub fn animate_bool_eased(
     ctx: &Context,
-    id: impl Hash + Sized,
+    id: impl AsId,
     bool: bool,
     easing: Easing,
     time: f32,
@@ -38,13 +36,7 @@ pub fn animate_bool_eased(
 }
 
 /// Same as [`Context::animate_value_with_time`] but with an easing function.
-pub fn animate_eased(
-    ctx: &Context,
-    id: impl Hash + Sized,
-    value: f32,
-    time: f32,
-    easing: Easing,
-) -> f32 {
+pub fn animate_eased(ctx: &Context, id: impl AsId, value: f32, time: f32, easing: Easing) -> f32 {
     let id = Id::new(id).with("animate_eased");
 
     let (source, target) = ctx.memory_mut(|mem| {
@@ -75,7 +67,7 @@ pub fn animate_eased(
 /// It will try to correct for scrolling, since in egui, scroll will change a widgets y position.
 pub fn animate_position(
     ui: &mut Ui,
-    id: impl Hash + Sized,
+    id: impl AsId,
     value: Pos2,
     time: f32,
     easing: Easing,
@@ -102,7 +94,7 @@ pub fn animate_position(
 /// A wrapper around [`animate_position`] that animates the position of a child ui.
 pub fn animate_ui_translation(
     ui: &mut Ui,
-    id: impl Hash + Sized + Debug + Copy,
+    id: impl AsId,
     easing: Easing,
     size: Vec2,
     prevent_scroll_animation: bool,

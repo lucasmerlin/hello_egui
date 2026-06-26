@@ -4,7 +4,7 @@ use egui::{CentralPanel, Frame, Id, ScrollArea};
 use egui_dnd::dnd;
 use egui_virtual_list::VirtualList;
 use rand::prelude::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 
 pub fn main() -> eframe::Result<()> {
     let mut items: Vec<_> = (0..100_000).collect();
@@ -14,7 +14,7 @@ pub fn main() -> eframe::Result<()> {
         "DnD Virtual List Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     let response = dnd(ui, "dnd").show_custom(|ui, iter| {
                         virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {

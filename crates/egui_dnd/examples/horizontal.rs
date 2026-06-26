@@ -12,7 +12,7 @@ pub fn main() -> eframe::Result<()> {
         "DnD Simple Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            Panel::bottom("bottom_panel").show_inside(ui, |ui| {
+            Panel::bottom("bottom_panel").show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label(format!(
                         "Sorted: {:?}",
@@ -24,7 +24,7 @@ pub fn main() -> eframe::Result<()> {
                 });
             });
 
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ui.style_mut().animation_time = 0.15;
 
                 ui.spacing_mut().item_spacing.y = ui.spacing().item_spacing.x;
