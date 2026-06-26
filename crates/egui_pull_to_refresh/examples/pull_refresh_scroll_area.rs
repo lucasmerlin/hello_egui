@@ -25,7 +25,7 @@ pub fn main() -> eframe::Result<()> {
         "Pull to refresh minimal example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 // Disable text selection, so it doesn't interfere with the drag gesture
                 ui.style_mut().interaction.selectable_labels = false;
                 ui.style_mut().interaction.multi_widget_text_select = false;

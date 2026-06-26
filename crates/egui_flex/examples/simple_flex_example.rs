@@ -6,7 +6,7 @@ fn main() -> eframe::Result {
     let mut text = "Hello, World!".to_string();
 
     eframe::run_ui_native(file!(), NativeOptions::default(), move |ui, _frame| {
-        CentralPanel::default().show_inside(ui, |ui| {
+        CentralPanel::default().show(ui, |ui| {
             // Flex::horizontal().show(ui, |flex| {
             //     flex.add_container(item().grow(1.0), |ui, container| {
             //         ui.scope(|ui| {

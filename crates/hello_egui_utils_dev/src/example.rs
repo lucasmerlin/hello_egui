@@ -9,7 +9,7 @@ pub fn run(name: &str, mut f: impl FnMut(&mut Ui) + 'static) {
             initialized = true;
             return;
         }
-        CentralPanel::default().show_inside(ui, |ui| {
+        CentralPanel::default().show(ui, |ui| {
             let mut style = (*ui.ctx().global_style()).clone();
             ui.checkbox(&mut style.debug.debug_on_hover, "Debug on hover");
             ui.checkbox(&mut style.visuals.dark_mode, "Dark mode");

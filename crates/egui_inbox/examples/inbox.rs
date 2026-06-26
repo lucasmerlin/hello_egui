@@ -10,7 +10,7 @@ pub fn main() -> eframe::Result<()> {
         "DnD Simple Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 // `read` will return an iterator over all pending messages
                 if let Some(last) = inbox.read(ui).last() {
                     state = last;

@@ -14,7 +14,7 @@ pub fn main() -> eframe::Result<()> {
         "DnD Infinite Scroll Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     let response = dnd(ui, "dnd").show_custom(|ui, iter| {
                         infinite_scroll.ui(ui, 10, |ui, index, item| {

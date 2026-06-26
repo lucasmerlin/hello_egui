@@ -109,7 +109,7 @@ fn main() {
         "Broadcast Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            egui::CentralPanel::default().show_inside(ui, |ui| {
+            egui::CentralPanel::default().show(ui, |ui| {
                 ui.vertical(|ui| {
                     ui.group(|ui| {
                         ui.heading("Auth");

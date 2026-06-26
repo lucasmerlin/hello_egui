@@ -92,8 +92,8 @@ use egui::{Button, CentralPanel};
 use egui_flex::{item, Flex, FlexAlignContent};
 
 fn main() -> eframe::Result {
-    eframe::run_simple_native(file!(), NativeOptions::default(), |ctx, _frame| {
-        CentralPanel::default().show(ctx, |ui| {
+    eframe::run_ui_native(file!(), NativeOptions::default(), |ui, _frame| {
+        CentralPanel::default().show(ui, |ui| {
             Flex::horizontal().show(ui, |flex| {
                 flex.add(item().grow(1.0), Button::new("Growing button"));
                 flex.add(item(), Button::new("Non-growing button"));

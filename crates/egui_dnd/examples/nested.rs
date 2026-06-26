@@ -100,7 +100,7 @@ impl MyApp {
 
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show_inside(ui, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             let response =
                 dnd(ui, "dnd_example").show(self.items.iter_mut(), |ui, item, handle, _pressed| {
                     MyApp::draw_item(ui, item, handle);

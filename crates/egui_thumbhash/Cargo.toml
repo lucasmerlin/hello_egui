@@ -13,6 +13,7 @@ keywords = ["egui", "thumbhash", "image", "placeholder"]
 thumbhash = "0.1.0"
 egui = { workspace = true }
 base64 = "0.22.1"
+ahash = "0.8.12"
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }

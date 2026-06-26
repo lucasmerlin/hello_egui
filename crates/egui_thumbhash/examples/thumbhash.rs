@@ -51,7 +51,7 @@ fn main() -> eframe::Result<()> {
 
             CentralPanel::default()
                 .frame(Frame::central_panel(&ui.ctx().global_style()).inner_margin(16.0))
-                .show_inside(ui, |ui| {
+                .show(ui, |ui| {
                     if ui.button("Reload").clicked() {
                         ui.ctx().forget_all_images();
                         ui.ctx().clear_animations();

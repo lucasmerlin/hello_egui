@@ -4,6 +4,7 @@ use std::hash::{Hash, Hasher};
 
 use egui_dnd::dnd;
 
+#[derive(Debug)]
 struct ItemType {
     number: u32,
 }
@@ -18,7 +19,7 @@ fn main() -> eframe::Result<()> {
     let mut items: Vec<_> = (0..1000).map(|number| ItemType { number }).collect();
 
     eframe::run_ui_native("dnd scroll demo", NativeOptions::default(), move |ui, _| {
-        CentralPanel::default().show_inside(ui, |ui| {
+        CentralPanel::default().show(ui, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 dnd(ui, "dnd").show_vec(&mut items, |ui, item, handle, _dragging| {
                     ui.horizontal(|ui| {

@@ -2,7 +2,7 @@ use eframe::{egui, NativeOptions};
 use egui::{CentralPanel, Frame, Margin, ScrollArea};
 use egui_virtual_list::VirtualList;
 use rand::prelude::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 
 pub fn main() -> eframe::Result<()> {
     let items: Vec<_> = (0..100_000).collect();
@@ -14,7 +14,7 @@ pub fn main() -> eframe::Result<()> {
         "Virtual List Simple Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {

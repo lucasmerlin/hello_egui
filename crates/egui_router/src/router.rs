@@ -359,7 +359,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
                 .or_else(|| self.history.iter().position(|r| r.state == state_index));
 
             if let Some(idx) = matched {
-                self.history[idx].path_with_query = path.clone();
+                self.history[idx].path_with_query.clone_from(&path);
                 let route_state = self.history[idx].state;
                 let active_state = self.history.last().map_or(0, |r| r.state);
 

@@ -73,7 +73,7 @@ pub fn main() -> eframe::Result<()> {
                         ),
                     ),
                 )
-                .show_inside(ui, |ui| {
+                .show(ui, |ui| {
                     ui.style_mut().animation_time = 0.5;
                     ui.spacing_mut().item_spacing.x = ui.spacing().item_spacing.y;
 

@@ -9,7 +9,7 @@ pub fn main() -> eframe::Result<()> {
         "DnD Simple Example",
         NativeOptions::default(),
         move |ui, _frame| {
-            CentralPanel::default().show_inside(ui, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ui.vertical_centered_justified(|ui| {
                     dnd(ui, "dnd_example").show_vec(&mut items, |ui, item, handle, state| {
                         handle.ui(ui, |ui| {

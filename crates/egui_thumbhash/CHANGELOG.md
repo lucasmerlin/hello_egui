@@ -1,5 +1,9 @@
 # egui_thumbhash changelog
 
+## Unreleased
+
+- Update egui to 0.35
+
 ## 0.10.0
 
 - Update egui to 0.34
