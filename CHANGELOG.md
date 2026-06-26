@@ -1,6 +1,6 @@
 # hello_egui changelog
 
-## Unreleased
+## 0.12.0
 
 - Update egui to 0.35
 - egui_form: Update garde to 0.23

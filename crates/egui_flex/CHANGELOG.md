@@ -1,6 +1,6 @@
 # egui_flex changelog
 
-## Unreleased
+## 0.7.0
 
 - Update egui to 0.35
 

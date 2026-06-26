@@ -1,6 +1,6 @@
 # egui_material_icons changelog
 
-## Unreleased
+## 0.7.0
 
 - Update egui to 0.35
 

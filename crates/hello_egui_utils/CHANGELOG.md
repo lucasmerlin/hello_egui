@@ -1,6 +1,6 @@
 # hello_egui_utils changelog
 
-## Unreleased
+## 0.12.0
 
 - Update egui to 0.35
 

@@ -1,6 +1,6 @@
 # egui_infinite_scroll changelog
 
-## Unreleased
+## 0.11.0
 
 - Update egui to 0.35
 

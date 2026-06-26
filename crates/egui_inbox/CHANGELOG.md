@@ -1,6 +1,6 @@
 # egui_inbox changelog
 
-## Unreleased
+## 0.12.0
 
 - Update egui to 0.35
 
