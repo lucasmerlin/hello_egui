@@ -9,6 +9,29 @@ use web_time::{Duration, SystemTime};
 use crate::item_iterator::ItemIterator;
 use crate::utils::shift_vec;
 
+/// Dragged item motion constraint
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum DragAxis {
+    /// The item follows the pointer freely in both directions (default).
+    #[default]
+    Both,
+    /// The item only follows the pointer horizontally. Its vertical position stays fixed.
+    Horizontal,
+    /// The item only follows the pointer vertically. Its horizontal position stays fixed.
+    Vertical,
+}
+
+impl DragAxis {
+    /// Constrain `pos` relative to the position the drag started at (`start`).
+    pub(crate) fn constrain(self, start: Pos2, pos: Pos2) -> Pos2 {
+        match self {
+            DragAxis::Both => pos,
+            DragAxis::Horizontal => Pos2::new(pos.x, start.y),
+            DragAxis::Vertical => Pos2::new(start.x, pos.y),
+        }
+    }
+}
+
 /// Item that can be reordered using drag and drop
 pub trait DragDropItem {
     /// Unique id for the item, to allow egui to keep track of its dragged state between frames
@@ -110,6 +133,7 @@ pub struct DragDropUi {
     mouse_config: DragDropConfig,
     pub(crate) swap_animation_time: f32,
     pub(crate) return_animation_time: f32,
+    pub(crate) drag_axis: DragAxis,
 }
 
 impl Default for DragDropUi {
@@ -120,6 +144,7 @@ impl Default for DragDropUi {
             mouse_config: DragDropConfig::mouse(),
             swap_animation_time: 0.2,
             return_animation_time: 0.2,
+            drag_axis: DragAxis::Both,
         }
     }
 }
@@ -155,6 +180,7 @@ pub(crate) enum DragDetectionState {
         id: Id,
         source_idx: usize,
         offset: Vec2,
+        drag_start_pos: Pos2,
         dragged_item_size: Vec2,
         closest_item: (Id, Pos2),
         last_pointer_pos: Pos2,
@@ -365,6 +391,8 @@ impl<'a> Handle<'a> {
             self.state.detection_state = DragDetectionState::Dragging {
                 id: self.id,
                 offset,
+                // At the start of the drag the floating item sits at its original position.
+                drag_start_pos: self.item_pos,
                 // We set this in the Item
                 dragged_item_size: Vec2::default(),
                 closest_item: (self.id, self.item_pos),
@@ -460,6 +488,13 @@ impl DragDropUi {
         self
     }
 
+    /// Constrains the motion of the dragged item to a single axis.
+    /// The default is [`DragAxis::Both`] (no constraint).
+    pub fn with_drag_axis(mut self, axis: DragAxis) -> Self {
+        self.drag_axis = axis;
+        self
+    }
+
     fn config(&self, ui: &Ui) -> &DragDropConfig {
         if ui.input(egui::InputState::any_touches) {
             self.touch_config.as_ref().unwrap_or(&self.mouse_config)
@@ -534,13 +569,14 @@ impl DragDropUi {
         let dragged_item_rect = if let DragDetectionState::Dragging {
             offset,
             dragged_item_size,
+            drag_start_pos,
             ..
         } = &self.detection_state
         {
-            Some(Rect::from_min_size(
-                pointer_pos.unwrap_or_default() + *offset,
-                *dragged_item_size,
-            ))
+            let position = self
+                .drag_axis
+                .constrain(*drag_start_pos, pointer_pos.unwrap_or_default() + *offset);
+            Some(Rect::from_min_size(position, *dragged_item_size))
         } else {
             None
         };
