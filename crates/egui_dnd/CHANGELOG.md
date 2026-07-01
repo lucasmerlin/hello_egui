@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add `Dnd::with_drag_axis` / `DragDropUi::with_drag_axis` and the `DragAxis` enum to constrain drag motion to the horizontal or vertical axis only
+
 ## 0.16.0
 
 - Update egui to 0.35
