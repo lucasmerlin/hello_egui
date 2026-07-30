@@ -142,3 +142,60 @@ fn the_offscreen_path_forwards_textures_too() {
     // Rendering is what would fail if a texture the parent still draws had been freed.
     harness.render().expect("failed to render");
 }
+
+/// The child must agree with its parent about `max_texture_side`.
+///
+/// That value feeds into the font atlas' `TextOptions`, and egui rebuilds the atlas whenever
+/// they change. A child that disagrees makes it rebuild at the start of every pass, twice
+/// per frame, and the rebuild during the child's pass throws away the atlas that the
+/// parent's already-laid-out text points into: the parent then renders from the wrong parts
+/// of the new atlas, as gibberish.
+///
+/// The trap is that an integration reports its limit in the raw input once and `InputState`
+/// keeps the resolved value afterwards, so reading the raw `Option` gives `None` on every
+/// later pass. This drives the `Context` directly rather than using a harness, because a
+/// harness repeats the raw value every pass and the two agree by accident.
+#[test]
+fn the_child_inherits_the_parents_max_texture_side() {
+    use egui::{Context, Pos2, RawInput, Rect, ViewportId, vec2 as v2};
+    use std::cell::Cell;
+
+    const PARENT_MAX: usize = 8192;
+
+    let ctx = Context::default();
+    let child_viewport = Cell::new(ViewportId::ROOT);
+
+    let run = |max_texture_side: Option<usize>, with_child: bool| {
+        let input = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, v2(300.0, 200.0))),
+            max_texture_side,
+            ..Default::default()
+        };
+        let output = ctx.run_ui(input, |ui| {
+            ui.label("parent text");
+            if with_child {
+                let output = Regui::new("child").size(v2(80.0, 40.0)).show(ui, |ui| {
+                    ui.label("child text");
+                });
+                child_viewport.set(output.viewport_id);
+            }
+        });
+        output.drop_without_applying_deltas();
+    };
+
+    // The integration reports its limit, then stops repeating it. The child starts on a
+    // later pass, which is what happens whenever a ui is not built on the very first frame.
+    run(Some(PARENT_MAX), false);
+    run(None, true);
+    run(None, true);
+
+    let parent = ctx.input(|input| input.max_texture_side);
+    let child = ctx.input_for(child_viewport.get(), |input| input.max_texture_side);
+
+    assert_eq!(parent, PARENT_MAX, "the parent should have kept our value");
+    assert_eq!(
+        child, parent,
+        "the child disagrees with the parent about max_texture_side, so egui rebuilds the \
+         font atlas every pass and the parent's text renders as gibberish"
+    );
+}

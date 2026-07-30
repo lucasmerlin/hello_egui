@@ -24,7 +24,14 @@ pub(crate) fn child_input(
     let mut input = ui.input(|input| RawInput {
         viewport_id,
         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
-        max_texture_side: input.raw.max_texture_side,
+        // The resolved value, not `raw.max_texture_side`, which the integration only sets
+        // on some passes and is `None` on the rest. Getting this wrong is expensive and
+        // not obviously a texture problem: it feeds into the font atlas' `TextOptions`, so
+        // a child that disagrees with its parent makes egui rebuild the atlas at the start
+        // of every pass, twice per frame. The rebuild during the child's pass throws away
+        // the atlas the parent's already-laid-out text points into, and the parent renders
+        // gibberish.
+        max_texture_side: Some(input.max_texture_side),
         time: input.raw.time,
         predicted_dt: input.raw.predicted_dt,
         focused: input.raw.focused,
