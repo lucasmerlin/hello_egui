@@ -62,15 +62,37 @@ This needs `CallbackTrait::needs_backdrop`, which is not in a released egui-wgpu
 
 ## How it renders
 
-`Regui` tessellates the child itself and hands the triangles to the parent's painter, so it
-works with any egui backend — no wgpu needed. An untransformed child comes out pixel for
-pixel identical to the same ui drawn straight into the parent.
+By default `Regui` tessellates the child itself and hands the triangles to the parent's
+painter, so it works with any egui backend — no wgpu needed. An untransformed child comes
+out pixel for pixel identical to the same ui drawn straight into the parent.
+
+With the `wgpu` feature, `.offscreen(true)` renders the child into a texture instead and
+draws that. This clips a rotated child exactly, keeps text crisp at any scale, and lets a
+shader work on the child's image — `.blur(radius)` blurs the child's own content, as
+opposed to `BackdropBlur`, which blurs what is behind a rect:
+
+```rust
+# egui::__run_test_ui(|ui| {
+# #[cfg(feature = "wgpu")]
+regui::Regui::new("preview")
+    .size(egui::vec2(200.0, 120.0))
+    .blur(8.0)
+    .interactive(false)
+    .show(ui, |ui| {
+        ui.label("out of focus");
+    });
+# });
+```
+
+The child is rendered with the parent's own `egui_wgpu::Renderer`, so it shares the font
+atlas and every other texture, and costs one extra render pass rather than a second
+renderer.
 
 ## Caveats
 
-- Clipping is axis-aligned, because egui's clip rectangles are. Rotate a child and its
-  clip rectangles grow to their bounding boxes, so content that should be cut off at the
-  edge of a scroll area can spill a little.
+- The default backend clips axis-aligned, because egui's clip rectangles are. Rotate a
+  child and its clip rectangles grow to their bounding boxes, so content that should be cut
+  off at the edge of a scroll area can spill a little. `.offscreen(true)` clips exactly.
 - Child popups and tooltips cannot leave the child's rect: all of the child's shapes go
   into a single parent layer.
 - The child is not in the parent's accessibility tree.

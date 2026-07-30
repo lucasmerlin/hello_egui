@@ -40,6 +40,12 @@ pub struct Regui {
     offset: Vec2,
     crisp: bool,
     interactive: bool,
+
+    /// Blur the child's own content, in points. Zero for none. Needs the `wgpu` feature.
+    blur: f32,
+
+    /// Render through a texture even without an effect asking for it.
+    offscreen: bool,
 }
 
 /// What [`Regui::show`] gives you back.
@@ -94,6 +100,8 @@ impl Regui {
             offset: Vec2::ZERO,
             crisp: false,
             interactive: true,
+            blur: 0.0,
+            offscreen: false,
         }
     }
 
@@ -147,6 +155,37 @@ impl Regui {
         self
     }
 
+    /// Blur the child's own content, with the given radius in points.
+    ///
+    /// Unlike [`crate::BackdropBlur`], which blurs what is _behind_ a rect, this blurs the
+    /// child ui itself: use it to push a panel out of focus, or to fade one in and out.
+    /// The child stays interactive while blurred, which is usually not what you want, so
+    /// pair it with [`Self::interactive`].
+    ///
+    /// Needs the `wgpu` feature and [`crate::install_wgpu`]; it turns
+    /// [`Self::offscreen`] on, since a shader needs an image to work on.
+    #[cfg(feature = "wgpu")]
+    #[inline]
+    pub fn blur(mut self, radius: f32) -> Self {
+        self.blur = radius;
+        self
+    }
+
+    /// Render the child into a texture, rather than handing its triangles to the parent.
+    ///
+    /// Turn this on for exact clipping when the child is rotated, and for text that stays
+    /// crisp at any scale without [`Self::crisp`]'s cost to the font atlas. It is on
+    /// automatically when an effect needs it.
+    ///
+    /// Needs the `wgpu` feature and [`crate::install_wgpu`]. Without them this falls back
+    /// to handing the parent triangles, and says so in the log.
+    #[cfg(feature = "wgpu")]
+    #[inline]
+    pub fn offscreen(mut self, offscreen: bool) -> Self {
+        self.offscreen = offscreen;
+        self
+    }
+
     /// May the user interact with the child?
     ///
     /// On by default. Turn it off for a child that should only be looked at: it then sees
@@ -168,6 +207,8 @@ impl Regui {
             offset,
             crisp,
             interactive,
+            blur,
+            offscreen,
         } = self;
 
         let id = ui.make_persistent_id(id_salt);
@@ -175,26 +216,7 @@ impl Regui {
         let ctx = ui.ctx().clone();
         let parent_id = ctx.viewport_id();
 
-        // Work out where the child lands in the parent. Rotating around the child's own
-        // origin moves it off the space we were given, so lay out the bounding box of the
-        // rotated child and then shift the child back into it.
-        let child_rect = Rect::from_min_size(Pos2::ZERO, size);
-        let unplaced = Transform {
-            scale,
-            rotation: Rot2::from_angle(rotation),
-            translation: Vec2::ZERO,
-        };
-        let bounds = unplaced.bounding_rect(child_rect);
-        let sense = if interactive {
-            Sense::click_and_drag()
-        } else {
-            Sense::hover()
-        };
-        let (rect, response) = ui.allocate_exact_size(bounds.size(), sense);
-        let transform = Transform {
-            translation: (rect.min - bounds.min) + offset,
-            ..unplaced
-        };
+        let (transform, response) = allocate(ui, size, scale, rotation, offset, interactive);
 
         if !transform.is_valid() {
             // A scale of zero or a NaN rotation would make the inverse transform, and
@@ -254,7 +276,6 @@ impl Regui {
             viewport_output: _,
         } = output;
 
-        output::forward_textures_delta(&ctx, textures_delta);
         output::forward_platform_output(
             &ctx,
             platform_output,
@@ -264,7 +285,19 @@ impl Regui {
         output::forward_repaint(&ctx, viewport_id, parent_id);
 
         let primitives = ctx.tessellate(shapes, pixels_per_point);
-        backend::shapes::paint(ui, primitives, transform);
+        paint(
+            ui,
+            Painted {
+                id,
+                primitives,
+                size,
+                pixels_per_point,
+                transform,
+                textures_delta,
+                blur_radius: blur * pixels_per_point,
+                offscreen: offscreen || blur > 0.0,
+            },
+        );
 
         ReguiOutput {
             response,
@@ -273,4 +306,98 @@ impl Regui {
             viewport_id,
         }
     }
+}
+
+/// Everything the backends need to draw one pass of a child.
+struct Painted {
+    id: Id,
+    primitives: Vec<egui::ClippedPrimitive>,
+    size: Vec2,
+    pixels_per_point: f32,
+    transform: Transform,
+    textures_delta: egui::TexturesDelta,
+
+    /// Blur radius over the child's own image, in physical pixels.
+    blur_radius: f32,
+
+    /// Whether to go through a texture rather than hand the parent triangles.
+    offscreen: bool,
+}
+
+/// Draw the child, off-screen if asked for and possible, and by replaying its triangles
+/// otherwise.
+fn paint(ui: &Ui, painted: Painted) {
+    let Painted {
+        primitives,
+        transform,
+        textures_delta,
+        ..
+    } = painted;
+
+    #[cfg(feature = "wgpu")]
+    let (primitives, textures_delta) = {
+        let mut carried = (primitives, textures_delta);
+        if painted.offscreen {
+            match crate::wgpu_state::render_state(ui.ctx()) {
+                Some(render_state) => {
+                    let (primitives, textures_delta) = carried;
+                    let request = backend::texture::Request {
+                        id: painted.id,
+                        primitives,
+                        size: painted.size,
+                        pixels_per_point: painted.pixels_per_point,
+                        transform,
+                        textures_delta,
+                        blur_radius: painted.blur_radius,
+                    };
+                    // The off-screen path forwards the texture uploads itself, once it has
+                    // used them to render the child.
+                    if let Some(shape) = backend::texture::render(ui, &render_state, request) {
+                        ui.painter().add(shape);
+                        return;
+                    }
+                    // It could not render after all, and has already dealt with the uploads,
+                    // so fall through with nothing left to hand on.
+                    carried = (Vec::new(), egui::TexturesDelta::default());
+                }
+                None => crate::wgpu_state::warn_not_installed(ui.ctx(), "Regui::offscreen"),
+            }
+        }
+        carried
+    };
+
+    output::forward_textures_delta(ui.ctx(), textures_delta);
+    backend::shapes::paint(ui, primitives, transform);
+}
+
+/// Reserve room for the child in the parent and work out where it lands.
+///
+/// Rotating around the child's own origin moves it off the space we were given, so lay out
+/// the bounding box of the rotated child and then shift the child back into it.
+fn allocate(
+    ui: &mut Ui,
+    size: Vec2,
+    scale: f32,
+    rotation: f32,
+    offset: Vec2,
+    interactive: bool,
+) -> (Transform, Response) {
+    let child_rect = Rect::from_min_size(Pos2::ZERO, size);
+    let unplaced = Transform {
+        scale,
+        rotation: Rot2::from_angle(rotation),
+        translation: Vec2::ZERO,
+    };
+    let bounds = unplaced.bounding_rect(child_rect);
+    let sense = if interactive {
+        Sense::click_and_drag()
+    } else {
+        Sense::hover()
+    };
+    let (rect, response) = ui.allocate_exact_size(bounds.size(), sense);
+    let transform = Transform {
+        translation: (rect.min - bounds.min) + offset,
+        ..unplaced
+    };
+    (transform, response)
 }
