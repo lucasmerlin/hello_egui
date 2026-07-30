@@ -37,17 +37,25 @@ use resources::{BlurResources, Settings};
 #[derive(Clone, Copy, Debug)]
 pub struct BackdropBlur {
     radius: f32,
-    tint: Color32,
+
+    /// `None` means the window fill of whatever theme is in use, faded down.
+    tint: Option<Color32>,
     margin: Margin,
     corner_radius: CornerRadius,
 }
+
+/// How opaque the default tint is.
+///
+/// Enough of the theme's own colour to keep text readable, but still clearly a blur of
+/// what is behind rather than a solid panel.
+const DEFAULT_TINT_OPACITY: f32 = 0.6;
 
 impl BackdropBlur {
     /// Blur the background with the given radius, in points.
     pub fn new(radius: f32) -> Self {
         Self {
             radius,
-            tint: Color32::TRANSPARENT,
+            tint: None,
             margin: Margin::same(8),
             corner_radius: CornerRadius::ZERO,
         }
@@ -56,12 +64,15 @@ impl BackdropBlur {
     /// A colour laid over the blurred background.
     ///
     /// Its alpha says how far to fade the blur towards it, so
-    /// `Color32::from_white_alpha(64)` gives the usual light frosted glass and
-    /// `Color32::from_black_alpha(64)` a dark one. The default,
-    /// [`Color32::TRANSPARENT`], leaves the blur as it is.
+    /// `Color32::from_white_alpha(64)` gives light frosted glass and
+    /// `Color32::from_black_alpha(64)` a dark one.
+    ///
+    /// By default this is the theme's [`egui::Visuals::window_fill`] at 60% opacity, so the
+    /// glass follows the theme and whatever you put on it stays readable. Pass
+    /// [`Color32::TRANSPARENT`] to leave the blur alone.
     #[inline]
     pub fn tint(mut self, tint: Color32) -> Self {
-        self.tint = tint;
+        self.tint = Some(tint);
         self
     }
 
@@ -132,7 +143,13 @@ impl BackdropBlur {
                     format: render_state.target_format,
                     settings: Settings {
                         radius: self.radius * pixels_per_point,
-                        tint: self.tint,
+                        tint: self.tint.unwrap_or_else(|| {
+                            // `gamma_multiply` scales the alpha along with the rest, which
+                            // is what fading a premultiplied colour means.
+                            ui.visuals()
+                                .window_fill
+                                .gamma_multiply(DEFAULT_TINT_OPACITY)
+                        }),
                         rect_in_pixels: Rect::from_min_max(
                             (rect.min.to_vec2() * pixels_per_point).to_pos2(),
                             (rect.max.to_vec2() * pixels_per_point).to_pos2(),

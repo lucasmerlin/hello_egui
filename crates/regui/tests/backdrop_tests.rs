@@ -52,7 +52,7 @@ fn checkerboard(ui: &Ui, rect: Rect) {
 /// A `radius` of zero switches the blur off, which is how the test below gets an otherwise
 /// identical image to compare against.
 fn harness(radius: f32, panel_rect: Rc<Cell<Rect>>) -> Harness<'static> {
-    harness_with(radius, panel_rect, 0, Color32::TRANSPARENT)
+    harness_with(radius, panel_rect, 0, Some(Color32::TRANSPARENT))
 }
 
 /// As above, but with rounded corners and a tint.
@@ -60,7 +60,8 @@ fn harness_with(
     radius: f32,
     panel_rect: Rc<Cell<Rect>>,
     corner_radius: u8,
-    tint: Color32,
+    // `None` leaves `BackdropBlur` to pick the theme's default.
+    tint: Option<Color32>,
 ) -> Harness<'static> {
     let render_state = create_render_state(
         default_wgpu_setup(),
@@ -80,10 +81,11 @@ fn harness_with(
             let panel = Rect::from_min_size(rect.min + vec2(40.0, 40.0), vec2(160.0, 100.0));
             panel_rect.set(panel);
             let mut panel_ui = ui.new_child(UiBuilder::new().max_rect(panel));
-            BackdropBlur::new(radius)
-                .corner_radius(corner_radius)
-                .tint(tint)
-                .paint_at(&panel_ui, panel);
+            let mut blur = BackdropBlur::new(radius).corner_radius(corner_radius);
+            if let Some(tint) = tint {
+                blur = blur.tint(tint);
+            }
+            blur.paint_at(&panel_ui, panel);
             panel_ui.label("on glass");
         })
 }
@@ -162,10 +164,19 @@ fn snapshot_backdrop_blur_rounded() {
         14.0,
         Rc::new(Cell::new(Rect::ZERO)),
         24,
-        Color32::from_white_alpha(70),
+        Some(Color32::from_white_alpha(70)),
     );
     harness.run();
     harness.snapshot("backdrop_blur_rounded");
+}
+
+/// With no tint given, the blur is faded towards the theme's own window fill, so the glass
+/// matches the rest of the app and content on it stays readable.
+#[test]
+fn snapshot_backdrop_blur_default_tint() {
+    let mut harness = harness_with(14.0, Rc::new(Cell::new(Rect::ZERO)), 16, None);
+    harness.run();
+    harness.snapshot("backdrop_blur_default_tint");
 }
 
 #[test]

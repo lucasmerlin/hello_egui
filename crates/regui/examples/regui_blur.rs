@@ -9,7 +9,8 @@ use regui::BackdropBlur;
 fn main() {
     let mut radius = 12.0_f32;
     let mut corner_radius = 12_u8;
-    let mut tint = Color32::from_white_alpha(60);
+    // `None` leaves `BackdropBlur` to pick the theme's window fill.
+    let mut tint: Option<Color32> = None;
 
     hello_egui_utils_dev::run!(move |ui: &mut Ui, frame: &mut eframe::Frame| {
         // Without this, `BackdropBlur` has no device to work with and draws nothing.
@@ -26,21 +27,40 @@ fn main() {
             .title_bar(false)
             .frame(Frame::new().fill(Color32::TRANSPARENT))
             .show(ui, |ui| {
-                BackdropBlur::new(radius)
-                    .tint(tint)
+                let mut blur = BackdropBlur::new(radius)
                     .corner_radius(corner_radius)
-                    .inner_margin(16)
-                    .show(ui, |ui| {
-                        ui.heading("Frosted glass");
-                        ui.label("The pattern behind this panel is blurred.");
-                        ui.add_space(8.0);
-                        ui.add(Slider::new(&mut radius, 0.0..=40.0).text("blur radius"));
-                        ui.add(Slider::new(&mut corner_radius, 0..=60).text("corner radius"));
+                    .inner_margin(16);
+                if let Some(tint) = tint {
+                    blur = blur.tint(tint);
+                }
+
+                blur.show(ui, |ui| {
+                    // A blurred background has less contrast than a flat one, so lean on
+                    // the theme's strong colour for everything on the glass.
+                    let strong = ui.visuals().strong_text_color();
+                    ui.visuals_mut().override_text_color = Some(strong);
+                    ui.visuals_mut().widgets.inactive.fg_stroke.color = strong;
+                    ui.visuals_mut().widgets.hovered.fg_stroke.color = strong;
+                    ui.visuals_mut().widgets.active.fg_stroke.color = strong;
+
+                    ui.heading("Frosted glass");
+                    ui.label("The pattern behind this panel is blurred.");
+                    ui.add_space(8.0);
+                    ui.add(Slider::new(&mut radius, 0.0..=40.0).text("blur radius"));
+                    ui.add(Slider::new(&mut corner_radius, 0..=60).text("corner radius"));
+
+                    ui.add_space(8.0);
+                    let mut custom = tint.is_some();
+                    if ui.checkbox(&mut custom, "override the tint").changed() {
+                        tint = custom.then(|| ui.visuals().window_fill);
+                    }
+                    if let Some(tint) = &mut tint {
                         ui.horizontal(|ui| {
-                            ui.color_edit_button_srgba(&mut tint);
-                            ui.label("tint (its alpha fades the blur towards it)");
+                            ui.color_edit_button_srgba(tint);
+                            ui.label("its alpha fades the blur towards it");
                         });
-                    });
+                    }
+                });
             });
     });
 }
