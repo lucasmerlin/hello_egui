@@ -1,0 +1,26 @@
+[package]
+name = "regui"
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/lucasmerlin/hello_egui/tree/main/crates/regui"
+homepage = "https://lucasmerlin.github.io/hello_egui/#/example/regui"
+description = "Render an egui ui inside another egui ui, transformed and with shader effects."
+keywords = ["egui", "viewport", "transform", "shader", "gui"]
+categories = ["gui"]
+license = "MIT"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dependencies]
+egui.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+eframe = { workspace = true, default-features = true, features = ["wgpu"] }
+hello_egui_utils_dev = { workspace = true }
+egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+image = { workspace = true }
+
+[lints]
+workspace = true

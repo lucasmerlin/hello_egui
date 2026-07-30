@@ -26,3 +26,5 @@ pub use egui_suspense as suspense;
 pub use egui_thumbhash as thumbhash;
 #[cfg(feature = "virtual_list")]
 pub use egui_virtual_list as virtual_list;
+#[cfg(feature = "regui")]
+pub use regui;

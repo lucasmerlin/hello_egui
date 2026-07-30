@@ -76,6 +76,10 @@ Only includes crates that have been released on [crates.io](https://crates.io/).
     - Experimental, released on [crates.io](https://crates.io/crates/egui_animation), used internally
       by [egui_dnd](crates/egui_dnd)
 
+- [regui](crates/regui)
+    - Render an egui ui inside another egui ui, transformed
+    - Experimental, needs an unreleased egui
+
 - [egui_taffy](crates/egui_taffy)
     - Experiment to add flexbox layout to egui using [taffy](https://github.com/DioxusLabs/taffy)
     - Made into a proper crate by [@PPakalns](https://github.com/PPakalns), check out [egui_taffy](https://github.com/PPakalns/egui_taffy)!
