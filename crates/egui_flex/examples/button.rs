@@ -4,7 +4,7 @@ use egui_flex::{Flex, FlexInstance, FlexItem, FlexWidget};
 use hello_egui_utils_dev::run;
 
 fn main() {
-    run!(move |ui| {
+    run!(move |ui, _frame| {
         Flex::horizontal().w_full().show(ui, |flex| {
             flex.add(FlexItem::new().grow(1.0), Button::new("Hi"));
             flex.add(FlexItem::new().grow(1.0), Button::new("Hi"));

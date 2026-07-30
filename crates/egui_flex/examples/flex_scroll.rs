@@ -5,7 +5,7 @@ use std::num::NonZeroUsize;
 
 #[allow(clippy::too_many_lines)]
 fn main() {
-    run!(|ui| {
+    run!(|ui, _frame| {
         ScrollArea::vertical().show(ui, |ui| {
             let available_rect = ui.max_rect();
             for _ in 0..50 {

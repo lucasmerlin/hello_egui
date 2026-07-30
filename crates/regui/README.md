@@ -35,9 +35,34 @@ Regui::new("preview")
 # });
 ```
 
+## Backdrop blur
+
+With the `wgpu` feature, `BackdropBlur` blurs whatever is already behind it — the frosted
+glass under a dialog or a sidebar:
+
+```rust
+# egui::__run_test_ui(|ui| {
+# #[cfg(feature = "wgpu")]
+regui::BackdropBlur::new(12.0).show(ui, |ui| {
+    ui.heading("On frosted glass");
+});
+# });
+```
+
+Call `regui::install_wgpu(&cc.egui_ctx, cc.wgpu_render_state.clone().unwrap())` once at
+startup so it can reach the device.
+
+egui draws in order, so by the time it reaches the widget the background is already drawn.
+Nothing can sample the texture it is drawing into, so egui-wgpu interrupts its render pass,
+copies the half-drawn frame aside, blurs it, and draws the result back. The blur therefore
+shows exactly what is behind it, with no guessing and no one-frame lag — but it costs a pass
+split and a full-screen copy each, so use a handful rather than dozens.
+
+This needs `CallbackTrait::needs_backdrop`, which is not in a released egui-wgpu yet.
+
 ## How it renders
 
-`regui` tessellates the child itself and hands the triangles to the parent's painter, so it
+`Regui` tessellates the child itself and hands the triangles to the parent's painter, so it
 works with any egui backend — no wgpu needed. An untransformed child comes out pixel for
 pixel identical to the same ui drawn straight into the parent.
 

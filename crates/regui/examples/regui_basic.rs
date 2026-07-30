@@ -12,7 +12,7 @@ fn main() {
     let mut clicks = 0_u32;
     let mut parent_text = "type here too".to_owned();
 
-    hello_egui_utils_dev::run!(move |ui: &mut Ui| {
+    hello_egui_utils_dev::run!(move |ui: &mut Ui, _frame: &mut eframe::Frame| {
         ui.horizontal(|ui| {
             ui.label("Parent text field:");
             ui.add(TextEdit::singleline(&mut parent_text).desired_width(150.0));

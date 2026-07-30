@@ -5163,10 +5163,12 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "egui",
+ "egui-wgpu",
  "egui_kittest",
  "hello_egui_utils_dev",
  "image",
  "log",
+ "wgpu",
 ]
 
 [[package]]

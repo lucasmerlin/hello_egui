@@ -12,15 +12,30 @@ license = "MIT"
 [package.metadata.docs.rs]
 all-features = true
 
+[features]
+default = []
+## Render the child ui into an off-screen texture with wgpu. Gives exact clipping for a
+## rotated child, crisp text at any scale, and lets you run shaders over the child, such
+## as [`Blur`](crate::Blur).
+wgpu = ["dep:egui-wgpu", "dep:wgpu"]
+
 [dependencies]
 egui.workspace = true
 log.workspace = true
+
+egui-wgpu = { workspace = true, optional = true }
+wgpu = { workspace = true, optional = true }
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true, features = ["wgpu"] }
 hello_egui_utils_dev = { workspace = true }
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+egui-wgpu = { workspace = true }
 image = { workspace = true }
+
+[[example]]
+name = "regui_blur"
+required-features = ["wgpu"]
 
 [lints]
 workspace = true

@@ -14,7 +14,7 @@ fn main() {
     let mut child_value = 0.5_f32;
     let mut child_checked = false;
 
-    hello_egui_utils_dev::run!(move |ui: &mut Ui| {
+    hello_egui_utils_dev::run!(move |ui: &mut Ui, _frame: &mut eframe::Frame| {
         ui.add(Slider::new(&mut scale, 0.25..=3.0).text("scale"));
         ui.add(
             Slider::new(&mut rotation, -std::f32::consts::PI..=std::f32::consts::PI)
