@@ -18,6 +18,7 @@ fn main() {
     let mut blur = 0.0_f32;
     let mut child_value = 0.5_f32;
     let mut child_checked = false;
+    let mut chosen = "nothing".to_owned();
 
     hello_egui_utils_dev::run!(move |ui: &mut Ui, frame: &mut eframe::Frame| {
         #[cfg(feature = "wgpu")]
@@ -47,7 +48,8 @@ fn main() {
         ui.separator();
 
         let child = Regui::new("child")
-            .size(vec2(220.0, 120.0))
+            // Tall enough that the menu popup has somewhere to open.
+            .size(vec2(240.0, 220.0))
             .scale(scale)
             .rotation(rotation)
             .crisp(crisp);
@@ -57,7 +59,22 @@ fn main() {
 
         child.show(ui, |ui| {
             egui::Frame::group(ui.style()).show(ui, |ui| {
-                ui.label("Rotate me, then drag the slider.");
+                // A menu is the hardest thing to put in a child: it opens a popup, and all
+                // of the child's shapes go into one layer of the parent, so the popup cannot
+                // escape the child's rect. Give the child room below the button, or the menu
+                // has nowhere to go.
+                egui::MenuBar::new().ui(ui, |ui| {
+                    ui.menu_button("Menu", |ui| {
+                        for option in ["First", "Second", "Third"] {
+                            if ui.button(option).clicked() {
+                                option.clone_into(&mut chosen);
+                                ui.close();
+                            }
+                        }
+                    });
+                });
+                ui.label(format!("Picked: {chosen}"));
+
                 ui.add(Slider::new(&mut child_value, 0.0..=1.0).text("value"));
                 ui.checkbox(&mut child_checked, "and check a box");
             });

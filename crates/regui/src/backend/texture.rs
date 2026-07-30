@@ -6,7 +6,9 @@
 //! it ends up being drawn at rather than having its geometry stretched.
 
 use crate::Transform;
-use egui::{ClippedPrimitive, Color32, Id, Mesh, Rect, Shape, TextureId, Ui, Vec2, pos2};
+use egui::{
+    ClippedPrimitive, Color32, Id, Mesh, Rect, Shape, TextureId, Ui, Vec2, epaint::Primitive, pos2,
+};
 use egui_wgpu::{RenderState, ScreenDescriptor, wgpu};
 use std::{collections::HashMap, sync::Arc};
 
@@ -30,11 +32,6 @@ pub(crate) struct Request {
 
     /// Maps child coordinates to parent coordinates.
     pub transform: Transform,
-
-    /// Texture uploads from the child's pass, which have to be applied before the child is
-    /// rendered: the parent's backend only applies them after the ui is done, and glyphs
-    /// the child added this frame would otherwise be missing.
-    pub textures_delta: egui::TexturesDelta,
 
     /// Blur radius over the child's own content, in physical pixels. Zero for none.
     pub blur_radius: f32,
@@ -64,29 +61,37 @@ struct ChildTarget {
 pub(crate) fn render(ui: &Ui, render_state: &RenderState, request: Request) -> Option<Shape> {
     let Request {
         id,
-        primitives,
+        mut primitives,
         size,
         pixels_per_point,
         transform,
-        textures_delta,
         blur_radius,
     } = request;
 
+    // A blur has to spread outside the child, so give it room to spread into. Without this
+    // the texture ends exactly where the child does, and content touching an edge gets
+    // smeared along it by the clamping sampler instead of fading out, which looks like the
+    // blur has been cut off.
+    let padding_in_pixels = blur_radius.ceil().max(0.0);
+    let padding = padding_in_pixels / pixels_per_point;
+
+    // The child is rendered inset by the padding, and the quad the parent draws covers the
+    // padded rect, so the blur fades out beyond the child's own bounds.
+    let padded_size = size + Vec2::splat(2.0 * padding);
+    offset_primitives(&mut primitives, Vec2::splat(padding));
+
     let size_in_pixels = [
-        (size.x * pixels_per_point).ceil().max(1.0) as u32,
-        (size.y * pixels_per_point).ceil().max(1.0) as u32,
+        (padded_size.x * pixels_per_point).ceil().max(1.0) as u32,
+        (padded_size.y * pixels_per_point).ceil().max(1.0) as u32,
     ];
     if size_in_pixels[0] > u32::from(u16::MAX) || size_in_pixels[1] > u32::from(u16::MAX) {
         log::warn!("regui: child ui of {size_in_pixels:?} pixels is too big to render");
-        // We took ownership of the uploads, so hand them on before giving up. Dropping a
-        // `TexturesDelta` that still holds them asserts.
-        crate::output::forward_textures_delta(ui.ctx(), textures_delta);
         return None;
     }
 
     let mut renderer = render_state.renderer.write();
 
-    apply_textures(&mut renderer, render_state, &textures_delta);
+    apply_pending_textures(ui, &mut renderer, render_state);
 
     let format = render_state.target_format;
     let target = ensure_target(
@@ -151,27 +156,45 @@ pub(crate) fn render(ui: &Ui, render_state: &RenderState, request: Request) -> O
         .submit(std::iter::once(encoder.finish()).chain(user_buffers));
     drop(renderer);
 
-    // Hand the child's uploads back so the parent's backend sees them too.
-    crate::output::forward_textures_delta(ui.ctx(), textures_delta);
-
     Some(Shape::Mesh(Arc::new(mesh(
         transform,
-        Rect::from_min_size(egui::Pos2::ZERO, size),
+        Rect::from_min_size(egui::Pos2::ZERO, size).expand(padding),
         texture_id,
     ))))
 }
 
-/// Upload the child's textures before it is rendered.
+/// Shift everything the child painted, so it can be rendered inset into a bigger texture.
+fn offset_primitives(primitives: &mut [ClippedPrimitive], offset: Vec2) {
+    if offset == Vec2::ZERO {
+        return;
+    }
+    for ClippedPrimitive {
+        clip_rect,
+        primitive,
+    } in primitives
+    {
+        *clip_rect = clip_rect.translate(offset);
+        match primitive {
+            Primitive::Mesh(mesh) => {
+                for vertex in &mut mesh.vertices {
+                    vertex.pos += offset;
+                }
+            }
+            Primitive::Callback(callback) => callback.rect = callback.rect.translate(offset),
+        }
+    }
+}
+
+/// Upload this frame's textures before the child is rendered.
 ///
-/// The child's pass drained this frame's uploads, the parent's included, so without this
-/// the child renders with a stale font atlas and glyphs added this frame are missing. The
-/// parent's backend applies them again later, which is harmless.
-fn apply_textures(
-    renderer: &mut egui_wgpu::Renderer,
-    render_state: &RenderState,
-    textures_delta: &egui::TexturesDelta,
-) {
-    for (texture_id, image_deltas) in &textures_delta.set {
+/// The application's backend only applies them once the ui is done, and we are rendering
+/// part way through it, so without this the child gets a stale font atlas and any glyph
+/// first drawn this frame is missing from it. Peeking rather than taking leaves the uploads
+/// for the backend, which applies them again later; re-uploading the same data is harmless.
+fn apply_pending_textures(ui: &Ui, renderer: &mut egui_wgpu::Renderer, render_state: &RenderState) {
+    let manager = ui.ctx().tex_manager();
+    let manager = manager.read();
+    for (texture_id, image_deltas) in &manager.pending_delta().set {
         for image_delta in image_deltas {
             renderer.update_texture(
                 &render_state.device,

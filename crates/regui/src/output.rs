@@ -1,31 +1,6 @@
 use crate::Transform;
-use egui::{Context, PlatformOutput, TexturesDelta, ViewportId};
+use egui::{Context, PlatformOutput, ViewportId};
 use std::time::Duration;
-
-/// Hand the child's texture uploads back to the [`Context`], so that the parent's own
-/// backend picks them up.
-///
-/// The child's pass runs first, so `Context::end_pass` hands the child _all_ of this
-/// pass' texture uploads, including any the parent caused, and the parent is left with
-/// nothing. Queueing them again puts them back where the backend will find them.
-pub(crate) fn forward_textures_delta(ctx: &Context, mut delta: TexturesDelta) {
-    if delta.is_empty() {
-        return;
-    }
-
-    // Drain rather than destructure: a `TexturesDelta` that still holds unapplied deltas
-    // asserts when it is dropped, and it cannot be taken apart because of that.
-    let manager = ctx.tex_manager();
-    let mut manager = manager.write();
-    for (id, image_deltas) in std::mem::take(&mut delta.set) {
-        for image_delta in image_deltas {
-            manager.set(id, image_delta);
-        }
-    }
-    for id in std::mem::take(&mut delta.free) {
-        manager.free(id);
-    }
-}
 
 /// Merge the child's platform output into the parent's.
 ///

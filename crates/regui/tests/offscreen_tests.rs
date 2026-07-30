@@ -246,3 +246,75 @@ fn an_offscreen_child_is_still_clickable() {
 
     assert_eq!(clicks.get(), 1, "the off-screen child was not clickable");
 }
+
+/// A blur has to be able to spread outside the child's own rect.
+///
+/// The child is rendered into a texture, and if that texture is exactly the child's size
+/// then a blur has nowhere to go: content touching an edge gets smeared along it by the
+/// clamping sampler instead of fading out, which looks like the blur has been cut off.
+#[test]
+fn the_blur_spreads_outside_the_child() {
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    const RADIUS: f32 = 12.0;
+
+    let rect = Rc::new(Cell::new(Rect::ZERO));
+
+    // The child fills itself completely, so its content touches every edge and the blur has
+    // to spread past all of them.
+    let scene = |blur: f32, rect: Rc<Cell<Rect>>| {
+        move |ui: &mut Ui| {
+            // Leave room around the child, so nothing else clips the blur.
+            ui.add_space(40.0);
+            ui.horizontal(|ui| {
+                ui.add_space(40.0);
+                let output = Regui::new("child")
+                    .size(vec2(120.0, 80.0))
+                    .blur(blur)
+                    .offscreen(true)
+                    .interactive(false)
+                    .show(ui, |ui| {
+                        let viewport = ui.ctx().viewport_rect();
+                        ui.painter().rect_filled(viewport, 0.0, Color32::WHITE);
+                    });
+                rect.set(output.response.rect);
+            });
+        }
+    };
+
+    let sharp = render(scene(0.0, Rc::clone(&rect)));
+    let blurred = render(scene(RADIUS, Rc::clone(&rect)));
+    let child = rect.get();
+
+    // Where the two images differ. With the blur cut off this is the child's rect exactly;
+    // with room to spread it reaches beyond it on every side.
+    let mut min = (u32::MAX, u32::MAX);
+    let mut max = (0_u32, 0_u32);
+    for (x, y, pixel) in blurred.enumerate_pixels() {
+        if pixel != sharp.get_pixel(x, y) {
+            min.0 = min.0.min(x);
+            min.1 = min.1.min(y);
+            max.0 = max.0.max(x);
+            max.1 = max.1.max(y);
+        }
+    }
+    assert_ne!(min.0, u32::MAX, "the blur changed nothing at all");
+
+    // Allow a couple of pixels of slack for rounding and for the blur's faintest tail.
+    let slack = 3.0;
+    assert!(
+        (min.0 as f32) < child.left() - slack && (min.1 as f32) < child.top() - slack,
+        "the blur did not spread past the child's top left: it reaches {min:?} but the child \
+         starts at ({}, {})",
+        child.left(),
+        child.top()
+    );
+    assert!(
+        (max.0 as f32) > child.right() + slack && (max.1 as f32) > child.bottom() + slack,
+        "the blur did not spread past the child's bottom right: it reaches {max:?} but the \
+         child ends at ({}, {})",
+        child.right(),
+        child.bottom()
+    );
+}

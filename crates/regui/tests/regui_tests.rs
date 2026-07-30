@@ -309,3 +309,50 @@ fn show_returns_the_inner_value() {
     });
     harness.run();
 }
+
+/// A menu inside the child must open and be clickable.
+///
+/// This is the most demanding thing to put in a child: the popup lives in a different layer
+/// of the child's viewport, it takes an extra pass to appear, and it only works if the
+/// child's areas and interaction state all survive between passes.
+#[test]
+fn a_menu_inside_the_child_works() {
+    let probe = Probe::default();
+    let item_rect = Cell::new(None::<Rect>);
+    let chosen = RefCell::new(String::new());
+
+    let mut harness = Harness::builder().with_size([300.0, 260.0]).build_ui(|ui| {
+        let output = Regui::new("child").size(vec2(220.0, 200.0)).show(ui, |ui| {
+            egui::MenuBar::new().ui(ui, |ui| {
+                let response = ui.menu_button("Menu", |ui| {
+                    let item = ui.button("Second");
+                    item_rect.set(Some(item.rect));
+                    if item.clicked() {
+                        *chosen.borrow_mut() = "Second".to_owned();
+                        ui.close();
+                    }
+                });
+                probe.rect.set(Some(response.response.rect));
+            });
+        });
+        probe.transform.set(Some(output.transform));
+    });
+
+    harness.run();
+
+    // Open the menu.
+    click_at(&mut harness, probe.widget_center());
+    harness.run();
+
+    let item = item_rect
+        .get()
+        .expect("the menu did not open, so its contents never ran");
+    let transform = probe.transform.get().expect("the child ui should have run");
+    click_at(&mut harness, transform.mul_pos(item.center()));
+
+    assert_eq!(
+        chosen.borrow().as_str(),
+        "Second",
+        "the menu item inside the child was not clickable"
+    );
+}

@@ -270,11 +270,20 @@ impl Regui {
 
         let FullOutput {
             platform_output,
-            textures_delta,
+            mut textures_delta,
             shapes,
             pixels_per_point,
             viewport_output: _,
         } = output;
+
+        // A hosted viewport leaves this frame's texture uploads in the `Context` for the
+        // viewport that hosts us to hand to its backend, so there is nothing here to pass
+        // on. Anything else would mean egui had drained them behind our back.
+        debug_assert!(
+            textures_delta.is_empty(),
+            "regui: expected egui to leave the texture uploads to the hosting viewport"
+        );
+        textures_delta.clear();
 
         output::forward_platform_output(
             &ctx,
@@ -293,7 +302,6 @@ impl Regui {
                 size,
                 pixels_per_point,
                 transform,
-                textures_delta,
                 blur_radius: blur * pixels_per_point,
                 offscreen: offscreen || blur > 0.0,
             },
@@ -315,7 +323,6 @@ struct Painted {
     size: Vec2,
     pixels_per_point: f32,
     transform: Transform,
-    textures_delta: egui::TexturesDelta,
 
     /// Blur radius over the child's own image, in physical pixels.
     blur_radius: f32,
@@ -330,43 +337,36 @@ fn paint(ui: &Ui, painted: Painted) {
     let Painted {
         primitives,
         transform,
-        textures_delta,
         ..
     } = painted;
 
     #[cfg(feature = "wgpu")]
-    let (primitives, textures_delta) = {
-        let mut carried = (primitives, textures_delta);
+    let primitives = {
+        let mut primitives = primitives;
         if painted.offscreen {
-            match crate::wgpu_state::render_state(ui.ctx()) {
-                Some(render_state) => {
-                    let (primitives, textures_delta) = carried;
-                    let request = backend::texture::Request {
-                        id: painted.id,
-                        primitives,
-                        size: painted.size,
-                        pixels_per_point: painted.pixels_per_point,
-                        transform,
-                        textures_delta,
-                        blur_radius: painted.blur_radius,
-                    };
-                    // The off-screen path forwards the texture uploads itself, once it has
-                    // used them to render the child.
-                    if let Some(shape) = backend::texture::render(ui, &render_state, request) {
-                        ui.painter().add(shape);
-                        return;
-                    }
-                    // It could not render after all, and has already dealt with the uploads,
-                    // so fall through with nothing left to hand on.
-                    carried = (Vec::new(), egui::TexturesDelta::default());
+            if let Some(render_state) = crate::wgpu_state::render_state(ui.ctx()) {
+                let request = backend::texture::Request {
+                    id: painted.id,
+                    primitives,
+                    size: painted.size,
+                    pixels_per_point: painted.pixels_per_point,
+                    transform,
+                    blur_radius: painted.blur_radius,
+                };
+                if let Some(shape) = backend::texture::render(ui, &render_state, request) {
+                    ui.painter().add(shape);
+                    return;
                 }
-                None => crate::wgpu_state::warn_not_installed(ui.ctx(), "Regui::offscreen"),
+                // It could not render after all, so there is nothing left to fall back with.
+                primitives = Vec::new();
+            } else {
+                crate::wgpu_state::warn_not_installed(ui.ctx(), "Regui::offscreen");
+                primitives = Vec::new();
             }
         }
-        carried
+        primitives
     };
 
-    output::forward_textures_delta(ui.ctx(), textures_delta);
     backend::shapes::paint(ui, primitives, transform);
 }
 
