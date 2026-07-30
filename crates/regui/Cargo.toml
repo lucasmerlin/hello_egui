@@ -29,6 +29,7 @@ wgpu = { workspace = true, optional = true }
 [dev-dependencies]
 eframe = { workspace = true, default-features = true, features = ["wgpu"] }
 hello_egui_utils_dev = { workspace = true }
+egui_demo_lib = { workspace = true }
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
 egui-wgpu = { workspace = true }
 image = { workspace = true }

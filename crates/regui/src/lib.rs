@@ -17,6 +17,6 @@ pub use transform::Transform;
 pub use viewport::{Regui, ReguiOutput};
 
 #[cfg(feature = "wgpu")]
-pub use backdrop::BackdropBlur;
+pub use backdrop::{BackdropBlur, PendingBlur};
 #[cfg(feature = "wgpu")]
 pub use wgpu_state::install_wgpu;

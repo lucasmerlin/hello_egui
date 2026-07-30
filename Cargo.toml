@@ -95,6 +95,7 @@ egui = { version = "0.35.0", default-features = false }
 egui_kittest = { version = "0.35.0" }
 eframe = { version = "0.35.0", default-features = false }
 egui_extras = { version = "0.35.0", default-features = false }
+egui_demo_lib = { version = "0.35.0", default-features = false }
 egui-wgpu = { version = "0.35.0", default-features = false }
 wgpu = { version = "30.0", default-features = false, features = ["std"] }
 bytemuck = "1.25"
@@ -142,6 +143,7 @@ eframe = { path = "../egui/crates/eframe" }
 egui-wgpu = { path = "../egui/crates/egui-wgpu" }
 egui_extras = { path = "../egui/crates/egui_extras" }
 egui_kittest = { path = "../egui/crates/egui_kittest" }
+egui_demo_lib = { path = "../egui/crates/egui_demo_lib" }
 #winit = { path = "../winit" }
 
 

@@ -3,7 +3,10 @@
 mod resources;
 
 use crate::wgpu_state;
-use egui::{Color32, CornerRadius, InnerResponse, Margin, Rect, Shape, Ui};
+use egui::{
+    Color32, Context, CornerRadius, Id, InnerResponse, LayerId, Margin, Order, Rect, Shape, Ui,
+    Visuals, layers::ShapeIdx,
+};
 use egui_wgpu::{Backdrop, CallbackResources, CallbackTrait, ScreenDescriptor, wgpu};
 use resources::{BlurResources, Settings};
 
@@ -100,6 +103,70 @@ impl BackdropBlur {
         self.put_at(ui, rect, ui.painter().add(Shape::Noop));
     }
 
+    /// Blur behind a window or area, underneath everything it draws.
+    ///
+    /// A window reserves the slot for its frame before its body runs, so nothing added
+    /// from inside the body can get below it: a blur put there would cover the frame's
+    /// fill. This claims the first slot in the window's layer instead, before the window
+    /// has drawn anything, so its fill, stroke, shadow and rounded corners all land on top
+    /// of the blur.
+    ///
+    /// Call this _before_ showing the window, then hand the returned [`PendingBlur`] the
+    /// window's rect. [`Self::show_window`] does both for you.
+    ///
+    /// A window's layer is `LayerId::new(Order::Middle, id)`, where `id` is what you passed
+    /// to [`egui::Window::id`], or `Id::new(title)` if you did not pass one.
+    #[must_use = "Give the returned PendingBlur a rect, or nothing is drawn"]
+    pub fn behind_layer(self, ctx: &Context, layer_id: LayerId) -> PendingBlur {
+        // Claiming a slot in a layer the window has not created yet is fine: egui keys
+        // paint lists by layer id and drains them in area order at the end of the pass, so
+        // the window's own shapes simply land after this one.
+        let index = ctx.layer_painter(layer_id).add(Shape::Noop);
+        PendingBlur {
+            blur: self,
+            layer_id,
+            index,
+        }
+    }
+
+    /// Show a window whose background is blurred, with its frame drawn on top.
+    ///
+    /// The window is given `id`, so that the blur can find its layer. Note that this
+    /// assumes the window is at [`egui::Order::Middle`], which is the default.
+    ///
+    /// Use a frame with a see-through fill, or the fill will hide the blur. The blur brings
+    /// its own [`Self::tint`], so `Color32::TRANSPARENT` is usually what you want:
+    ///
+    /// ```
+    /// # egui::__run_test_ui(|ui| {
+    /// use egui::{Color32, Frame, Id, Window};
+    /// use regui::BackdropBlur;
+    ///
+    /// let frame = Frame::window(ui.style()).fill(Color32::TRANSPARENT);
+    /// BackdropBlur::new(12.0)
+    ///     .corner_radius(frame.corner_radius)
+    ///     .show_window(ui, Id::new("frosted"), Window::new("frosted").frame(frame), |ui| {
+    ///         ui.label("on glass");
+    ///     });
+    /// # });
+    /// ```
+    pub fn show_window<R>(
+        self,
+        ui: &mut Ui,
+        id: Id,
+        window: egui::Window<'_>,
+        add_contents: impl FnOnce(&mut Ui) -> R,
+    ) -> Option<InnerResponse<Option<R>>> {
+        let pending = self.behind_layer(ui.ctx(), LayerId::new(Order::Middle, id));
+        let response = window.id(id).show(ui, add_contents);
+        match &response {
+            Some(response) => pending.set_rect(ui.ctx(), response.response.rect),
+            // The window is closed or collapsed, so there is nothing to blur behind.
+            None => pending.discard(),
+        }
+        response
+    }
+
     /// Lay out `add_contents` and blur the background behind it, like a [`egui::Frame`].
     pub fn show<R>(self, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) -> InnerResponse<R> {
         // Reserve a slot in the paint list now and fill it in once the content has told us
@@ -121,55 +188,95 @@ impl BackdropBlur {
         InnerResponse::new(inner, response)
     }
 
-    fn put_at(self, ui: &Ui, rect: Rect, index: egui::layers::ShapeIdx) {
+    fn put_at(self, ui: &Ui, rect: Rect, index: ShapeIdx) {
+        // Each blur needs an id of its own to keep its shader uniforms apart from every
+        // other blur in the pass. Two blurs in the same `Ui` would share one, and the
+        // second would win; give them their own `Ui` if you need both.
+        let id = ui.id().with("regui_backdrop_blur");
+        if let Some(shape) = self.shape(ui.ctx(), ui.visuals(), id, rect) {
+            ui.painter().set(index, shape);
+        }
+    }
+
+    /// The paint callback that does the work, or `None` if there is nothing to draw.
+    fn shape(self, ctx: &Context, visuals: &Visuals, id: Id, rect: Rect) -> Option<Shape> {
         if self.radius <= 0.0 {
             // Nothing to do, and no reason to make egui interrupt its render pass.
-            return;
+            return None;
         }
-        let Some(render_state) = wgpu_state::render_state(ui.ctx()) else {
-            wgpu_state::warn_not_installed(ui.ctx(), "BackdropBlur");
-            return;
+        let Some(render_state) = wgpu_state::render_state(ctx) else {
+            wgpu_state::warn_not_installed(ctx, "BackdropBlur");
+            return None;
         };
 
         // The shader works in physical pixels, since that is what it samples.
-        let pixels_per_point = ui.ctx().pixels_per_point();
+        let pixels_per_point = ctx.pixels_per_point();
         let scale = |radius: u8| f32::from(radius) * pixels_per_point;
 
-        ui.painter().set(
-            index,
-            egui_wgpu::Callback::new_paint_callback(
-                rect,
-                BlurCallback {
-                    format: render_state.target_format,
-                    settings: Settings {
-                        radius: self.radius * pixels_per_point,
-                        tint: self.tint.unwrap_or_else(|| {
-                            // `gamma_multiply` scales the alpha along with the rest, which
-                            // is what fading a premultiplied colour means.
-                            ui.visuals()
-                                .window_fill
-                                .gamma_multiply(DEFAULT_TINT_OPACITY)
-                        }),
-                        rect_in_pixels: Rect::from_min_max(
-                            (rect.min.to_vec2() * pixels_per_point).to_pos2(),
-                            (rect.max.to_vec2() * pixels_per_point).to_pos2(),
-                        ),
-                        corner_radii: [
-                            scale(self.corner_radius.nw),
-                            scale(self.corner_radius.ne),
-                            scale(self.corner_radius.sw),
-                            scale(self.corner_radius.se),
-                        ],
-                    },
+        let callback = egui_wgpu::Callback::new_paint_callback(
+            rect,
+            BlurCallback {
+                format: render_state.target_format,
+                id,
+                settings: Settings {
+                    radius: self.radius * pixels_per_point,
+                    tint: self.tint.unwrap_or_else(|| {
+                        // `gamma_multiply` scales the alpha along with the rest, which is
+                        // what fading a premultiplied colour means.
+                        visuals.window_fill.gamma_multiply(DEFAULT_TINT_OPACITY)
+                    }),
+                    rect_in_pixels: Rect::from_min_max(
+                        (rect.min.to_vec2() * pixels_per_point).to_pos2(),
+                        (rect.max.to_vec2() * pixels_per_point).to_pos2(),
+                    ),
+                    corner_radii: [
+                        scale(self.corner_radius.nw),
+                        scale(self.corner_radius.ne),
+                        scale(self.corner_radius.sw),
+                        scale(self.corner_radius.se),
+                    ],
                 },
-            ),
+            },
         );
+        Some(callback.into())
+    }
+}
+
+/// A blur that has claimed its place in the paint order but does not know where it goes yet.
+///
+/// See [`BackdropBlur::behind_layer`].
+#[must_use = "Give this a rect, or nothing is drawn"]
+pub struct PendingBlur {
+    blur: BackdropBlur,
+    layer_id: LayerId,
+    index: ShapeIdx,
+}
+
+impl PendingBlur {
+    /// Blur behind this rect. Usually a window's `response.rect`.
+    pub fn set_rect(self, ctx: &Context, rect: Rect) {
+        let style = ctx.global_style();
+        // The layer is the window's own, so its id is unique per blurred window.
+        let id = self.layer_id.id.with("regui_backdrop_blur");
+        if let Some(shape) = self.blur.shape(ctx, &style.visuals, id, rect) {
+            ctx.layer_painter(self.layer_id).set(self.index, shape);
+        }
+    }
+
+    /// Draw nothing after all, e.g. because the window turned out to be closed.
+    pub fn discard(self) {
+        // The slot we claimed still holds the `Shape::Noop` we put there, so there is
+        // genuinely nothing to undo.
     }
 }
 
 /// The part that runs on the render thread.
 struct BlurCallback {
     format: wgpu::TextureFormat,
+
+    /// Which blurred widget this is, so it gets its own uniforms rather than sharing them
+    /// with every other blur in the pass.
+    id: Id,
     settings: Settings,
 }
 
@@ -187,7 +294,12 @@ impl CallbackTrait for BlurCallback {
         let resources = callback_resources
             .entry()
             .or_insert_with(|| BlurResources::new(device, self.format));
-        resources.update(device, screen_descriptor.size_in_pixels, self.format);
+        resources.update(
+            device,
+            self.id,
+            screen_descriptor.size_in_pixels,
+            self.format,
+        );
         Vec::new()
     }
 
@@ -206,7 +318,7 @@ impl CallbackTrait for BlurCallback {
         let Some(resources) = callback_resources.get::<BlurResources>() else {
             return;
         };
-        resources.blur(device, queue, encoder, backdrop, self.settings);
+        resources.blur(device, queue, encoder, backdrop, self.id, self.settings);
     }
 
     fn paint_with_backdrop(
@@ -219,7 +331,7 @@ impl CallbackTrait for BlurCallback {
         let Some(resources) = callback_resources.get::<BlurResources>() else {
             return;
         };
-        resources.draw(render_pass);
+        resources.draw(render_pass, self.id);
     }
 
     fn paint(

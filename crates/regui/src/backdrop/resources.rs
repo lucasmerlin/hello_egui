@@ -1,7 +1,8 @@
 //! The wgpu objects the backdrop blur needs, and the passes it runs.
 
-use egui::{Color32, Rect};
+use egui::{Color32, Id, Rect};
 use egui_wgpu::{Backdrop, wgpu};
+use std::collections::HashMap;
 
 /// One `Params` in `blur.wgsl`.
 ///
@@ -89,14 +90,45 @@ pub(crate) struct BlurResources {
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
 
+    /// Allocated on first use and whenever the target resizes.
+    textures: Option<Textures>,
+
+    /// Bumped whenever `textures` is rebuilt, so per-blur bind groups know they are stale.
+    generation: u64,
+
+    /// One set of uniforms per blurred widget.
+    ///
+    /// Every blur in a pass shares this one `BlurResources`, since callback resources are
+    /// keyed by type. The scratch textures can be shared, because the passes run one after
+    /// another in the encoder, but the uniforms cannot: `Queue::write_buffer` lands before
+    /// any command runs, so a shared buffer would leave every blur using the last one's
+    /// settings and the rest drawing nothing.
+    ///
+    /// TODO(lucas): entries for widgets that go away are never dropped. They are a couple
+    /// of hundred bytes each, so this is a slow leak rather than a problem, but it should
+    /// be pruned once egui-wgpu gives callbacks a frame boundary to hook.
+    per_blur: HashMap<Id, PerBlur>,
+}
+
+/// The uniforms and bind groups belonging to one blurred widget.
+struct PerBlur {
     /// One per [`Pass`].
     uniforms: [wgpu::Buffer; PASS_COUNT],
 
-    /// Allocated on first use and whenever the target resizes.
-    textures: Option<Textures>,
+    /// Reads the first scratch image, writes the second.
+    vertical: wgpu::BindGroup,
+
+    /// Reads the second scratch image, writes egui's target.
+    draw: wgpu::BindGroup,
+
+    /// Which `BlurResources::generation` the bind groups were built against.
+    generation: u64,
 }
 
 /// The two intermediate images the separable blur bounces between.
+///
+/// Shared by every blur in the pass: each one runs its blur passes and then draws, all in
+/// encoder order, so nothing is still reading these when the next blur overwrites them.
 struct Textures {
     size_in_pixels: [u32; 2],
     format: wgpu::TextureFormat,
@@ -106,12 +138,6 @@ struct Textures {
 
     /// Holds the finished blur, and is what the final pass samples.
     second_view: wgpu::TextureView,
-
-    /// Reads `first_view`, writes `second_view`.
-    vertical: wgpu::BindGroup,
-
-    /// Reads `second_view`, writes the egui target.
-    draw: wgpu::BindGroup,
 }
 
 impl BlurResources {
@@ -158,15 +184,9 @@ impl BlurResources {
                 min_filter: wgpu::FilterMode::Linear,
                 ..Default::default()
             }),
-            uniforms: std::array::from_fn(|_| {
-                device.create_buffer(&wgpu::BufferDescriptor {
-                    label: Some("regui_backdrop_blur_params"),
-                    size: Params::SIZE,
-                    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                    mapped_at_creation: false,
-                })
-            }),
             textures: None,
+            generation: 0,
+            per_blur: HashMap::new(),
         }
     }
 }
@@ -255,8 +275,53 @@ fn create_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
 }
 
 impl BlurResources {
-    /// Allocate the intermediate images, or reallocate them if the target changed size.
+    /// Make sure the shared images and this blur's own uniforms exist and are the right size.
     pub(crate) fn update(
+        &mut self,
+        device: &wgpu::Device,
+        id: Id,
+        size_in_pixels: [u32; 2],
+        format: wgpu::TextureFormat,
+    ) {
+        self.update_textures(device, size_in_pixels, format);
+
+        let stale = self
+            .per_blur
+            .get(&id)
+            .is_none_or(|per_blur| per_blur.generation != self.generation);
+        if stale {
+            let per_blur = self.create_per_blur(device);
+            self.per_blur.insert(id, per_blur);
+        }
+    }
+
+    /// Build the uniforms and bind groups for one blurred widget.
+    fn create_per_blur(&self, device: &wgpu::Device) -> PerBlur {
+        let uniforms: [wgpu::Buffer; PASS_COUNT] = std::array::from_fn(|_| {
+            device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("regui_backdrop_blur_params"),
+                size: Params::SIZE,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            })
+        });
+
+        // The horizontal pass reads the backdrop, which is handed to us per frame, so its
+        // bind group is built in `blur`. These two only depend on our own textures.
+        let (first, second) = match &self.textures {
+            Some(textures) => (&textures.first_view, &textures.second_view),
+            None => unreachable!("update_textures runs first"),
+        };
+        PerBlur {
+            vertical: self.bind_group(device, first, &uniforms[Pass::Vertical as usize]),
+            draw: self.bind_group(device, second, &uniforms[Pass::Draw as usize]),
+            uniforms,
+            generation: self.generation,
+        }
+    }
+
+    /// Allocate the intermediate images, or reallocate them if the target changed size.
+    fn update_textures(
         &mut self,
         device: &wgpu::Device,
         size_in_pixels: [u32; 2],
@@ -290,26 +355,22 @@ impl BlurResources {
                 .create_view(&wgpu::TextureViewDescriptor::default())
         };
 
-        let first_view = texture("regui_backdrop_blur_first");
-        let second_view = texture("regui_backdrop_blur_second");
-
-        // The horizontal pass reads the backdrop, which is handed to us per frame, so its
-        // bind group is built in `blur`. These two only depend on our own textures.
         self.textures = Some(Textures {
             size_in_pixels,
             format,
-            vertical: self.bind_group(device, &first_view, Pass::Vertical),
-            draw: self.bind_group(device, &second_view, Pass::Draw),
-            first_view,
-            second_view,
+            first_view: texture("regui_backdrop_blur_first"),
+            second_view: texture("regui_backdrop_blur_second"),
         });
+
+        // Every per-blur bind group points at the old images, so they all have to go.
+        self.generation += 1;
     }
 
     fn bind_group(
         &self,
         device: &wgpu::Device,
         source: &wgpu::TextureView,
-        pass: Pass,
+        uniforms: &wgpu::Buffer,
     ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("regui_backdrop_blur"),
@@ -325,7 +386,7 @@ impl BlurResources {
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: self.uniforms[pass as usize].as_entire_binding(),
+                    resource: uniforms.as_entire_binding(),
                 },
             ],
         })
@@ -338,9 +399,10 @@ impl BlurResources {
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
         backdrop: &Backdrop<'_>,
+        id: Id,
         settings: Settings,
     ) {
-        let Some(textures) = &self.textures else {
+        let (Some(textures), Some(per_blur)) = (&self.textures, self.per_blur.get(&id)) else {
             return;
         };
         if textures.size_in_pixels != backdrop.size_in_pixels {
@@ -372,7 +434,7 @@ impl BlurResources {
 
         let write = |pass: Pass, step: [f32; 2]| {
             queue.write_buffer(
-                &self.uniforms[pass as usize],
+                &per_blur.uniforms[pass as usize],
                 0,
                 &Params {
                     step,
@@ -391,7 +453,11 @@ impl BlurResources {
         write(Pass::Vertical, [0.0, 1.0 / height]);
         write(Pass::Draw, [0.0, 0.0]);
 
-        let horizontal = self.bind_group(device, backdrop.view, Pass::Horizontal);
+        let horizontal = self.bind_group(
+            device,
+            backdrop.view,
+            &per_blur.uniforms[Pass::Horizontal as usize],
+        );
         self.run(
             encoder,
             "regui_backdrop_blur_horizontal",
@@ -401,7 +467,7 @@ impl BlurResources {
         self.run(
             encoder,
             "regui_backdrop_blur_vertical",
-            &textures.vertical,
+            &per_blur.vertical,
             &textures.second_view,
         );
     }
@@ -435,12 +501,12 @@ impl BlurResources {
     }
 
     /// Draw the finished blur into egui's render pass.
-    pub(crate) fn draw(&self, render_pass: &mut wgpu::RenderPass<'static>) {
-        let Some(textures) = &self.textures else {
+    pub(crate) fn draw(&self, render_pass: &mut wgpu::RenderPass<'static>, id: Id) {
+        let Some(per_blur) = self.per_blur.get(&id) else {
             return;
         };
         render_pass.set_pipeline(&self.draw_pipeline);
-        render_pass.set_bind_group(0, &textures.draw, &[]);
+        render_pass.set_bind_group(0, &per_blur.draw, &[]);
         render_pass.draw(0..3, 0..1);
     }
 }

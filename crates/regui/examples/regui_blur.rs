@@ -3,7 +3,7 @@
 //! The blur reads what egui has already drawn, so it always shows what is actually behind
 //! the panel, with no lag. Drag the window over the pattern to see it keep up.
 
-use egui::{Color32, Frame, Pos2, Slider, Ui, Vec2, Window};
+use egui::{Color32, Frame, Id, Pos2, Shadow, Slider, Ui, Vec2, Window};
 use regui::BackdropBlur;
 
 fn main() {
@@ -11,6 +11,8 @@ fn main() {
     let mut corner_radius = 12_u8;
     // `None` leaves `BackdropBlur` to pick the theme's window fill.
     let mut tint: Option<Color32> = None;
+    let mut show_demo = false;
+    let mut demo = egui_demo_lib::DemoWindows::default();
 
     hello_egui_utils_dev::run!(move |ui: &mut Ui, frame: &mut eframe::Frame| {
         // Without this, `BackdropBlur` has no device to work with and draws nothing.
@@ -18,25 +20,41 @@ fn main() {
             regui::install_wgpu(ui.ctx(), render_state.clone());
         }
 
-        let rect = ui.max_rect();
-        busy_background(ui, rect);
+        // Whatever is drawn here is what the blur will pick up. The demo is the more
+        // interesting test: it has panels, windows, text and images, so you can see how the
+        // blur behaves over each. Its own windows are ordinary areas, so whether one ends up
+        // above or below a blurred window depends on which you clicked last.
+        if show_demo {
+            demo.ui(ui);
+        } else {
+            busy_background(ui, ui.max_rect());
+        }
 
-        // Drag the window around: the blur always shows what is really behind it, because
-        // it reads the frame egui has already drawn rather than guessing.
-        Window::new("blurred")
-            .title_bar(false)
-            .frame(Frame::new().fill(Color32::TRANSPARENT))
-            .show(ui, |ui| {
-                let mut blur = BackdropBlur::new(radius)
-                    .corner_radius(corner_radius)
-                    .inner_margin(16);
-                if let Some(tint) = tint {
-                    blur = blur.tint(tint);
-                }
+        ui.ctx().all_styles_mut(|style| {
+            style.visuals.window_shadow = Shadow::NONE;
+        });
 
-                blur.show(ui, |ui| {
-                    // A blurred background has less contrast than a flat one, so lean on
-                    // the theme's strong colour for everything on the glass.
+        for i in 0..2 {
+            // A see-through fill, so the blur shows through. The frame's stroke, shadow and
+            // rounded corners are still drawn, on top of the blur.
+            let frame = Frame::window(ui.style()).fill(Color32::TRANSPARENT);
+
+            let mut blur = BackdropBlur::new(radius).corner_radius(frame.corner_radius);
+            if let Some(tint) = tint {
+                blur = blur.tint(tint);
+            }
+
+            // `show_window` claims the first slot in the window's layer, so the blur sits under
+            // everything the window draws, its own frame included. Drag the window around: the
+            // blur always shows what is really behind it, because it reads the frame egui has
+            // already drawn rather than guessing.
+            blur.show_window(
+                ui,
+                Id::new(("blurred", i)),
+                Window::new("blurred").frame(frame),
+                |ui| {
+                    // A blurred background has less contrast than a flat one, so lean on the
+                    // theme's strong colour for everything on the glass.
                     let strong = ui.visuals().strong_text_color();
                     ui.visuals_mut().override_text_color = Some(strong);
                     ui.visuals_mut().widgets.inactive.fg_stroke.color = strong;
@@ -44,7 +62,9 @@ fn main() {
                     ui.visuals_mut().widgets.active.fg_stroke.color = strong;
 
                     ui.heading("Frosted glass");
-                    ui.label("The pattern behind this panel is blurred.");
+                    ui.label("Whatever is behind this window is blurred.");
+                    ui.add_space(8.0);
+                    ui.checkbox(&mut show_demo, "show the egui demo behind");
                     ui.add_space(8.0);
                     ui.add(Slider::new(&mut radius, 0.0..=40.0).text("blur radius"));
                     ui.add(Slider::new(&mut corner_radius, 0..=60).text("corner radius"));
@@ -60,8 +80,9 @@ fn main() {
                             ui.label("its alpha fades the blur towards it");
                         });
                     }
-                });
-            });
+                },
+            );
+        }
     });
 }
 

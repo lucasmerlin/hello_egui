@@ -185,3 +185,174 @@ fn snapshot_backdrop_blur() {
     harness.run();
     harness.snapshot("backdrop_blur");
 }
+
+/// A window's frame reserves its shape slot before the body runs, so a blur added from
+/// inside the body sits on top of the frame's fill. `show_window` claims the first slot in
+/// the window's layer instead, so the frame lands on top of the blur.
+///
+/// The window frame has a visible stroke, so if the blur were painted over it the stroke
+/// would be gone.
+#[test]
+fn show_window_puts_the_blur_under_the_window_frame() {
+    let stroke_pixels = |blur_first: bool| {
+        let render_state = create_render_state(
+            default_wgpu_setup(),
+            egui_wgpu::RendererOptions::PREDICTABLE,
+        );
+        let installed = render_state.clone();
+
+        let mut harness = Harness::builder()
+            .with_size(SIZE)
+            .renderer(WgpuTestRenderer::from_render_state(render_state))
+            .build_ui(move |ui| {
+                regui::install_wgpu(ui.ctx(), installed.clone());
+                checkerboard(ui, ui.max_rect());
+
+                let frame = egui::Frame::window(ui.style())
+                    .fill(Color32::TRANSPARENT)
+                    .stroke(egui::Stroke::new(3.0, Color32::RED));
+                let blur = BackdropBlur::new(10.0).corner_radius(0);
+                let window = egui::Window::new("w")
+                    .title_bar(false)
+                    .frame(frame)
+                    .default_pos(egui::pos2(40.0, 40.0))
+                    .resizable(false);
+
+                if blur_first {
+                    blur.show_window(ui, egui::Id::new("w"), window, |ui| {
+                        ui.label("on glass");
+                    });
+                } else {
+                    // The old way: the blur goes over the frame and hides the stroke.
+                    window.show(ui, |ui| {
+                        blur.paint_at(ui, ui.max_rect().expand(8.0));
+                        ui.label("on glass");
+                    });
+                }
+            });
+
+        harness.run();
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        image
+            .pixels()
+            .filter(|pixel| {
+                let [r, g, b, _] = pixel.0;
+                r > 150 && g < 90 && b < 90
+            })
+            .count()
+    };
+
+    let with_show_window = stroke_pixels(true);
+    let with_blur_on_top = stroke_pixels(false);
+
+    assert!(
+        with_show_window > 100,
+        "the window's red stroke should survive, found {with_show_window} red pixels"
+    );
+    assert!(
+        with_show_window > with_blur_on_top * 2,
+        "show_window should keep much more of the stroke than blurring over it \
+         ({with_show_window} vs {with_blur_on_top} red pixels)"
+    );
+}
+
+#[test]
+fn snapshot_backdrop_blur_window() {
+    let render_state = create_render_state(
+        default_wgpu_setup(),
+        egui_wgpu::RendererOptions::PREDICTABLE,
+    );
+    let installed = render_state.clone();
+
+    let mut harness = Harness::builder()
+        .with_size([260.0, 200.0])
+        .renderer(WgpuTestRenderer::from_render_state(render_state))
+        .build_ui(move |ui| {
+            regui::install_wgpu(ui.ctx(), installed.clone());
+            checkerboard(ui, ui.max_rect());
+
+            let frame = egui::Frame::window(ui.style()).fill(Color32::TRANSPARENT);
+            BackdropBlur::new(12.0)
+                .corner_radius(frame.corner_radius)
+                .show_window(
+                    ui,
+                    egui::Id::new("w"),
+                    egui::Window::new("w")
+                        .title_bar(false)
+                        .frame(frame)
+                        .fixed_pos(egui::pos2(40.0, 50.0))
+                        .resizable(false),
+                    |ui| {
+                        ui.label("on frosted glass");
+                        ui.label("the frame is drawn on top");
+                    },
+                );
+        });
+
+    harness.run();
+    harness.run();
+    harness.snapshot("backdrop_blur_window");
+}
+
+/// Two blurred windows must both blur.
+///
+/// Every blur in a pass shares one `BlurResources`, since callback resources are keyed by
+/// type. Sharing the shader uniform buffers meant the last window's settings overwrote the
+/// first's, so the first drew with the wrong rect and vanished.
+#[test]
+fn two_windows_both_get_blurred() {
+    let blurred_pixels = |count: usize| {
+        let render_state = create_render_state(
+            default_wgpu_setup(),
+            egui_wgpu::RendererOptions::PREDICTABLE,
+        );
+        let installed = render_state.clone();
+
+        let mut harness = Harness::builder()
+            .with_size([320.0, 240.0])
+            .renderer(WgpuTestRenderer::from_render_state(render_state))
+            .build_ui(move |ui| {
+                regui::install_wgpu(ui.ctx(), installed.clone());
+                checkerboard(ui, ui.max_rect());
+
+                for index in 0..count {
+                    let frame = egui::Frame::window(ui.style()).fill(Color32::TRANSPARENT);
+                    BackdropBlur::new(10.0).corner_radius(0).show_window(
+                        ui,
+                        egui::Id::new(("w", index)),
+                        egui::Window::new(format!("w{index}"))
+                            .title_bar(false)
+                            .frame(frame)
+                            .fixed_pos(egui::pos2(20.0, 20.0 + 100.0 * index as f32)),
+                        |ui| {
+                            ui.label("on glass");
+                        },
+                    );
+                }
+            });
+
+        harness.run();
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        // The checkerboard is pure black and white, so a mid grey is a blurred pixel.
+        image
+            .pixels()
+            .filter(|pixel| {
+                let [r, g, b, _] = pixel.0;
+                let grey = r.max(g).max(b);
+                (40..220).contains(&grey)
+            })
+            .count()
+    };
+
+    let one = blurred_pixels(1);
+    let two = blurred_pixels(2);
+
+    assert!(one > 500, "one window should blur something, found {one}");
+    assert!(
+        two > one * 3 / 2,
+        "the second window should blur roughly as much again, but {two} is not much more \
+         than {one}: one of the two blurs is missing"
+    );
+}
