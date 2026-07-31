@@ -52,16 +52,17 @@ fn checkerboard(ui: &Ui, rect: Rect) {
 /// A `radius` of zero switches the blur off, which is how the test below gets an otherwise
 /// identical image to compare against.
 fn harness(radius: f32, panel_rect: Rc<Cell<Rect>>) -> Harness<'static> {
-    harness_with(radius, panel_rect, 0, Some(Color32::TRANSPARENT))
+    harness_with(radius, panel_rect, 0, Some(Color32::TRANSPARENT), 0.0)
 }
 
-/// As above, but with rounded corners and a tint.
+/// As above, but with rounded corners, a tint, and a feathered edge.
 fn harness_with(
     radius: f32,
     panel_rect: Rc<Cell<Rect>>,
     corner_radius: u8,
     // `None` leaves `BackdropBlur` to pick the theme's default.
     tint: Option<Color32>,
+    feather: f32,
 ) -> Harness<'static> {
     let render_state = create_render_state(
         default_wgpu_setup(),
@@ -81,7 +82,9 @@ fn harness_with(
             let panel = Rect::from_min_size(rect.min + vec2(40.0, 40.0), vec2(160.0, 100.0));
             panel_rect.set(panel);
             let mut panel_ui = ui.new_child(UiBuilder::new().max_rect(panel));
-            let mut blur = BackdropBlur::new(radius).corner_radius(corner_radius);
+            let mut blur = BackdropBlur::new(radius)
+                .corner_radius(corner_radius)
+                .feather(feather);
             if let Some(tint) = tint {
                 blur = blur.tint(tint);
             }
@@ -165,6 +168,7 @@ fn snapshot_backdrop_blur_rounded() {
         Rc::new(Cell::new(Rect::ZERO)),
         24,
         Some(Color32::from_white_alpha(70)),
+        0.0,
     );
     harness.run();
     harness.snapshot("backdrop_blur_rounded");
@@ -174,7 +178,7 @@ fn snapshot_backdrop_blur_rounded() {
 /// matches the rest of the app and content on it stays readable.
 #[test]
 fn snapshot_backdrop_blur_default_tint() {
-    let mut harness = harness_with(14.0, Rc::new(Cell::new(Rect::ZERO)), 16, None);
+    let mut harness = harness_with(14.0, Rc::new(Cell::new(Rect::ZERO)), 16, None, 0.0);
     harness.run();
     harness.snapshot("backdrop_blur_default_tint");
 }
@@ -184,6 +188,73 @@ fn snapshot_backdrop_blur() {
     let mut harness = harness(14.0, Rc::new(Cell::new(Rect::ZERO)));
     harness.run();
     harness.snapshot("backdrop_blur");
+}
+
+/// A feathered edge fades out across the rect's edge instead of stopping at it, so half of
+/// the fade lands outside the rect and there is no step where the glass ends.
+#[test]
+fn the_feathered_edge_reaches_outside_the_rect() {
+    const FEATHER: f32 = 16.0;
+
+    let render = |feather: f32| {
+        let panel_rect = Rc::new(Cell::new(Rect::ZERO));
+        let mut harness = harness_with(
+            14.0,
+            Rc::clone(&panel_rect),
+            0,
+            Some(Color32::TRANSPARENT),
+            feather,
+        );
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        (image, panel_rect.get())
+    };
+
+    let (hard, panel) = render(0.0);
+    let (soft, _) = render(FEATHER);
+    let pixels_per_point = hard.width() as f32 / SIZE[0];
+
+    // Walk out from the middle of the panel's left edge. Just outside it the hard edge has
+    // left the checkerboard alone and the feather has not, and far enough out both are back
+    // to the untouched background.
+    let sample = |image: &image::RgbaImage, offset: f32| {
+        let point = panel.left_center() + vec2(offset, 0.0);
+        *image.get_pixel(
+            (point.x * pixels_per_point) as u32,
+            (point.y * pixels_per_point) as u32,
+        )
+    };
+
+    let outside = -FEATHER / 4.0;
+    assert_ne!(
+        sample(&hard, outside),
+        sample(&soft, outside),
+        "the feather did not spread outside the rect, so its outer half was clipped away"
+    );
+
+    let well_outside = -FEATHER;
+    assert_eq!(
+        sample(&hard, well_outside),
+        sample(&soft, well_outside),
+        "the feather spread further than it was asked to"
+    );
+
+    // Inside the edge the feather is still fading in, so it cannot match the hard edge's
+    // fully opaque glass either.
+    let inside = FEATHER / 4.0;
+    assert_ne!(
+        sample(&hard, inside),
+        sample(&soft, inside),
+        "the feather did not soften the inside of the edge"
+    );
+}
+
+/// What a feathered edge looks like: the glass has no outline of its own, it just thins out.
+#[test]
+fn snapshot_backdrop_blur_feathered() {
+    let mut harness = harness_with(14.0, Rc::new(Cell::new(Rect::ZERO)), 16, None, 24.0);
+    harness.run();
+    harness.snapshot("backdrop_blur_feathered");
 }
 
 /// A window's frame reserves its shape slot before the body runs, so a blur added from

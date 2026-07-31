@@ -12,6 +12,7 @@ struct Params {
     sigma: f32,
     radius: f32,
     target_size: [f32; 2],
+    feather: f32,
     tint: [f32; 4],
     rect_min: [f32; 2],
     rect_max: [f32; 2],
@@ -19,7 +20,7 @@ struct Params {
 }
 
 impl Params {
-    /// 20 floats: see `Params` in `blur.wgsl`, including the two of padding that keep
+    /// 20 floats: see `Params` in `blur.wgsl`, including the one of padding that keeps
     /// `tint` on a 16 byte boundary.
     const SIZE: u64 = 20 * 4;
 
@@ -31,7 +32,7 @@ impl Params {
             self.radius,
             self.target_size[0],
             self.target_size[1],
-            0.0,
+            self.feather,
             0.0,
             self.tint[0],
             self.tint[1],
@@ -68,6 +69,9 @@ pub(crate) struct Settings {
 
     /// North west, north east, south west, south east, in physical pixels.
     pub corner_radii: [f32; 4],
+
+    /// How far the edge of the glass fades out, in physical pixels. Zero for a hard edge.
+    pub feather: f32,
 }
 
 /// Which of the three passes a set of uniforms belongs to.
@@ -441,6 +445,7 @@ impl BlurResources {
                     sigma,
                     radius: taps,
                     target_size,
+                    feather: settings.feather,
                     tint,
                     rect_min: [settings.rect_in_pixels.min.x, settings.rect_in_pixels.min.y],
                     rect_max: [settings.rect_in_pixels.max.x, settings.rect_in_pixels.max.y],

@@ -18,7 +18,10 @@ struct Params {
     // back into a texture coordinate.
     target_size: vec2<f32>,
 
-    _padding: vec2<f32>,
+    // How far the edge of the glass fades out, in physical pixels. Zero for a hard edge.
+    feather: f32,
+
+    _padding: f32,
 
     // Laid over the blur, premultiplied. Use its alpha to fade the blur towards a colour.
     tint: vec4<f32>,
@@ -105,8 +108,19 @@ fn fs_draw(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     let half_size = (params.rect_max - params.rect_min) * 0.5;
     let distance = rounded_rect_distance(position.xy - centre, half_size, params.corner_radii);
 
-    // Fade across the last pixel, so the corners are not jagged. Premultiplied colour, so
-    // the coverage scales the alpha along with everything else.
-    let coverage = clamp(0.5 - distance, 0.0, 1.0);
+    // Fade out across the edge: one pixel by default, so the corners are not jagged, or the
+    // whole feather if one was asked for. The fade straddles the edge, half of it outside
+    // the rect and half inside. `smoothstep` rolls off at both ends, so a wide feather
+    // reads as glass thinning out rather than as a linear ramp.
+    let width = max(params.feather, 1.0);
+    let ramp = clamp(0.5 - distance / width, 0.0, 1.0);
+
+    // A linear ramp is what anti-aliasing wants, since it is measuring how much of the pixel
+    // the shape covers. A feather is not measuring anything, so roll it off at both ends
+    // instead: that reads as glass thinning out, where a linear ramp shows its two ends as
+    // faint lines.
+    let coverage = select(ramp, smoothstep(0.0, 1.0, ramp), params.feather > 1.0);
+
+    // Premultiplied colour, so the coverage scales the alpha along with everything else.
     return tinted * coverage;
 }

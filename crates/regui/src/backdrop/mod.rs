@@ -45,6 +45,9 @@ pub struct BackdropBlur {
     tint: Option<Color32>,
     margin: Margin,
     corner_radius: CornerRadius,
+
+    /// How far the edge of the glass fades out, in points. Zero for a hard edge.
+    feather: f32,
 }
 
 /// How opaque the default tint is.
@@ -61,6 +64,7 @@ impl BackdropBlur {
             tint: None,
             margin: Margin::same(8),
             corner_radius: CornerRadius::ZERO,
+            feather: 0.0,
         }
     }
 
@@ -86,6 +90,22 @@ impl BackdropBlur {
     #[inline]
     pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
         self.corner_radius = corner_radius.into();
+        self
+    }
+
+    /// Fade the edge of the glass out over this many points, instead of stopping at it.
+    ///
+    /// By default the glass ends at its rect, one pixel of anti-aliasing aside, so its
+    /// outline stays crisp however strong the blur is. A feather spreads that edge, half of
+    /// it outside the rect and half inside, which is what you want while animating a panel
+    /// in or out: fade the feather down to zero as the panel arrives and the glass gathers
+    /// itself into a sharp shape.
+    ///
+    /// The blurred region grows to make room for the fade, so a feathered blur touches
+    /// pixels outside its rect.
+    #[inline]
+    pub fn feather(mut self, feather: f32) -> Self {
+        self.feather = feather;
         self
     }
 
@@ -213,8 +233,14 @@ impl BackdropBlur {
         let pixels_per_point = ctx.pixels_per_point();
         let scale = |radius: u8| f32::from(radius) * pixels_per_point;
 
+        // The fade straddles the edge, so half of it falls outside the rect. Give the
+        // callback that room, or the outer half would be clipped away and the edge would
+        // look cut off rather than soft. The extra point covers the pixel of anti-aliasing
+        // the mask always has.
+        let drawn_rect = rect.expand(self.feather / 2.0 + 1.0);
+
         let callback = egui_wgpu::Callback::new_paint_callback(
-            rect,
+            drawn_rect,
             BlurCallback {
                 format: render_state.target_format,
                 id,
@@ -235,6 +261,7 @@ impl BackdropBlur {
                         scale(self.corner_radius.sw),
                         scale(self.corner_radius.se),
                     ],
+                    feather: self.feather * pixels_per_point,
                 },
             },
         );

@@ -38,5 +38,9 @@ image = { workspace = true }
 name = "regui_blur"
 required-features = ["wgpu"]
 
+[[example]]
+name = "regui_window_animation"
+required-features = ["wgpu"]
+
 [lints]
 workspace = true
