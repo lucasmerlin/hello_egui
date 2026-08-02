@@ -52,18 +52,35 @@ fn checkerboard(ui: &Ui, rect: Rect) {
 /// A `radius` of zero switches the blur off, which is how the test below gets an otherwise
 /// identical image to compare against.
 fn harness(radius: f32, panel_rect: Rc<Cell<Rect>>) -> Harness<'static> {
-    harness_with(radius, panel_rect, 0, Some(Color32::TRANSPARENT), 0.0)
+    harness_with(
+        radius,
+        panel_rect,
+        Options {
+            tint: Some(Color32::TRANSPARENT),
+            ..Options::default()
+        },
+    )
 }
 
-/// As above, but with rounded corners, a tint, and a feathered edge.
-fn harness_with(
-    radius: f32,
-    panel_rect: Rc<Cell<Rect>>,
+/// Everything about the glass except how hard it blurs.
+///
+/// The defaults match [`BackdropBlur::new`], apart from `tint`: `None` leaves
+/// `BackdropBlur` to pick the theme's own.
+#[derive(Clone, Copy, Default)]
+struct Options {
     corner_radius: u8,
-    // `None` leaves `BackdropBlur` to pick the theme's default.
     tint: Option<Color32>,
     feather: f32,
-) -> Harness<'static> {
+    refraction: f32,
+    specular: f32,
+    squircle: f32,
+    lens: f32,
+    sheen: f32,
+    grain: f32,
+}
+
+/// As above, but with rounded corners, a tint, a feathered edge and a glass rim.
+fn harness_with(radius: f32, panel_rect: Rc<Cell<Rect>>, options: Options) -> Harness<'static> {
     let render_state = create_render_state(
         default_wgpu_setup(),
         egui_wgpu::RendererOptions::PREDICTABLE,
@@ -83,9 +100,15 @@ fn harness_with(
             panel_rect.set(panel);
             let mut panel_ui = ui.new_child(UiBuilder::new().max_rect(panel));
             let mut blur = BackdropBlur::new(radius)
-                .corner_radius(corner_radius)
-                .feather(feather);
-            if let Some(tint) = tint {
+                .corner_radius(options.corner_radius)
+                .feather(options.feather)
+                .refraction(options.refraction)
+                .specular(options.specular)
+                .squircle(options.squircle)
+                .lens(options.lens)
+                .sheen(options.sheen)
+                .grain(options.grain);
+            if let Some(tint) = options.tint {
                 blur = blur.tint(tint);
             }
             blur.paint_at(&panel_ui, panel);
@@ -166,9 +189,11 @@ fn snapshot_backdrop_blur_rounded() {
     let mut harness = harness_with(
         14.0,
         Rc::new(Cell::new(Rect::ZERO)),
-        24,
-        Some(Color32::from_white_alpha(70)),
-        0.0,
+        Options {
+            corner_radius: 24,
+            tint: Some(Color32::from_white_alpha(70)),
+            ..Options::default()
+        },
     );
     harness.run();
     harness.snapshot("backdrop_blur_rounded");
@@ -178,7 +203,14 @@ fn snapshot_backdrop_blur_rounded() {
 /// matches the rest of the app and content on it stays readable.
 #[test]
 fn snapshot_backdrop_blur_default_tint() {
-    let mut harness = harness_with(14.0, Rc::new(Cell::new(Rect::ZERO)), 16, None, 0.0);
+    let mut harness = harness_with(
+        14.0,
+        Rc::new(Cell::new(Rect::ZERO)),
+        Options {
+            corner_radius: 16,
+            ..Options::default()
+        },
+    );
     harness.run();
     harness.snapshot("backdrop_blur_default_tint");
 }
@@ -201,9 +233,11 @@ fn the_feathered_edge_reaches_outside_the_rect() {
         let mut harness = harness_with(
             14.0,
             Rc::clone(&panel_rect),
-            0,
-            Some(Color32::TRANSPARENT),
-            feather,
+            Options {
+                tint: Some(Color32::TRANSPARENT),
+                feather,
+                ..Options::default()
+            },
         );
         harness.run();
         let image = harness.render().expect("failed to render");
@@ -252,9 +286,225 @@ fn the_feathered_edge_reaches_outside_the_rect() {
 /// What a feathered edge looks like: the glass has no outline of its own, it just thins out.
 #[test]
 fn snapshot_backdrop_blur_feathered() {
-    let mut harness = harness_with(14.0, Rc::new(Cell::new(Rect::ZERO)), 16, None, 24.0);
+    let mut harness = harness_with(
+        14.0,
+        Rc::new(Cell::new(Rect::ZERO)),
+        Options {
+            corner_radius: 16,
+            feather: 24.0,
+            ..Options::default()
+        },
+    );
     harness.run();
     harness.snapshot("backdrop_blur_feathered");
+}
+
+/// Refraction bends the rim, and only the rim.
+///
+/// The pane's edge shows what lies beside it, so the pixels in the rim band have to change
+/// when it is switched on, while the flat middle keeps looking straight down.
+#[test]
+fn refraction_bends_the_rim_and_leaves_the_middle_alone() {
+    let render = |refraction: f32| {
+        let panel_rect = Rc::new(Cell::new(Rect::ZERO));
+        let mut harness = harness_with(
+            14.0,
+            Rc::clone(&panel_rect),
+            Options {
+                corner_radius: 24,
+                tint: Some(Color32::TRANSPARENT),
+                refraction,
+                ..Options::default()
+            },
+        );
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        (image, panel_rect.get())
+    };
+
+    let (straight, panel) = render(0.0);
+    let (bent, _) = render(10.0);
+    let pixels_per_point = straight.width() as f32 / SIZE[0];
+    let sample = |image: &image::RgbaImage, point: Pos2| {
+        *image.get_pixel(
+            (point.x * pixels_per_point) as u32,
+            (point.y * pixels_per_point) as u32,
+        )
+    };
+
+    // Walk along the left edge, three points in, which is well inside the ten point band.
+    let moved = (10..90)
+        .map(|step| panel.left_top() + vec2(3.0, step as f32))
+        .filter(|&point| sample(&straight, point) != sample(&bent, point))
+        .count();
+    assert!(
+        moved > 40,
+        "refraction moved only {moved} of 80 pixels along the rim, so it barely sampled \
+         anywhere else"
+    );
+
+    // The middle of the pane is flat, so it must show exactly what it did before.
+    for offset in [vec2(0.0, 0.0), vec2(-20.0, 10.0), vec2(20.0, -10.0)] {
+        let point = panel.center() + offset;
+        assert_eq!(
+            sample(&straight, point),
+            sample(&bent, point),
+            "refraction reached the flat middle of the pane, at {point:?}"
+        );
+    }
+}
+
+/// The specular brightens the side of the rim that faces the light, and no other.
+#[test]
+fn the_specular_lights_only_the_side_facing_the_light() {
+    let render = |specular: f32| {
+        let panel_rect = Rc::new(Cell::new(Rect::ZERO));
+        let mut harness = harness_with(
+            14.0,
+            Rc::clone(&panel_rect),
+            Options {
+                corner_radius: 24,
+                tint: Some(Color32::TRANSPARENT),
+                specular,
+                ..Options::default()
+            },
+        );
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        (image, panel_rect.get())
+    };
+
+    let (dark, panel) = render(0.0);
+    let (lit, _) = render(0.8);
+    let pixels_per_point = dark.width() as f32 / SIZE[0];
+
+    // The default light is above and to the left, so the top rim is lit and the bottom rim
+    // is not. Both strips run along the middle of their edge, clear of the corners.
+    let brightness = |image: &image::RgbaImage, point: Pos2| {
+        let [r, g, b, _] = image
+            .get_pixel(
+                (point.x * pixels_per_point) as u32,
+                (point.y * pixels_per_point) as u32,
+            )
+            .0;
+        u32::from(r) + u32::from(g) + u32::from(b)
+    };
+    let strip = |image: &image::RgbaImage, y: f32| {
+        (40..120)
+            .map(|step| brightness(image, panel.left_top() + vec2(step as f32, y)))
+            .sum::<u32>()
+    };
+
+    let top_gain = i64::from(strip(&lit, 3.0)) - i64::from(strip(&dark, 3.0));
+    assert!(
+        top_gain > 2000,
+        "the lit side of the rim only gained {top_gain}, so the highlight is missing"
+    );
+
+    let bottom = panel.height() - 3.0;
+    assert_eq!(
+        strip(&lit, bottom),
+        strip(&dark, bottom),
+        "the rim facing away from the light was lit as well"
+    );
+}
+
+/// Big blocks of colour, for looking at the glass rather than measuring it.
+///
+/// A fine checkerboard is the right thing to blur, but it blurs to a flat grey, and a rim
+/// that bends flat grey shows nothing. These stripes keep their shape through the blur, so
+/// the refraction has something to bend.
+fn colour_blocks(ui: &Ui, rect: Rect) {
+    let painter = ui.painter();
+    painter.rect_filled(rect, 0.0, Color32::from_rgb(20, 30, 60));
+
+    let colours = [
+        Color32::from_rgb(240, 90, 60),
+        Color32::from_rgb(250, 200, 60),
+        Color32::from_rgb(60, 200, 140),
+        Color32::from_rgb(90, 120, 240),
+    ];
+    let band = rect.height() / colours.len() as f32;
+    for (index, colour) in colours.into_iter().enumerate() {
+        let top = rect.top() + band * index as f32;
+        // Slanted, so the rim meets an edge running across it wherever you look.
+        painter.add(egui::Shape::convex_polygon(
+            vec![
+                Pos2::new(rect.left(), top),
+                Pos2::new(rect.right(), top - band * 0.6),
+                Pos2::new(rect.right(), top + band * 0.4),
+                Pos2::new(rect.left(), top + band),
+            ],
+            colour,
+            egui::Stroke::NONE,
+        ));
+    }
+}
+
+/// A harness for looking at the glass, over [`colour_blocks`].
+fn glass_harness(options: Options) -> Harness<'static> {
+    let render_state = create_render_state(
+        default_wgpu_setup(),
+        egui_wgpu::RendererOptions::PREDICTABLE,
+    );
+    let installed = render_state.clone();
+
+    Harness::builder()
+        .with_size(SIZE)
+        .renderer(WgpuTestRenderer::from_render_state(render_state))
+        .build_ui(move |ui| {
+            regui::install_wgpu(ui.ctx(), installed.clone());
+
+            let rect = ui.max_rect();
+            colour_blocks(ui, rect);
+
+            let panel = Rect::from_min_size(rect.min + vec2(40.0, 40.0), vec2(160.0, 100.0));
+            let mut panel_ui = ui.new_child(UiBuilder::new().max_rect(panel));
+            let mut blur = BackdropBlur::new(14.0)
+                .corner_radius(options.corner_radius)
+                .feather(options.feather)
+                .refraction(options.refraction)
+                .specular(options.specular)
+                .squircle(options.squircle)
+                .lens(options.lens)
+                .sheen(options.sheen)
+                .grain(options.grain);
+            if let Some(tint) = options.tint {
+                blur = blur.tint(tint);
+            }
+            blur.paint_at(&panel_ui, panel);
+            panel_ui.label("on glass");
+        })
+}
+
+/// What the glass looks like with both rim effects on: a bright, bent edge around a flat
+/// blurred middle.
+#[test]
+fn snapshot_backdrop_blur_glass() {
+    let mut harness = glass_harness(Options {
+        corner_radius: 28,
+        tint: Some(Color32::from_white_alpha(30)),
+        refraction: 12.0,
+        specular: 0.8,
+        ..Options::default()
+    });
+    harness.run();
+    harness.snapshot("backdrop_blur_glass");
+}
+
+/// A feathered rim still bends and still catches the light; the fade only thins it out.
+#[test]
+fn snapshot_backdrop_blur_glass_feathered() {
+    let mut harness = glass_harness(Options {
+        corner_radius: 28,
+        tint: Some(Color32::from_white_alpha(30)),
+        feather: 16.0,
+        refraction: 12.0,
+        specular: 0.8,
+        ..Options::default()
+    });
+    harness.run();
+    harness.snapshot("backdrop_blur_glass_feathered");
 }
 
 /// A window's frame reserves its shape slot before the body runs, so a blur added from
@@ -426,4 +676,148 @@ fn two_windows_both_get_blurred() {
         "the second window should blur roughly as much again, but {two} is not much more \
          than {one}: one of the two blurs is missing"
     );
+}
+
+/// The lens gathers the background into the rim, and leaves the flat middle alone.
+///
+/// This is the difference between glass that looks like an object and a blurred hole: near
+/// the edge you should see a squeezed copy of what lies around the pane, and in the middle
+/// you should see straight through.
+#[test]
+fn the_lens_squeezes_the_rim_and_leaves_the_middle_alone() {
+    let render = |lens: f32| {
+        let panel_rect = Rc::new(Cell::new(Rect::ZERO));
+        let mut harness = harness_with(
+            14.0,
+            Rc::clone(&panel_rect),
+            Options {
+                corner_radius: 24,
+                tint: Some(Color32::TRANSPARENT),
+                lens,
+                ..Options::default()
+            },
+        );
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        (image, panel_rect.get())
+    };
+
+    let (flat, panel) = render(0.0);
+    let (squeezed, _) = render(1.0);
+    let pixels_per_point = flat.width() as f32 / SIZE[0];
+    let sample = |image: &image::RgbaImage, point: Pos2| {
+        *image.get_pixel(
+            (point.x * pixels_per_point) as u32,
+            (point.y * pixels_per_point) as u32,
+        )
+    };
+
+    // Walk along the left edge, three points in. The lens only reaches a sliver of the
+    // pane, so this is where all of its work happens.
+    let moved = (10..90)
+        .map(|step| panel.left_top() + vec2(3.0, step as f32))
+        .filter(|&point| sample(&flat, point) != sample(&squeezed, point))
+        .count();
+    assert!(
+        moved > 40,
+        "the lens moved only {moved} of 80 pixels along the rim, so it barely squeezed \
+         anything"
+    );
+
+    // Everything but the rim looks straight down, so it must be untouched.
+    for offset in [vec2(0.0, 0.0), vec2(-20.0, 10.0), vec2(20.0, -10.0)] {
+        let point = panel.center() + offset;
+        assert_eq!(
+            sample(&flat, point),
+            sample(&squeezed, point),
+            "the lens reached the flat middle of the pane, at {point:?}"
+        );
+    }
+}
+
+/// A superellipse changes the corners of the pane, and nothing else.
+///
+/// A low power rounds the shape off hard, a high one squares it up, so a pixel near the
+/// corner of the rect is outside one shape and inside the other. The middle is the same
+/// either way.
+#[test]
+fn the_squircle_power_changes_the_corners_only() {
+    let render = |squircle: f32| {
+        let panel_rect = Rc::new(Cell::new(Rect::ZERO));
+        let mut harness = harness_with(
+            14.0,
+            Rc::clone(&panel_rect),
+            Options {
+                tint: Some(Color32::from_white_alpha(40)),
+                squircle,
+                ..Options::default()
+            },
+        );
+        harness.run();
+        let image = harness.render().expect("failed to render");
+        (image, panel_rect.get())
+    };
+
+    let (round, panel) = render(2.0);
+    let (square, _) = render(16.0);
+    let pixels_per_point = round.width() as f32 / SIZE[0];
+    let sample = |image: &image::RgbaImage, point: Pos2| {
+        *image.get_pixel(
+            (point.x * pixels_per_point) as u32,
+            (point.y * pixels_per_point) as u32,
+        )
+    };
+
+    for corner in [
+        panel.left_top() + vec2(4.0, 4.0),
+        panel.right_top() + vec2(-4.0, 4.0),
+        panel.left_bottom() + vec2(4.0, -4.0),
+        panel.right_bottom() + vec2(-4.0, -4.0),
+    ] {
+        assert_ne!(
+            sample(&round, corner),
+            sample(&square, corner),
+            "both powers covered the corner at {corner:?} the same way"
+        );
+    }
+
+    for offset in [vec2(0.0, 0.0), vec2(-30.0, 15.0), vec2(30.0, -15.0)] {
+        let point = panel.center() + offset;
+        assert_eq!(
+            sample(&round, point),
+            sample(&square, point),
+            "the power changed the middle of the pane, at {point:?}"
+        );
+    }
+}
+
+/// What [`BackdropBlur::liquid_glass`] looks like.
+#[test]
+fn snapshot_backdrop_liquid_glass() {
+    let render_state = create_render_state(
+        default_wgpu_setup(),
+        egui_wgpu::RendererOptions::PREDICTABLE,
+    );
+    let installed = render_state.clone();
+
+    let mut harness = Harness::builder()
+        .with_size(SIZE)
+        .renderer(WgpuTestRenderer::from_render_state(render_state))
+        .build_ui(move |ui| {
+            regui::install_wgpu(ui.ctx(), installed.clone());
+
+            let rect = ui.max_rect();
+            colour_blocks(ui, rect);
+
+            let panel = Rect::from_min_size(rect.min + vec2(40.0, 40.0), vec2(160.0, 100.0));
+            let mut panel_ui = ui.new_child(UiBuilder::new().max_rect(panel));
+            BackdropBlur::new(14.0)
+                .liquid_glass()
+                .tint(Color32::from_white_alpha(20))
+                .paint_at(&panel_ui, panel);
+            panel_ui.label("on liquid glass");
+        });
+
+    harness.run();
+    harness.snapshot("backdrop_liquid_glass");
 }

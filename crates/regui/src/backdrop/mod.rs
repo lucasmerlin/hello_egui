@@ -5,7 +5,7 @@ mod resources;
 use crate::wgpu_state;
 use egui::{
     Color32, Context, CornerRadius, Id, InnerResponse, LayerId, Margin, Order, Rect, Shape, Ui,
-    Visuals, layers::ShapeIdx,
+    Vec2, Visuals, layers::ShapeIdx,
 };
 use egui_wgpu::{Backdrop, CallbackResources, CallbackTrait, ScreenDescriptor, wgpu};
 use resources::{BlurResources, Settings};
@@ -48,6 +48,33 @@ pub struct BackdropBlur {
 
     /// How far the edge of the glass fades out, in points. Zero for a hard edge.
     feather: f32,
+
+    /// How far the rim bends what it shows, in points. Zero for no refraction.
+    refraction: f32,
+
+    /// How bright the lit rim is, from 0 to 1. Zero for no highlight.
+    specular: f32,
+
+    /// How thick the pane is, in points. Sets how wide the rim band is.
+    thickness: f32,
+
+    /// Which way the light lies, in screen space. y grows downward.
+    light_direction: Vec2,
+
+    /// Superellipse power. Zero uses the rounded rectangle and its corner radii instead.
+    squircle: f32,
+
+    /// How hard the rim squeezes what is behind the pane, from 0 to 1. Zero for none.
+    lens: f32,
+
+    /// How bright the sheen running round the rim is. Zero for none.
+    sheen: f32,
+
+    /// How much grain is laid over the glass, from 0 to 1. Zero for none.
+    grain: f32,
+
+    /// How far the colours split where the lens bends. Zero for none.
+    dispersion: f32,
 }
 
 /// How opaque the default tint is.
@@ -55,6 +82,15 @@ pub struct BackdropBlur {
 /// Enough of the theme's own colour to keep text readable, but still clearly a blur of
 /// what is behind rather than a solid panel.
 const DEFAULT_TINT_OPACITY: f32 = 0.6;
+
+/// How thick the pane is by default, in points.
+///
+/// Wide enough to see the rim bend and catch the light, narrow enough to leave most of a
+/// small panel flat.
+const DEFAULT_THICKNESS: f32 = 10.0;
+
+/// Where the light lies by default: above and to the left, as in most icon sets.
+const DEFAULT_LIGHT_DIRECTION: Vec2 = Vec2::new(-0.6, -0.8);
 
 impl BackdropBlur {
     /// Blur the background with the given radius, in points.
@@ -65,6 +101,15 @@ impl BackdropBlur {
             margin: Margin::same(8),
             corner_radius: CornerRadius::ZERO,
             feather: 0.0,
+            refraction: 0.0,
+            specular: 0.0,
+            thickness: DEFAULT_THICKNESS,
+            light_direction: DEFAULT_LIGHT_DIRECTION,
+            squircle: 0.0,
+            lens: 0.0,
+            sheen: 0.0,
+            grain: 0.0,
+            dispersion: 0.0,
         }
     }
 
@@ -107,6 +152,150 @@ impl BackdropBlur {
     pub fn feather(mut self, feather: f32) -> Self {
         self.feather = feather;
         self
+    }
+
+    /// Bend what the rim shows, by up to this many points.
+    ///
+    /// A real pane of glass is thick, so its ground edge shows you what lies beside it
+    /// rather than what lies under it. This walks the sample outwards along the edge,
+    /// hardest at the rim and not at all in the middle, which is what makes the glass look
+    /// like an object instead of a blurred rectangle.
+    ///
+    /// Off by default. Two or three points reads as a thin sheet; ten bends the rim hard.
+    /// [`Self::thickness`] sets how wide the bent band is.
+    #[inline]
+    pub fn refraction(mut self, strength: f32) -> Self {
+        self.refraction = strength;
+        self
+    }
+
+    /// Light the rim from one side, with this strength from 0 to 1.
+    ///
+    /// The part of the rim that turns towards the light gets brighter, the way a bevel
+    /// catches a window. The far side stays dark, so the glass reads as a solid thing lit
+    /// from somewhere.
+    ///
+    /// Off by default. Use [`Self::light_direction`] to move the light, and
+    /// [`Self::thickness`] to widen the band it lights.
+    #[inline]
+    pub fn specular(mut self, strength: f32) -> Self {
+        self.specular = strength;
+        self
+    }
+
+    /// How thick the pane is, in points.
+    ///
+    /// Both [`Self::refraction`] and [`Self::specular`] live in a band this wide around the
+    /// edge; the rest of the pane stays flat. Ten points by default.
+    #[inline]
+    pub fn thickness(mut self, thickness: f32) -> Self {
+        self.thickness = thickness;
+        self
+    }
+
+    /// Which way the light lies, for [`Self::specular`].
+    ///
+    /// This points at the light, in screen space, so y grows downward. It is normalised for
+    /// you. By default the light is above and to the left.
+    #[inline]
+    pub fn light_direction(mut self, direction: Vec2) -> Self {
+        self.light_direction = direction;
+        self
+    }
+
+    /// Shape the pane as a superellipse of this power, instead of a rounded rectangle.
+    ///
+    /// `|x|ⁿ + |y|ⁿ = 1`. At 2 that is an ellipse, and it squares up as the power grows.
+    /// Around 4 it is the rounded square Apple uses, where the straight sides run into the
+    /// corners with nothing to see at the join; a rounded rectangle meets its corner arcs at
+    /// a point where the curvature jumps, and the eye picks that up.
+    ///
+    /// The shape fills the whole rect, so this replaces [`Self::corner_radius`] rather than
+    /// working with it.
+    #[inline]
+    pub fn squircle(mut self, power: f32) -> Self {
+        self.squircle = power;
+        self
+    }
+
+    /// Squeeze what is behind the rim, with this strength from 0 to 1.
+    ///
+    /// A thick lens does not bend its edge a little; it gathers a wide band of the
+    /// background into a thin ring, so the ring shows a squeezed copy of everything around
+    /// the pane. That is what makes Apple's glass look like a solid object being held over
+    /// the screen rather than a blurred hole in it.
+    ///
+    /// This and [`Self::refraction`] both move where a pixel looks, and they add up. Use one
+    /// or the other: refraction is a thin ground edge, this is a whole lens.
+    ///
+    /// Off by default.
+    #[inline]
+    pub fn lens(mut self, strength: f32) -> Self {
+        self.lens = strength;
+        self
+    }
+
+    /// Run a sheen round the rim, with this strength.
+    ///
+    /// Bright down one side of the pane and dark down the other, following the angle round
+    /// the edge. [`Self::specular`] is a point of light on the bevel; this is the whole rim
+    /// picking up the room, and it is what stops a wide edge reading as a flat grey band.
+    ///
+    /// Off by default. Around 0.3 is enough to see.
+    #[inline]
+    pub fn sheen(mut self, strength: f32) -> Self {
+        self.sheen = strength;
+        self
+    }
+
+    /// Lay grain over the glass, from 0 to 1.
+    ///
+    /// A blurred image is very smooth, and large areas of it band. A little grain hides
+    /// that, and reads as the surface of the glass rather than as noise.
+    ///
+    /// Off by default. Around 0.03 is enough.
+    #[inline]
+    pub fn grain(mut self, amount: f32) -> Self {
+        self.grain = amount;
+        self
+    }
+
+    /// Split the colours where [`Self::lens`] bends hardest.
+    ///
+    /// Glass does not bend red and blue by the same amount, so a hard bend fringes. This
+    /// takes the red and the blue from a little further along the same path, as a fraction
+    /// of the pane's own size, and only where the lens is working.
+    ///
+    /// Off by default. Around 0.03 is a fringe you notice without being able to name.
+    #[inline]
+    pub fn dispersion(mut self, amount: f32) -> Self {
+        self.dispersion = amount;
+        self
+    }
+
+    /// Every glass option at once, set to something that looks like Apple's Liquid Glass.
+    ///
+    /// A squircle, a full lens at the rim, a sheen round the edge, a lit bevel and a little
+    /// grain. Set any of them again afterwards to taste, and pick the blur radius with
+    /// [`Self::new`].
+    ///
+    /// ```
+    /// # egui::__run_test_ui(|ui| {
+    /// # let rect = ui.max_rect();
+    /// regui::BackdropBlur::new(16.0)
+    ///     .liquid_glass()
+    ///     .paint_at(ui, rect);
+    /// # });
+    /// ```
+    #[inline]
+    pub fn liquid_glass(self) -> Self {
+        self.squircle(4.0)
+            .lens(1.0)
+            .sheen(0.3)
+            .specular(0.5)
+            .thickness(14.0)
+            .grain(0.03)
+            .dispersion(0.03)
     }
 
     /// Padding between the blurred rect and the content, as in [`egui::Frame`].
@@ -165,9 +354,14 @@ impl BackdropBlur {
     /// let frame = Frame::window(ui.style()).fill(Color32::TRANSPARENT);
     /// BackdropBlur::new(12.0)
     ///     .corner_radius(frame.corner_radius)
-    ///     .show_window(ui, Id::new("frosted"), Window::new("frosted").frame(frame), |ui| {
-    ///         ui.label("on glass");
-    ///     });
+    ///     .show_window(
+    ///         ui,
+    ///         Id::new("frosted"),
+    ///         Window::new("frosted").frame(frame),
+    ///         |ui| {
+    ///             ui.label("on glass");
+    ///         },
+    ///     );
     /// # });
     /// ```
     pub fn show_window<R>(
@@ -237,15 +431,37 @@ impl BackdropBlur {
         // callback that room, or the outer half would be clipped away and the edge would
         // look cut off rather than soft. The extra point covers the pixel of anti-aliasing
         // the mask always has.
+        //
+        // The rim needs no room of its own. Refraction moves what a pixel samples, not
+        // which pixels are drawn, and the coverage mask is applied after the highlight, so
+        // neither can reach past the fade.
         let drawn_rect = rect.expand(self.feather / 2.0 + 1.0);
+
+        // Refraction walks the sample outwards along the rim, and dispersion pushes the red
+        // and blue a little further along the same path, so the final pass can read outside
+        // the pixels it draws. Nothing else does: the lens only pulls inwards.
+        let sample_margin = self.refraction + self.dispersion * rect.size().length() / 2.0;
+
+        // The blur is separable, so the horizontal pass reaches `taps` pixels to each side
+        // and the vertical one `taps` up and down. Everything the callback samples out of
+        // the backdrop is therefore within this of its own rect, which is what lets
+        // egui-wgpu copy a panel-sized piece of the frame instead of all of it.
+        let taps = (self.radius * pixels_per_point).ceil().clamp(1.0, 128.0) / pixels_per_point;
+        let backdrop_margin = sample_margin + 2.0 * taps;
 
         let callback = egui_wgpu::Callback::new_paint_callback(
             drawn_rect,
             BlurCallback {
                 format: render_state.target_format,
                 id,
+                backdrop_margin,
                 settings: Settings {
                     radius: self.radius * pixels_per_point,
+                    drawn_rect_in_pixels: Rect::from_min_max(
+                        (drawn_rect.min.to_vec2() * pixels_per_point).to_pos2(),
+                        (drawn_rect.max.to_vec2() * pixels_per_point).to_pos2(),
+                    ),
+                    sample_margin: sample_margin * pixels_per_point,
                     tint: self.tint.unwrap_or_else(|| {
                         // `gamma_multiply` scales the alpha along with the rest, which is
                         // what fading a premultiplied colour means.
@@ -262,6 +478,16 @@ impl BackdropBlur {
                         scale(self.corner_radius.se),
                     ],
                     feather: self.feather * pixels_per_point,
+                    refraction: self.refraction * pixels_per_point,
+                    specular: self.specular,
+                    thickness: self.thickness * pixels_per_point,
+                    light: self.light_direction.normalized().into(),
+                    // These four are ratios and powers, so they are the same at any scale.
+                    squircle: self.squircle,
+                    lens: self.lens,
+                    sheen: self.sheen,
+                    grain: self.grain,
+                    dispersion: self.dispersion,
                 },
             },
         );
@@ -304,6 +530,9 @@ struct BlurCallback {
     /// Which blurred widget this is, so it gets its own uniforms rather than sharing them
     /// with every other blur in the pass.
     id: Id,
+
+    /// How far outside its rect this blur reads the backdrop, in points.
+    backdrop_margin: f32,
     settings: Settings,
 }
 
@@ -332,6 +561,12 @@ impl CallbackTrait for BlurCallback {
 
     fn needs_backdrop(&self) -> bool {
         self.settings.radius > 0.0
+    }
+
+    fn backdrop_rect(&self, drawn: Rect) -> Rect {
+        // A Gaussian reaches the same distance on every side, so this is the one case where
+        // a region says no more than a margin would.
+        drawn.expand(self.backdrop_margin)
     }
 
     fn process_backdrop(

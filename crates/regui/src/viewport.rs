@@ -41,8 +41,9 @@ pub struct Regui {
     crisp: bool,
     interactive: bool,
 
-    /// Blur the child's own content, in points. Zero for none. Needs the `wgpu` feature.
-    blur: f32,
+    /// Shaders to run over the child's image, in the order they were added.
+    #[cfg(feature = "wgpu")]
+    effects: Vec<Box<dyn crate::Effect>>,
 
     /// Render through a texture even without an effect asking for it.
     offscreen: bool,
@@ -100,7 +101,8 @@ impl Regui {
             offset: Vec2::ZERO,
             crisp: false,
             interactive: true,
-            blur: 0.0,
+            #[cfg(feature = "wgpu")]
+            effects: Vec::new(),
             offscreen: false,
         }
     }
@@ -155,20 +157,38 @@ impl Regui {
         self
     }
 
+    /// Run a shader over the child's rendered image.
+    ///
+    /// Effects run in the order they were added, each reading what the one before it
+    /// wrote. See [`crate::effect`] for the ones that come with regui, and
+    /// [`crate::Effect`] for writing your own.
+    ///
+    /// Needs the `wgpu` feature and [`crate::install_wgpu`]; it turns [`Self::offscreen`]
+    /// on, since a shader needs an image to work on.
+    #[cfg(feature = "wgpu")]
+    #[inline]
+    pub fn effect(mut self, effect: impl crate::Effect + 'static) -> Self {
+        self.effects.push(Box::new(effect));
+        self
+    }
+
     /// Blur the child's own content, with the given radius in points.
+    ///
+    /// Shorthand for [`Self::effect`] with [`crate::effect::Blur`]. A radius of zero adds
+    /// nothing, so it costs nothing to animate one down to it.
     ///
     /// Unlike [`crate::BackdropBlur`], which blurs what is _behind_ a rect, this blurs the
     /// child ui itself: use it to push a panel out of focus, or to fade one in and out.
     /// The child stays interactive while blurred, which is usually not what you want, so
     /// pair it with [`Self::interactive`].
-    ///
-    /// Needs the `wgpu` feature and [`crate::install_wgpu`]; it turns
-    /// [`Self::offscreen`] on, since a shader needs an image to work on.
     #[cfg(feature = "wgpu")]
     #[inline]
-    pub fn blur(mut self, radius: f32) -> Self {
-        self.blur = radius;
-        self
+    pub fn blur(self, radius: f32) -> Self {
+        if radius > 0.0 {
+            self.effect(crate::effect::Blur::new(radius))
+        } else {
+            self
+        }
     }
 
     /// Render the child into a texture, rather than handing its triangles to the parent.
@@ -207,9 +227,13 @@ impl Regui {
             offset,
             crisp,
             interactive,
-            blur,
+            #[cfg(feature = "wgpu")]
+            effects,
             offscreen,
         } = self;
+
+        #[cfg(feature = "wgpu")]
+        let offscreen = offscreen || !effects.is_empty();
 
         let id = ui.make_persistent_id(id_salt);
         let viewport_id = ViewportId::from_hash_of(id);
@@ -302,8 +326,9 @@ impl Regui {
                 size,
                 pixels_per_point,
                 transform,
-                blur_radius: blur * pixels_per_point,
-                offscreen: offscreen || blur > 0.0,
+                #[cfg(feature = "wgpu")]
+                effects,
+                offscreen,
             },
         );
 
@@ -324,8 +349,9 @@ struct Painted {
     pixels_per_point: f32,
     transform: Transform,
 
-    /// Blur radius over the child's own image, in physical pixels.
-    blur_radius: f32,
+    /// Shaders to run over the child's image, in order.
+    #[cfg(feature = "wgpu")]
+    effects: Vec<Box<dyn crate::Effect>>,
 
     /// Whether to go through a texture rather than hand the parent triangles.
     offscreen: bool,
@@ -351,7 +377,7 @@ fn paint(ui: &Ui, painted: Painted) {
                     size: painted.size,
                     pixels_per_point: painted.pixels_per_point,
                     transform,
-                    blur_radius: painted.blur_radius,
+                    effects: painted.effects,
                 };
                 if let Some(shape) = backend::texture::render(ui, &render_state, request) {
                     ui.painter().add(shape);

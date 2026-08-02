@@ -5,16 +5,15 @@
 //! rotated, and keeps text crisp at any scale, because the child is rasterized at the size
 //! it ends up being drawn at rather than having its geometry stretched.
 
-use crate::Transform;
+use crate::{
+    Transform,
+    effect::{Effect, EffectContext},
+};
 use egui::{
     ClippedPrimitive, Color32, Id, Mesh, Rect, Shape, TextureId, Ui, Vec2, epaint::Primitive, pos2,
 };
 use egui_wgpu::{RenderState, ScreenDescriptor, wgpu};
 use std::{collections::HashMap, sync::Arc};
-
-mod blur;
-
-pub(crate) use blur::ChildBlur;
 
 /// Everything the off-screen path needs to know for one frame.
 pub(crate) struct Request {
@@ -33,8 +32,8 @@ pub(crate) struct Request {
     /// Maps child coordinates to parent coordinates.
     pub transform: Transform,
 
-    /// Blur radius over the child's own content, in physical pixels. Zero for none.
-    pub blur_radius: f32,
+    /// Shaders to run over the child's image, in order.
+    pub effects: Vec<Box<dyn Effect>>,
 }
 
 /// Per-child GPU state, kept in the renderer's callback resources so it survives between
@@ -65,20 +64,25 @@ pub(crate) fn render(ui: &Ui, render_state: &RenderState, request: Request) -> O
         size,
         pixels_per_point,
         transform,
-        blur_radius,
+        effects,
     } = request;
 
-    // A blur has to spread outside the child, so give it room to spread into. Without this
-    // the texture ends exactly where the child does, and content touching an edge gets
-    // smeared along it by the clamping sampler instead of fading out, which looks like the
-    // blur has been cut off.
-    let padding_in_pixels = blur_radius.ceil().max(0.0);
-    let padding = padding_in_pixels / pixels_per_point;
+    // An effect spreads outside the child, so give it room to spread into. Without this the
+    // texture ends exactly where the child does, and content touching an edge gets smeared
+    // along it by the clamping sampler instead of fading out, which looks like the blur has
+    // been cut off. Whole pixels, so the child still lands on the pixel grid.
+    let asked_for = effects.iter().fold(Vec2::ZERO, |total, effect| {
+        total + effect.padding().max(Vec2::ZERO)
+    });
+    let padding = Vec2::new(
+        (asked_for.x * pixels_per_point).ceil() / pixels_per_point,
+        (asked_for.y * pixels_per_point).ceil() / pixels_per_point,
+    );
 
     // The child is rendered inset by the padding, and the quad the parent draws covers the
-    // padded rect, so the blur fades out beyond the child's own bounds.
-    let padded_size = size + Vec2::splat(2.0 * padding);
-    offset_primitives(&mut primitives, Vec2::splat(padding));
+    // padded rect, so an effect fades out beyond the child's own bounds.
+    let padded_size = size + 2.0 * padding;
+    offset_primitives(&mut primitives, padding);
 
     let size_in_pixels = [
         (padded_size.x * pixels_per_point).ceil().max(1.0) as u32,
@@ -122,26 +126,21 @@ pub(crate) fn render(ui: &Ui, render_state: &RenderState, request: Request) -> O
         },
     );
 
-    // Blur the child's own image, if asked. The result goes into scratch textures, so the
-    // parent is pointed at whichever texture came out last.
-    let blurred = (blur_radius > 0.0).then(|| {
-        let blur = renderer
-            .callback_resources
-            .entry()
-            .or_insert_with(|| ChildBlur::new(&render_state.device, format));
-        blur.run(
-            &render_state.device,
-            &render_state.queue,
-            &mut encoder,
+    // Run the effects over the child's image. Each writes to a texture of its own, so the
+    // parent is pointed at whichever one came out last.
+    let drawn = run_effects(
+        &mut renderer,
+        render_state,
+        &mut encoder,
+        &effects,
+        Chain {
             id,
-            &view,
+            source: &view,
             size_in_pixels,
             format,
-            blur_radius,
-        )
-    });
-
-    let drawn = blurred.flatten().unwrap_or_else(|| Arc::clone(&view));
+            pixels_per_point,
+        },
+    );
     renderer.update_egui_texture_from_wgpu_texture(
         &render_state.device,
         &drawn,
@@ -158,9 +157,122 @@ pub(crate) fn render(ui: &Ui, render_state: &RenderState, request: Request) -> O
 
     Some(Shape::Mesh(Arc::new(mesh(
         transform,
-        Rect::from_min_size(egui::Pos2::ZERO, size).expand(padding),
+        Rect::from_min_size(egui::Pos2::ZERO, size).expand2(padding),
         texture_id,
     ))))
+}
+
+/// What one chain of effects runs over.
+#[derive(Clone, Copy)]
+struct Chain<'a> {
+    id: Id,
+
+    /// The child's own rendered image, which the first effect reads.
+    source: &'a Arc<wgpu::TextureView>,
+
+    size_in_pixels: [u32; 2],
+    format: wgpu::TextureFormat,
+    pixels_per_point: f32,
+}
+
+/// Run every effect in turn and return the texture holding the result.
+///
+/// With no effects this is the child's own image, untouched.
+fn run_effects(
+    renderer: &mut egui_wgpu::Renderer,
+    render_state: &RenderState,
+    encoder: &mut wgpu::CommandEncoder,
+    effects: &[Box<dyn Effect>],
+    chain: Chain<'_>,
+) -> Arc<wgpu::TextureView> {
+    if effects.is_empty() {
+        return Arc::clone(chain.source);
+    }
+
+    // Two textures for the effects to hand their images along in, and enough scratch for
+    // the greediest single effect. Scratch is shared: an effect only uses it while it runs.
+    let scratch_count = effects
+        .iter()
+        .map(|effect| effect.passes().saturating_sub(1) as usize)
+        .max()
+        .unwrap_or(0);
+    let pool = ensure_pool(
+        renderer,
+        &render_state.device,
+        chain.id,
+        2 + scratch_count,
+        chain.size_in_pixels,
+        chain.format,
+    );
+
+    let mut input = Arc::clone(chain.source);
+    for (index, effect) in effects.iter().enumerate() {
+        // Alternating targets, so an effect never reads the texture it is writing.
+        let output = Arc::clone(&pool[index % 2]);
+        let mut ctx = EffectContext {
+            device: &render_state.device,
+            queue: &render_state.queue,
+            encoder,
+            size: chain.size_in_pixels,
+            format: chain.format,
+            pixels_per_point: chain.pixels_per_point,
+            id: chain.id,
+            scratch: &pool[2..],
+            resources: &mut renderer.callback_resources,
+        };
+        effect.run(&mut ctx, &input, &output);
+        input = output;
+    }
+    input
+}
+
+/// The textures the effects on one child hand their images along in.
+///
+/// Per child, not shared: a child is rendered off-screen during the ui pass and drawn at
+/// the end of the frame, by which time other children have had their turn.
+#[derive(Default)]
+struct ChildPools(HashMap<Id, Pool>);
+
+struct Pool {
+    size_in_pixels: [u32; 2],
+    format: wgpu::TextureFormat,
+    views: Vec<Arc<wgpu::TextureView>>,
+}
+
+/// Get this child's pool of textures, making or resizing it as needed.
+///
+/// The views are handed back cloned rather than borrowed, because the effects need the
+/// renderer's resource map at the same time.
+fn ensure_pool(
+    renderer: &mut egui_wgpu::Renderer,
+    device: &wgpu::Device,
+    id: Id,
+    count: usize,
+    size_in_pixels: [u32; 2],
+    format: wgpu::TextureFormat,
+) -> Vec<Arc<wgpu::TextureView>> {
+    let pools: &mut ChildPools = renderer
+        .callback_resources
+        .entry()
+        .or_insert_with(ChildPools::default);
+
+    let pool = pools.0.entry(id).or_insert_with(|| Pool {
+        size_in_pixels,
+        format,
+        views: Vec::new(),
+    });
+
+    if pool.size_in_pixels != size_in_pixels || pool.format != format {
+        pool.size_in_pixels = size_in_pixels;
+        pool.format = format;
+        pool.views.clear();
+    }
+    while pool.views.len() < count {
+        pool.views
+            .push(Arc::new(create_view(device, size_in_pixels, format)));
+    }
+
+    pool.views.clone()
 }
 
 /// Shift everything the child painted, so it can be rendered inset into a bigger texture.

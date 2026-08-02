@@ -17,12 +17,21 @@ struct Params {
     rect_min: [f32; 2],
     rect_max: [f32; 2],
     corner_radii: [f32; 4],
+    refraction: f32,
+    specular: f32,
+    thickness: f32,
+    light: [f32; 2],
+    squircle: f32,
+    lens: f32,
+    sheen: f32,
+    grain: f32,
+    dispersion: f32,
 }
 
 impl Params {
-    /// 20 floats: see `Params` in `blur.wgsl`, including the one of padding that keeps
-    /// `tint` on a 16 byte boundary.
-    const SIZE: u64 = 20 * 4;
+    /// 36 floats: see `Params` in `blur.wgsl`, including the padding that keeps `tint` on a
+    /// 16 byte boundary and the trailing padding that rounds the struct out to whole vec4s.
+    const SIZE: u64 = 36 * 4;
 
     fn to_bytes(&self) -> [u8; Self::SIZE as usize] {
         let floats = [
@@ -46,12 +55,82 @@ impl Params {
             self.corner_radii[1],
             self.corner_radii[2],
             self.corner_radii[3],
+            self.refraction,
+            self.specular,
+            self.thickness,
+            0.0,
+            self.light[0],
+            self.light[1],
+            0.0,
+            0.0,
+            self.squircle,
+            self.lens,
+            self.sheen,
+            self.grain,
+            self.dispersion,
+            0.0,
+            0.0,
+            0.0,
         ];
         let mut bytes = [0_u8; Self::SIZE as usize];
         for (chunk, float) in bytes.chunks_exact_mut(4).zip(floats) {
             chunk.copy_from_slice(&float.to_le_bytes());
         }
         bytes
+    }
+}
+
+/// A whole-pixel part of the target, ready for `set_scissor_rect`.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Region {
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+}
+
+impl Region {
+    /// Every pixel `rect` touches, clamped to a target `size_in_pixels` across.
+    pub(crate) fn new(rect: Rect, size_in_pixels: [u32; 2]) -> Self {
+        let [width, height] = size_in_pixels.map(|size| size as f32);
+        let min_x = rect.min.x.floor().clamp(0.0, width);
+        let min_y = rect.min.y.floor().clamp(0.0, height);
+        let max_x = rect.max.x.ceil().clamp(min_x, width);
+        let max_y = rect.max.y.ceil().clamp(min_y, height);
+        Self {
+            x: min_x as u32,
+            y: min_y as u32,
+            width: (max_x - min_x) as u32,
+            height: (max_y - min_y) as u32,
+        }
+    }
+
+    /// `[x, y, width, height]`, as [`Backdrop::valid_in_pixels`] gives it.
+    fn from_array([x, y, width, height]: [u32; 4]) -> Self {
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
+    }
+
+    /// The part of `self` that is also in `other`.
+    fn intersect(self, other: Self) -> Self {
+        let x = self.x.max(other.x);
+        let y = self.y.max(other.y);
+        let right = (self.x + self.width).min(other.x + other.width);
+        let bottom = (self.y + self.height).min(other.y + other.height);
+        Self {
+            x,
+            y,
+            width: right.saturating_sub(x),
+            height: bottom.saturating_sub(y),
+        }
+    }
+
+    fn is_empty(self) -> bool {
+        self.width == 0 || self.height == 0
     }
 }
 
@@ -67,11 +146,45 @@ pub(crate) struct Settings {
     /// The rect being blurred, in physical pixels.
     pub rect_in_pixels: Rect,
 
+    /// The pixels the final pass covers: [`Self::rect_in_pixels`] plus room for the fade.
+    pub drawn_rect_in_pixels: Rect,
+
+    /// How far outside [`Self::drawn_rect_in_pixels`] the final pass can sample, in
+    /// physical pixels, because the rim bends what it shows outwards.
+    pub sample_margin: f32,
+
     /// North west, north east, south west, south east, in physical pixels.
     pub corner_radii: [f32; 4],
 
     /// How far the edge of the glass fades out, in physical pixels. Zero for a hard edge.
     pub feather: f32,
+
+    /// How far the rim bends what it shows, in physical pixels. Zero switches it off.
+    pub refraction: f32,
+
+    /// How bright the lit rim is, from 0 to 1. Zero switches it off.
+    pub specular: f32,
+
+    /// How thick the pane is, in physical pixels. Both rim effects live in a band this wide.
+    pub thickness: f32,
+
+    /// Unit vector pointing at the light, in screen space. y grows downward.
+    pub light: [f32; 2],
+
+    /// Superellipse power. Zero uses the rounded rectangle and its corner radii instead.
+    pub squircle: f32,
+
+    /// How hard the rim squeezes what is behind the pane, from 0 to 1.
+    pub lens: f32,
+
+    /// How bright the sheen running round the rim is.
+    pub sheen: f32,
+
+    /// How much grain is laid over the glass, from 0 to 1.
+    pub grain: f32,
+
+    /// How far the colours split where the lens bends. Zero switches it off.
+    pub dispersion: f32,
 }
 
 /// Which of the three passes a set of uniforms belongs to.
@@ -450,6 +563,15 @@ impl BlurResources {
                     rect_min: [settings.rect_in_pixels.min.x, settings.rect_in_pixels.min.y],
                     rect_max: [settings.rect_in_pixels.max.x, settings.rect_in_pixels.max.y],
                     corner_radii: settings.corner_radii,
+                    refraction: settings.refraction,
+                    specular: settings.specular,
+                    thickness: settings.thickness,
+                    light: settings.light,
+                    squircle: settings.squircle,
+                    lens: settings.lens,
+                    sheen: settings.sheen,
+                    grain: settings.grain,
+                    dispersion: settings.dispersion,
                 }
                 .to_bytes(),
             );
@@ -458,7 +580,26 @@ impl BlurResources {
         write(Pass::Vertical, [0.0, 1.0 / height]);
         write(Pass::Draw, [0.0, 0.0]);
 
-        let horizontal = self.bind_group(
+        // Only the pixels the panel will actually show are worth blurring. The final pass
+        // reads the vertical pass wherever it draws, plus however far the rim bends its
+        // sample outwards; the vertical pass reads the horizontal one `taps` pixels up and
+        // down; the horizontal pass reads the backdrop `taps` pixels to each side. So each
+        // stage covers the one after it, grown by its own reach. On a panel-sized rect that
+        // is a small fraction of the screen the full-screen passes used to cover.
+        //
+        // Anything outside the piece of the frame that was captured for us is clipped away
+        // before it reaches the screen — that is why it was not captured — so trim to that
+        // as well. It is what keeps a blur inside a scrolled area cheap.
+        let valid = Region::from_array(backdrop.valid_in_pixels);
+        let vertical_rect = settings.drawn_rect_in_pixels.expand(settings.sample_margin);
+        let vertical = Region::new(vertical_rect, backdrop.size_in_pixels).intersect(valid);
+        let horizontal =
+            Region::new(vertical_rect.expand(taps), backdrop.size_in_pixels).intersect(valid);
+        if vertical.is_empty() || horizontal.is_empty() {
+            return;
+        }
+
+        let horizontal_bind_group = self.bind_group(
             device,
             backdrop.view,
             &per_blur.uniforms[Pass::Horizontal as usize],
@@ -466,14 +607,16 @@ impl BlurResources {
         self.run(
             encoder,
             "regui_backdrop_blur_horizontal",
-            &horizontal,
+            &horizontal_bind_group,
             &textures.first_view,
+            horizontal,
         );
         self.run(
             encoder,
             "regui_backdrop_blur_vertical",
             &per_blur.vertical,
             &textures.second_view,
+            vertical,
         );
     }
 
@@ -483,6 +626,7 @@ impl BlurResources {
         label: &str,
         bind_group: &wgpu::BindGroup,
         output: &wgpu::TextureView,
+        region: Region,
     ) {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some(label),
@@ -491,7 +635,12 @@ impl BlurResources {
                 resolve_target: None,
                 depth_slice: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    // Not `Clear`: a load op covers the whole attachment however small the
+                    // scissor is, so clearing here would put the full-screen cost we are
+                    // trying to avoid straight back. Whatever is left outside the region is
+                    // from an earlier blur and is never sampled, since every pass that reads
+                    // this image stays inside the region we set here.
+                    load: wgpu::LoadOp::Load,
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -500,6 +649,7 @@ impl BlurResources {
             occlusion_query_set: None,
             multiview_mask: None,
         });
+        pass.set_scissor_rect(region.x, region.y, region.width, region.height);
         pass.set_pipeline(&self.blur_pipeline);
         pass.set_bind_group(0, bind_group, &[]);
         pass.draw(0..3, 0..1);

@@ -42,5 +42,9 @@ required-features = ["wgpu"]
 name = "regui_window_animation"
 required-features = ["wgpu"]
 
+[[example]]
+name = "regui_effects"
+required-features = ["wgpu"]
+
 [lints]
 workspace = true
