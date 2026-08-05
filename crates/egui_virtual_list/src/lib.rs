@@ -325,9 +325,7 @@ impl VirtualList {
         let item_range = first_visible_item_index.unwrap_or(item_start_index)..current_item_index;
 
         // If we scrolled this frame, don't store the last top most item
-        if !did_scroll
-            && self.last_resize.elapsed().unwrap_or_default() > Duration::from_millis(1000)
-        {
+        if !did_scroll && self.last_resize.elapsed().unwrap_or_default() > Duration::from_secs(1) {
             if let Some((first_visible_item_index, first_visible_item_visibility)) =
                 first_visible_item_index.zip(first_visible_item_visibility)
             {
