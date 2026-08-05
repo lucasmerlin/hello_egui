@@ -76,10 +76,6 @@ fn main() {
         let velocity = (travel - previous_travel) * settings.shutter;
         previous_travel = travel;
 
-        if t <= 0.0 {
-            return;
-        }
-
         tiles(ui, t, travel, velocity, &settings);
     });
 }

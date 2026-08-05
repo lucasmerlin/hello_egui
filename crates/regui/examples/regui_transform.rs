@@ -7,7 +7,7 @@
 //! Run with `--features wgpu` for the off-screen renderer, which clips a rotated child
 //! exactly, keeps text crisp at any scale, and can blur the child's own content.
 
-use egui::{Slider, Ui, vec2};
+use egui::{ScrollArea, Slider, Ui, vec2};
 use regui::Regui;
 
 fn main() {
@@ -77,6 +77,17 @@ fn main() {
 
                 ui.add(Slider::new(&mut child_value, 0.0..=1.0).text("value"));
                 ui.checkbox(&mut child_checked, "and check a box");
+
+                ScrollArea::vertical().show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    for i in 0..100 {
+                        ui.group(|ui| {
+                            for i in 0..5 {
+                                ui.label("Hello");
+                            }
+                        });
+                    }
+                });
             });
         });
     });
