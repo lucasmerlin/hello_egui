@@ -40,7 +40,9 @@ serde_json.workspace = true
 
 casey = "0.4.2"
 
-egui_commonmark = { version = "0.23.0", features = [] }
+# 0.24.0 is unpublished; supplied by the [patch.crates-io] entry
+# in the workspace Cargo.toml until it's released.
+egui_commonmark = { version = "0.24.0", features = [] }
 
 validator = { version = "0.20.0", features = ["derive"] }
 env_logger = "0.11"

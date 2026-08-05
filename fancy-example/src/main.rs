@@ -18,7 +18,7 @@ fn main() -> eframe::Result<()> {
     std::thread::spawn(move || {
         rt.block_on(async {
             loop {
-                tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+                tokio::time::sleep(std::time::Duration::from_hours(1)).await;
             }
         });
     });

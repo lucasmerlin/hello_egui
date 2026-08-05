@@ -33,7 +33,7 @@ fn example_stargazers() -> Vec<Stargazer> {
     vec![Stargazer {
         login: "lucasmerlin".to_string(),
         html_url: "https://github.com/lucasmerlin".to_string(),
-        avatar_url: format!("file://{dir}/src/egui.png",),
+        avatar_url: format!("file://{dir}/src/egui.png"),
     }]
 }
 
