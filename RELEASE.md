@@ -51,6 +51,31 @@ branch.
 Install release-plz with `brew install release-plz` or
 `cargo binstall release-plz`.
 
+## Dev-dependencies between workspace crates
+
+Dev-dependencies on other crates of this workspace use a path without a
+version, e.g. `egui_inbox = { path = "../egui_inbox" }`. Cargo drops those from
+the published manifest, so the publish order does not have to account for them.
+
+With a version, `cargo publish` demands that the dev-dependency is already on
+crates.io, but release-plz ignores dev-dependencies when it sorts the crates for
+publishing ([release-plz#2697]) — the release then fails halfway through.
+
+[release-plz#2697]: https://github.com/release-plz/release-plz/issues/2697
+
+## Retrying a failed release
+
+`release_always = false` means the release job publishes only when the commit
+belongs to a PR whose branch name starts with `release-plz-`.
+
+- If the release failed for a reason outside the repo (crates.io, network),
+  re-run the failed job.
+- If the release needs a code fix, put the fix on a branch whose name starts
+  with `release-plz-` and merge that PR. The release job then publishes the
+  crates that are still missing from crates.io. Note that a merged release PR
+  cannot be reopened, and release-plz creates no new release PR while the
+  versions on `main` are already ahead of crates.io.
+
 ## New crates
 
 crates.io trusted publishing does not cover the first publish of a crate:

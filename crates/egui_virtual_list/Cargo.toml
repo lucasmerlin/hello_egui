@@ -16,7 +16,9 @@ web-time = "1"
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
 rand.workspace = true
-hello_egui_utils_dev = { workspace = true }
+# Dev-deps on other workspace crates use a path without a version, so cargo
+# drops them from the published manifest and the publish order can ignore them.
+hello_egui_utils_dev = { path = "../hello_egui_utils_dev" }
 
 [lints]
 workspace = true
