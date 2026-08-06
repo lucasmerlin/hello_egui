@@ -1,0 +1,4 @@
+# getrandom 0.3 (pulled in via ahash/egui) needs an explicit backend on wasm.
+# The matching "wasm_js" feature is enabled in fancy-example/Cargo.toml.
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]

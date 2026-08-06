@@ -59,6 +59,8 @@ ureq = "3"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4.50"
 gloo-timers = { version = "0.4.0", features = ["futures"] }
+# Enables the wasm backend; the matching cfg flag is set in .cargo/config.toml.
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [lints]
 workspace = true
