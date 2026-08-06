@@ -1,4 +1,4 @@
-# egui_thumbhash changelog
+# Changelog
 
 ## 0.11.0
 

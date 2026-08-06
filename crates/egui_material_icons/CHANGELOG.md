@@ -1,4 +1,4 @@
-# egui_material_icons changelog
+# Changelog
 
 ## 0.7.0
 

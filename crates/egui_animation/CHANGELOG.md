@@ -1,4 +1,4 @@
-# egui_animation changelog
+# Changelog
 
 ## 0.12.0
 

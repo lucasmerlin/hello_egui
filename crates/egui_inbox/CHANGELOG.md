@@ -1,4 +1,4 @@
-# egui_inbox changelog
+# Changelog
 
 ## 0.12.0
 

@@ -1,4 +1,4 @@
-# egui_router changelog
+# Changelog
 
 ## 0.8.0
 

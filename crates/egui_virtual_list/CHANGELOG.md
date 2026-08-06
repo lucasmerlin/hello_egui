@@ -1,4 +1,4 @@
-# egui_virtual_list changelog
+# Changelog
 
 ## 0.11.0
 

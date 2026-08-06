@@ -1,4 +1,4 @@
-# egui_pull_to_refresh changelog
+# Changelog
 
 ## 0.12.0
 

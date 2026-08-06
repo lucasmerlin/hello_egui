@@ -1,4 +1,4 @@
-# egui_infinite_scroll changelog
+# Changelog
 
 ## 0.11.0
 

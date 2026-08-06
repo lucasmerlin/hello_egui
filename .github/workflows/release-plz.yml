@@ -1,0 +1,92 @@
+name: Release-plz
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Release unpublished packages.
+  release-plz-release:
+    name: Release-plz release
+    runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'lucasmerlin' }}
+    permissions:
+      contents: write
+      pull-requests: read
+      # crates.io trusted publishing
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Create a PR with the new versions and changelog, preparing the next release.
+  release-plz-pr:
+    name: Release-plz PR
+    runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'lucasmerlin' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install release-plz
+        uses: taiki-e/install-action@v2
+        with:
+          tool: release-plz
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          # The optional RELEASE_PLZ_TOKEN (fine-grained PAT) makes CI run on release PRs.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
+      # An egui update is a breaking change for every crate, but release-plz
+      # proposes patch bumps for crates the update commit doesn't touch. Fix up
+      # the release PR so every published crate gets a minor bump instead.
+      # The commit must be authored as a bot: release-plz force-pushes over bot
+      # commits when it regenerates the PR (and this step then re-applies the
+      # fix-up), but human commits make it close and reopen the PR.
+      - name: Bump release PR versions to minor if egui was updated
+        run: |
+          pr_branch=$(gh pr list --state open --base main --json headRefName \
+            --jq '[.[] | select(.headRefName | startswith("release-plz-"))][0].headRefName // empty')
+          if [ -z "$pr_branch" ]; then
+            echo "no open release PR"
+            exit 0
+          fi
+          git reset --hard --quiet
+          git clean -fdq
+          git fetch origin "$pr_branch"
+          git checkout "$pr_branch"
+          ./scripts/bump_versions_on_egui_update.sh
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -aqm "Bump versions to minor for the egui update"
+            git push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${pr_branch}"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pushing with the PAT (when configured) makes CI run on the release PR.
+          PUSH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
