@@ -1,0 +1,45 @@
+[workspace]
+# Publish only when the release PR is merged, not on every push to main.
+# This allows bumping versions on main (e.g. in an egui update PR, see
+# RELEASE.md) without triggering an immediate release.
+release_always = false
+# GitHub releases are created only for the root hello_egui package (see below).
+git_release_enable = false
+
+[changelog]
+# Match the existing hand-written style: "## 0.16.0" followed by a flat bullet list.
+header = "# Changelog\n"
+trim = false
+body = """
+## {{ version | trim_start_matches(pat="v") }}
+{% for commit in commits %}
+- {{ commit.message }}
+{%- endfor %}
+"""
+commit_parsers = [
+    { message = "^chore: release", skip = true },
+    { message = ".*", group = "other" },
+]
+
+# The root package's changelog automatically includes the commits of all the
+# crates it depends on, so the hello_egui GitHub release lists every change in
+# the workspace.
+[[package]]
+name = "hello_egui"
+git_release_enable = true
+
+[[package]]
+name = "egui_webview"
+release = false
+
+[[package]]
+name = "perfect_cursors"
+release = false
+
+[[package]]
+name = "fancy-example"
+release = false
+
+[[package]]
+name = "scripts"
+release = false

@@ -9,9 +9,6 @@ repository = "https://github.com/lucasmerlin/hello_egui"
 homepage = "https://lucasmerlin.github.io/hello_egui/"
 keywords = ["egui", "gui", "ui", "widgets"]
 
-[package.metadata.release]
-tag-prefix = "hello_egui-"
-
 [package.metadata.docs.rs]
 all-features = true
 

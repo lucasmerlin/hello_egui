@@ -1,4 +1,4 @@
-# hello_egui changelog
+# Changelog
 
 ## 0.12.0
 

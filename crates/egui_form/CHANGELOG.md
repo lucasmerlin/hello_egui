@@ -1,4 +1,4 @@
-# egui_form changelog
+# Changelog
 
 ## 0.9.0
 

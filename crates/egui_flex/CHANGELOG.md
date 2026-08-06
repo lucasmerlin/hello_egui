@@ -1,4 +1,4 @@
-# egui_flex changelog
+# Changelog
 
 ## 0.7.0
 

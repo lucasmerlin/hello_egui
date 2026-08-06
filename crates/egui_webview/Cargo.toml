@@ -4,9 +4,6 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
-[package.metadata.release]
-release = false
-
 [dependencies]
 wry = "0.55.0"
 http = "1"

@@ -1,4 +1,4 @@
-# egui_suspense changelog
+# Changelog
 
 ## 0.12.0
 
