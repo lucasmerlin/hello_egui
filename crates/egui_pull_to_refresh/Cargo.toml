@@ -13,7 +13,9 @@ egui.workspace = true
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
-egui_inbox.workspace = true
+# Dev-deps on other workspace crates use a path without a version, so cargo
+# drops them from the published manifest and the publish order can ignore them.
+egui_inbox = { path = "../egui_inbox" }
 ehttp.workspace = true
 
 [lints]

@@ -16,8 +16,10 @@ egui.workspace = true
 [dev-dependencies]
 eframe = { workspace = true, default-features = true, features = ["wgpu"] }
 egui = { workspace = true, features = ["callstack"] }
-egui_inbox.workspace = true
-hello_egui_utils_dev = { workspace = true }
+# Dev-deps on other workspace crates use a path without a version, so cargo
+# drops them from the published manifest and the publish order can ignore them.
+egui_inbox = { path = "../egui_inbox" }
+hello_egui_utils_dev = { path = "../hello_egui_utils_dev" }
 
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
 rstest = "0.26.1"
