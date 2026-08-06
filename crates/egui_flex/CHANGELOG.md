@@ -1,7 +1,8 @@
 # Changelog
 
-## 0.7.1
+## 0.8.0
 
+- Update egui to 0.36
 - Add release-plz to automate releases ([#105](https://github.com/lucasmerlin/hello_egui/pull/105))
 
 ## 0.7.0

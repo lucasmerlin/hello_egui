@@ -1,7 +1,8 @@
 # Changelog
 
-## 0.16.1
+## 0.17.0
 
+- Update egui to 0.36
 - Add release-plz to automate releases ([#105](https://github.com/lucasmerlin/hello_egui/pull/105))
 - Add axis constraining to egui_dnd ([#103](https://github.com/lucasmerlin/hello_egui/pull/103))
 

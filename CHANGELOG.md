@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.1
+## 0.13.0
 
 - Fix release-plz config for unpublished crates, update release PR description
 - Add release-plz to automate releases ([#105](https://github.com/lucasmerlin/hello_egui/pull/105))
