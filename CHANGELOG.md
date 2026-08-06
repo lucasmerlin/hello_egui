@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1
+
+- Fix release-plz config for unpublished crates, update release PR description
+- Add release-plz to automate releases ([#105](https://github.com/lucasmerlin/hello_egui/pull/105))
+- Fix CI
+- Update egui to 0.36 and MSRV to 1.95 ([#104](https://github.com/lucasmerlin/hello_egui/pull/104))
+
 ## 0.12.0
 
 - Update egui to 0.35

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Add release-plz to automate releases ([#105](https://github.com/lucasmerlin/hello_egui/pull/105))
+
 ## 0.8.0
 
 - Add `EguiRouter::replace_url` for in-place URL updates that preserve the history state index
