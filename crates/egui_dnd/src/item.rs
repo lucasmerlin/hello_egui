@@ -66,9 +66,11 @@ impl<'a> Item<'a> {
         let unique_id = Self::unique_id(id, self.ui_id);
         let index = self.state.index;
         let last_pointer_pos = self.dnd_state.detection_state.last_pointer_pos();
+        let drag_axis = self.dnd_state.drag_axis;
         if let DragDetectionState::Dragging {
             id: dragging_id,
             offset,
+            drag_start_pos,
             ..
         } = &mut self.dnd_state.detection_state
         {
@@ -81,7 +83,7 @@ impl<'a> Item<'a> {
                     .pointer_hover_pos()
                     .or(last_pointer_pos)
                     .unwrap_or_else(|| ui.next_widget_position());
-                let position = pointer_pos + *offset;
+                let position = drag_axis.constrain(*drag_start_pos, pointer_pos + *offset);
 
                 // We animate so the animated position is updated, even though we don't use it here.
                 animate_position(

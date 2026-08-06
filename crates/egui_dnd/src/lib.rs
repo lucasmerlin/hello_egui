@@ -3,7 +3,7 @@
 #![warn(missing_docs)]
 
 use egui::{AsId, Id, Ui};
-pub use state::{DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
+pub use state::{DragAxis, DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
 
 pub use crate::item_iterator::ItemIterator;
 use crate::state::DragDropUi;
@@ -85,6 +85,15 @@ impl<'a> Dnd<'a> {
     #[must_use]
     pub fn with_touch_config(mut self, config: Option<DragDropConfig>) -> Self {
         self.drag_drop_ui = self.drag_drop_ui.with_touch_config(config);
+        self
+    }
+
+    /// Constrains the motion of the dragged item to a single axis.
+    /// This only affects the visual position of the floating item.
+    /// The default is [`DragAxis::Both`] (no constraint).
+    #[must_use]
+    pub fn with_drag_axis(mut self, axis: DragAxis) -> Self {
+        self.drag_drop_ui = self.drag_drop_ui.with_drag_axis(axis);
         self
     }
 
