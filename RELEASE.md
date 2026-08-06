@@ -40,9 +40,9 @@ newer than the one the crates were last published against (checked via the
 crates.io index), CI runs `scripts/bump_versions_on_egui_update.sh` on the
 release PR branch. The script raises every pending patch bump to the next
 minor version and puts an "Update egui to 0.x" entry into each crate's
-changelog section. CI pushes the fix-up to the release PR as a bot commit, so
-release-plz can still regenerate the PR when `main` moves (the fix-up is then
-re-applied by the next run).
+changelog section. CI pushes the fix-up to the release PR as a bot commit and
+rewrites the versions in the PR description. release-plz can still regenerate
+the PR when `main` moves (the fix-up is then re-applied by the next run).
 
 The script is idempotent (crates whose pending version already bumps the minor
 are left alone) and can also be run locally on a checked-out release PR

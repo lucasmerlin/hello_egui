@@ -31,15 +31,19 @@ git_release_enable = true
 [[package]]
 name = "egui_webview"
 release = false
+publish = false
 
 [[package]]
 name = "perfect_cursors"
 release = false
+publish = false
 
 [[package]]
 name = "fancy-example"
 release = false
+publish = false
 
 [[package]]
 name = "scripts"
 release = false
+publish = false

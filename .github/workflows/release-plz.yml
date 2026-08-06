@@ -69,23 +69,36 @@ jobs:
       # fix-up), but human commits make it close and reopen the PR.
       - name: Bump release PR versions to minor if egui was updated
         run: |
-          pr_branch=$(gh pr list --state open --base main --json headRefName \
-            --jq '[.[] | select(.headRefName | startswith("release-plz-"))][0].headRefName // empty')
-          if [ -z "$pr_branch" ]; then
+          pr=$(gh pr list --state open --base main --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("release-plz-"))][0] // empty')
+          if [ -z "$pr" ]; then
             echo "no open release PR"
             exit 0
           fi
+          pr_number=$(jq -r .number <<<"$pr")
+          pr_branch=$(jq -r .headRefName <<<"$pr")
           git reset --hard --quiet
           git clean -fdq
           git fetch origin "$pr_branch"
           git checkout "$pr_branch"
           ./scripts/bump_versions_on_egui_update.sh
-          if ! git diff --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -aqm "Bump versions to minor for the egui update"
-            git push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${pr_branch}"
+          if git diff --quiet; then
+            exit 0
           fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -aqm "Bump versions to minor for the egui update"
+          git push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${pr_branch}"
+          # The PR description was written by release-plz before this fix-up
+          # and still shows the patch versions; rewrite them.
+          body=$(gh pr view "$pr_number" --json body --jq .body)
+          while read -r old new; do
+            body=${body//"-> $old"/"-> $new"}
+            body=${body//"## $old"/"## $new"}
+          done < <(git diff HEAD~1 HEAD -U0 -- 'Cargo.toml' 'crates/*/Cargo.toml' |
+            awk '/^-version = /{old=$3} /^\+version = /{print old, $3}' | tr -d '"' | sort -u)
+          body+=$'\n\n'"> ⚠️ egui was updated: the versions were raised to the next minor by \`scripts/bump_versions_on_egui_update.sh\`."
+          gh pr edit "$pr_number" --body "$body"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Pushing with the PAT (when configured) makes CI run on the release PR.
