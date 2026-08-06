@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12.0
+
+- Add release-plz to automate releases ([#105](https://github.com/lucasmerlin/hello_egui/pull/105))
+- Update egui to 0.36 and MSRV to 1.95 ([#104](https://github.com/lucasmerlin/hello_egui/pull/104))
+
 ## 0.11.0
 
 - Update egui to 0.35
