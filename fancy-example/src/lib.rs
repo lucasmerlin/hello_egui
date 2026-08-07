@@ -15,6 +15,7 @@ use crate::routes::router;
 
 pub mod chat;
 mod color_sort;
+pub mod contributors;
 mod crate_ui;
 pub mod example;
 mod flex;
@@ -24,7 +25,6 @@ mod routes;
 mod shared_state;
 mod sidebar;
 mod signup_form;
-pub mod stargazers;
 
 pub enum FancyMessage {
     Navigate(String),

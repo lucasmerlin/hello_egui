@@ -2,9 +2,9 @@ use egui::accesskit::Role;
 use egui_kittest::Harness;
 use egui_kittest::{kittest::Queryable, Node};
 use fancy_example::chat::CHAT_EXAMPLE;
+use fancy_example::contributors::CONTRIBUTORS_EXAMPLE;
 use fancy_example::example::{Example, EXAMPLES};
 use fancy_example::gallery::GALLERY_EXAMPLE;
-use fancy_example::stargazers::STARGAZERS_EXAMPLE;
 use fancy_example::App;
 use std::time::Duration;
 
@@ -36,7 +36,7 @@ pub async fn test_pages() {
 
     let wait = [
         (&GALLERY_EXAMPLE, None),
-        (&STARGAZERS_EXAMPLE, Some("lucasmerlin")),
+        (&CONTRIBUTORS_EXAMPLE, Some("lucasmerlin")),
     ];
 
     for category in EXAMPLES {
@@ -71,10 +71,10 @@ pub async fn test_pages() {
 }
 
 #[tokio::test]
-pub async fn test_stargazers() {
+pub async fn test_contributors() {
     let mut harness = app();
 
-    open(&STARGAZERS_EXAMPLE, &mut harness);
+    open(&CONTRIBUTORS_EXAMPLE, &mut harness);
 
     wait_for(&mut harness, |harness| {
         harness.query_by_label_contains("lucasmerlin")
@@ -87,7 +87,7 @@ pub async fn test_stargazers() {
         harness.step();
     }
 
-    harness.snapshot("stargazers");
+    harness.snapshot("contributors");
 }
 
 #[tokio::test]
