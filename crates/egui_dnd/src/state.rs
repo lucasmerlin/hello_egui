@@ -130,6 +130,7 @@ pub struct DragDropUi {
     pub(crate) detection_state: DragDetectionState,
     /// If the mobile config is set, we will use it if we detect a touch event
     touch_config: Option<DragDropConfig>,
+    pressed_handle: Option<(Id, Vec2)>,
     mouse_config: DragDropConfig,
     pub(crate) swap_animation_time: f32,
     pub(crate) return_animation_time: f32,
@@ -141,6 +142,7 @@ impl Default for DragDropUi {
         DragDropUi {
             detection_state: DragDetectionState::None,
             touch_config: Some(DragDropConfig::touch()),
+            pressed_handle: None,
             mouse_config: DragDropConfig::mouse(),
             swap_animation_time: 0.2,
             return_animation_time: 0.2,
@@ -347,11 +349,22 @@ impl<'a> Handle<'a> {
             *self.hovering_over_any_handle = true;
         }
 
-        let offset = self.item_pos.to_vec2()
-            - ui.ctx()
-                .input(|i| i.pointer.hover_pos())
-                .unwrap_or_default()
-                .to_vec2();
+        // Retain the pressed handle and grab offset even if the pointer leaves it
+        // before crossing the drag threshold.
+        if self.state.detection_state.is_evaluating_drag()
+            && self.state.pressed_handle.is_none()
+            && response.contains_pointer()
+        {
+            if let Some(origin) = ui.input(|i| i.pointer.press_origin()) {
+                if response.rect.contains(origin) {
+                    self.state.pressed_handle = Some((self.id, self.item_pos - origin));
+                }
+            }
+        }
+
+        let Some((_, offset)) = self.state.pressed_handle.filter(|(id, _)| *id == self.id) else {
+            return response;
+        };
 
         let drag_distance = ui.input(|i| {
             (i.pointer.hover_pos().unwrap_or_default()
@@ -362,32 +375,24 @@ impl<'a> Handle<'a> {
         let click_threshold = 1.0;
         let is_above_click_threshold = drag_distance > click_threshold;
 
-        if response.contains_pointer()
-            && response
-                .rect
-                .contains(ui.input(|input| input.pointer.press_origin().unwrap_or_default()))
+        if let DragDetectionState::WaitingForClickThreshold { pressed_at } =
+            self.state.detection_state
         {
-            if let DragDetectionState::WaitingForClickThreshold { pressed_at } =
-                self.state.detection_state
+            // It should be safe to stop anything else being dragged here
+            // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
+            ui.ctx().stop_dragging();
+            if is_above_click_threshold
+                || pressed_at.elapsed().unwrap_or_default()
+                    > self.state.config(ui).click_tolerance_timeout
             {
-                // It should be safe to stop anything else being dragged here
-                // This is important so any ScrollArea isn't being dragged while we wait for the click threshold
-                ui.ctx().stop_dragging();
-                if is_above_click_threshold
-                    || pressed_at.elapsed().unwrap_or_default()
-                        > self.state.config(ui).click_tolerance_timeout
-                {
-                    self.state.detection_state = DragDetectionState::CouldBeValidDrag;
-                }
+                self.state.detection_state = DragDetectionState::CouldBeValidDrag;
             }
         }
 
-        if response.contains_pointer()
-            && matches!(
-                self.state.detection_state,
-                DragDetectionState::CouldBeValidDrag
-            )
-        {
+        if matches!(
+            self.state.detection_state,
+            DragDetectionState::CouldBeValidDrag
+        ) {
             self.state.detection_state = DragDetectionState::Dragging {
                 id: self.id,
                 offset,
@@ -523,6 +528,7 @@ impl DragDropUi {
                     )
                 {
                     first_frame = true;
+                    self.pressed_handle = None;
                     self.detection_state = DragDetectionState::PressedWaitingForDelay {
                         pressed_at: SystemTime::now(),
                     };
