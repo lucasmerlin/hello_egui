@@ -1,18 +1,21 @@
-use egui::{Align2, Id, Rect, Ui, UiBuilder, Vec2};
+use egui::{Align2, AsIdSalt, IdSalt, Rect, Ui, UiBuilder, Vec2};
 
 /// A widget that measures its content and centers it within the available space.
 pub struct Center {
-    id: Id,
+    id_salt: IdSalt,
     rect: Option<Rect>,
     size: Option<Vec2>,
     align2: Align2,
 }
 
 impl Center {
-    /// Create a new center widget with the given id.
-    pub fn new(id: impl Into<Id>) -> Self {
+    /// Create a new center widget with the given id salt.
+    ///
+    /// The salt is combined with the surrounding [`Ui`] scope,
+    /// so it only needs to be unique within that scope.
+    pub fn new(id_salt: impl AsIdSalt) -> Self {
         Self {
-            id: id.into(),
+            id_salt: IdSalt::new(id_salt),
             rect: None,
             size: None,
             align2: Align2::CENTER_CENTER,
@@ -27,7 +30,7 @@ impl Center {
 
     /// Show the widget
     pub fn ui<T>(self, ui: &mut Ui, content: impl FnOnce(&mut Ui) -> T) -> T {
-        let id = ui.id().with(self.id);
+        let id = ui.scope_id().with_salt(self.id_salt);
         let data_id = id.with("center");
 
         let rect = if let Some(rect) = self.rect {

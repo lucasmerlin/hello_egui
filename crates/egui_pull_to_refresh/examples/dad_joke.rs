@@ -55,7 +55,7 @@ pub fn main() -> eframe::Result<()> {
                 }
             });
 
-            Area::new(Id::new("attribution"))
+            Area::new(Id::unique("attribution"))
                 .anchor(Align2::LEFT_BOTTOM, Vec2::new(8.0, -8.0))
                 .show(ui.ctx(), |ui| {
                     ui.hyperlink_to(

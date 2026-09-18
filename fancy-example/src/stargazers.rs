@@ -120,45 +120,53 @@ impl Stargazers {
     }
 
     pub fn stargazers_dnd_ui(&mut self, ui: &mut Ui) {
-        let response = dnd(ui, "stargazers_dnd")
+        let response = dnd(ui, ui.make_persistent_id("stargazers_dnd"))
             .with_touch_config(Some(DragDropConfig::touch_scroll()))
             .show_custom(|ui, iter| {
                 self.infinite_scroll.ui(ui, 10, |ui, index, item| {
-                    iter.next(ui, Id::new(&*item.login), index, true, |ui, item_handle| {
-                        item_handle.ui(ui, |ui, handle, _state| {
-                            ui.horizontal(|ui| {
-                                handle.ui(ui, |ui| {
-                                    Frame::NONE
-                                        .fill(ui.visuals().faint_bg_color)
-                                        .inner_margin(8.0)
-                                        .outer_margin(2.0)
-                                        .corner_radius(4.0)
-                                        .show(ui, |ui| {
-                                            ui.set_width(ui.available_width());
+                    iter.next(
+                        ui,
+                        Id::unique(&*item.login),
+                        index,
+                        true,
+                        |ui, item_handle| {
+                            item_handle.ui(ui, |ui, handle, _state| {
+                                ui.horizontal(|ui| {
+                                    handle.ui(ui, |ui| {
+                                        Frame::NONE
+                                            .fill(ui.visuals().faint_bg_color)
+                                            .inner_margin(8.0)
+                                            .outer_margin(2.0)
+                                            .corner_radius(4.0)
+                                            .show(ui, |ui| {
+                                                ui.set_width(ui.available_width());
 
-                                            let size = Vec2::new(32.0, 32.0);
+                                                let size = Vec2::new(32.0, 32.0);
 
-                                            let image_url = if cfg!(feature = "mock") {
-                                                item.avatar_url.clone()
-                                            } else {
-                                                format!(
-                                                    "{}&s={}",
-                                                    item.avatar_url,
-                                                    size.x as u32 * 2
-                                                )
-                                            };
+                                                let image_url = if cfg!(feature = "mock") {
+                                                    item.avatar_url.clone()
+                                                } else {
+                                                    format!(
+                                                        "{}&s={}",
+                                                        item.avatar_url,
+                                                        size.x as u32 * 2
+                                                    )
+                                                };
 
-                                            ui.add(Image::new(image_url).fit_to_exact_size(size));
+                                                ui.add(
+                                                    Image::new(image_url).fit_to_exact_size(size),
+                                                );
 
-                                            ui.hyperlink_to(
-                                                item.login.as_str(),
-                                                item.html_url.as_str(),
-                                            );
-                                        });
+                                                ui.hyperlink_to(
+                                                    item.login.as_str(),
+                                                    item.html_url.as_str(),
+                                                );
+                                            });
+                                    });
                                 });
-                            });
-                        })
-                    });
+                            })
+                        },
+                    );
                 });
             });
         response.update_vec(&mut self.infinite_scroll.items);

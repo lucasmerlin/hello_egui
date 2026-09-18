@@ -133,12 +133,19 @@ doc_markdown = { level = "allow", priority = 21 }
 #winit = { path = "../winit" }
 
 
-# egui = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_extras = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_glow = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_kittest = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_demo_lib = { git = "https://github.com/emilk/egui", branch = "lucas/malmal/main" }
-# egui_commonmark has no egui 0.36 release yet (only used by fancy-example).
-# Remove this patch once 0.24.0 is published.
-egui_commonmark = { git = "https://github.com/lucasmerlin/egui_commonmark", branch = "update-egui-0.36.0" }
+# Track the latest egui `main` branch.
+ecolor = { git = "https://github.com/emilk/egui", branch = "main" }
+eframe = { git = "https://github.com/emilk/egui", branch = "main" }
+egui = { git = "https://github.com/emilk/egui", branch = "main" }
+egui-wgpu = { git = "https://github.com/emilk/egui", branch = "main" }
+egui-winit = { git = "https://github.com/emilk/egui", branch = "main" }
+egui_extras = { git = "https://github.com/emilk/egui", branch = "main" }
+egui_glow = { git = "https://github.com/emilk/egui", branch = "main" }
+egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
+emath = { git = "https://github.com/emilk/egui", branch = "main" }
+epaint = { git = "https://github.com/emilk/egui", branch = "main" }
+
+# https://github.com/lampsitter/egui_commonmark/pull/107
+egui_commonmark = { git = "https://github.com/emilk/egui_commonmark", branch = "emilk/egui-main" }
+egui_commonmark_backend = { git = "https://github.com/emilk/egui_commonmark", branch = "emilk/egui-main" }
+

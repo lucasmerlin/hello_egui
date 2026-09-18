@@ -392,7 +392,7 @@ fn truncate_shrink() {
                 let frame = Frame::group(flex.ui().style());
                 flex.add_flex(item().frame(frame), Flex::horizontal(), |flex| {
                     flex.add(
-                        item().shrink().grow(1.0).content_id(Id::new(text)),
+                        item().shrink().grow(1.0).content_id(Id::unique(text)),
                         Button::new(text).truncate(),
                     );
                     flex.add(item(), Button::new("World!").wrap());

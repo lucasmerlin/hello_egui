@@ -23,7 +23,7 @@ struct EnumeratedItem<T> {
 
 impl<T> DragDropItem for EnumeratedItem<T> {
     fn id(&self) -> Id {
-        Id::new(self.index)
+        Id::unique(self.index)
     }
 }
 
@@ -40,7 +40,7 @@ pub fn main() -> eframe::Result<()> {
         NativeOptions::default(),
         move |ui, _frame| {
             CentralPanel::default().show(ui, |ui| {
-                let response = dnd(ui, "dnd_example")
+                let response = dnd(ui, ui.make_persistent_id("dnd_example"))
                     // Since egui_dnd's animations rely on the ids not
                     // changing after the drag finished we need to disable animations
                     .with_animation_time(0.0)

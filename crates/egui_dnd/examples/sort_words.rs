@@ -7,28 +7,31 @@ use hello_egui_utils::measure_text;
 
 pub fn dnd_ui(ui: &mut Ui, items: &mut [(usize, String)]) {
     ui.horizontal_wrapped(|ui| {
-        dnd(ui, "dnd_example").show_custom_vec(items, |ui, items, item_iter| {
-            items.iter().enumerate().for_each(|(idx, item)| {
-                let size = measure_text(ui, &item.1);
+        dnd(ui, ui.make_persistent_id("dnd_example")).show_custom_vec(
+            items,
+            |ui, items, item_iter| {
+                items.iter().enumerate().for_each(|(idx, item)| {
+                    let size = measure_text(ui, &item.1);
 
-                let frame_padding = 4.0;
-                let size = size + Vec2::splat(frame_padding) * 2.0;
+                    let frame_padding = 4.0;
+                    let size = size + Vec2::splat(frame_padding) * 2.0;
 
-                item_iter.next(ui, Id::new(item.0), idx, true, |ui, item_handle| {
-                    item_handle.ui_sized(ui, size, |ui, handle, _state| {
-                        Frame::NONE
-                            .inner_margin(frame_padding)
-                            .fill(ui.visuals().extreme_bg_color)
-                            .corner_radius(4.0)
-                            .show(ui, |ui| {
-                                handle.ui_sized(ui, size, |ui| {
-                                    ui.label(&item.1);
+                    item_iter.next(ui, Id::unique(item.0), idx, true, |ui, item_handle| {
+                        item_handle.ui_sized(ui, size, |ui, handle, _state| {
+                            Frame::NONE
+                                .inner_margin(frame_padding)
+                                .fill(ui.visuals().extreme_bg_color)
+                                .corner_radius(4.0)
+                                .show(ui, |ui| {
+                                    handle.ui_sized(ui, size, |ui| {
+                                        ui.label(&item.1);
+                                    });
                                 });
-                            });
-                    })
+                        })
+                    });
                 });
-            });
-        });
+            },
+        );
     });
 }
 

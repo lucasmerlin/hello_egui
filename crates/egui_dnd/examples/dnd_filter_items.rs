@@ -15,7 +15,7 @@ use egui_dnd::utils::shift_vec;
 fn filter_by_skipping_items(ui: &mut Ui, filter: &str, items: &mut Vec<ItemType>) {
     let spacing = mem::replace(&mut ui.spacing_mut().item_spacing.y, 0.0);
 
-    dnd(ui, "dnd").show_vec(items, |ui, item, handle, _dragging| {
+    dnd(ui, ui.make_persistent_id("dnd")).show_vec(items, |ui, item, handle, _dragging| {
         if !item.number.to_string().contains(filter) {
             return;
         }
@@ -38,13 +38,16 @@ fn filter_by_filtering_source_list(ui: &mut Ui, filter: &str, items: &mut Vec<It
         .filter(|(_, item)| item.number.to_string().contains(filter))
         .collect::<Vec<_>>();
 
-    let response = dnd(ui, "dnd").show(filtered.iter_mut(), |ui, (_, item), handle, _dragging| {
-        ui.horizontal(|ui| {
-            handle.ui(ui, |ui| {
-                ui.label(item.number.to_string());
+    let response = dnd(ui, ui.make_persistent_id("dnd")).show(
+        filtered.iter_mut(),
+        |ui, (_, item), handle, _dragging| {
+            ui.horizontal(|ui| {
+                handle.ui(ui, |ui| {
+                    ui.label(item.number.to_string());
+                });
             });
-        });
-    });
+        },
+    );
 
     if let Some(update) = response.final_update() {
         // Get the index the item had in the original vec

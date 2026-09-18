@@ -1,4 +1,4 @@
-use egui::{Id, Image, OpenUrl, ScrollArea, Sense, Ui, Vec2};
+use egui::{Image, OpenUrl, ScrollArea, Sense, Ui, Vec2};
 use serde::Deserialize;
 
 use egui_infinite_scroll::InfiniteScroll;
@@ -132,7 +132,7 @@ impl ExampleTrait for Gallery {
                                         };
                                     let image = Image::new(image_url).sense(Sense::click());
                                     let image = ThumbhashImage::new(image, &item.thumbhash)
-                                        .id(Id::new("gallery_item").with(start_idx + idx));
+                                        .id(ui.make_persistent_id(("gallery_item", start_idx + idx)));
                                     let response = ui.add_sized(size, image.rounding(8.0));
 
                                     // Workaround for buttons blocking touch scroll: https://github.com/emilk/egui/pull/3815

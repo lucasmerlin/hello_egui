@@ -12,7 +12,7 @@ pub mod easing {
 }
 
 pub use collapse::*;
-use egui::{AsId, Context, Id, Pos2, Rect, Sense, Ui, UiBuilder, Vec2};
+use egui::{Context, Id, Pos2, Rect, Sense, Ui, UiBuilder, Vec2};
 use hello_egui_utils::current_scroll_delta;
 
 #[derive(Debug, Clone)]
@@ -24,20 +24,20 @@ struct AnimationState {
 type Easing = fn(f32) -> f32;
 
 /// Same as [`Context::animate_bool_with_time`] but with an easing function.
-pub fn animate_bool_eased(
-    ctx: &Context,
-    id: impl AsId,
-    bool: bool,
-    easing: Easing,
-    time: f32,
-) -> f32 {
-    let x = ctx.animate_bool_with_time(Id::new(id), bool, time);
+///
+/// The animation state is stored in the global [`Context`] memory,
+/// so `id` must be globally unique.
+pub fn animate_bool_eased(ctx: &Context, id: Id, bool: bool, easing: Easing, time: f32) -> f32 {
+    let x = ctx.animate_bool_with_time(id, bool, time);
     easing(x)
 }
 
 /// Same as [`Context::animate_value_with_time`] but with an easing function.
-pub fn animate_eased(ctx: &Context, id: impl AsId, value: f32, time: f32, easing: Easing) -> f32 {
-    let id = Id::new(id).with("animate_eased");
+///
+/// The animation state is stored in the global [`Context`] memory,
+/// so `id` must be globally unique.
+pub fn animate_eased(ctx: &Context, id: Id, value: f32, time: f32, easing: Easing) -> f32 {
+    let id = id.with("animate_eased");
 
     let (source, target) = ctx.memory_mut(|mem| {
         let state = mem.data.get_temp_mut_or_insert_with(id, || AnimationState {
@@ -65,16 +65,16 @@ pub fn animate_eased(ctx: &Context, id: impl AsId, value: f32, time: f32, easing
 /// Animate a position. Useful to e.g. animate swapping items in a list.
 /// This is basically a wrapper around [`animate_eased`] that animates both x and y.
 /// It will try to correct for scrolling, since in egui, scroll will change a widgets y position.
+///
+/// `id` must be globally unique, see [`animate_eased`].
 pub fn animate_position(
     ui: &mut Ui,
-    id: impl AsId,
+    id: Id,
     value: Pos2,
     time: f32,
     easing: Easing,
     scroll_correction: bool,
 ) -> Pos2 {
-    let id1 = Id::new(id);
-
     let scroll_offset = if scroll_correction {
         current_scroll_delta(ui)
     } else {
@@ -84,17 +84,19 @@ pub fn animate_position(
     let value = value + scroll_offset;
 
     let position = Pos2::new(
-        animate_eased(ui.ctx(), id1.with("x"), value.x, time, easing),
-        animate_eased(ui.ctx(), id1.with("y"), value.y, time, easing),
+        animate_eased(ui.ctx(), id.with("x"), value.x, time, easing),
+        animate_eased(ui.ctx(), id.with("y"), value.y, time, easing),
     );
 
     position - scroll_offset
 }
 
 /// A wrapper around [`animate_position`] that animates the position of a child ui.
+///
+/// `id` must be globally unique, see [`animate_eased`].
 pub fn animate_ui_translation(
     ui: &mut Ui,
-    id: impl AsId,
+    id: Id,
     easing: Easing,
     size: Vec2,
     prevent_scroll_animation: bool,

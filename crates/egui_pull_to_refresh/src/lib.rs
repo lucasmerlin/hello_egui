@@ -69,7 +69,7 @@ impl PullToRefresh {
     /// If `loading` is true, the widget will show the loading indicator.
     pub fn new(loading: bool) -> Self {
         Self {
-            id: Id::new("pull_to_refresh"),
+            id: Id::unique("pull_to_refresh"),
             loading,
             min_refresh_distance: 100.0,
             can_refresh: true,
@@ -240,7 +240,7 @@ impl PullToRefresh {
         let offset_top = -spinner_size.y + spinner_size.y * anim_progress * 2.0;
 
         if anim_progress > 0.0 {
-            Area::new(Id::new("Pull to refresh indicator"))
+            Area::new(Id::unique("Pull to refresh indicator"))
                 .fixed_pos(content_rect.center_top())
                 .pivot(Align2::CENTER_TOP)
                 .show(ui.ctx(), |ui| {

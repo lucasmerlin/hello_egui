@@ -1,4 +1,4 @@
-use egui::{Context, CursorIcon, Id, Ui, Vec2};
+use egui::{AsIdSalt, CursorIcon, Ui, Vec2};
 use serde::{Deserialize, Serialize};
 use wry::raw_window_handle::HasWindowHandle;
 
@@ -53,12 +53,13 @@ enum Event {
 
 impl NativeTextField {
     pub fn new(
-        ctx: &Context,
-        id: impl Into<Id>,
+        ui: &Ui,
+        id_salt: impl AsIdSalt,
         text_field_type: TextFieldType,
         window: &impl HasWindowHandle,
     ) -> NativeTextField {
-        let view = EguiWebView::new(ctx, id.into(), window, |b| {
+        let id = ui.make_persistent_id(id_salt);
+        let view = EguiWebView::new(ui.ctx(), id, window, |b| {
             b.with_html(
                 include_str!("native_text_field.html")
                     .replace("_tag", text_field_type.tag())

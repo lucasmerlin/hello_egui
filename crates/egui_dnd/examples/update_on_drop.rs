@@ -12,8 +12,9 @@ pub fn main() -> eframe::Result<()> {
             CentralPanel::default().show(ui, |ui| {
                 ui.label("Drag and drop the items below");
 
-                let response =
-                    dnd(ui, "dnd_example").show(items.iter(), |ui, item, handle, state| {
+                let response = dnd(ui, ui.make_persistent_id("dnd_example")).show(
+                    items.iter(),
+                    |ui, item, handle, state| {
                         handle.ui(ui, |ui| {
                             if state.dragged {
                                 ui.label("dragging");
@@ -22,7 +23,8 @@ pub fn main() -> eframe::Result<()> {
                             }
                         });
                         ui.label(*item);
-                    });
+                    },
+                );
 
                 if response.is_drag_finished() {
                     response.update_vec(&mut items);

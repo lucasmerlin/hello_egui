@@ -7,8 +7,8 @@ mod flex_widget;
 pub use crate::flex_widget::FlexWidget;
 use egui::emath::{GuiRounding, TSTransform};
 use egui::{
-    Align, Align2, Direction, Frame, Id, InnerResponse, Layout, Margin, Pos2, Rect, Response,
-    Sense, Ui, UiBuilder, Vec2, Widget,
+    Align, Align2, AsIdSalt, Direction, Frame, Id, IdSalt, InnerResponse, Layout, Margin, Pos2,
+    Rect, Response, Sense, Ui, UiBuilder, Vec2, Widget,
 };
 use std::fmt::Debug;
 use std::mem;
@@ -96,7 +96,7 @@ impl Size {
 /// A flex container.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Flex {
-    id_salt: Option<Id>,
+    id_salt: Option<IdSalt>,
     direction: FlexDirection,
     justify: FlexJustify,
     align_content: FlexAlignContent,
@@ -386,8 +386,10 @@ impl Flex {
     }
 
     /// Customize the id of the flex container to prevent conflicts with other flex containers.
-    pub fn id_salt(mut self, id_salt: impl Into<Id>) -> Self {
-        self.id_salt = Some(id_salt.into());
+    ///
+    /// The salt only has to be unique within the surrounding [`Ui`] scope.
+    pub fn id_salt(mut self, id_salt: impl AsIdSalt) -> Self {
+        self.id_salt = Some(IdSalt::new(id_salt));
         self
     }
 
@@ -481,7 +483,7 @@ impl Flex {
         f: impl FnOnce(&mut FlexInstance) -> R,
     ) -> (Vec2, FlexState, InnerResponse<R>) {
         let id = if let Some(id_salt) = self.id_salt {
-            ui.id().with(id_salt)
+            ui.scope_id().with_salt(id_salt)
         } else {
             ui.auto_id_with("flex")
         };
@@ -1197,7 +1199,7 @@ impl FlexInstance<'_> {
 
                 let item = ItemState {
                     inner_size: inner_size.round_ui(),
-                    id: ui.id(),
+                    id: ui.scope_id(),
                     inner_min_size: Vec2::max(
                         Vec2::new(
                             item.min_size[0].unwrap_or_default(),
@@ -1451,9 +1453,8 @@ impl FlexContainerUi {
         ui: &mut Ui,
         widget: impl Widget,
     ) -> FlexContainerResponse<Response> {
-        let id_salt = ui.id().with("flex_widget");
         let builder = UiBuilder::new()
-            .id_salt(id_salt)
+            .id_salt("flex_widget")
             .layout(Layout::centered_and_justified(Direction::TopDown));
         ui.set_width(ui.available_width());
         ui.set_height(ui.available_height());

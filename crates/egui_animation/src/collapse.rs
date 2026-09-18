@@ -13,21 +13,24 @@ pub struct Collapse {
 }
 
 impl Collapse {
-    // pub fn horizontal(id: impl Into<Id>, visible: bool) -> Self {
+    // pub fn horizontal(id: Id, visible: bool) -> Self {
     //     Self {
     //         horizontal: true,
     //         visible,
-    //         id: id.into(),
+    //         id,
     //         duration: 0.2,
     //     }
     // }
 
     /// Creates a new vertical collapse animation.
-    pub fn vertical(id: impl Into<Id>, visible: bool) -> Self {
+    ///
+    /// The animation state is stored in the global [`egui::Context`] memory,
+    /// so `id` must be globally unique.
+    pub fn vertical(id: Id, visible: bool) -> Self {
         Self {
             horizontal: false,
             visible,
-            id: id.into(),
+            id,
             duration: None,
         }
     }

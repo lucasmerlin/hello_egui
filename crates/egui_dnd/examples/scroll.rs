@@ -21,20 +21,23 @@ fn main() -> eframe::Result<()> {
     eframe::run_ui_native("dnd scroll demo", NativeOptions::default(), move |ui, _| {
         CentralPanel::default().show(ui, |ui| {
             ScrollArea::vertical().show(ui, |ui| {
-                dnd(ui, "dnd").show_vec(&mut items, |ui, item, handle, _dragging| {
-                    ui.horizontal(|ui| {
-                        let clicked = handle
-                            .sense(Sense::click())
-                            .ui(ui, |ui| {
-                                ui.label("grab");
-                            })
-                            .clicked();
-                        if clicked {
-                            println!("clicked {}", item.number);
-                        }
-                        ui.label(item.number.to_string());
-                    });
-                });
+                dnd(ui, ui.make_persistent_id("dnd")).show_vec(
+                    &mut items,
+                    |ui, item, handle, _dragging| {
+                        ui.horizontal(|ui| {
+                            let clicked = handle
+                                .sense(Sense::click())
+                                .ui(ui, |ui| {
+                                    ui.label("grab");
+                                })
+                                .clicked();
+                            if clicked {
+                                println!("clicked {}", item.number);
+                            }
+                            ui.label(item.number.to_string());
+                        });
+                    },
+                );
             })
         });
     })

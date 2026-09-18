@@ -16,13 +16,13 @@ pub fn main() -> eframe::Result<()> {
         move |ui, _frame| {
             CentralPanel::default().show(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
-                    let response = dnd(ui, "dnd").show_custom(|ui, iter| {
+                    let response = dnd(ui, ui.make_persistent_id("dnd")).show_custom(|ui, iter| {
                         virtual_list.ui_custom_layout(ui, items.len(), |ui, start_index| {
                             let item = &items[start_index];
 
                             iter.next(
                                 ui,
-                                Id::new(*item), // assumes that each item is a unique hash
+                                Id::unique(*item), // assumes that each item is a unique hash
                                 start_index,
                                 true,
                                 |ui, dnd_item| {

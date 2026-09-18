@@ -10,18 +10,21 @@ pub fn main() -> eframe::Result<()> {
         NativeOptions::default(),
         move |ui, _frame| {
             CentralPanel::default().show(ui, |ui| {
-                dnd(ui, "dnd_example").show_vec(&mut items, |ui, item, handle, state| {
-                    ui.horizontal(|ui| {
-                        handle.ui(ui, |ui| {
-                            if state.dragged {
-                                ui.label("dragging");
-                            } else {
-                                ui.label("drag");
-                            }
+                dnd(ui, ui.make_persistent_id("dnd_example")).show_vec(
+                    &mut items,
+                    |ui, item, handle, state| {
+                        ui.horizontal(|ui| {
+                            handle.ui(ui, |ui| {
+                                if state.dragged {
+                                    ui.label("dragging");
+                                } else {
+                                    ui.label("drag");
+                                }
+                            });
+                            ui.label(*item);
                         });
-                        ui.label(*item);
-                    });
-                });
+                    },
+                );
             });
         },
     )
