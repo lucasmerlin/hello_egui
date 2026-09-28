@@ -10,16 +10,15 @@ pub struct ItemIterator<'a> {
     dragged_item_rect: Option<Rect>,
     hovering_item: Option<(Id, Pos2)>,
     layout: Layout,
-    set_next_item_as_hovering_above: bool,
     pub(crate) hovering_last_item: bool,
     pub(crate) last_item: Option<(usize, Id, Pos2)>,
 
     pub(crate) mark_next_as_closest_item: Option<(f32, Pos2)>,
 
-    pub(crate) is_after_dragged_item: bool,
     pub(crate) is_after_hovered_item: bool,
     pub(crate) hovering_over_any_handle: bool,
     pub(crate) source_item: Option<(usize, Id)>,
+    pub(crate) hovering_item_index: Option<usize>,
 
     #[allow(clippy::type_complexity)]
     pub(crate) closest_item: Option<(f32, Option<(usize, Id, Pos2)>)>,
@@ -49,17 +48,16 @@ impl<'a> ItemIterator<'a> {
             state,
             dragged_item_rect,
             layout,
-            set_next_item_as_hovering_above: false,
             closest_item: None,
             hovering_item,
             mark_next_as_closest_item: None,
             hovering_last_item,
             last_item: None,
 
-            is_after_dragged_item: false,
             is_after_hovered_item: false,
             hovering_over_any_handle: false,
             source_item: None,
+            hovering_item_index: None,
         }
     }
 
@@ -83,21 +81,16 @@ impl<'a> ItemIterator<'a> {
             self.closest_item = Some((distance, Some((idx, id, pos))));
         }
 
-        if is_dragged_item {
-            self.is_after_dragged_item = true;
-        }
-
         if let Some((hovering_id, _pos)) = self.hovering_item {
             if hovering_id == id {
                 self.is_after_hovered_item = true;
+                self.hovering_item_index = Some(idx);
             }
         }
 
         if add_surrounding_space_automatically {
             self.space_before(ui, id, |_ui, _space| {});
         }
-
-        let dragging = self.state.detection_state.is_dragging();
 
         let item = Item::new(
             id,
@@ -129,10 +122,6 @@ impl<'a> ItemIterator<'a> {
             content(ui, item).0
         };
 
-        if dragging != self.state.detection_state.is_dragging() {
-            self.set_next_item_as_hovering_above = true;
-        }
-
         if add_surrounding_space_automatically {
             self.space_after(ui, id, |_ui, _space| {});
         }
@@ -154,6 +143,9 @@ impl<'a> ItemIterator<'a> {
 
         if self.state.detection_state.is_dragging_item(id) {
             self.source_item = Some((idx, id));
+            if self.hovering_item.is_none() {
+                self.hovering_item_index = Some(idx);
+            }
         }
 
         self.last_item = Some((idx, id, rect.min));

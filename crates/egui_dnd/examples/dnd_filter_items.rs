@@ -49,7 +49,10 @@ fn filter_by_filtering_source_list(ui: &mut Ui, filter: &str, items: &mut Vec<It
     if let Some(update) = response.final_update() {
         // Get the index the item had in the original vec
         let (original_index_from, _) = filtered[update.from];
-        let (original_index_to, _) = filtered[update.to];
+        // `to` is an insertion boundary and may be just past the filtered list.
+        let original_index_to = filtered
+            .get(update.to)
+            .map_or_else(|| filtered.last().unwrap().0 + 1, |(index, _)| *index);
         // Get the original indices of the items for the update
         shift_vec(original_index_from, original_index_to, items);
     }

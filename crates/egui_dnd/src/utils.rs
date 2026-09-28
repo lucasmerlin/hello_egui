@@ -41,3 +41,15 @@ pub fn shift_vec<T>(source_idx: usize, target_idx: usize, vec: &mut [T]) {
         );
     }
 }
+
+/// Convert a screen position into the coordinate space used by this UI.
+pub(crate) fn position_from_global(ui: &egui::Ui, pos: egui::Pos2) -> egui::Pos2 {
+    ui.ctx()
+        .layer_transform_from_global(ui.layer_id())
+        .map_or(pos, |transform| transform * pos)
+}
+
+pub(crate) fn pointer_position(ui: &egui::Ui) -> Option<egui::Pos2> {
+    ui.input(|i| i.pointer.hover_pos())
+        .map(|pos| position_from_global(ui, pos))
+}

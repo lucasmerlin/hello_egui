@@ -2,6 +2,7 @@ use egui::{CursorIcon, Id, InnerResponse, Layout, Order, Pos2, Rect, Sense, Ui, 
 use egui_animation::animate_position;
 
 use crate::state::DragDetectionState;
+use crate::utils::pointer_position;
 use crate::{DragDropUi, Handle, ItemState};
 
 pub struct Item<'a> {
@@ -64,7 +65,6 @@ impl<'a> Item<'a> {
         let hovering_over_any_handle = self.hovering_over_any_handle;
         let id = self.id;
         let unique_id = Self::unique_id(id, self.ui_id);
-        let index = self.state.index;
         let last_pointer_pos = self.dnd_state.detection_state.last_pointer_pos();
         let drag_axis = self.dnd_state.drag_axis;
         if let DragDetectionState::Dragging {
@@ -78,9 +78,7 @@ impl<'a> Item<'a> {
             if id == *dragging_id {
                 ui.output_mut(|o| o.cursor_icon = CursorIcon::Grabbing);
 
-                let pointer_pos = ui
-                    .ctx()
-                    .pointer_hover_pos()
+                let pointer_pos = pointer_position(ui)
                     .or(last_pointer_pos)
                     .unwrap_or_else(|| ui.next_widget_position());
                 let position = drag_axis.constrain(*drag_start_pos, pointer_pos + *offset);
@@ -195,13 +193,7 @@ impl<'a> Item<'a> {
                 |ui| {
                     drag_body(
                         ui,
-                        Handle::new(
-                            id,
-                            index,
-                            self.dnd_state,
-                            hovering_over_any_handle,
-                            rect.min,
-                        ),
+                        Handle::new(id, self.dnd_state, hovering_over_any_handle, rect.min),
                         self.state,
                     );
                 },
@@ -238,7 +230,6 @@ impl<'a> Item<'a> {
                         ui,
                         Handle::new(
                             id,
-                            index,
                             self.dnd_state,
                             hovering_over_any_handle,
                             animated_position,
@@ -277,15 +268,22 @@ impl<'a> Item<'a> {
         layout: Layout,
         body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> InnerResponse<Rect> {
-        let transform = ui.ctx().layer_transform_to_global(ui.layer_id());
-        egui::Area::new(Id::new("draggable_item"))
+        let transform = ui
+            .ctx()
+            .layer_transform_to_global(ui.layer_id())
+            .unwrap_or_default();
+        let area_id = unique_id.with("floating");
+        ui.ctx()
+            .set_transform_layer(egui::LayerId::new(Order::Tooltip, area_id), transform);
+        let enabled = ui.is_enabled();
+        egui::Area::new(area_id)
             .interactable(false)
             .fixed_pos(pos)
             .order(Order::Tooltip)
             .constrain(false)
             .show(ui.ctx(), |ui| {
-                if let Some(transform) = transform {
-                    ui.ctx().set_transform_layer(ui.layer_id(), transform);
+                if !enabled {
+                    ui.disable();
                 }
 
                 ui.scope_builder(UiBuilder::new().layout(layout).id(unique_id), |ui| {
@@ -294,7 +292,7 @@ impl<'a> Item<'a> {
                     }
                     body(
                         ui,
-                        Handle::new(id, state.index, dnd_state, hovering_over_any_handle, pos),
+                        Handle::new(id, dnd_state, hovering_over_any_handle, pos),
                         state,
                     );
                 })

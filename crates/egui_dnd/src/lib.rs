@@ -212,6 +212,9 @@ impl<'a> Dnd<'a> {
 
     /// This will allow for very flexible UI. You can use it to e.g. render outlines around items
     /// or render items in complex layouts. This is **experimental**.
+    /// For virtual lists, updates are suspended while the dragged item or drop target is
+    /// not rendered. Releasing during that time cancels the drop. Apply updates each frame
+    /// to keep the dragged item near the visible drop target.
     pub fn show_custom(self, f: impl FnOnce(&mut Ui, &mut ItemIterator)) -> DragDropResponse {
         #[allow(clippy::used_underscore_items)]
         self._show_with_inner(|_id, ui, drag_drop_ui| drag_drop_ui.ui(ui, f))
