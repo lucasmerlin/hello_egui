@@ -1,27 +1,29 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
 use egui::mutex::Mutex;
-use egui::{Context, Id, Image, Popup, Sense, TextureHandle, Ui, Vec2, Widget};
+use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
 use egui_inbox::UiInbox;
 use serde::{Deserialize, Serialize};
-use wry::dpi::{LogicalPosition, LogicalSize, Position, Size};
 use wry::raw_window_handle::HasWindowHandle;
 use wry::{PageLoadEvent, WebView};
 
+mod clip;
 pub mod native_text_field;
+
+use clip::{NativeClip, Shown};
 
 pub struct EguiWebView {
     pub view: Arc<wry::WebView>,
+    /// Only owned here: `webview_end_frame` reaches it through a weak ref.
+    _clip: Arc<NativeClip>,
     id: Id,
     inbox: UiInbox<WebViewEvent>,
     current_image: Option<TextureHandle>,
     #[allow(dead_code)]
     context: Context,
-
-    displayed_last_frame: bool,
 }
 
 impl Debug for EguiWebView {
@@ -64,7 +66,6 @@ enum PageCommand {
 pub struct WebViewResponse {
     pub events: Vec<WebViewEvent>,
     pub egui_response: egui::Response,
-    pub webview_visible: bool,
 }
 
 impl EguiWebView {
@@ -123,21 +124,26 @@ impl EguiWebView {
 
         *view_ref.lock() = Some(web_view.clone());
 
+        #[allow(clippy::arc_with_non_send_sync)]
+        let clip = Arc::new(NativeClip::new(&web_view));
+
         ctx.data_mut(|data| {
             let state = data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
                 Id::new(WEBVIEW_ID),
                 || unreachable!(),
             );
-            state.views.insert(id, Arc::downgrade(&web_view));
+            state
+                .views
+                .insert(id, (Arc::downgrade(&web_view), Arc::downgrade(&clip)));
         });
 
         Self {
             inbox,
             view: web_view,
+            _clip: clip,
             id,
             current_image: None,
             context: ctx.clone(),
-            displayed_last_frame: false,
         }
     }
 
@@ -151,6 +157,7 @@ impl EguiWebView {
         }
     }
 
+    #[allow(dead_code)]
     fn take_screenshot() {
         // let ctx = self.context.clone();
         // let tx = self.inbox.sender();
@@ -228,17 +235,7 @@ impl EguiWebView {
             }
         }
 
-        let my_layer = ui.layer_id();
-
-        let is_my_layer_top =
-            ui.memory(|mem| mem.areas().top_layer_id(my_layer.order) == Some(my_layer));
-
-        if !is_my_layer_top {
-            //response.surrender_focus();
-        }
-
         if response.gained_focus() {
-            println!("Gained focus");
             self.view.focus().ok();
         }
 
@@ -246,45 +243,24 @@ impl EguiWebView {
             Image::new(image).paint_at(ui, response.rect);
         }
 
-        let should_display = is_my_layer_top && !Popup::is_any_open(ui.ctx());
-
-        if !should_display && self.displayed_last_frame {
-            self.current_image = None;
-            Self::take_screenshot();
-        }
-        self.displayed_last_frame = should_display;
-
-        if should_display || self.current_image.is_none() {
-            ui.ctx().memory_mut(|mem| {
-                let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                    Id::new(WEBVIEW_ID),
-                    || unreachable!(),
-                );
-                state.rendered_this_frame.insert(self.id);
-            });
-        }
-
-        let screen_rect = ui.ctx().content_rect();
-        let wv_height = screen_rect.height() * ui.ctx().zoom_factor();
-        let wv_rect = response.rect * ui.ctx().zoom_factor();
-
-        self.view
-            .set_bounds(wry::Rect {
-                position: Position::Logical(LogicalPosition::new(
-                    f64::from(wv_rect.min.x),
-                    f64::from(wv_height - wv_rect.max.y),
-                )),
-                size: Size::Logical(LogicalSize::new(
-                    f64::from(wv_rect.width()),
-                    f64::from(wv_rect.height()),
-                )),
-            })
-            .unwrap();
+        // The native view is placed in `webview_end_frame`, once the popups
+        // that may cover it have been shown.
+        let shown = Shown {
+            layer: ui.layer_id(),
+            rect: response.rect,
+            clip: ui.clip_rect(),
+        };
+        ui.ctx().memory_mut(|mem| {
+            let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
+                Id::new(WEBVIEW_ID),
+                || unreachable!(),
+            );
+            state.shown_this_frame.insert(self.id, shown);
+        });
 
         WebViewResponse {
             events,
             egui_response: response,
-            webview_visible: should_display,
         }
     }
 
@@ -299,8 +275,8 @@ impl EguiWebView {
 
 #[derive(Clone, Debug)]
 struct GlobalWebViewState {
-    views: HashMap<Id, Weak<WebView>>,
-    rendered_this_frame: HashSet<Id>,
+    views: HashMap<Id, (Weak<WebView>, Weak<NativeClip>)>,
+    shown_this_frame: HashMap<Id, Shown>,
 }
 
 #[allow(unsafe_code)]
@@ -322,34 +298,36 @@ pub fn init_webview(ctx: &Context) {
         mem.data.insert_temp(
             Id::new(WEBVIEW_ID),
             GlobalWebViewState {
-                rendered_this_frame: HashSet::new(),
+                shown_this_frame: HashMap::new(),
                 views: HashMap::new(),
             },
         );
     });
 }
 
+/// Place every webview and cut holes for the layers above it.
+///
+/// Call it once per frame, after all your UI, so every popup has been shown.
 pub fn webview_end_frame(ctx: &Context) {
-    ctx.memory_mut(|mem| {
+    let (views, shown) = ctx.memory_mut(|mem| {
         let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
             Id::new(WEBVIEW_ID),
             || unreachable!(),
         );
-        state.views.retain(|id, view| {
-            if let Some(view) = view.upgrade() {
-                if state.rendered_this_frame.contains(id) {
-                    println!("Set visible true");
-                    view.set_visible(true).ok();
-                } else {
-                    println!("Set visible false");
-                    view.set_visible(false).ok();
-                }
-
-                true
-            } else {
-                false
-            }
-        });
-        state.rendered_this_frame.clear();
+        state
+            .views
+            .retain(|_, (view, clip)| view.strong_count() > 0 && clip.strong_count() > 0);
+        (
+            state.views.clone(),
+            std::mem::take(&mut state.shown_this_frame),
+        )
     });
+
+    // Outside the memory lock: the native calls can run webview callbacks.
+    let placements = clip::placements(ctx, &shown);
+    for (id, (view, clip)) in views {
+        if let (Some(view), Some(clip)) = (view.upgrade(), clip.upgrade()) {
+            clip.update(&view, placements.get(&id).and_then(Option::as_ref));
+        }
+    }
 }
