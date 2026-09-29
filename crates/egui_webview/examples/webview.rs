@@ -3,7 +3,7 @@ use eframe::{emath::Align, NativeOptions};
 use egui::{CentralPanel, Context, Id, Layout, Popup, TextEdit, Widget, Window};
 use wry::raw_window_handle::HasWindowHandle;
 
-use egui_webview::{init_webview, webview_end_frame, EguiWebView, WebViewEvent};
+use egui_webview::{init_webview, use_paint_planes, EguiWebView, WebViewEvent};
 
 pub struct WebBrowser {
     id: Id,
@@ -103,12 +103,18 @@ pub fn main() -> eframe::Result<()> {
             CentralPanel::default().show(ui, |ui| {
                 if windows.is_empty() || ui.button("New Window").clicked() {
                     init_webview(ui.ctx());
+                    // `WEBVIEW_HOLES=1` cuts holes into the webview instead.
+                    if std::env::var_os("WEBVIEW_HOLES").is_none() {
+                        if let Some(render_state) = frame.wgpu_render_state() {
+                            use_paint_planes(ui.ctx(), render_state);
+                        }
+                    }
 
                     let url = default_urls[count % default_urls.len()];
 
                     windows.push(WebBrowser::new(
                         ui.ctx(),
-                        Id::new(format!("Window {count}")),
+                        Id::unique(format!("Window {count}")),
                         url,
                         frame,
                     ));
@@ -117,8 +123,6 @@ pub fn main() -> eframe::Result<()> {
             });
 
             windows.retain_mut(|w| w.ui(ui.ctx()));
-
-            webview_end_frame(ui.ctx());
         },
     )
 }

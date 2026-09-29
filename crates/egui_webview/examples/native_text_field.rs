@@ -1,8 +1,8 @@
 use eframe::NativeOptions;
-use egui::{vec2, TextEdit, Widget, Window};
+use egui::{vec2, Id, TextEdit, Widget, Window};
 
+use egui_webview::init_webview;
 use egui_webview::native_text_field::{NativeTextField, TextFieldType};
-use egui_webview::{init_webview, webview_end_frame};
 
 pub fn main() -> eframe::Result<()> {
     let mut view = None;
@@ -15,9 +15,24 @@ pub fn main() -> eframe::Result<()> {
                 init_webview(ui.ctx());
 
                 view = Some((
-                    NativeTextField::new(ui.ctx(), "email", TextFieldType::Email, frame),
-                    NativeTextField::new(ui.ctx(), "password", TextFieldType::Password, frame),
-                    NativeTextField::new(ui.ctx(), "textarea", TextFieldType::Textarea, frame),
+                    NativeTextField::new(
+                        ui.ctx(),
+                        Id::unique("email"),
+                        TextFieldType::Email,
+                        frame,
+                    ),
+                    NativeTextField::new(
+                        ui.ctx(),
+                        Id::unique("password"),
+                        TextFieldType::Password,
+                        frame,
+                    ),
+                    NativeTextField::new(
+                        ui.ctx(),
+                        Id::unique("textarea"),
+                        TextFieldType::Textarea,
+                        frame,
+                    ),
                 ));
             }
 
@@ -50,8 +65,6 @@ pub fn main() -> eframe::Result<()> {
                 view.2
                     .current_text_mut(|text| TextEdit::multiline(text).ui(ui).changed());
             });
-
-            webview_end_frame(ui.ctx());
         },
     )
 }

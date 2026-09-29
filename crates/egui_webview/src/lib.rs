@@ -1,52 +1,40 @@
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt::Debug;
-use std::sync::{Arc, Weak};
+use std::sync::Weak;
 
-use egui::mutex::Mutex;
-use egui::{Context, Id, Image, Sense, TextureHandle, Ui, Vec2, Widget};
-use egui_inbox::UiInbox;
-use serde::{Deserialize, Serialize};
-use wry::raw_window_handle::HasWindowHandle;
-use wry::{PageLoadEvent, WebView};
+use egui::{Context, Id};
 
 mod clip;
+#[cfg(not(target_arch = "wasm32"))]
+mod native;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod native_text_field;
+#[cfg(target_arch = "wasm32")]
+mod web;
 
-use clip::{NativeClip, Shown};
+use clip::Shown;
+#[cfg(not(target_arch = "wasm32"))]
+use native::Placer;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native::{EguiWebView, WebViewError};
+#[cfg(target_arch = "wasm32")]
+use web::Placer;
+#[cfg(target_arch = "wasm32")]
+pub use web::{EguiWebView, WebViewError};
 
-pub struct EguiWebView {
-    pub view: Arc<wry::WebView>,
-    /// Only owned here: `webview_end_frame` reaches it through a weak ref.
-    _clip: Arc<NativeClip>,
-    id: Id,
-    inbox: UiInbox<WebViewEvent>,
-    current_image: Option<TextureHandle>,
-    #[allow(dead_code)]
-    context: Context,
-}
+/// What a webview shows.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum WebViewSource {
+    /// A page given as HTML.
+    ///
+    /// On the web, the page gets an opaque origin, so it can't reach the page that shows it.
+    Html(String),
 
-impl Debug for EguiWebView {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("EguiWebView").field("id", &self.id).finish()
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct JsEvent {
-    event: JsEventType,
-    __egui_webview: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
-enum JsEventType {
-    Focus,
-    Blur,
+    /// A page to load from a URL.
+    Url(String),
 }
 
 pub enum WebViewEvent {
-    ScreenshotReceived(TextureHandle),
+    ScreenshotReceived(egui::TextureHandle),
     Focus,
     Blur,
     Loading(String),
@@ -54,231 +42,26 @@ pub enum WebViewEvent {
     Ipc(String),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
-enum PageCommand {
-    // Screenshot,
-    Click { x: f32, y: f32 },
-    Back,
-    Forward,
-}
-
 pub struct WebViewResponse {
     pub events: Vec<WebViewEvent>,
     pub egui_response: egui::Response,
 }
 
-impl EguiWebView {
-    pub fn new(
-        ctx: &Context,
-        id: impl Into<Id>,
-        window: &impl HasWindowHandle,
-        build: impl FnOnce(wry::WebViewBuilder) -> wry::WebViewBuilder,
-    ) -> Self {
-        let (tx, inbox) = UiInbox::channel();
-        let id = id.into();
-        ctx.memory_mut(|mem| {
-            mem.data
-                .get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                    Id::new(WEBVIEW_ID),
-                    || unreachable!(),
-                )
-                .clone()
-        });
-
-        let mut builder = wry::WebViewBuilder::new();
-
-        builder = build(builder);
-
-        #[allow(clippy::arc_with_non_send_sync)]
-        let view_ref = Arc::new(Mutex::new(None::<Arc<WebView>>));
-        let view_ref_weak = view_ref.clone();
-        let ctx_clone = ctx.clone();
-
-        let tx_clone = tx.clone();
-
-        builder = builder
-            .with_devtools(true)
-            .with_on_page_load_handler(move |event, url| {
-                match event {
-                    PageLoadEvent::Started => {
-                        let guard = view_ref_weak.lock();
-                        if let Some(view) = guard.as_ref() {
-                            if let Err(err) = view.evaluate_script(include_str!("webview.js")) {
-                                println!("Error loading webview script: {err}");
-                            }
-                        }
-                    }
-                    PageLoadEvent::Finished => {}
-                }
-
-                tx_clone.send(WebViewEvent::Loaded(url)).ok();
-            })
-            .with_ipc_handler(move |msg: http::Request<String>| {
-                let result = Self::handle_js_event(msg.body().clone(), &ctx_clone);
-                tx.send(result).ok();
-            });
-
-        #[allow(clippy::arc_with_non_send_sync)]
-        let web_view = Arc::new(builder.build_as_child(window).unwrap());
-
-        *view_ref.lock() = Some(web_view.clone());
-
-        #[allow(clippy::arc_with_non_send_sync)]
-        let clip = Arc::new(NativeClip::new(&web_view));
-
-        ctx.data_mut(|data| {
-            let state = data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                Id::new(WEBVIEW_ID),
-                || unreachable!(),
-            );
-            state
-                .views
-                .insert(id, (Arc::downgrade(&web_view), Arc::downgrade(&clip)));
-        });
-
-        Self {
-            inbox,
-            view: web_view,
-            _clip: clip,
-            id,
-            current_image: None,
-            context: ctx.clone(),
-        }
-    }
-
-    fn handle_js_event(msg: String, _ctx: &Context) -> WebViewEvent {
-        let event = serde_json::from_str::<JsEvent>(&msg).map(|e| e.event);
-
-        match event {
-            Ok(JsEventType::Focus) => WebViewEvent::Focus,
-            Ok(JsEventType::Blur) => WebViewEvent::Blur,
-            Err(_) => WebViewEvent::Ipc(msg),
-        }
-    }
-
-    #[allow(dead_code)]
-    fn take_screenshot() {
-        // let ctx = self.context.clone();
-        // let tx = self.inbox.sender();
-
-        // // TODO: This requires a screenshot feature in wry, https://github.com/tauri-apps/wry/pull/266
-        // self.view
-        //     .screenshot(wry::ScreenshotRegion::Visible, move |data| {
-        //         let ctx = ctx.clone();
-        //         let tx = tx.clone();
-        //         if let Ok(screenshot) = data {
-        //             let image = image::load_from_memory(&screenshot).unwrap();
-        //
-        //             let data = image.into_rgba8();
-        //
-        //             let handle = ctx.load_texture(
-        //                 "browser_screenshot",
-        //                 ColorImage::from_rgba_unmultiplied(
-        //                     [data.width() as usize, data.height() as usize],
-        //                     &data,
-        //                 ),
-        //                 Default::default(),
-        //             );
-        //             tx.send(WebViewEvent::ScreenshotReceived(handle)).ok();
-        //         }
-        //     })
-        //     .ok();
-    }
-
-    #[allow(clippy::needless_pass_by_value)]
-    fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
-        let json = serde_json::to_string(&command)?;
-        self.view
-            .evaluate_script(&format!("__egui_webview_handle_command({json})"))?;
-        Ok(())
-    }
-
-    pub fn back(&self) {
-        self.send_command(PageCommand::Back).ok();
-    }
-
-    pub fn forward(&self) {
-        self.send_command(PageCommand::Forward).ok();
-    }
-
-    pub fn ui(&mut self, ui: &mut Ui, size: Vec2) -> WebViewResponse {
-        //self.take_screenshot();
-
-        let response = ui.allocate_response(size, Sense::click());
-
-        let events = self
-            .inbox
-            .read(ui)
-            .inspect(|e| match e {
-                WebViewEvent::ScreenshotReceived(img) => {
-                    self.current_image = Some(img.clone());
-                }
-                WebViewEvent::Focus => {
-                    ui.memory_mut(|mem| mem.request_focus(response.id));
-                }
-                _ => {}
-            })
-            .collect();
-
-        if response.clicked() {
-            response.request_focus();
-            let pos = response.hover_pos();
-            if let Some(pos) = pos {
-                let relative = (pos - response.rect.min) / ui.ctx().pixels_per_point();
-
-                self.send_command(PageCommand::Click {
-                    x: relative.x,
-                    y: relative.y,
-                })
-                .ok();
-            }
-        }
-
-        if response.gained_focus() {
-            self.view.focus().ok();
-        }
-
-        if let Some(image) = &self.current_image {
-            Image::new(image).paint_at(ui, response.rect);
-        }
-
-        // The native view is placed in `webview_end_frame`, once the popups
-        // that may cover it have been shown.
-        let shown = Shown {
-            layer: ui.layer_id(),
-            rect: response.rect,
-            clip: ui.clip_rect(),
-        };
-        ui.ctx().memory_mut(|mem| {
-            let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                Id::new(WEBVIEW_ID),
-                || unreachable!(),
-            );
-            state.shown_this_frame.insert(self.id, shown);
-        });
-
-        WebViewResponse {
-            events,
-            egui_response: response,
-        }
-    }
-
-    pub fn screenshot_ui(&mut self, ui: &mut Ui) {
-        if let Some(img) = self.current_image.as_ref() {
-            Image::new(img)
-                .fit_to_exact_size(img.size_vec2() / ui.ctx().pixels_per_point())
-                .ui(ui);
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Default)]
 struct GlobalWebViewState {
-    views: HashMap<Id, (Weak<WebView>, Weak<NativeClip>)>,
+    views: HashMap<Id, Weak<Placer>>,
     shown_this_frame: HashMap<Id, Shown>,
+    /// Set by [`use_paint_planes`].
+    render_state: Option<egui_wgpu::RenderState>,
+    /// Set by [`set_parent_window`].
+    #[cfg(not(target_arch = "wasm32"))]
+    parent_window: Option<wry::raw_window_handle::RawWindowHandle>,
+    /// Set by [`set_parent_canvas`].
+    #[cfg(target_arch = "wasm32")]
+    parent_canvas: Option<web_sys::HtmlCanvasElement>,
 }
 
+// Webviews and DOM elements are only touched from the thread that runs egui.
 #[allow(unsafe_code)]
 unsafe impl Send for GlobalWebViewState {}
 #[allow(unsafe_code)]
@@ -286,37 +69,70 @@ unsafe impl Sync for GlobalWebViewState {}
 
 pub const WEBVIEW_ID: &str = "egui_webview";
 
-pub fn init_webview(ctx: &Context) {
-    ctx.memory_mut(|mem| {
-        if mem
-            .data
-            .get_temp::<GlobalWebViewState>(Id::new(WEBVIEW_ID))
-            .is_some()
-        {
-            return;
-        }
-        mem.data.insert_temp(
-            Id::new(WEBVIEW_ID),
-            GlobalWebViewState {
-                shown_this_frame: HashMap::new(),
-                views: HashMap::new(),
-            },
-        );
-    });
+fn with_state<R>(ctx: &Context, f: impl FnOnce(&mut GlobalWebViewState) -> R) -> R {
+    ctx.data_mut(|data| {
+        f(data.get_temp_mut_or_default::<GlobalWebViewState>(Id::unique(WEBVIEW_ID)))
+    })
 }
 
-/// Place every webview and cut holes for the layers above it.
+/// Places every webview at the end of each pass, once all popups that may cover it are shown.
+struct WebViewPlugin;
+
+impl egui::Plugin for WebViewPlugin {
+    fn debug_name(&self) -> &'static str {
+        "egui_webview"
+    }
+
+    fn on_end_pass(&mut self, ui: &mut egui::Ui) {
+        end_pass(ui.ctx());
+    }
+}
+
+/// Set up webviews for this context. Calling it again does nothing.
+pub fn init_webview(ctx: &Context) {
+    with_state(ctx, |_| {});
+    ctx.add_plugin(WebViewPlugin);
+}
+
+/// The native window that webviews are added to.
 ///
-/// Call it once per frame, after all your UI, so every popup has been shown.
-pub fn webview_end_frame(ctx: &Context) {
-    let (views, shown) = ctx.memory_mut(|mem| {
-        let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-            Id::new(WEBVIEW_ID),
-            || unreachable!(),
-        );
-        state
-            .views
-            .retain(|_, (view, clip)| view.strong_count() > 0 && clip.strong_count() > 0);
+/// Needed before [`EguiWebView::from_source`] creates a webview.
+/// The window has to outlive every webview.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn set_parent_window(
+    ctx: &Context,
+    window: &impl wry::raw_window_handle::HasWindowHandle,
+) -> Result<(), wry::raw_window_handle::HandleError> {
+    let raw = window.window_handle()?.as_raw();
+    init_webview(ctx);
+    with_state(ctx, |state| state.parent_window = Some(raw));
+    Ok(())
+}
+
+/// The canvas egui paints into. Webviews are placed over it.
+///
+/// Needed before [`EguiWebView::from_source`] creates a webview.
+#[cfg(target_arch = "wasm32")]
+pub fn set_parent_canvas(ctx: &Context, canvas: web_sys::HtmlCanvasElement) {
+    init_webview(ctx);
+    with_state(ctx, |state| state.parent_canvas = Some(canvas));
+}
+
+/// Paint the egui layers above each webview into a transparent surface over it,
+/// instead of cutting holes into the webview for them.
+///
+/// Popups then keep their shadows over the page, and a modal's backdrop dims it.
+/// Needs a wgpu renderer, and applies to webviews created after this call.
+/// Only macOS and the web (with WebGPU) have paint planes so far; elsewhere this changes nothing.
+pub fn use_paint_planes(ctx: &Context, render_state: &egui_wgpu::RenderState) {
+    init_webview(ctx);
+    with_state(ctx, |state| state.render_state = Some(render_state.clone()));
+}
+
+/// Place every webview, and keep it out from under the layers above it.
+fn end_pass(ctx: &Context) {
+    let (views, shown) = with_state(ctx, |state| {
+        state.views.retain(|_, placer| placer.strong_count() > 0);
         (
             state.views.clone(),
             std::mem::take(&mut state.shown_this_frame),
@@ -325,9 +141,28 @@ pub fn webview_end_frame(ctx: &Context) {
 
     // Outside the memory lock: the native calls can run webview callbacks.
     let placements = clip::placements(ctx, &shown);
-    for (id, (view, clip)) in views {
-        if let (Some(view), Some(clip)) = (view.upgrade(), clip.upgrade()) {
-            clip.update(&view, placements.get(&id).and_then(Option::as_ref));
+    for (id, placer) in views {
+        if let Some(placer) = placer.upgrade() {
+            placer.place(placements.get(&id));
         }
     }
+}
+
+/// Note that the webview with this id is shown this pass, and add its paint plane.
+fn show(ui: &egui::Ui, id: Id, rect: egui::Rect, has_plane: bool) {
+    use egui::emath::GuiRounding as _;
+
+    let shown = Shown {
+        layer: ui.layer_id(),
+        rect,
+        visible: rect
+            .intersect(ui.clip_rect())
+            .round_to_pixels(ui.pixels_per_point()),
+    };
+    if has_plane && shown.visible.is_positive() {
+        ui.ctx().add_paint_plane(id, shown.layer, shown.visible);
+    }
+    with_state(ui.ctx(), |state| {
+        state.shown_this_frame.insert(id, shown);
+    });
 }

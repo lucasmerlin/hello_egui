@@ -5,15 +5,30 @@ edition = "2021"
 publish = false
 
 [dependencies]
-wry = "0.55.0"
-http = "1"
 egui.workspace = true
 egui_inbox = { workspace = true }
 
-image.workspace = true
-egui_extras = { workspace = true, features = ["image"] }
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wry = "0.55.0"
+http = "1"
+egui-wgpu = { version = "0.36.0", features = ["winit"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+egui-wgpu = { version = "0.36.0", features = ["paint-planes"] }
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = [
+  "console",
+  "CssStyleDeclaration",
+  "Document",
+  "Element",
+  "HtmlCanvasElement",
+  "HtmlElement",
+  "HtmlIFrameElement",
+  "Node",
+  "Window",
+] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # Same versions wry uses, so the `WKWebView` it hands out is the same type.
@@ -26,6 +41,7 @@ objc2-core-foundation = { version = "0.3.2", default-features = false, features 
 
 [dev-dependencies]
 eframe = { workspace = true, default-features = true }
+egui_extras = { workspace = true, features = ["image"] }
 
 [lints]
 workspace = true

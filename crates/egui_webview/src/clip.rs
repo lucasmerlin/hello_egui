@@ -1,9 +1,14 @@
 //! Keeps the native webview out from under the egui layers painted above it.
 //!
 //! The webview is a native view on top of egui's surface, so nothing egui paints
-//! can cover it. Instead, each layer above the webview's layer cuts a hole into
-//! the native view, through which egui's own rendering of that layer shows. The
-//! same holes let clicks through to egui.
+//! can cover it. There are two ways around that:
+//!
+//! - Holes: each layer above the webview's layer cuts a hole into the native
+//!   view, through which egui's own rendering of that layer shows.
+//! - Paint planes: egui paints the layers above the webview a second time, into a
+//!   transparent surface over it (see [`egui::Context::add_paint_plane`]).
+//!
+//! Either way, clicks in the rects of those layers go through to egui.
 
 use egui::{Context, Id, LayerId, Rect};
 use std::collections::HashMap;
@@ -17,6 +22,11 @@ pub(crate) struct Placement {
     pub visible: Rect,
     /// Rects inside `visible` that egui paints over.
     pub holes: Vec<Rect>,
+    /// A modal is open above the webview.
+    pub under_modal: bool,
+    /// Where the webview's layer is in egui's paint order. Native views have to
+    /// stack the same way, or a webview in a window behind covers one in front.
+    pub stack: usize,
 }
 
 /// What [`crate::EguiWebView::ui`] saw of a webview this frame, in egui points.
@@ -24,45 +34,42 @@ pub(crate) struct Placement {
 pub(crate) struct Shown {
     pub layer: LayerId,
     pub rect: Rect,
-    pub clip: Rect,
+    /// The part of `rect` inside the clip rect, rounded to pixels.
+    pub visible: Rect,
 }
 
 /// Turn what each webview saw this frame into a placement.
 ///
 /// Call it once all areas have been shown, so the rects of popups opened
-/// after the webview are already known. A webview under a modal gets `None`:
-/// the modal's backdrop covers the whole screen, but only the dialog has an
-/// area rect, so there is no hole to cut for the rest.
-pub(crate) fn placements(
-    ctx: &Context,
-    shown: &HashMap<Id, Shown>,
-) -> HashMap<Id, Option<Placement>> {
+/// after the webview are already known.
+pub(crate) fn placements(ctx: &Context, shown: &HashMap<Id, Shown>) -> HashMap<Id, Placement> {
     let zoom = ctx.zoom_factor();
     ctx.memory(|mem| {
         let order = mem.layer_ids().collect::<Vec<_>>();
         shown
             .iter()
             .map(|(id, shown)| {
-                let placement = mem.is_above_modal_layer(shown.layer).then(|| {
-                    let visible = shown.rect.intersect(shown.clip);
-                    let above = order
-                        .iter()
-                        .rposition(|layer| *layer == shown.layer)
-                        .map_or(order.len(), |i| i + 1);
-                    let holes = order[above..]
-                        .iter()
-                        .filter(|layer| mem.areas().is_visible(layer))
-                        .filter_map(|layer| mem.area_rect(layer.id))
-                        .map(|rect| rect.intersect(visible))
-                        .filter(Rect::is_positive)
-                        .map(|rect| rect * zoom)
-                        .collect();
-                    Placement {
-                        rect: shown.rect * zoom,
-                        visible: visible * zoom,
-                        holes,
-                    }
-                });
+                let above = order
+                    .iter()
+                    .rposition(|layer| *layer == shown.layer)
+                    .map_or(order.len(), |i| i + 1);
+                let holes = order[above..]
+                    .iter()
+                    .filter(|layer| mem.areas().is_visible(layer))
+                    .filter_map(|layer| mem.area_rect(layer.id))
+                    .map(|rect| rect.intersect(shown.visible))
+                    .filter(Rect::is_positive)
+                    .map(|rect| rect * zoom)
+                    .collect();
+                let placement = Placement {
+                    rect: shown.rect * zoom,
+                    visible: shown.visible * zoom,
+                    holes,
+                    // One frame behind: `top_modal_layer` is only set at the
+                    // end of the pass.
+                    under_modal: !mem.is_above_modal_layer(shown.layer),
+                    stack: above,
+                };
                 (*id, placement)
             })
             .collect()
@@ -70,7 +77,10 @@ pub(crate) fn placements(
 }
 
 /// Cut `holes` out of `rect`. The result is a set of rects that do not overlap.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+#[cfg_attr(
+    not(any(target_os = "macos", target_arch = "wasm32")),
+    allow(dead_code)
+)]
 pub(crate) fn subtract(rect: Rect, holes: &[Rect]) -> Vec<Rect> {
     let mut parts = vec![rect];
     for hole in holes {
@@ -101,7 +111,7 @@ pub(crate) fn subtract(rect: Rect, holes: &[Rect]) -> Vec<Rect> {
 #[cfg(target_os = "macos")]
 pub(crate) use macos::NativeClip;
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_arch = "wasm32")))]
 pub(crate) use fallback::NativeClip;
 
 #[cfg(target_os = "macos")]
@@ -115,6 +125,10 @@ mod macos {
     use objc2_core_foundation::{CGPoint, CGRect, CGSize};
     use objc2_core_graphics::CGMutablePath;
     use objc2_quartz_core::{CAShapeLayer, CATransaction};
+    use std::ptr::NonNull;
+    use wry::raw_window_handle::{
+        AppKitDisplayHandle, AppKitWindowHandle, RawDisplayHandle, RawWindowHandle,
+    };
     use wry::WebViewExtMacOS;
 
     use super::{subtract, Placement};
@@ -168,16 +182,90 @@ mod macos {
         }
     }
 
+    define_class!(
+        /// Shows the paint plane over the `WKWebView`. Clicks go through it.
+        #[unsafe(super(NSView))]
+        #[thread_kind = MainThreadOnly]
+        struct PlaneView;
+
+        impl PlaneView {
+            #[unsafe(method(isFlipped))]
+            fn is_flipped(&self) -> bool {
+                true
+            }
+
+            #[unsafe(method_id(hitTest:))]
+            fn hit_test(&self, _point: CGPoint) -> Option<Retained<NSView>> {
+                None
+            }
+        }
+    );
+
+    impl PlaneView {
+        fn new(mtm: MainThreadMarker) -> Retained<Self> {
+            let this = Self::alloc(mtm).set_ivars(());
+            unsafe { msg_send![super(this), init] }
+        }
+    }
+
+    /// The transparent view egui-wgpu paints the webview's paint plane into.
+    struct Plane {
+        id: egui::Id,
+        view: Retained<PlaneView>,
+        surfaces: egui_wgpu::PlaneSurfaces,
+    }
+
+    impl Plane {
+        fn new(
+            mtm: MainThreadMarker,
+            id: egui::Id,
+            render_state: &egui_wgpu::RenderState,
+        ) -> Option<Self> {
+            let view = PlaneView::new(mtm);
+            let handle = AppKitWindowHandle::new(NonNull::from(&*view).cast());
+            let target = egui_wgpu::wgpu::SurfaceTargetUnsafe::RawHandle {
+                raw_display_handle: Some(RawDisplayHandle::AppKit(AppKitDisplayHandle::new())),
+                raw_window_handle: RawWindowHandle::AppKit(handle),
+            };
+            // The view outlives the surface: `Drop` removes the surface first.
+            let surface = unsafe { render_state.instance.create_surface_unsafe(target) }
+                .inspect_err(|err| eprintln!("egui_webview: no paint plane surface: {err}"))
+                .ok()?;
+            render_state.plane_surfaces.insert(id, surface);
+            Some(Self {
+                id,
+                view,
+                surfaces: render_state.plane_surfaces.clone(),
+            })
+        }
+    }
+
+    impl Drop for Plane {
+        fn drop(&mut self) {
+            self.surfaces.remove(self.id);
+            self.view.removeFromSuperview();
+        }
+    }
+
     pub(crate) struct NativeClip {
         view: Retained<ClipView>,
         mask: Retained<CAShapeLayer>,
+        /// With paint planes, instead of holes in the mask.
+        plane: Option<Plane>,
         /// `None` while hidden, which is how the view starts.
         last: RefCell<Option<Placement>>,
     }
 
     impl NativeClip {
         /// Move the `WKWebView` from winit's view into a [`ClipView`].
-        pub fn new(webview: &wry::WebView) -> Self {
+        ///
+        /// With a `render_state`, egui paints the layers above the webview into a
+        /// plane over it. Without one, they cut holes into it.
+        pub fn new(
+            webview: &wry::WebView,
+            id: egui::Id,
+            render_state: Option<&egui_wgpu::RenderState>,
+        ) -> Self {
             let mtm = MainThreadMarker::new().expect("webviews live on the main thread");
             let wk = webview.webview();
             let parent = unsafe { wk.superview() }.expect("wry adds child webviews to a view");
@@ -189,15 +277,27 @@ mod macos {
             wk.removeFromSuperview();
             view.addSubview(&wk);
 
+            let plane = render_state.and_then(|render_state| Plane::new(mtm, id, render_state));
+            if let Some(plane) = &plane {
+                view.addSubview(&plane.view);
+            }
+
             Self {
                 view,
                 mask: CAShapeLayer::new(),
+                plane,
                 last: RefCell::new(None),
             }
         }
 
+        pub fn has_plane(&self) -> bool {
+            self.plane.is_some()
+        }
+
         pub fn update(&self, webview: &wry::WebView, placement: Option<&Placement>) {
-            let placement = placement.filter(|p| p.visible.is_positive());
+            // Holes can't show a modal's backdrop, but a plane can.
+            let placement = placement
+                .filter(|p| p.visible.is_positive() && (self.plane.is_some() || !p.under_modal));
             if self.last.borrow().as_ref() == placement {
                 return;
             }
@@ -209,29 +309,48 @@ mod macos {
             };
 
             let origin = placement.visible.min.to_vec2();
-            let holes = placement
-                .holes
-                .iter()
-                .map(|hole| hole.translate(-origin))
-                .collect::<Vec<_>>();
             let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, placement.visible.size());
+            let holes = if placement.under_modal {
+                // The modal takes all input.
+                vec![bounds]
+            } else {
+                placement
+                    .holes
+                    .iter()
+                    .map(|hole| hole.translate(-origin))
+                    .collect::<Vec<_>>()
+            };
 
             // A layer that no view owns animates every change by default.
             CATransaction::begin();
             CATransaction::setDisableActions(true);
 
             self.view.setFrame(cg_rect(placement.visible));
-            webview.webview().setFrame(cg_rect(placement.rect.translate(-origin)));
+            webview
+                .webview()
+                .setFrame(cg_rect(placement.rect.translate(-origin)));
+
+            if let Some(plane) = &self.plane {
+                plane.view.setFrame(cg_rect(bounds));
+            }
 
             let layer = self.view.layer();
-            if holes.is_empty() {
+            if let Some(layer) = &layer {
+                // Above egui's own surface, which sits at 0. Only drawing follows
+                // this; clicks don't need to, since the holes of a webview behind
+                // cover the windows in front of it.
+                layer.setZPosition(1.0 + placement.stack as f64);
+            }
+            if holes.is_empty() || self.plane.is_some() {
                 if let Some(layer) = layer {
                     unsafe { layer.setMask(None) };
                 }
             } else if let Some(layer) = layer {
                 let path = CGMutablePath::new();
                 for part in subtract(bounds, &holes) {
-                    unsafe { CGMutablePath::add_rect(Some(&path), std::ptr::null(), cg_rect(part)) };
+                    unsafe {
+                        CGMutablePath::add_rect(Some(&path), std::ptr::null(), cg_rect(part));
+                    };
                 }
                 self.mask.setFrame(cg_rect(bounds));
                 self.mask.setPath(Some(&path));
@@ -252,23 +371,32 @@ mod macos {
     }
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_arch = "wasm32")))]
 mod fallback {
     use wry::dpi::{LogicalPosition, LogicalSize};
 
     use super::Placement;
 
-    /// No holes on this platform yet: hide the webview while anything covers it.
+    /// No holes or planes on this platform yet: hide the webview while anything covers it.
     pub(crate) struct NativeClip;
 
     impl NativeClip {
-        pub fn new(_webview: &wry::WebView) -> Self {
+        pub fn new(
+            _webview: &wry::WebView,
+            _id: egui::Id,
+            _render_state: Option<&egui_wgpu::RenderState>,
+        ) -> Self {
             Self
         }
 
         #[allow(clippy::unused_self)]
+        pub fn has_plane(&self) -> bool {
+            false
+        }
+
+        #[allow(clippy::unused_self)]
         pub fn update(&self, webview: &wry::WebView, placement: Option<&Placement>) {
-            let Some(placement) = placement.filter(|p| p.holes.is_empty()) else {
+            let Some(placement) = placement.filter(|p| p.holes.is_empty() && !p.under_modal) else {
                 webview.set_visible(false).ok();
                 return;
             };
