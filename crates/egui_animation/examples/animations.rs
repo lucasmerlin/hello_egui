@@ -1,6 +1,6 @@
 use eframe::emath::Align;
 use eframe::{egui, NativeOptions};
-use egui::{CentralPanel, ComboBox, Layout, ScrollArea, Vec2};
+use egui::{CentralPanel, ComboBox, Id, Layout, ScrollArea, Vec2};
 use egui_animation::{animate_ui_translation, Collapse};
 use hello_egui_utils::measure_text;
 use rand::seq::SliceRandom;
@@ -175,7 +175,7 @@ pub fn main() -> eframe::Result<()> {
                     visible = !visible;
                 }
 
-                Collapse::vertical("collapse", visible).ui(ui, |ui| {
+                Collapse::vertical(Id::unique("collapse"), visible).ui(ui, |ui| {
                     ui.group(|ui| {
                         ScrollArea::vertical()
                             .max_height(100.0)

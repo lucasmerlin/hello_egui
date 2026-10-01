@@ -95,13 +95,16 @@ pub(crate) struct Placer {
     /// The CSS last applied, to skip style changes that change nothing.
     last: RefCell<Option<String>>,
     _on_load: Closure<dyn FnMut()>,
+    on_message: Closure<dyn FnMut(web_sys::MessageEvent)>,
 }
 
 impl Placer {
     pub fn place(&self, placement: Option<&Placement>) {
-        // Holes can't show a modal's backdrop, but a plane can.
-        let placement = placement
-            .filter(|p| p.visible.is_positive() && (self.plane.is_some() || !p.under_modal));
+        // Without a plane, hide while anything covers the page.
+        let placement = placement.filter(|p| {
+            p.visible.is_positive()
+                && (self.plane.is_some() || (p.holes.is_empty() && !p.under_modal))
+        });
 
         let css = placement.map(|placement| self.css(placement));
         let key = css.as_ref().map(|(a, b, c)| format!("{a}{b}{c}"));
@@ -189,6 +192,14 @@ impl Placer {
 
 impl Drop for Placer {
     fn drop(&mut self) {
+        if let Some(window) = web_sys::window() {
+            window
+                .remove_event_listener_with_callback(
+                    "message",
+                    self.on_message.as_ref().unchecked_ref(),
+                )
+                .ok();
+        }
         self.plane = None;
         self.container.remove();
     }
@@ -240,11 +251,32 @@ impl EguiWebView {
         let (tx, inbox) = UiInbox::channel();
         let on_load = {
             let iframe = iframe.clone();
+            let tx = tx.clone();
             Closure::<dyn FnMut()>::new(move || {
                 tx.send(WebViewEvent::Loaded(iframe.src())).ok();
             })
         };
         iframe.set_onload(Some(on_load.as_ref().unchecked_ref()));
+
+        // Every frame on the page can post to the window, so only take messages from our iframe.
+        let on_message = {
+            let iframe = iframe.clone();
+            Closure::<dyn FnMut(web_sys::MessageEvent)>::new(move |event: web_sys::MessageEvent| {
+                let from_page =
+                    event
+                        .source()
+                        .zip(iframe.content_window())
+                        .is_some_and(|(source, page)| {
+                            wasm_bindgen::JsValue::from(source) == wasm_bindgen::JsValue::from(page)
+                        });
+                if let Some(text) = event.data().as_string().filter(|_| from_page) {
+                    tx.send(WebViewEvent::Ipc(text)).ok();
+                }
+            })
+        };
+        web_sys::window()
+            .ok_or_else(|| WebViewError::Js("No window".to_owned()))?
+            .add_event_listener_with_callback("message", on_message.as_ref().unchecked_ref())?;
 
         #[allow(clippy::arc_with_non_send_sync)]
         let placer = Arc::new(Placer {
@@ -254,6 +286,7 @@ impl EguiWebView {
             plane,
             last: RefCell::new(None),
             _on_load: on_load,
+            on_message,
         });
         with_state(ctx, |state| {
             state.views.insert(id, Arc::downgrade(&placer));

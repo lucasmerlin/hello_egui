@@ -126,7 +126,7 @@ impl eframe::App for App {
 }
 
 pub fn demo_area(ui: &mut Ui, title: &'static str, width: f32, content: impl FnOnce(&mut Ui)) {
-    Center::new(title).ui(ui, |ui| {
+    Center::new(Id::unique(title)).ui(ui, |ui| {
         let width = f32::min(ui.available_width() - 20.0, width);
         ui.set_max_width(width);
         ui.set_max_height(ui.available_height() - 20.0);

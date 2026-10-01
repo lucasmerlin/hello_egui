@@ -103,11 +103,8 @@ pub fn main() -> eframe::Result<()> {
             CentralPanel::default().show(ui, |ui| {
                 if windows.is_empty() || ui.button("New Window").clicked() {
                     init_webview(ui.ctx());
-                    // `WEBVIEW_HOLES=1` cuts holes into the webview instead.
-                    if std::env::var_os("WEBVIEW_HOLES").is_none() {
-                        if let Some(render_state) = frame.wgpu_render_state() {
-                            use_paint_planes(ui.ctx(), render_state);
-                        }
+                    if let Some(render_state) = frame.wgpu_render_state() {
+                        use_paint_planes(ui.ctx(), render_state);
                     }
 
                     let url = default_urls[count % default_urls.len()];

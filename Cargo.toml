@@ -125,11 +125,18 @@ doc_markdown = { level = "allow", priority = 21 }
 [patch.crates-io]
 #wry = { path = "../wry" }
 #
-#egui = { path = "../egui/crates/egui" }
-#eframe = { path = "../egui/crates/eframe" }
-#egui-wgpu = { path = "../egui/crates/egui-wgpu" }
-#egui_extras = { path = "../egui/crates/egui_extras" }
-#egui_kittest = { path = "../egui/crates/egui_kittest" }
+# egui_webview's paint planes need egui's `paint-planes` branch.
+egui = { path = "../egui/crates/egui" }
+eframe = { path = "../egui/crates/eframe" }
+egui-wgpu = { path = "../egui/crates/egui-wgpu" }
+egui-winit = { path = "../egui/crates/egui-winit" }
+egui_extras = { path = "../egui/crates/egui_extras" }
+egui_glow = { path = "../egui/crates/egui_glow" }
+egui_kittest = { path = "../egui/crates/egui_kittest" }
+epaint = { path = "../egui/crates/epaint" }
+epaint_default_fonts = { path = "../egui/crates/epaint_default_fonts" }
+emath = { path = "../egui/crates/emath" }
+ecolor = { path = "../egui/crates/ecolor" }
 #winit = { path = "../winit" }
 
 

@@ -1,14 +1,11 @@
 //! Keeps the native webview out from under the egui layers painted above it.
 //!
 //! The webview is a native view on top of egui's surface, so nothing egui paints
-//! can cover it. There are two ways around that:
+//! can cover it. Instead, egui paints the layers above the webview a second time,
+//! into a transparent surface over it (see [`egui::Context::add_paint_plane`]).
+//! Clicks in the rects of those layers go through the webview to egui.
 //!
-//! - Holes: each layer above the webview's layer cuts a hole into the native
-//!   view, through which egui's own rendering of that layer shows.
-//! - Paint planes: egui paints the layers above the webview a second time, into a
-//!   transparent surface over it (see [`egui::Context::add_paint_plane`]).
-//!
-//! Either way, clicks in the rects of those layers go through to egui.
+//! Without a paint plane, the webview hides while anything covers it.
 
 use egui::{Context, Id, LayerId, Rect};
 use std::collections::HashMap;
@@ -20,7 +17,7 @@ pub(crate) struct Placement {
     pub rect: Rect,
     /// The part of `rect` inside the clip rect of its `Ui`.
     pub visible: Rect,
-    /// Rects inside `visible` that egui paints over.
+    /// Rects inside `visible` that egui paints over. Clicks in them go to egui.
     pub holes: Vec<Rect>,
     /// A modal is open above the webview.
     pub under_modal: bool,
@@ -77,10 +74,7 @@ pub(crate) fn placements(ctx: &Context, shown: &HashMap<Id, Shown>) -> HashMap<I
 }
 
 /// Cut `holes` out of `rect`. The result is a set of rects that do not overlap.
-#[cfg_attr(
-    not(any(target_os = "macos", target_arch = "wasm32")),
-    allow(dead_code)
-)]
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub(crate) fn subtract(rect: Rect, holes: &[Rect]) -> Vec<Rect> {
     let mut parts = vec![rect];
     for hole in holes {
@@ -123,15 +117,14 @@ mod macos {
     use objc2::{define_class, msg_send, DefinedClass, MainThreadMarker, MainThreadOnly};
     use objc2_app_kit::NSView;
     use objc2_core_foundation::{CGPoint, CGRect, CGSize};
-    use objc2_core_graphics::CGMutablePath;
-    use objc2_quartz_core::{CAShapeLayer, CATransaction};
+    use objc2_quartz_core::CATransaction;
     use std::ptr::NonNull;
     use wry::raw_window_handle::{
         AppKitDisplayHandle, AppKitWindowHandle, RawDisplayHandle, RawWindowHandle,
     };
     use wry::WebViewExtMacOS;
 
-    use super::{subtract, Placement};
+    use super::Placement;
 
     fn cg_rect(rect: egui::Rect) -> CGRect {
         CGRect::new(
@@ -147,8 +140,8 @@ mod macos {
     }
 
     define_class!(
-        /// Holds the `WKWebView`, crops it to the visible part of its `Ui` and
-        /// cuts the holes into it.
+        /// Holds the `WKWebView` and the plane over it, and crops both to the
+        /// visible part of the webview's `Ui`.
         #[unsafe(super(NSView))]
         #[thread_kind = MainThreadOnly]
         #[ivars = ClipViewIvars]
@@ -162,6 +155,7 @@ mod macos {
             }
 
             /// A click in a hole goes on to the winit view below, and so to egui.
+            /// The plane shows what egui paints there.
             #[unsafe(method_id(hitTest:))]
             fn hit_test(&self, point: CGPoint) -> Option<Retained<NSView>> {
                 let local = self.convertPoint_fromView(point, unsafe { self.superview() }.as_deref());
@@ -249,8 +243,7 @@ mod macos {
 
     pub(crate) struct NativeClip {
         view: Retained<ClipView>,
-        mask: Retained<CAShapeLayer>,
-        /// With paint planes, instead of holes in the mask.
+        /// `None` without paint planes, or if the surface failed.
         plane: Option<Plane>,
         /// `None` while hidden, which is how the view starts.
         last: RefCell<Option<Placement>>,
@@ -260,7 +253,7 @@ mod macos {
         /// Move the `WKWebView` from winit's view into a [`ClipView`].
         ///
         /// With a `render_state`, egui paints the layers above the webview into a
-        /// plane over it. Without one, they cut holes into it.
+        /// plane over it. Without one, the webview hides while anything covers it.
         pub fn new(
             webview: &wry::WebView,
             id: egui::Id,
@@ -272,6 +265,11 @@ mod macos {
 
             let view = ClipView::new(mtm);
             view.setWantsLayer(true);
+            // Cut the page off at the edge of the visible rect, e.g. of a scroll area.
+            // `NSView` doesn't clip its subviews by default since the macOS 14 SDK.
+            if let Some(layer) = view.layer() {
+                layer.setMasksToBounds(true);
+            }
             view.setHidden(true);
             parent.addSubview(&view);
             wk.removeFromSuperview();
@@ -284,7 +282,6 @@ mod macos {
 
             Self {
                 view,
-                mask: CAShapeLayer::new(),
                 plane,
                 last: RefCell::new(None),
             }
@@ -295,9 +292,10 @@ mod macos {
         }
 
         pub fn update(&self, webview: &wry::WebView, placement: Option<&Placement>) {
-            // Holes can't show a modal's backdrop, but a plane can.
-            let placement = placement
-                .filter(|p| p.visible.is_positive() && (self.plane.is_some() || !p.under_modal));
+            let placement = placement.filter(|p| {
+                p.visible.is_positive()
+                    && (self.plane.is_some() || (p.holes.is_empty() && !p.under_modal))
+            });
             if self.last.borrow().as_ref() == placement {
                 return;
             }
@@ -334,27 +332,11 @@ mod macos {
                 plane.view.setFrame(cg_rect(bounds));
             }
 
-            let layer = self.view.layer();
-            if let Some(layer) = &layer {
+            if let Some(layer) = self.view.layer() {
                 // Above egui's own surface, which sits at 0. Only drawing follows
                 // this; clicks don't need to, since the holes of a webview behind
                 // cover the windows in front of it.
                 layer.setZPosition(1.0 + placement.stack as f64);
-            }
-            if holes.is_empty() || self.plane.is_some() {
-                if let Some(layer) = layer {
-                    unsafe { layer.setMask(None) };
-                }
-            } else if let Some(layer) = layer {
-                let path = CGMutablePath::new();
-                for part in subtract(bounds, &holes) {
-                    unsafe {
-                        CGMutablePath::add_rect(Some(&path), std::ptr::null(), cg_rect(part));
-                    };
-                }
-                self.mask.setFrame(cg_rect(bounds));
-                self.mask.setPath(Some(&path));
-                unsafe { layer.setMask(Some(&self.mask)) };
             }
 
             CATransaction::commit();
@@ -377,7 +359,7 @@ mod fallback {
 
     use super::Placement;
 
-    /// No holes or planes on this platform yet: hide the webview while anything covers it.
+    /// No paint planes on this platform yet: hide the webview while anything covers it.
     pub(crate) struct NativeClip;
 
     impl NativeClip {

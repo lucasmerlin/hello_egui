@@ -26,6 +26,7 @@ web-sys = { version = "0.3", features = [
   "HtmlCanvasElement",
   "HtmlElement",
   "HtmlIFrameElement",
+  "MessageEvent",
   "Node",
   "Window",
 ] }
@@ -35,8 +36,7 @@ web-sys = { version = "0.3", features = [
 objc2 = "0.6.4"
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSGeometry"] }
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "objc2-quartz-core", "NSResponder", "NSView"] }
-objc2-quartz-core = { version = "0.3.2", default-features = false, features = ["std", "objc2-core-graphics", "CALayer", "CAShapeLayer", "CATransaction"] }
-objc2-core-graphics = { version = "0.3.2", default-features = false, features = ["std", "CGPath"] }
+objc2-quartz-core = { version = "0.3.2", default-features = false, features = ["std", "CALayer", "CATransaction"] }
 objc2-core-foundation = { version = "0.3.2", default-features = false, features = ["std", "CFCGTypes"] }
 
 [dev-dependencies]

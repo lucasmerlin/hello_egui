@@ -39,6 +39,11 @@ pub enum WebViewEvent {
     Blur,
     Loading(String),
     Loaded(String),
+
+    /// A string the page sent.
+    ///
+    /// On native the page sends it with `window.ipc.postMessage(text)`,
+    /// on the web with `window.parent.postMessage(text, "*")`.
     Ipc(String),
 }
 
@@ -119,9 +124,9 @@ pub fn set_parent_canvas(ctx: &Context, canvas: web_sys::HtmlCanvasElement) {
 }
 
 /// Paint the egui layers above each webview into a transparent surface over it,
-/// instead of cutting holes into the webview for them.
+/// so popups and windows show over the page.
 ///
-/// Popups then keep their shadows over the page, and a modal's backdrop dims it.
+/// Without it, a webview hides while anything covers it.
 /// Needs a wgpu renderer, and applies to webviews created after this call.
 /// Only macOS and the web (with WebGPU) have paint planes so far; elsewhere this changes nothing.
 pub fn use_paint_planes(ctx: &Context, render_state: &egui_wgpu::RenderState) {
