@@ -1,9 +1,10 @@
 #![allow(clippy::needless_pass_by_value)] // It's ok here as it is an example
 use eframe::{emath::Align, NativeOptions};
 use egui::{CentralPanel, Context, Id, Layout, Popup, TextEdit, Widget, Window};
-use wry::raw_window_handle::HasWindowHandle;
 
-use egui_webview::{init_webview, use_paint_planes, EguiWebView, WebViewEvent};
+use egui_webview::{
+    set_parent_window, use_paint_planes, EguiWebView, WebViewEvent, WebViewSource,
+};
 
 pub struct WebBrowser {
     id: Id,
@@ -12,8 +13,10 @@ pub struct WebBrowser {
 }
 
 impl WebBrowser {
-    pub fn new(ctx: &Context, id: Id, url: &str, window: &impl HasWindowHandle) -> Self {
-        let view = EguiWebView::new(ctx, id, window, |b| b.with_url(url));
+    pub fn new(ctx: &Context, id: Id, url: &str) -> Self {
+        // `EGUI_WEBVIEW_BACKEND=cef` (with the `cef` feature) renders it with CEF instead.
+        let view = EguiWebView::from_source(ctx, id, &WebViewSource::Url(url.to_owned()))
+            .expect("Failed to create webview");
 
         Self {
             id,
@@ -24,7 +27,7 @@ impl WebBrowser {
 
     pub fn ui(&mut self, ctx: &Context) -> bool {
         let mut open = true;
-        Window::new("Browser")
+        Window::new(format!("Browser ({:?})", self.view.backend()))
             .id(self.id)
             .open(&mut open)
             .show(ctx, |ui| {
@@ -48,7 +51,6 @@ impl WebBrowser {
                             let _ = ui.button("My existence is meaningless");
                             if ui.button("Why did you click me?").clicked() {
                                 self.view
-                                    .view
                                     .load_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
                                     .unwrap();
                             }
@@ -62,7 +64,7 @@ impl WebBrowser {
                         if text_resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))
                             || btn_resp.clicked()
                         {
-                            self.view.view.load_url(&self.url_bar).unwrap();
+                            self.view.load_url(&self.url_bar).unwrap();
                         }
                     });
                 });
@@ -82,6 +84,11 @@ impl WebBrowser {
 }
 
 pub fn main() -> eframe::Result<()> {
+    // CEF runs its helper processes from this executable.
+    if let Some(code) = egui_webview::run_cef_subprocess() {
+        std::process::exit(code);
+    }
+
     let default_urls = [
         "https://www.rust-lang.org",
         "https://www.egui.rs",
@@ -102,7 +109,7 @@ pub fn main() -> eframe::Result<()> {
 
             CentralPanel::default().show(ui, |ui| {
                 if windows.is_empty() || ui.button("New Window").clicked() {
-                    init_webview(ui.ctx());
+                    set_parent_window(ui.ctx(), frame).expect("No window handle");
                     if let Some(render_state) = frame.wgpu_render_state() {
                         use_paint_planes(ui.ctx(), render_state);
                     }
@@ -113,7 +120,6 @@ pub fn main() -> eframe::Result<()> {
                         ui.ctx(),
                         Id::unique(format!("Window {count}")),
                         url,
-                        frame,
                     ));
                     count += 1;
                 }

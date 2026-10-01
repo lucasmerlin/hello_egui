@@ -3,6 +3,8 @@ use std::sync::Weak;
 
 use egui::{Context, Id};
 
+#[cfg(all(feature = "cef", not(target_arch = "wasm32")))]
+mod cef;
 mod clip;
 #[cfg(not(target_arch = "wasm32"))]
 mod native;
@@ -33,6 +35,96 @@ pub enum WebViewSource {
     Url(String),
 }
 
+/// Which engine shows a webview.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum WebViewBackend {
+    /// The `EGUI_WEBVIEW_BACKEND` environment variable if it is set, to `native` or `cef`.
+    /// Otherwise CEF on Wayland, where a native webview can't be embedded, and the native
+    /// webview everywhere else.
+    #[default]
+    Auto,
+
+    /// The platform's webview (WKWebView, WebView2 or WebKitGTK), as a native view over the
+    /// window. Needs [`set_parent_window`]. Not available on Wayland.
+    Native,
+
+    /// Chromium, through CEF, rendered off screen into an egui texture. egui paints over it
+    /// like over any image. Needs the `cef` feature, and [`run_cef_subprocess`] in `main`.
+    Cef,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl WebViewBackend {
+    /// Turn [`Self::Auto`] into the backend to use for a webview in `parent`.
+    fn resolve(self, parent: Option<wry::raw_window_handle::RawWindowHandle>) -> Self {
+        if self != Self::Auto {
+            return self;
+        }
+        match std::env::var("EGUI_WEBVIEW_BACKEND")
+            .map(|value| value.to_ascii_lowercase())
+            .as_deref()
+        {
+            Ok("native" | "wry") => return Self::Native,
+            Ok("cef") => return Self::Cef,
+            Ok(other) => eprintln!(
+                "egui_webview: unknown EGUI_WEBVIEW_BACKEND {other:?}, expected `native` or `cef`"
+            ),
+            Err(_) => {}
+        }
+        let wayland = matches!(
+            parent,
+            Some(wry::raw_window_handle::RawWindowHandle::Wayland(_))
+        );
+        if wayland {
+            Self::Cef
+        } else {
+            Self::Native
+        }
+    }
+}
+
+/// How to create a webview.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, Default)]
+#[non_exhaustive]
+pub struct WebViewOptions {
+    pub backend: WebViewBackend,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl WebViewOptions {
+    #[must_use]
+    pub fn backend(mut self, backend: WebViewBackend) -> Self {
+        self.backend = backend;
+        self
+    }
+}
+
+/// Run a CEF helper process and return its exit code, if this process is one.
+///
+/// CEF starts its helper processes (renderer, GPU, …) from the app's own executable. Call
+/// this first thing in `main`, and exit with the code it returns:
+///
+/// ```no_run
+/// if let Some(code) = egui_webview::run_cef_subprocess() {
+///     std::process::exit(code);
+/// }
+/// ```
+///
+/// Without the `cef` feature this does nothing and returns `None`.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn run_cef_subprocess() -> Option<i32> {
+    #[cfg(feature = "cef")]
+    {
+        cef::run_subprocess()
+    }
+    #[cfg(not(feature = "cef"))]
+    {
+        None
+    }
+}
+
 pub enum WebViewEvent {
     ScreenshotReceived(egui::TextureHandle),
     Focus,
@@ -42,7 +134,7 @@ pub enum WebViewEvent {
 
     /// A string the page sent.
     ///
-    /// On native the page sends it with `window.ipc.postMessage(text)`,
+    /// On native and with CEF the page sends it with `window.ipc.postMessage(text)`,
     /// on the web with `window.parent.postMessage(text, "*")`.
     Ipc(String),
 }

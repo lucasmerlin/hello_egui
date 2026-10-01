@@ -10,13 +10,20 @@ use wry::raw_window_handle::{HasWindowHandle, WindowHandle};
 use wry::{PageLoadEvent, WebView};
 
 use crate::clip::{NativeClip, Placement};
-use crate::{show, with_state, WebViewEvent, WebViewResponse, WebViewSource};
+use crate::{
+    show, with_state, WebViewBackend, WebViewEvent, WebViewOptions, WebViewResponse, WebViewSource,
+};
 
 #[derive(Debug)]
 pub enum WebViewError {
     /// [`crate::set_parent_window`] wasn't called.
     NoParentWindow,
     Wry(wry::Error),
+    /// Native webviews can't be embedded in a Wayland window. Use the CEF backend instead.
+    Wayland,
+    /// The CEF backend was asked for, but the `cef` feature is off.
+    CefNotEnabled,
+    Cef(String),
 }
 
 impl std::fmt::Display for WebViewError {
@@ -24,6 +31,12 @@ impl std::fmt::Display for WebViewError {
         match self {
             Self::NoParentWindow => write!(f, "No parent window, call `set_parent_window` first"),
             Self::Wry(err) => write!(f, "Webview failed: {err}"),
+            Self::Wayland => write!(
+                f,
+                "Native webviews don't work on Wayland: enable the `cef` feature, or run under X11"
+            ),
+            Self::CefNotEnabled => write!(f, "The CEF backend needs the `cef` feature"),
+            Self::Cef(err) => write!(f, "CEF failed: {err}"),
         }
     }
 }
@@ -49,11 +62,19 @@ impl Placer {
 }
 
 pub struct EguiWebView {
-    pub view: Arc<wry::WebView>,
-    placer: Arc<Placer>,
+    backend: Backend,
     id: Id,
     inbox: UiInbox<WebViewEvent>,
     current_image: Option<TextureHandle>,
+}
+
+enum Backend {
+    Wry {
+        view: Arc<wry::WebView>,
+        placer: Arc<Placer>,
+    },
+    #[cfg(feature = "cef")]
+    Cef(crate::cef::CefView),
 }
 
 impl Debug for EguiWebView {
@@ -84,23 +105,62 @@ enum PageCommand {
 }
 
 impl EguiWebView {
-    /// Create a webview in the window given to [`crate::set_parent_window`].
+    /// Create a webview, in the window given to [`crate::set_parent_window`] for a native one.
+    ///
+    /// The backend follows [`WebViewBackend::Auto`].
     pub fn from_source(
         ctx: &Context,
         id: impl Into<Id>,
         source: &WebViewSource,
     ) -> Result<Self, WebViewError> {
-        let raw =
-            with_state(ctx, |state| state.parent_window).ok_or(WebViewError::NoParentWindow)?;
-        // SAFETY: `set_parent_window` requires the window to outlive every webview.
-        #[allow(unsafe_code)]
-        let window = unsafe { WindowHandle::borrow_raw(raw) };
-        Self::try_new(ctx, id, &window, |builder| match source {
-            WebViewSource::Html(html) => builder.with_html(html),
-            WebViewSource::Url(url) => builder.with_url(url),
+        Self::with_options(ctx, id, source, &WebViewOptions::default())
+    }
+
+    /// Create a webview with the given options.
+    pub fn with_options(
+        ctx: &Context,
+        id: impl Into<Id>,
+        source: &WebViewSource,
+        options: &WebViewOptions,
+    ) -> Result<Self, WebViewError> {
+        crate::init_webview(ctx);
+        let parent = with_state(ctx, |state| state.parent_window);
+        match options.backend.resolve(parent) {
+            WebViewBackend::Cef => Self::new_cef(ctx, id.into(), source),
+            WebViewBackend::Native | WebViewBackend::Auto => {
+                let raw = parent.ok_or(WebViewError::NoParentWindow)?;
+                if matches!(raw, wry::raw_window_handle::RawWindowHandle::Wayland(_)) {
+                    return Err(WebViewError::Wayland);
+                }
+                // SAFETY: `set_parent_window` requires the window to outlive every webview.
+                #[allow(unsafe_code)]
+                let window = unsafe { WindowHandle::borrow_raw(raw) };
+                Self::try_new(ctx, id, &window, |builder| match source {
+                    WebViewSource::Html(html) => builder.with_html(html),
+                    WebViewSource::Url(url) => builder.with_url(url),
+                })
+            }
+        }
+    }
+
+    #[cfg(feature = "cef")]
+    fn new_cef(ctx: &Context, id: Id, source: &WebViewSource) -> Result<Self, WebViewError> {
+        let (tx, inbox) = UiInbox::channel();
+        Ok(Self {
+            backend: Backend::Cef(crate::cef::CefView::new(ctx, source, tx)?),
+            id,
+            inbox,
+            current_image: None,
         })
     }
 
+    #[cfg(not(feature = "cef"))]
+    fn new_cef(_ctx: &Context, _id: Id, _source: &WebViewSource) -> Result<Self, WebViewError> {
+        Err(WebViewError::CefNotEnabled)
+    }
+
+    /// Create a native webview with wry, set up by `build`.
+    ///
     /// # Panics
     /// If wry fails to create the webview.
     pub fn new(
@@ -171,20 +231,69 @@ impl EguiWebView {
 
         Ok(Self {
             inbox,
-            view: web_view,
-            placer,
+            backend: Backend::Wry {
+                view: web_view,
+                placer,
+            },
             id,
             current_image: None,
         })
     }
 
+    /// The wry webview, if this is a native one.
+    pub fn wry_view(&self) -> Option<&Arc<wry::WebView>> {
+        match &self.backend {
+            Backend::Wry { view, .. } => Some(view),
+            #[cfg(feature = "cef")]
+            Backend::Cef(_) => None,
+        }
+    }
+
+    /// Which backend shows this webview: [`WebViewBackend::Native`] or [`WebViewBackend::Cef`].
+    pub fn backend(&self) -> WebViewBackend {
+        match &self.backend {
+            Backend::Wry { .. } => WebViewBackend::Native,
+            #[cfg(feature = "cef")]
+            Backend::Cef(_) => WebViewBackend::Cef,
+        }
+    }
+
     /// Show another page.
     pub fn load(&self, source: &WebViewSource) -> Result<(), WebViewError> {
-        match source {
-            WebViewSource::Html(html) => self.view.load_html(html)?,
-            WebViewSource::Url(url) => self.view.load_url(url)?,
+        match &self.backend {
+            Backend::Wry { view, .. } => match source {
+                WebViewSource::Html(html) => view.load_html(html)?,
+                WebViewSource::Url(url) => view.load_url(url)?,
+            },
+            #[cfg(feature = "cef")]
+            Backend::Cef(view) => view.load(source),
         }
         Ok(())
+    }
+
+    /// Load the page at `url`.
+    pub fn load_url(&self, url: &str) -> Result<(), WebViewError> {
+        self.load(&WebViewSource::Url(url.to_owned()))
+    }
+
+    /// Run `script` in the page.
+    pub fn evaluate_script(&self, script: &str) -> Result<(), WebViewError> {
+        match &self.backend {
+            Backend::Wry { view, .. } => view.evaluate_script(script)?,
+            #[cfg(feature = "cef")]
+            Backend::Cef(view) => view.evaluate_script(script),
+        }
+        Ok(())
+    }
+
+    pub fn reload(&self) {
+        match &self.backend {
+            Backend::Wry { view, .. } => {
+                view.reload().ok();
+            }
+            #[cfg(feature = "cef")]
+            Backend::Cef(view) => view.reload(),
+        }
     }
 
     fn handle_js_event(msg: String, _ctx: &Context) -> WebViewEvent {
@@ -200,20 +309,44 @@ impl EguiWebView {
     #[allow(clippy::needless_pass_by_value)]
     fn send_command(&self, command: PageCommand) -> Result<(), Box<dyn Error>> {
         let json = serde_json::to_string(&command)?;
-        self.view
-            .evaluate_script(&format!("__egui_webview_handle_command({json})"))?;
+        self.evaluate_script(&format!("__egui_webview_handle_command({json})"))?;
         Ok(())
     }
 
     pub fn back(&self) {
-        self.send_command(PageCommand::Back).ok();
+        match &self.backend {
+            Backend::Wry { .. } => {
+                self.send_command(PageCommand::Back).ok();
+            }
+            #[cfg(feature = "cef")]
+            Backend::Cef(view) => view.back(),
+        }
     }
 
     pub fn forward(&self) {
-        self.send_command(PageCommand::Forward).ok();
+        match &self.backend {
+            Backend::Wry { .. } => {
+                self.send_command(PageCommand::Forward).ok();
+            }
+            #[cfg(feature = "cef")]
+            Backend::Cef(view) => view.forward(),
+        }
     }
 
     pub fn ui(&mut self, ui: &mut Ui, size: Vec2) -> WebViewResponse {
+        let (view, placer) = match &mut self.backend {
+            Backend::Wry { view, placer } => (view.clone(), placer.clone()),
+            #[cfg(feature = "cef")]
+            Backend::Cef(view) => {
+                let response = ui.allocate_response(size, Sense::click_and_drag());
+                view.ui(ui, &response);
+                return WebViewResponse {
+                    events: self.inbox.read(ui).collect(),
+                    egui_response: response,
+                };
+            }
+        };
+
         let response = ui.allocate_response(size, Sense::click());
 
         let events = self
@@ -245,7 +378,7 @@ impl EguiWebView {
         }
 
         if response.gained_focus() {
-            self.view.focus().ok();
+            view.focus().ok();
         }
 
         if let Some(image) = &self.current_image {
@@ -254,7 +387,7 @@ impl EguiWebView {
 
         // The native view is placed at the end of the pass, once the popups
         // that may cover it have been shown.
-        show(ui, self.id, response.rect, self.placer.clip.has_plane());
+        show(ui, self.id, response.rect, placer.clip.has_plane());
 
         WebViewResponse {
             events,

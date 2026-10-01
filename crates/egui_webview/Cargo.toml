@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[features]
+# Render webviews off screen with CEF (Chromium) where native webviews can't be embedded, like
+# on Wayland. Downloads CEF at build time. See `EGUI_WEBVIEW_BACKEND`.
+cef = ["dep:cef", "dep:keycode"]
+
 [dependencies]
 egui.workspace = true
 egui_inbox = { workspace = true }
@@ -14,6 +19,8 @@ http = "1"
 egui-wgpu = { version = "0.36.0", features = ["winit"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+cef = { version = "154.3.0", default-features = false, optional = true }
+keycode = { version = "1.0.0", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 egui-wgpu = { version = "0.36.0", features = ["paint-planes"] }
