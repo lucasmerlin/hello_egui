@@ -15,7 +15,7 @@ fn main() {
                 ui.scope(|ui| {
                     ui.set_max_height(available_rect.height());
 
-                    ui.label(format!("Item {:?}", ui.id()));
+                    ui.label(format!("Item {:?}", ui.scope_id()));
 
                     ui.ctx().debug_painter().debug_rect(
                         ui.available_rect_before_wrap(),

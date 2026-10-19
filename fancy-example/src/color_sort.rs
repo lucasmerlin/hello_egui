@@ -76,44 +76,50 @@ impl ColorSort {
             Vec2::new(ui.available_width(), 32.0)
         };
 
-        let response = dnd(ui, "fancy_dnd").show_custom(|ui, iter| {
+        let response = dnd(ui, ui.make_persistent_id("fancy_dnd")).show_custom(|ui, iter| {
             items.iter_mut().enumerate().for_each(|(index, item)| {
-                iter.next(ui, Id::new(item.index), index, true, |ui, item_handle| {
-                    item_handle.ui_sized(ui, item_size, |ui, handle, state| {
-                        ui.horizontal(|ui| {
-                            handle.ui_sized(ui, item_size, |ui| {
-                                let size_factor = ui.ctx().animate_value_with_time(
-                                    item.id().with("handle_anim"),
-                                    if state.dragged { 1.1 } else { 1.0 },
-                                    0.2,
-                                );
-                                let size = 32.0;
+                iter.next(
+                    ui,
+                    Id::unique(item.index),
+                    index,
+                    true,
+                    |ui, item_handle| {
+                        item_handle.ui_sized(ui, item_size, |ui, handle, state| {
+                            ui.horizontal(|ui| {
+                                handle.ui_sized(ui, item_size, |ui| {
+                                    let size_factor = ui.ctx().animate_value_with_time(
+                                        item.id().with("handle_anim"),
+                                        if state.dragged { 1.1 } else { 1.0 },
+                                        0.2,
+                                    );
+                                    let size = 32.0;
 
-                                let (_id, response) =
-                                    ui.allocate_exact_size(Vec2::splat(size), Sense::click());
+                                    let (_id, response) =
+                                        ui.allocate_exact_size(Vec2::splat(size), Sense::click());
 
-                                if response.clicked() {
-                                    item.rounded = !item.rounded;
-                                }
-                                let rect = response.rect;
+                                    if response.clicked() {
+                                        item.rounded = !item.rounded;
+                                    }
+                                    let rect = response.rect;
 
-                                let x = ui.ctx().animate_bool(item.id(), item.rounded);
-                                let rounding = (x * 16.0 + 1.0).round() as u8;
+                                    let x = ui.ctx().animate_bool(item.id(), item.rounded);
+                                    let rounding = (x * 16.0 + 1.0).round() as u8;
 
-                                ui.painter().rect_filled(
-                                    rect.shrink(x * 4.0 * size_factor)
-                                        .shrink(rect.width() * (1.0 - size_factor)),
-                                    CornerRadius::same(rounding),
-                                    item.color,
-                                );
+                                    ui.painter().rect_filled(
+                                        rect.shrink(x * 4.0 * size_factor)
+                                            .shrink(rect.width() * (1.0 - size_factor)),
+                                        CornerRadius::same(rounding),
+                                        item.color,
+                                    );
 
-                                if !many {
-                                    ui.heading(item.name);
-                                }
+                                    if !many {
+                                        ui.heading(item.name);
+                                    }
+                                });
                             });
-                        });
-                    })
-                });
+                        })
+                    },
+                );
             });
         });
 

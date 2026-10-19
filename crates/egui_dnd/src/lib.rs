@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use egui::{AsId, Id, Ui};
+use egui::{Id, Ui};
 pub use state::{DragAxis, DragDropConfig, DragDropItem, DragDropResponse, DragUpdate, Handle};
 
 pub use crate::item_iterator::ItemIterator;
@@ -37,7 +37,8 @@ pub struct Dnd<'a> {
 ///     eframe::run_ui_native("DnD Simple Example", Default::default(), move |ui, _frame| {
 ///         CentralPanel::default().show(ui, |ui| {
 ///
-///             dnd(ui, "dnd_example")
+///             let id = ui.make_persistent_id("dnd_example");
+///             dnd(ui, id)
 ///                 .show_vec(&mut items, |ui, item, handle, state| {
 ///                     handle.ui(ui, |ui| {
 ///                         ui.label("drag");
@@ -49,8 +50,13 @@ pub struct Dnd<'a> {
 ///     })
 /// }
 /// ```
-pub fn dnd(ui: &mut Ui, id_source: impl AsId) -> Dnd<'_> {
-    let id = Id::new(id_source).with("dnd");
+///
+/// The drag and drop state is stored in the global [`egui::Context`] memory,
+/// so `id` must be globally unique.
+/// Prefer [`Ui::make_persistent_id`] over [`Id::unique`], so that the id only
+/// has to be unique within the surrounding [`Ui`] scope.
+pub fn dnd(ui: &mut Ui, id: Id) -> Dnd<'_> {
+    let id = id.with("dnd");
     let mut dnd_ui: DragDropUi =
         ui.data_mut(|data| (*data.get_temp_mut_or_default::<DragDropUi>(id)).clone());
 
@@ -66,8 +72,8 @@ pub fn dnd(ui: &mut Ui, id_source: impl AsId) -> Dnd<'_> {
 
 impl<'a> Dnd<'a> {
     /// Initialize the drag and drop UI. Same as [dnd].
-    pub fn new(ui: &'a mut Ui, id_source: impl AsId) -> Self {
-        dnd(ui, id_source)
+    pub fn new(ui: &'a mut Ui, id: Id) -> Self {
+        dnd(ui, id)
     }
 
     /// Sets the config used when dragging with the mouse or when no touch config is set
@@ -127,7 +133,7 @@ impl<'a> Dnd<'a> {
 
     /// Display the drag and drop UI.
     /// `items` should be an iterator over items that should be sortable.
-    /// Each item needs to implement [`DragDropItem`]. This is automatically implement for every type that implements [`AsId`].
+    /// Each item needs to implement [`DragDropItem`]. This is automatically implemented for every type that implements `Hash + Debug`.
     ///
     /// It can also be implemented manually. **Each item needs to have a unique id.**
     /// If you need to allow duplicate items in your list and cannot add a id field for some reason,

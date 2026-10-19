@@ -24,7 +24,7 @@ pub fn main() -> eframe::Result<()> {
                     for i in 1..=3 {
                         ui.vertical(|ui| {
                             ui.label(format!("List {i}"));
-                            list(ui, Id::new("dnd").with(i), &mut items);
+                            list(ui, ui.make_persistent_id(("dnd", i)), &mut items);
                         });
                     }
                 });

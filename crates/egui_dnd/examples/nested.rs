@@ -19,7 +19,7 @@ struct SortableItem {
 
 impl DragDropItem for &mut SortableItem {
     fn id(&self) -> Id {
-        Id::new(&self.name)
+        Id::unique(&self.name)
     }
 }
 
@@ -85,7 +85,7 @@ impl MyApp {
                 .show(ui, |ui| {
                     ui.label("Content");
 
-                    let response = dnd(ui, &item.name).show(
+                    let response = dnd(ui, ui.make_persistent_id(&item.name)).show(
                         children.iter_mut(),
                         |ui, item, handle, _pressed| {
                             Self::draw_item(ui, item, handle);
@@ -101,10 +101,12 @@ impl MyApp {
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ui, |ui| {
-            let response =
-                dnd(ui, "dnd_example").show(self.items.iter_mut(), |ui, item, handle, _pressed| {
+            let response = dnd(ui, ui.make_persistent_id("dnd_example")).show(
+                self.items.iter_mut(),
+                |ui, item, handle, _pressed| {
                     MyApp::draw_item(ui, item, handle);
-                });
+                },
+            );
             response.update_vec(&mut self.items);
         });
     }

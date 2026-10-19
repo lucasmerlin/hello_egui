@@ -8,7 +8,7 @@ fn main() -> eframe::Result {
         "flex debug example",
         NativeOptions::default(),
         |ui, _frame| {
-            Area::new(Id::new("area"))
+            Area::new(Id::unique("area"))
                 .anchor(egui::Align2::LEFT_TOP, [0.0, 0.0])
                 .show(ui.ctx(), |ui| {
                     ui.set_width(500.0);

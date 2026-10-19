@@ -11,7 +11,7 @@ pub fn main() -> eframe::Result<()> {
         move |ui, _frame| {
             CentralPanel::default().show(ui, |ui| {
                 ui.label("The dragged item can only move vertically:");
-                dnd(ui, "dnd_example")
+                dnd(ui, ui.make_persistent_id("dnd_example"))
                     .with_drag_axis(DragAxis::Vertical)
                     .show_vec(&mut items, |ui, item, handle, state| {
                         ui.horizontal(|ui| {

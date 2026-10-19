@@ -11,11 +11,14 @@ pub fn main() -> eframe::Result<()> {
         move |ui, _frame| {
             CentralPanel::default().show(ui, |ui| {
                 ui.vertical_centered_justified(|ui| {
-                    dnd(ui, "dnd_example").show_vec(&mut items, |ui, item, handle, state| {
-                        handle.ui(ui, |ui| {
-                            Button::new(&**item).selected(state.dragged).ui(ui);
-                        });
-                    });
+                    dnd(ui, ui.make_persistent_id("dnd_example")).show_vec(
+                        &mut items,
+                        |ui, item, handle, state| {
+                            handle.ui(ui, |ui| {
+                                Button::new(&**item).selected(state.dragged).ui(ui);
+                            });
+                        },
+                    );
                 });
             });
         },

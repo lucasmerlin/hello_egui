@@ -284,7 +284,7 @@ fn main() -> eframe::Result<()> {
             auth.dialog_ui(ui.ctx());
 
             CentralPanel::default().show(ui, |ui| {
-                Area::new(Id::new("Centered"))
+                Area::new(Id::unique("Centered"))
                     .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
                     .show(ui.ctx(), |ui| {
                         ui.group(|ui| {

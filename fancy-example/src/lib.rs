@@ -162,11 +162,11 @@ fn vertex_gradient(ui: &mut Ui, gradient: &Gradient) {
         let y = lerp(rect.y_range(), t);
         mesh.colored_vertex(
             pos2(rect.left(), y),
-            animate_color(ui, color, Id::new("a").with(i), animation_time),
+            animate_color(ui, color, ui.make_persistent_id(("a", i)), animation_time),
         );
         mesh.colored_vertex(
             pos2(rect.right(), y),
-            animate_color(ui, color, Id::new("b").with(i), animation_time),
+            animate_color(ui, color, ui.make_persistent_id(("b", i)), animation_time),
         );
         if i < n - 1 {
             let i = i as u32;
