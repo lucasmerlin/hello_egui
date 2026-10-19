@@ -29,6 +29,12 @@ name = "hello_egui"
 git_release_enable = true
 
 [[package]]
+name = "egui_router"
+# Published 0.9.0 can't build with all features (no `tokio` feature), so
+# cargo-semver-checks can't build the baseline. Remove after the next release.
+semver_check = false
+
+[[package]]
 name = "egui_webview"
 release = false
 publish = false
