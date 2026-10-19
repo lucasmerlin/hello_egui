@@ -79,7 +79,8 @@ impl Collapse {
 
         content(&mut child);
 
-        let size = child.min_size().min(ui.available_size());
+        let content_size = child.min_size();
+        let size = Vec2::new(content_size.x.min(ui.available_size().x), content_size.y);
 
         ui.memory_mut(|mem| {
             mem.data.insert_temp(id, size.y);
