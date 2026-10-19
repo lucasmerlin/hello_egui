@@ -16,9 +16,9 @@ pub fn main() -> eframe::Result<()> {
         move |ui, _frame| {
             CentralPanel::default().show(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
-                    let response = dnd(ui, "dnd").show_custom(|ui, iter| {
+                    let response = dnd(ui, ui.make_persistent_id("dnd")).show_custom(|ui, iter| {
                         infinite_scroll.ui(ui, 10, |ui, index, item| {
-                            iter.next(ui, Id::new(*item), index, true, |ui, item_handle| {
+                            iter.next(ui, Id::unique(*item), index, true, |ui, item_handle| {
                                 item_handle.ui(ui, |ui, handle, state| {
                                     ui.horizontal(|ui| {
                                         handle.ui(ui, |ui| {

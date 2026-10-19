@@ -1,11 +1,11 @@
 use crate::TransitionConfig;
-use egui::{Id, Ui, UiBuilder, Vec2};
+use egui::{AsIdSalt, Ui, UiBuilder, Vec2};
 
 /// Trait for declaring a transition.
 /// Prefer [`ComposableTransitionTrait`] unless you need to create a new ui to apply the transition.
 pub trait TransitionTrait {
     /// Create a child ui with the transition applied
-    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui;
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, id_salt: impl AsIdSalt) -> Ui;
 }
 
 /// Trait for declaring a composable transition.
@@ -15,8 +15,8 @@ pub trait ComposableTransitionTrait {
 }
 
 impl<T: ComposableTransitionTrait> TransitionTrait for T {
-    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()).id_salt(with_id));
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, id_salt: impl AsIdSalt) -> Ui {
+        let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()).id_salt(id_salt));
         self.apply(&mut child, t);
         child
     }
@@ -36,14 +36,14 @@ pub enum Transition {
 }
 
 impl TransitionTrait for Transition {
-    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, id_salt: impl AsIdSalt) -> Ui {
         match self {
-            Transition::Fade(fade) => fade.create_child_ui(ui, t, with_id),
+            Transition::Fade(fade) => fade.create_child_ui(ui, t, id_salt),
             Transition::NoTransition(no_transition) => {
-                no_transition.create_child_ui(ui, t, with_id)
+                no_transition.create_child_ui(ui, t, id_salt)
             }
-            Transition::Slide(slide) => slide.create_child_ui(ui, t, with_id),
-            Transition::SlideFade(slide_fade) => slide_fade.create_child_ui(ui, t, with_id),
+            Transition::Slide(slide) => slide.create_child_ui(ui, t, id_salt),
+            Transition::SlideFade(slide_fade) => slide_fade.create_child_ui(ui, t, id_salt),
         }
     }
 }
@@ -91,20 +91,20 @@ impl ComposableTransitionTrait for NoTransition {
 }
 
 impl TransitionTrait for SlideTransition {
-    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, id_salt: impl AsIdSalt) -> Ui {
         let available_size = ui.available_size();
         let offset = available_size * (1.0 - t) * self.amount;
         // Round to pixels to prevent sub-pixel jitter and flickering in child components
         let offset = Vec2::new(offset.x.round(), offset.y.round());
         let child_rect = ui.max_rect().translate(offset);
 
-        ui.new_child(UiBuilder::new().max_rect(child_rect).id_salt(with_id))
+        ui.new_child(UiBuilder::new().max_rect(child_rect).id_salt(id_salt))
     }
 }
 
 impl TransitionTrait for SlideFadeTransition {
-    fn create_child_ui(&self, ui: &mut Ui, t: f32, with_id: Id) -> Ui {
-        let mut child = self.0.create_child_ui(ui, t, with_id);
+    fn create_child_ui(&self, ui: &mut Ui, t: f32, id_salt: impl AsIdSalt) -> Ui {
+        let mut child = self.0.create_child_ui(ui, t, id_salt);
         self.1.apply(&mut child, t);
         child
     }
@@ -256,38 +256,34 @@ impl ActiveTransition {
 
         if self.backward {
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut out_ui =
-                    self.out
-                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
+                let mut out_ui = self
+                    .out
+                    .create_child_ui(ui, eased_t, ("router_child", in_id));
                 content_in(&mut out_ui, state);
             });
 
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
-                    let mut in_ui = self.in_.create_child_ui(
-                        ui,
-                        eased_t_rev,
-                        Id::new("router_child").with(out_id),
-                    );
+                    let mut in_ui =
+                        self.in_
+                            .create_child_ui(ui, eased_t_rev, ("router_child", out_id));
                     content_out(&mut in_ui, state);
                 });
             }
         } else {
             if let Some((out_id, content_out)) = content_out {
                 with_temp_auto_id(ui, out_id, |ui| {
-                    let mut out_ui = self.out.create_child_ui(
-                        ui,
-                        eased_t_rev,
-                        Id::new("router_child").with(out_id),
-                    );
+                    let mut out_ui =
+                        self.out
+                            .create_child_ui(ui, eased_t_rev, ("router_child", out_id));
                     content_out(&mut out_ui, state);
                 });
             }
 
             with_temp_auto_id(ui, in_id, |ui| {
-                let mut in_ui =
-                    self.in_
-                        .create_child_ui(ui, eased_t, Id::new("router_child").with(in_id));
+                let mut in_ui = self
+                    .in_
+                    .create_child_ui(ui, eased_t, ("router_child", in_id));
                 content_in(&mut in_ui, state);
             });
         }
@@ -304,7 +300,7 @@ impl ActiveTransition {
             let mut ui = ui.new_child(
                 UiBuilder::new()
                     .max_rect(ui.max_rect())
-                    .id_salt(Id::new("router_child").with(with_id)),
+                    .id_salt(("router_child", with_id)),
             );
             content(&mut ui);
         });

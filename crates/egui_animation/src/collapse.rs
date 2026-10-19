@@ -13,21 +13,24 @@ pub struct Collapse {
 }
 
 impl Collapse {
-    // pub fn horizontal(id: impl Into<Id>, visible: bool) -> Self {
+    // pub fn horizontal(id: Id, visible: bool) -> Self {
     //     Self {
     //         horizontal: true,
     //         visible,
-    //         id: id.into(),
+    //         id,
     //         duration: 0.2,
     //     }
     // }
 
     /// Creates a new vertical collapse animation.
-    pub fn vertical(id: impl Into<Id>, visible: bool) -> Self {
+    ///
+    /// The animation state is stored in the global [`egui::Context`] memory,
+    /// so `id` must be globally unique.
+    pub fn vertical(id: Id, visible: bool) -> Self {
         Self {
             horizontal: false,
             visible,
-            id: id.into(),
+            id,
             duration: None,
         }
     }
@@ -76,7 +79,8 @@ impl Collapse {
 
         content(&mut child);
 
-        let size = child.min_size().min(ui.available_size());
+        let content_size = child.min_size();
+        let size = Vec2::new(content_size.x.min(ui.available_size().x), content_size.y);
 
         ui.memory_mut(|mem| {
             mem.data.insert_temp(id, size.y);

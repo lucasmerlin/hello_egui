@@ -109,7 +109,6 @@ pub const ICON_ADD_CALL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0b7
 pub const ICON_ADD_CARD: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb86}");
 pub const ICON_ADD_CHART: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef3c}");
 pub const ICON_ADD_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e990}");
-pub const ICON_ADD_CIRCLE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e990}");
 pub const ICON_ADD_COLUMN_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f425}");
 pub const ICON_ADD_COLUMN_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f424}");
 pub const ICON_ADD_COMMENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e266}");
@@ -148,12 +147,18 @@ pub const ICON_AIR_PURIFIER: crate::MaterialIcon = crate::MaterialIcon::new("\u{
 pub const ICON_AIR_PURIFIER_GEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e829}");
 pub const ICON_AIRLINE_SEAT_FLAT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e630}");
 pub const ICON_AIRLINE_SEAT_FLAT_ANGLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e631}");
-pub const ICON_AIRLINE_SEAT_INDIVIDUAL_SUITE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e632}");
-pub const ICON_AIRLINE_SEAT_LEGROOM_EXTRA: crate::MaterialIcon = crate::MaterialIcon::new("\u{e633}");
-pub const ICON_AIRLINE_SEAT_LEGROOM_NORMAL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e634}");
-pub const ICON_AIRLINE_SEAT_LEGROOM_REDUCED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e635}");
-pub const ICON_AIRLINE_SEAT_RECLINE_EXTRA: crate::MaterialIcon = crate::MaterialIcon::new("\u{e636}");
-pub const ICON_AIRLINE_SEAT_RECLINE_NORMAL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e637}");
+pub const ICON_AIRLINE_SEAT_INDIVIDUAL_SUITE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e632}");
+pub const ICON_AIRLINE_SEAT_LEGROOM_EXTRA: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e633}");
+pub const ICON_AIRLINE_SEAT_LEGROOM_NORMAL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e634}");
+pub const ICON_AIRLINE_SEAT_LEGROOM_REDUCED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e635}");
+pub const ICON_AIRLINE_SEAT_RECLINE_EXTRA: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e636}");
+pub const ICON_AIRLINE_SEAT_RECLINE_NORMAL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e637}");
 pub const ICON_AIRLINE_STOPS: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7d0}");
 pub const ICON_AIRLINES: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7ca}");
 pub const ICON_AIRPLANE_TICKET: crate::MaterialIcon = crate::MaterialIcon::new("\u{efd9}");
@@ -182,8 +187,10 @@ pub const ICON_ALIGN_ITEMS_STRETCH: crate::MaterialIcon = crate::MaterialIcon::n
 pub const ICON_ALIGN_JUSTIFY_CENTER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f792}");
 pub const ICON_ALIGN_JUSTIFY_FLEX_END: crate::MaterialIcon = crate::MaterialIcon::new("\u{f791}");
 pub const ICON_ALIGN_JUSTIFY_FLEX_START: crate::MaterialIcon = crate::MaterialIcon::new("\u{f790}");
-pub const ICON_ALIGN_JUSTIFY_SPACE_AROUND: crate::MaterialIcon = crate::MaterialIcon::new("\u{f78f}");
-pub const ICON_ALIGN_JUSTIFY_SPACE_BETWEEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f78e}");
+pub const ICON_ALIGN_JUSTIFY_SPACE_AROUND: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f78f}");
+pub const ICON_ALIGN_JUSTIFY_SPACE_BETWEEN: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f78e}");
 pub const ICON_ALIGN_JUSTIFY_SPACE_EVEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f78d}");
 pub const ICON_ALIGN_JUSTIFY_STRETCH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f78c}");
 pub const ICON_ALIGN_SELF_STRETCH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f78b}");
@@ -220,23 +227,29 @@ pub const ICON_ANDROID_CELL_5_BAR_ALERT: crate::MaterialIcon = crate::MaterialIc
 pub const ICON_ANDROID_CELL_5_BAR_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef04}");
 pub const ICON_ANDROID_CELL_5_BAR_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef03}");
 pub const ICON_ANDROID_CELL_DUAL_4_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef0d}");
-pub const ICON_ANDROID_CELL_DUAL_4_BAR_ALERT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef0f}");
-pub const ICON_ANDROID_CELL_DUAL_4_BAR_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef0e}");
+pub const ICON_ANDROID_CELL_DUAL_4_BAR_ALERT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef0f}");
+pub const ICON_ANDROID_CELL_DUAL_4_BAR_PLUS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef0e}");
 pub const ICON_ANDROID_CELL_DUAL_5_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef0a}");
-pub const ICON_ANDROID_CELL_DUAL_5_BAR_ALERT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef0c}");
-pub const ICON_ANDROID_CELL_DUAL_5_BAR_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef0b}");
+pub const ICON_ANDROID_CELL_DUAL_5_BAR_ALERT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef0c}");
+pub const ICON_ANDROID_CELL_DUAL_5_BAR_PLUS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef0b}");
 pub const ICON_ANDROID_WIFI_3_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef16}");
 pub const ICON_ANDROID_WIFI_3_BAR_ALERT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef1b}");
 pub const ICON_ANDROID_WIFI_3_BAR_LOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef1a}");
 pub const ICON_ANDROID_WIFI_3_BAR_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef19}");
 pub const ICON_ANDROID_WIFI_3_BAR_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef18}");
-pub const ICON_ANDROID_WIFI_3_BAR_QUESTION: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef17}");
+pub const ICON_ANDROID_WIFI_3_BAR_QUESTION: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef17}");
 pub const ICON_ANDROID_WIFI_4_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef10}");
 pub const ICON_ANDROID_WIFI_4_BAR_ALERT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef15}");
 pub const ICON_ANDROID_WIFI_4_BAR_LOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef14}");
 pub const ICON_ANDROID_WIFI_4_BAR_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef13}");
 pub const ICON_ANDROID_WIFI_4_BAR_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef12}");
-pub const ICON_ANDROID_WIFI_4_BAR_QUESTION: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef11}");
+pub const ICON_ANDROID_WIFI_4_BAR_QUESTION: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef11}");
 pub const ICON_ANIMATED_IMAGES: crate::MaterialIcon = crate::MaterialIcon::new("\u{f49a}");
 pub const ICON_ANIMATION: crate::MaterialIcon = crate::MaterialIcon::new("\u{e71c}");
 pub const ICON_ANNOUNCEMENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e87f}");
@@ -462,13 +475,20 @@ pub const ICON_BATTERY_ANDROID_FRAME_3: crate::MaterialIcon = crate::MaterialIco
 pub const ICON_BATTERY_ANDROID_FRAME_4: crate::MaterialIcon = crate::MaterialIcon::new("\u{f254}");
 pub const ICON_BATTERY_ANDROID_FRAME_5: crate::MaterialIcon = crate::MaterialIcon::new("\u{f253}");
 pub const ICON_BATTERY_ANDROID_FRAME_6: crate::MaterialIcon = crate::MaterialIcon::new("\u{f252}");
-pub const ICON_BATTERY_ANDROID_FRAME_ALERT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f251}");
-pub const ICON_BATTERY_ANDROID_FRAME_BOLT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f250}");
-pub const ICON_BATTERY_ANDROID_FRAME_FULL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f24f}");
-pub const ICON_BATTERY_ANDROID_FRAME_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f24e}");
-pub const ICON_BATTERY_ANDROID_FRAME_QUESTION: crate::MaterialIcon = crate::MaterialIcon::new("\u{f24d}");
-pub const ICON_BATTERY_ANDROID_FRAME_SHARE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f24c}");
-pub const ICON_BATTERY_ANDROID_FRAME_SHIELD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f24b}");
+pub const ICON_BATTERY_ANDROID_FRAME_ALERT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f251}");
+pub const ICON_BATTERY_ANDROID_FRAME_BOLT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f250}");
+pub const ICON_BATTERY_ANDROID_FRAME_FULL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f24f}");
+pub const ICON_BATTERY_ANDROID_FRAME_PLUS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f24e}");
+pub const ICON_BATTERY_ANDROID_FRAME_QUESTION: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f24d}");
+pub const ICON_BATTERY_ANDROID_FRAME_SHARE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f24c}");
+pub const ICON_BATTERY_ANDROID_FRAME_SHIELD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f24b}");
 pub const ICON_BATTERY_ANDROID_FULL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f304}");
 pub const ICON_BATTERY_ANDROID_PLUS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f303}");
 pub const ICON_BATTERY_ANDROID_QUESTION: crate::MaterialIcon = crate::MaterialIcon::new("\u{f302}");
@@ -565,7 +585,6 @@ pub const ICON_BOOKMARK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8e7
 pub const ICON_BOOKMARK_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{e598}");
 pub const ICON_BOOKMARK_ADDED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e599}");
 pub const ICON_BOOKMARK_BAG: crate::MaterialIcon = crate::MaterialIcon::new("\u{f410}");
-pub const ICON_BOOKMARK_BORDER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8e7}");
 pub const ICON_BOOKMARK_CHECK: crate::MaterialIcon = crate::MaterialIcon::new("\u{f457}");
 pub const ICON_BOOKMARK_FLAG: crate::MaterialIcon = crate::MaterialIcon::new("\u{f456}");
 pub const ICON_BOOKMARK_HEART: crate::MaterialIcon = crate::MaterialIcon::new("\u{f455}");
@@ -708,7 +727,8 @@ pub const ICON_CAR_DEFROST_LOW_LEFT: crate::MaterialIcon = crate::MaterialIcon::
 pub const ICON_CAR_DEFROST_LOW_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f342}");
 pub const ICON_CAR_DEFROST_MID_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f278}");
 pub const ICON_CAR_DEFROST_MID_LOW_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f341}");
-pub const ICON_CAR_DEFROST_MID_LOW_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f277}");
+pub const ICON_CAR_DEFROST_MID_LOW_RIGHT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f277}");
 pub const ICON_CAR_DEFROST_MID_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f340}");
 pub const ICON_CAR_DEFROST_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f33f}");
 pub const ICON_CAR_FAN_LOW_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f33e}");
@@ -771,7 +791,6 @@ pub const ICON_CHAT_ADD_ON: crate::MaterialIcon = crate::MaterialIcon::new("\u{f
 pub const ICON_CHAT_APPS_SCRIPT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0bd}");
 pub const ICON_CHAT_BUBBLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e0cb}");
 pub const ICON_CHAT_BUBBLE_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{fffbb}");
-pub const ICON_CHAT_BUBBLE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e0cb}");
 pub const ICON_CHAT_DASHED: crate::MaterialIcon = crate::MaterialIcon::new("\u{eeed}");
 pub const ICON_CHAT_DISPLAY: crate::MaterialIcon = crate::MaterialIcon::new("\u{ffeac}");
 pub const ICON_CHAT_ERROR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7ac}");
@@ -784,10 +803,10 @@ pub const ICON_CHECK_BOX: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9d
 pub const ICON_CHECK_BOX_OUTLINE_BLANK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e835}");
 pub const ICON_CHECK_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0be}");
 pub const ICON_CHECK_CIRCLE_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0be}");
-pub const ICON_CHECK_CIRCLE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0be}");
 pub const ICON_CHECK_CIRCLE_UNREAD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f27e}");
 pub const ICON_CHECK_IN_OUT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6f6}");
-pub const ICON_CHECK_INDETERMINATE_SMALL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f88a}");
+pub const ICON_CHECK_INDETERMINATE_SMALL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f88a}");
 pub const ICON_CHECK_SMALL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f88b}");
 pub const ICON_CHECKBOOK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e70d}");
 pub const ICON_CHECKED_BAG: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb0c}");
@@ -1052,7 +1071,6 @@ pub const ICON_DEHAZE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e3c7}"
 pub const ICON_DELETE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e92e}");
 pub const ICON_DELETE_FOREVER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e92b}");
 pub const ICON_DELETE_HISTORY: crate::MaterialIcon = crate::MaterialIcon::new("\u{f518}");
-pub const ICON_DELETE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e92e}");
 pub const ICON_DELETE_SWEEP: crate::MaterialIcon = crate::MaterialIcon::new("\u{e16c}");
 pub const ICON_DELIVERY_DINING: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb28}");
 pub const ICON_DELIVERY_TRUCK_BOLT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f3a2}");
@@ -1140,12 +1158,14 @@ pub const ICON_DIRECTIONS_CAR_FILLED: crate::MaterialIcon = crate::MaterialIcon:
 pub const ICON_DIRECTIONS_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f10f}");
 pub const ICON_DIRECTIONS_RAILWAY: crate::MaterialIcon = crate::MaterialIcon::new("\u{eff8}");
 pub const ICON_DIRECTIONS_RAILWAY_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{f462}");
-pub const ICON_DIRECTIONS_RAILWAY_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{eff8}");
+pub const ICON_DIRECTIONS_RAILWAY_FILLED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{eff8}");
 pub const ICON_DIRECTIONS_RUN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e566}");
 pub const ICON_DIRECTIONS_SUBWAY: crate::MaterialIcon = crate::MaterialIcon::new("\u{effa}");
 pub const ICON_DIRECTIONS_SUBWAY_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{effa}");
 pub const ICON_DIRECTIONS_TRANSIT: crate::MaterialIcon = crate::MaterialIcon::new("\u{effa}");
-pub const ICON_DIRECTIONS_TRANSIT_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{effa}");
+pub const ICON_DIRECTIONS_TRANSIT_FILLED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{effa}");
 pub const ICON_DIRECTIONS_WALK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e536}");
 pub const ICON_DIRECTORY_SYNC: crate::MaterialIcon = crate::MaterialIcon::new("\u{e394}");
 pub const ICON_DIRTY_LENS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef4b}");
@@ -1173,7 +1193,8 @@ pub const ICON_DO_NOT_DISTURB: crate::MaterialIcon = crate::MaterialIcon::new("\
 pub const ICON_DO_NOT_DISTURB_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f08c}");
 pub const ICON_DO_NOT_DISTURB_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f08e}");
 pub const ICON_DO_NOT_DISTURB_ON: crate::MaterialIcon = crate::MaterialIcon::new("\u{f08f}");
-pub const ICON_DO_NOT_DISTURB_ON_TOTAL_SILENCE: crate::MaterialIcon = crate::MaterialIcon::new("\u{effb}");
+pub const ICON_DO_NOT_DISTURB_ON_TOTAL_SILENCE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{effb}");
 pub const ICON_DO_NOT_STEP: crate::MaterialIcon = crate::MaterialIcon::new("\u{f19f}");
 pub const ICON_DO_NOT_TOUCH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1b0}");
 pub const ICON_DOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2e0}");
@@ -1228,10 +1249,10 @@ pub const ICON_DRESSER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e210}
 pub const ICON_DRIVE_ETA: crate::MaterialIcon = crate::MaterialIcon::new("\u{eff7}");
 pub const ICON_DRIVE_EXPORT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f41d}");
 pub const ICON_DRIVE_FILE_MOVE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9a1}");
-pub const ICON_DRIVE_FILE_MOVE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9a1}");
 pub const ICON_DRIVE_FILE_MOVE_RTL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9a1}");
 pub const ICON_DRIVE_FILE_RENAME: crate::MaterialIcon = crate::MaterialIcon::new("\u{e676}");
-pub const ICON_DRIVE_FILE_RENAME_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9a2}");
+pub const ICON_DRIVE_FILE_RENAME_OUTLINE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e9a2}");
 pub const ICON_DRIVE_FOLDER_UPLOAD: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9a3}");
 pub const ICON_DRONE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f25a}");
 pub const ICON_DRONE_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{f259}");
@@ -1342,7 +1363,6 @@ pub const ICON_ERASER_SIZE_5: crate::MaterialIcon = crate::MaterialIcon::new("\u
 pub const ICON_ERROR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8b6}");
 pub const ICON_ERROR_CIRCLE_ROUNDED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8b6}");
 pub const ICON_ERROR_MED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e49b}");
-pub const ICON_ERROR_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8b6}");
 pub const ICON_ESCALATOR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1a1}");
 pub const ICON_ESCALATOR_WARNING: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1ac}");
 pub const ICON_EURO: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea15}");
@@ -1428,11 +1448,11 @@ pub const ICON_FAST_REWIND: crate::MaterialIcon = crate::MaterialIcon::new("\u{e
 pub const ICON_FASTFOOD: crate::MaterialIcon = crate::MaterialIcon::new("\u{e57a}");
 pub const ICON_FAUCET: crate::MaterialIcon = crate::MaterialIcon::new("\u{e278}");
 pub const ICON_FAVORITE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e87e}");
-pub const ICON_FAVORITE_BORDER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e87e}");
 pub const ICON_FAX: crate::MaterialIcon = crate::MaterialIcon::new("\u{ead8}");
 pub const ICON_FEATURE_SEARCH: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9a9}");
 pub const ICON_FEATURED_PLAY_LIST: crate::MaterialIcon = crate::MaterialIcon::new("\u{e06d}");
-pub const ICON_FEATURED_SEASONAL_AND_GIFTS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef91}");
+pub const ICON_FEATURED_SEASONAL_AND_GIFTS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ef91}");
 pub const ICON_FEATURED_VIDEO: crate::MaterialIcon = crate::MaterialIcon::new("\u{e06e}");
 pub const ICON_FEED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f009}");
 pub const ICON_FEEDBACK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e87f}");
@@ -1610,7 +1630,8 @@ pub const ICON_FORMAT_IMAGE_BREAK_LEFT: crate::MaterialIcon = crate::MaterialIco
 pub const ICON_FORMAT_IMAGE_BREAK_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eeae}");
 pub const ICON_FORMAT_IMAGE_FRONT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eead}");
 pub const ICON_FORMAT_IMAGE_INLINE_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eeac}");
-pub const ICON_FORMAT_IMAGE_INLINE_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ffffd}");
+pub const ICON_FORMAT_IMAGE_INLINE_RIGHT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ffffd}");
 pub const ICON_FORMAT_IMAGE_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f863}");
 pub const ICON_FORMAT_IMAGE_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f864}");
 pub const ICON_FORMAT_INDENT_DECREASE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e23d}");
@@ -1619,9 +1640,12 @@ pub const ICON_FORMAT_INK_HIGHLIGHTER: crate::MaterialIcon = crate::MaterialIcon
 pub const ICON_FORMAT_ITALIC: crate::MaterialIcon = crate::MaterialIcon::new("\u{e23f}");
 pub const ICON_FORMAT_LETTER_SPACING: crate::MaterialIcon = crate::MaterialIcon::new("\u{f773}");
 pub const ICON_FORMAT_LETTER_SPACING_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{f618}");
-pub const ICON_FORMAT_LETTER_SPACING_STANDARD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f617}");
-pub const ICON_FORMAT_LETTER_SPACING_WIDE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f616}");
-pub const ICON_FORMAT_LETTER_SPACING_WIDER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f615}");
+pub const ICON_FORMAT_LETTER_SPACING_STANDARD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f617}");
+pub const ICON_FORMAT_LETTER_SPACING_WIDE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f616}");
+pub const ICON_FORMAT_LETTER_SPACING_WIDER: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f615}");
 pub const ICON_FORMAT_LINE_SPACING: crate::MaterialIcon = crate::MaterialIcon::new("\u{e240}");
 pub const ICON_FORMAT_LIST_BULLETED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e241}");
 pub const ICON_FORMAT_LIST_BULLETED_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f849}");
@@ -1639,11 +1663,15 @@ pub const ICON_FORMAT_STRIKETHROUGH: crate::MaterialIcon = crate::MaterialIcon::
 pub const ICON_FORMAT_TEXT_CLIP: crate::MaterialIcon = crate::MaterialIcon::new("\u{f82a}");
 pub const ICON_FORMAT_TEXT_OVERFLOW: crate::MaterialIcon = crate::MaterialIcon::new("\u{f829}");
 pub const ICON_FORMAT_TEXT_WRAP: crate::MaterialIcon = crate::MaterialIcon::new("\u{f828}");
-pub const ICON_FORMAT_TEXTDIRECTION_L_TO_R: crate::MaterialIcon = crate::MaterialIcon::new("\u{e247}");
-pub const ICON_FORMAT_TEXTDIRECTION_R_TO_L: crate::MaterialIcon = crate::MaterialIcon::new("\u{e248}");
-pub const ICON_FORMAT_TEXTDIRECTION_VERTICAL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f4b8}");
+pub const ICON_FORMAT_TEXTDIRECTION_L_TO_R: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e247}");
+pub const ICON_FORMAT_TEXTDIRECTION_R_TO_L: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e248}");
+pub const ICON_FORMAT_TEXTDIRECTION_VERTICAL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f4b8}");
 pub const ICON_FORMAT_UNDERLINED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e249}");
-pub const ICON_FORMAT_UNDERLINED_SQUIGGLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f885}");
+pub const ICON_FORMAT_UNDERLINED_SQUIGGLE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f885}");
 pub const ICON_FORMS_ADD_ON: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0c7}");
 pub const ICON_FORMS_APPS_SCRIPT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0c8}");
 pub const ICON_FORT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eaad}");
@@ -1845,7 +1873,8 @@ pub const ICON_HEAP_SNAPSHOT_THUMBNAIL: crate::MaterialIcon = crate::MaterialIco
 pub const ICON_HEARING: crate::MaterialIcon = crate::MaterialIcon::new("\u{e023}");
 pub const ICON_HEARING_AID: crate::MaterialIcon = crate::MaterialIcon::new("\u{f464}");
 pub const ICON_HEARING_AID_DISABLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f3b0}");
-pub const ICON_HEARING_AID_DISABLED_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2ec}");
+pub const ICON_HEARING_AID_DISABLED_LEFT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f2ec}");
 pub const ICON_HEARING_AID_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2ed}");
 pub const ICON_HEARING_DISABLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f104}");
 pub const ICON_HEART_BROKEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{eac2}");
@@ -1861,7 +1890,6 @@ pub const ICON_HELICOPTER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6
 pub const ICON_HELP: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8fd}");
 pub const ICON_HELP_CENTER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1c0}");
 pub const ICON_HELP_CLINIC: crate::MaterialIcon = crate::MaterialIcon::new("\u{f810}");
-pub const ICON_HELP_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8fd}");
 pub const ICON_HEMATOLOGY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e0f6}");
 pub const ICON_HEVC: crate::MaterialIcon = crate::MaterialIcon::new("\u{f021}");
 pub const ICON_HEXAGON: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb39}");
@@ -1899,7 +1927,8 @@ pub const ICON_HOME_AND_GARDEN: crate::MaterialIcon = crate::MaterialIcon::new("
 pub const ICON_HOME_APP_LOGO: crate::MaterialIcon = crate::MaterialIcon::new("\u{e295}");
 pub const ICON_HOME_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9b2}");
 pub const ICON_HOME_HEALTH: crate::MaterialIcon = crate::MaterialIcon::new("\u{e4b9}");
-pub const ICON_HOME_IMPROVEMENT_AND_TOOLS: crate::MaterialIcon = crate::MaterialIcon::new("\u{efa0}");
+pub const ICON_HOME_IMPROVEMENT_AND_TOOLS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{efa0}");
 pub const ICON_HOME_IOT_DEVICE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e283}");
 pub const ICON_HOME_MAX: crate::MaterialIcon = crate::MaterialIcon::new("\u{f024}");
 pub const ICON_HOME_MAX_DOTS: crate::MaterialIcon = crate::MaterialIcon::new("\u{e849}");
@@ -1984,7 +2013,8 @@ pub const ICON_INBOX_TEXT_PERSON: crate::MaterialIcon = crate::MaterialIcon::new
 pub const ICON_INBOX_TEXT_SHARE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f35c}");
 pub const ICON_INCOMPLETE_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e79b}");
 pub const ICON_INDETERMINATE_CHECK_BOX: crate::MaterialIcon = crate::MaterialIcon::new("\u{e909}");
-pub const ICON_INDETERMINATE_QUESTION_BOX: crate::MaterialIcon = crate::MaterialIcon::new("\u{f56d}");
+pub const ICON_INDETERMINATE_QUESTION_BOX: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f56d}");
 pub const ICON_INFO: crate::MaterialIcon = crate::MaterialIcon::new("\u{e88e}");
 pub const ICON_INFO_I: crate::MaterialIcon = crate::MaterialIcon::new("\u{f59b}");
 pub const ICON_INFRARED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f87c}");
@@ -2001,7 +2031,6 @@ pub const ICON_INPUT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e890}")
 pub const ICON_INPUT_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f71a}");
 pub const ICON_INSERT_CHART: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0cc}");
 pub const ICON_INSERT_CHART_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0cc}");
-pub const ICON_INSERT_CHART_OUTLINED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0cc}");
 pub const ICON_INSERT_COMMENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e24c}");
 pub const ICON_INSERT_DRIVE_FILE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e66d}");
 pub const ICON_INSERT_EMOTICON: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea22}");
@@ -2061,9 +2090,12 @@ pub const ICON_KEYBOARD_CAPSLOCK: crate::MaterialIcon = crate::MaterialIcon::new
 pub const ICON_KEYBOARD_CAPSLOCK_BADGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7de}");
 pub const ICON_KEYBOARD_COMMAND_KEY: crate::MaterialIcon = crate::MaterialIcon::new("\u{eae7}");
 pub const ICON_KEYBOARD_CONTROL_KEY: crate::MaterialIcon = crate::MaterialIcon::new("\u{eae6}");
-pub const ICON_KEYBOARD_DOUBLE_ARROW_DOWN: crate::MaterialIcon = crate::MaterialIcon::new("\u{ead0}");
-pub const ICON_KEYBOARD_DOUBLE_ARROW_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eac3}");
-pub const ICON_KEYBOARD_DOUBLE_ARROW_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eac9}");
+pub const ICON_KEYBOARD_DOUBLE_ARROW_DOWN: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ead0}");
+pub const ICON_KEYBOARD_DOUBLE_ARROW_LEFT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{eac3}");
+pub const ICON_KEYBOARD_DOUBLE_ARROW_RIGHT: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{eac9}");
 pub const ICON_KEYBOARD_DOUBLE_ARROW_UP: crate::MaterialIcon = crate::MaterialIcon::new("\u{eacf}");
 pub const ICON_KEYBOARD_EXTERNAL_INPUT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7dd}");
 pub const ICON_KEYBOARD_FULL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7dc}");
@@ -2074,7 +2106,8 @@ pub const ICON_KEYBOARD_LOCK_OFF: crate::MaterialIcon = crate::MaterialIcon::new
 pub const ICON_KEYBOARD_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f67a}");
 pub const ICON_KEYBOARD_ONSCREEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7db}");
 pub const ICON_KEYBOARD_OPTION_KEY: crate::MaterialIcon = crate::MaterialIcon::new("\u{eae8}");
-pub const ICON_KEYBOARD_PREVIOUS_LANGUAGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7da}");
+pub const ICON_KEYBOARD_PREVIOUS_LANGUAGE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f7da}");
 pub const ICON_KEYBOARD_RETURN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e31b}");
 pub const ICON_KEYBOARD_TAB: crate::MaterialIcon = crate::MaterialIcon::new("\u{e31c}");
 pub const ICON_KEYBOARD_TAB_RTL: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec73}");
@@ -2088,9 +2121,7 @@ pub const ICON_LAB_PROFILE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e
 pub const ICON_LAB_RESEARCH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f80b}");
 pub const ICON_LABEL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e893}");
 pub const ICON_LABEL_IMPORTANT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e948}");
-pub const ICON_LABEL_IMPORTANT_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e948}");
 pub const ICON_LABEL_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9b6}");
-pub const ICON_LABEL_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e893}");
 pub const ICON_LABS: crate::MaterialIcon = crate::MaterialIcon::new("\u{e105}");
 pub const ICON_LAN: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb2f}");
 pub const ICON_LANDSCAPE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e564}");
@@ -2153,7 +2184,6 @@ pub const ICON_LIGHT_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9b
 pub const ICON_LIGHTBULB: crate::MaterialIcon = crate::MaterialIcon::new("\u{e90f}");
 pub const ICON_LIGHTBULB_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{f3e3}");
 pub const ICON_LIGHTBULB_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebfe}");
-pub const ICON_LIGHTBULB_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e90f}");
 pub const ICON_LIGHTNING_STAND: crate::MaterialIcon = crate::MaterialIcon::new("\u{efa4}");
 pub const ICON_LIGHTSTRIP: crate::MaterialIcon = crate::MaterialIcon::new("\u{fff75}");
 pub const ICON_LINE_AXIS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea9a}");
@@ -2237,7 +2267,6 @@ pub const ICON_LOCK_CLOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef
 pub const ICON_LOCK_OPEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e898}");
 pub const ICON_LOCK_OPEN_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f361}");
 pub const ICON_LOCK_OPEN_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f656}");
-pub const ICON_LOCK_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e899}");
 pub const ICON_LOCK_PERSON: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8f3}");
 pub const ICON_LOCK_RESET: crate::MaterialIcon = crate::MaterialIcon::new("\u{eade}");
 pub const ICON_LOGIN: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea77}");
@@ -2259,7 +2288,8 @@ pub const ICON_LOYALTY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e89a}
 pub const ICON_LTE_MOBILEDATA: crate::MaterialIcon = crate::MaterialIcon::new("\u{f02c}");
 pub const ICON_LTE_MOBILEDATA_BADGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7d9}");
 pub const ICON_LTE_PLUS_MOBILEDATA: crate::MaterialIcon = crate::MaterialIcon::new("\u{f02d}");
-pub const ICON_LTE_PLUS_MOBILEDATA_BADGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7d8}");
+pub const ICON_LTE_PLUS_MOBILEDATA_BADGE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f7d8}");
 pub const ICON_LUGGAGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f235}");
 pub const ICON_LUNCH_DINING: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea61}");
 pub const ICON_LYRICS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec0b}");
@@ -2276,7 +2306,6 @@ pub const ICON_MAIL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e159}");
 pub const ICON_MAIL_ASTERISK: crate::MaterialIcon = crate::MaterialIcon::new("\u{eef4}");
 pub const ICON_MAIL_LOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec0a}");
 pub const ICON_MAIL_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f48b}");
-pub const ICON_MAIL_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e159}");
 pub const ICON_MAIL_SHIELD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f249}");
 pub const ICON_MALE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e58e}");
 pub const ICON_MAN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e4eb}");
@@ -2433,7 +2462,6 @@ pub const ICON_MODE_COOL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f16
 pub const ICON_MODE_COOL_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f167}");
 pub const ICON_MODE_DUAL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f557}");
 pub const ICON_MODE_EDIT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f097}");
-pub const ICON_MODE_EDIT_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f097}");
 pub const ICON_MODE_FAN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f168}");
 pub const ICON_MODE_FAN_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{fffd0}");
 pub const ICON_MODE_FAN_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec17}");
@@ -2553,8 +2581,10 @@ pub const ICON_NEST_CAM_OUTDOOR: crate::MaterialIcon = crate::MaterialIcon::new(
 pub const ICON_NEST_CAM_STAND: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8b9}");
 pub const ICON_NEST_CAM_WALL_MOUNT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8ba}");
 pub const ICON_NEST_CAM_WIRED_STAND: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec16}");
-pub const ICON_NEST_CLOCK_FARSIGHT_ANALOG: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8bb}");
-pub const ICON_NEST_CLOCK_FARSIGHT_DIGITAL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8bc}");
+pub const ICON_NEST_CLOCK_FARSIGHT_ANALOG: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f8bb}");
+pub const ICON_NEST_CLOCK_FARSIGHT_DIGITAL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f8bc}");
 pub const ICON_NEST_CONNECT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f122}");
 pub const ICON_NEST_DETECT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f123}");
 pub const ICON_NEST_DISPLAY: crate::MaterialIcon = crate::MaterialIcon::new("\u{f124}");
@@ -2577,7 +2607,8 @@ pub const ICON_NEST_MINI: crate::MaterialIcon = crate::MaterialIcon::new("\u{e78
 pub const ICON_NEST_MULTI_ROOM: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8c2}");
 pub const ICON_NEST_PROTECT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e68e}");
 pub const ICON_NEST_REMOTE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5db}");
-pub const ICON_NEST_REMOTE_COMFORT_SENSOR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f12a}");
+pub const ICON_NEST_REMOTE_COMFORT_SENSOR: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f12a}");
 pub const ICON_NEST_SECURE_ALARM: crate::MaterialIcon = crate::MaterialIcon::new("\u{f12b}");
 pub const ICON_NEST_SUNBLOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8c3}");
 pub const ICON_NEST_TAG: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8c1}");
@@ -2585,8 +2616,10 @@ pub const ICON_NEST_THERMOSTAT: crate::MaterialIcon = crate::MaterialIcon::new("
 pub const ICON_NEST_THERMOSTAT_E_EU: crate::MaterialIcon = crate::MaterialIcon::new("\u{f12d}");
 pub const ICON_NEST_THERMOSTAT_GEN_3: crate::MaterialIcon = crate::MaterialIcon::new("\u{f12e}");
 pub const ICON_NEST_THERMOSTAT_SENSOR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f12f}");
-pub const ICON_NEST_THERMOSTAT_SENSOR_EU: crate::MaterialIcon = crate::MaterialIcon::new("\u{f130}");
-pub const ICON_NEST_THERMOSTAT_ZIRCONIUM_EU: crate::MaterialIcon = crate::MaterialIcon::new("\u{f131}");
+pub const ICON_NEST_THERMOSTAT_SENSOR_EU: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f130}");
+pub const ICON_NEST_THERMOSTAT_ZIRCONIUM_EU: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f131}");
 pub const ICON_NEST_TRUE_RADIANT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8c4}");
 pub const ICON_NEST_WAKE_ON_APPROACH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8c5}");
 pub const ICON_NEST_WAKE_ON_PRESS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8c6}");
@@ -2601,19 +2634,24 @@ pub const ICON_NETWORK_CELL: crate::MaterialIcon = crate::MaterialIcon::new("\u{
 pub const ICON_NETWORK_CHECK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e640}");
 pub const ICON_NETWORK_INTEL_NODE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f371}");
 pub const ICON_NETWORK_INTELLIGENCE: crate::MaterialIcon = crate::MaterialIcon::new("\u{efac}");
-pub const ICON_NETWORK_INTELLIGENCE_HISTORY: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5f6}");
-pub const ICON_NETWORK_INTELLIGENCE_UPDATE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5f5}");
+pub const ICON_NETWORK_INTELLIGENCE_HISTORY: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f5f6}");
+pub const ICON_NETWORK_INTELLIGENCE_UPDATE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f5f5}");
 pub const ICON_NETWORK_LOCKED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e61a}");
 pub const ICON_NETWORK_MANAGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7ab}");
 pub const ICON_NETWORK_NODE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f56e}");
 pub const ICON_NETWORK_PING: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebca}");
 pub const ICON_NETWORK_WIFI: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1ba}");
 pub const ICON_NETWORK_WIFI_1_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebe4}");
-pub const ICON_NETWORK_WIFI_1_BAR_LOCKED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f58f}");
+pub const ICON_NETWORK_WIFI_1_BAR_LOCKED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f58f}");
 pub const ICON_NETWORK_WIFI_2_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebd6}");
-pub const ICON_NETWORK_WIFI_2_BAR_LOCKED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f58e}");
+pub const ICON_NETWORK_WIFI_2_BAR_LOCKED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f58e}");
 pub const ICON_NETWORK_WIFI_3_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebe1}");
-pub const ICON_NETWORK_WIFI_3_BAR_LOCKED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f58d}");
+pub const ICON_NETWORK_WIFI_3_BAR_LOCKED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f58d}");
 pub const ICON_NETWORK_WIFI_LOCKED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f532}");
 pub const ICON_NEUROLOGY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e10e}");
 pub const ICON_NEW_LABEL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e609}");
@@ -2641,7 +2679,8 @@ pub const ICON_NO_BACKPACK: crate::MaterialIcon = crate::MaterialIcon::new("\u{f
 pub const ICON_NO_CRASH: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebf0}");
 pub const ICON_NO_DRINKS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1a5}");
 pub const ICON_NO_ENCRYPTION: crate::MaterialIcon = crate::MaterialIcon::new("\u{f03f}");
-pub const ICON_NO_ENCRYPTION_GMAILERRORRED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f03f}");
+pub const ICON_NO_ENCRYPTION_GMAILERRORRED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f03f}");
 pub const ICON_NO_FLASH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1a6}");
 pub const ICON_NO_FOOD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1a7}");
 pub const ICON_NO_LUGGAGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f23b}");
@@ -2785,7 +2824,6 @@ pub const ICON_PATTERN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f043}
 pub const ICON_PAUSE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e034}");
 pub const ICON_PAUSE_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1a2}");
 pub const ICON_PAUSE_CIRCLE_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1a2}");
-pub const ICON_PAUSE_CIRCLE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1a2}");
 pub const ICON_PAUSE_PRESENTATION: crate::MaterialIcon = crate::MaterialIcon::new("\u{e0ea}");
 pub const ICON_PAYMENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8a1}");
 pub const ICON_PAYMENT_ARROW_DOWN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2c0}");
@@ -2803,7 +2841,6 @@ pub const ICON_PENDING_ACTIONS: crate::MaterialIcon = crate::MaterialIcon::new("
 pub const ICON_PENTAGON: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb50}");
 pub const ICON_PEOPLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea21}");
 pub const ICON_PEOPLE_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea21}");
-pub const ICON_PEOPLE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea21}");
 pub const ICON_PEOPLE_SIZE_DECREASE: crate::MaterialIcon = crate::MaterialIcon::new("\u{ffeb1}");
 pub const ICON_PEOPLE_SIZE_INCREASE: crate::MaterialIcon = crate::MaterialIcon::new("\u{ffeb0}");
 pub const ICON_PERCENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb58}");
@@ -2835,7 +2872,6 @@ pub const ICON_PERSON_EDIT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f
 pub const ICON_PERSON_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0d3}");
 pub const ICON_PERSON_HEART: crate::MaterialIcon = crate::MaterialIcon::new("\u{f290}");
 pub const ICON_PERSON_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e510}");
-pub const ICON_PERSON_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0d3}");
 pub const ICON_PERSON_PIN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e55a}");
 pub const ICON_PERSON_PIN_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e56a}");
 pub const ICON_PERSON_PLAY: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7fd}");
@@ -2897,16 +2933,17 @@ pub const ICON_PICKLEBALL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2
 pub const ICON_PICTURE_AS_PDF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e415}");
 pub const ICON_PICTURE_IN_PICTURE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8aa}");
 pub const ICON_PICTURE_IN_PICTURE_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e911}");
-pub const ICON_PICTURE_IN_PICTURE_CENTER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f550}");
+pub const ICON_PICTURE_IN_PICTURE_CENTER: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f550}");
 pub const ICON_PICTURE_IN_PICTURE_LARGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f54f}");
-pub const ICON_PICTURE_IN_PICTURE_MEDIUM: crate::MaterialIcon = crate::MaterialIcon::new("\u{f54e}");
-pub const ICON_PICTURE_IN_PICTURE_MOBILE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f517}");
+pub const ICON_PICTURE_IN_PICTURE_MEDIUM: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f54e}");
+pub const ICON_PICTURE_IN_PICTURE_MOBILE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f517}");
 pub const ICON_PICTURE_IN_PICTURE_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f52f}");
 pub const ICON_PICTURE_IN_PICTURE_SMALL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f54d}");
 pub const ICON_PIE_CHART: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0da}");
 pub const ICON_PIE_CHART_FILLED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0da}");
-pub const ICON_PIE_CHART_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0da}");
-pub const ICON_PIE_CHART_OUTLINED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0da}");
 pub const ICON_PILL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e11f}");
 pub const ICON_PILL_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f809}");
 pub const ICON_PIN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f045}");
@@ -2944,7 +2981,8 @@ pub const ICON_PLAYGROUND_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{
 pub const ICON_PLAYING_CARDS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5dc}");
 pub const ICON_PLAYLIST_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{e03b}");
 pub const ICON_PLAYLIST_ADD_CHECK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e065}");
-pub const ICON_PLAYLIST_ADD_CHECK_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7e6}");
+pub const ICON_PLAYLIST_ADD_CHECK_CIRCLE: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e7e6}");
 pub const ICON_PLAYLIST_ADD_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7e5}");
 pub const ICON_PLAYLIST_PLAY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e05f}");
 pub const ICON_PLAYLIST_REMOVE: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb80}");
@@ -3002,7 +3040,8 @@ pub const ICON_PRIVATE_CONNECTIVITY: crate::MaterialIcon = crate::MaterialIcon::
 pub const ICON_PROBLEM: crate::MaterialIcon = crate::MaterialIcon::new("\u{e122}");
 pub const ICON_PROCEDURE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e651}");
 pub const ICON_PROCESS_CHART: crate::MaterialIcon = crate::MaterialIcon::new("\u{f855}");
-pub const ICON_PRODUCTION_QUANTITY_LIMITS: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1d1}");
+pub const ICON_PRODUCTION_QUANTITY_LIMITS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e1d1}");
 pub const ICON_PRODUCTIVITY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e296}");
 pub const ICON_PROGRESS_ACTIVITY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9d0}");
 pub const ICON_PROMPT_SUGGESTION: crate::MaterialIcon = crate::MaterialIcon::new("\u{f4f6}");
@@ -3091,7 +3130,6 @@ pub const ICON_REMINDERS_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u
 pub const ICON_REMOTE_GEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e83e}");
 pub const ICON_REMOVE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e15b}");
 pub const ICON_REMOVE_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f08f}");
-pub const ICON_REMOVE_CIRCLE_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f08f}");
 pub const ICON_REMOVE_DONE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9d3}");
 pub const ICON_REMOVE_FROM_QUEUE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e067}");
 pub const ICON_REMOVE_MODERATOR: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9d4}");
@@ -3295,14 +3333,16 @@ pub const ICON_SENTIMENT_CALM: crate::MaterialIcon = crate::MaterialIcon::new("\
 pub const ICON_SENTIMENT_CONTENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6a6}");
 pub const ICON_SENTIMENT_DISSATISFIED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e811}");
 pub const ICON_SENTIMENT_EXCITED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6a5}");
-pub const ICON_SENTIMENT_EXTREMELY_DISSATISFIED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f194}");
+pub const ICON_SENTIMENT_EXTREMELY_DISSATISFIED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f194}");
 pub const ICON_SENTIMENT_FRUSTRATED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6a4}");
 pub const ICON_SENTIMENT_NEUTRAL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e812}");
 pub const ICON_SENTIMENT_SAD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6a3}");
 pub const ICON_SENTIMENT_SATISFIED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e813}");
 pub const ICON_SENTIMENT_SATISFIED_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e813}");
 pub const ICON_SENTIMENT_STRESSED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6a2}");
-pub const ICON_SENTIMENT_VERY_DISSATISFIED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e814}");
+pub const ICON_SENTIMENT_VERY_DISSATISFIED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e814}");
 pub const ICON_SENTIMENT_VERY_SATISFIED: crate::MaterialIcon = crate::MaterialIcon::new("\u{e815}");
 pub const ICON_SENTIMENT_WORRIED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6a1}");
 pub const ICON_SERIF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f4ac}");
@@ -3413,11 +3453,15 @@ pub const ICON_SIGNAL_CELLULAR_3_BAR: crate::MaterialIcon = crate::MaterialIcon:
 pub const ICON_SIGNAL_CELLULAR_4_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1c8}");
 pub const ICON_SIGNAL_CELLULAR_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f7a9}");
 pub const ICON_SIGNAL_CELLULAR_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e202}");
-pub const ICON_SIGNAL_CELLULAR_ALT_1_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebdf}");
-pub const ICON_SIGNAL_CELLULAR_ALT_2_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebe3}");
+pub const ICON_SIGNAL_CELLULAR_ALT_1_BAR: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ebdf}");
+pub const ICON_SIGNAL_CELLULAR_ALT_2_BAR: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{ebe3}");
 pub const ICON_SIGNAL_CELLULAR_ALT_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{fff8a}");
-pub const ICON_SIGNAL_CELLULAR_CONNECTED_NO_INTERNET_0_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0ac}");
-pub const ICON_SIGNAL_CELLULAR_CONNECTED_NO_INTERNET_4_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1cd}");
+pub const ICON_SIGNAL_CELLULAR_CONNECTED_NO_INTERNET_0_BAR: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f0ac}");
+pub const ICON_SIGNAL_CELLULAR_CONNECTED_NO_INTERNET_4_BAR: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e1cd}");
 pub const ICON_SIGNAL_CELLULAR_NO_SIM: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1ce}");
 pub const ICON_SIGNAL_CELLULAR_NODATA: crate::MaterialIcon = crate::MaterialIcon::new("\u{f062}");
 pub const ICON_SIGNAL_CELLULAR_NULL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1cf}");
@@ -3428,11 +3472,15 @@ pub const ICON_SIGNAL_WIFI_0_BAR: crate::MaterialIcon = crate::MaterialIcon::new
 pub const ICON_SIGNAL_WIFI_4_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f065}");
 pub const ICON_SIGNAL_WIFI_4_BAR_LOCK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1e1}");
 pub const ICON_SIGNAL_WIFI_BAD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f064}");
-pub const ICON_SIGNAL_WIFI_CONNECTED_NO_INTERNET_4: crate::MaterialIcon = crate::MaterialIcon::new("\u{f064}");
+pub const ICON_SIGNAL_WIFI_CONNECTED_NO_INTERNET_4: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f064}");
 pub const ICON_SIGNAL_WIFI_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1da}");
-pub const ICON_SIGNAL_WIFI_STATUSBAR_4_BAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f065}");
-pub const ICON_SIGNAL_WIFI_STATUSBAR_NOT_CONNECTED: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0ef}");
-pub const ICON_SIGNAL_WIFI_STATUSBAR_NULL: crate::MaterialIcon = crate::MaterialIcon::new("\u{f067}");
+pub const ICON_SIGNAL_WIFI_STATUSBAR_4_BAR: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f065}");
+pub const ICON_SIGNAL_WIFI_STATUSBAR_NOT_CONNECTED: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f0ef}");
+pub const ICON_SIGNAL_WIFI_STATUSBAR_NULL: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f067}");
 pub const ICON_SIGNATURE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f74c}");
 pub const ICON_SIGNPOST: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb91}");
 pub const ICON_SIM_CARD: crate::MaterialIcon = crate::MaterialIcon::new("\u{e32b}");
@@ -3495,9 +3543,12 @@ pub const ICON_SOLO_DINING: crate::MaterialIcon = crate::MaterialIcon::new("\u{e
 pub const ICON_SORT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e164}");
 pub const ICON_SORT_BY_ALPHA: crate::MaterialIcon = crate::MaterialIcon::new("\u{e053}");
 pub const ICON_SOS: crate::MaterialIcon = crate::MaterialIcon::new("\u{ebf7}");
-pub const ICON_SOUND_DETECTION_DOG_BARKING: crate::MaterialIcon = crate::MaterialIcon::new("\u{f149}");
-pub const ICON_SOUND_DETECTION_GLASS_BREAK: crate::MaterialIcon = crate::MaterialIcon::new("\u{f14a}");
-pub const ICON_SOUND_DETECTION_LOUD_SOUND: crate::MaterialIcon = crate::MaterialIcon::new("\u{f14b}");
+pub const ICON_SOUND_DETECTION_DOG_BARKING: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f149}");
+pub const ICON_SOUND_DETECTION_GLASS_BREAK: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f14a}");
+pub const ICON_SOUND_DETECTION_LOUD_SOUND: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f14b}");
 pub const ICON_SOUND_SAMPLER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f6b4}");
 pub const ICON_SOUNDBAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{fff72}");
 pub const ICON_SOUP_KITCHEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7d3}");
@@ -3558,7 +3609,8 @@ pub const ICON_SPLITSCREEN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f
 pub const ICON_SPLITSCREEN_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f4fd}");
 pub const ICON_SPLITSCREEN_BOTTOM: crate::MaterialIcon = crate::MaterialIcon::new("\u{f676}");
 pub const ICON_SPLITSCREEN_LANDSCAPE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f459}");
-pub const ICON_SPLITSCREEN_LANDSCAPE_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{fffba}");
+pub const ICON_SPLITSCREEN_LANDSCAPE_ADD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{fffba}");
 pub const ICON_SPLITSCREEN_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f675}");
 pub const ICON_SPLITSCREEN_PORTRAIT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f458}");
 pub const ICON_SPLITSCREEN_RIGHT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f674}");
@@ -3610,10 +3662,8 @@ pub const ICON_STADIUM: crate::MaterialIcon = crate::MaterialIcon::new("\u{eb90}
 pub const ICON_STAIRS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1a9}");
 pub const ICON_STAIRS_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{f46c}");
 pub const ICON_STAR: crate::MaterialIcon = crate::MaterialIcon::new("\u{f09a}");
-pub const ICON_STAR_BORDER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f09a}");
 pub const ICON_STAR_BORDER_PURPLE500: crate::MaterialIcon = crate::MaterialIcon::new("\u{f09a}");
 pub const ICON_STAR_HALF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e839}");
-pub const ICON_STAR_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f09a}");
 pub const ICON_STAR_PURPLE500: crate::MaterialIcon = crate::MaterialIcon::new("\u{f09a}");
 pub const ICON_STAR_RATE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0ec}");
 pub const ICON_STAR_RATE_HALF: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec45}");
@@ -3695,7 +3745,8 @@ pub const ICON_SUNNY: crate::MaterialIcon = crate::MaterialIcon::new("\u{e81a}")
 pub const ICON_SUNNY_SNOWING: crate::MaterialIcon = crate::MaterialIcon::new("\u{e819}");
 pub const ICON_SUPERSCRIPT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f112}");
 pub const ICON_SUPERVISED_USER_CIRCLE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e939}");
-pub const ICON_SUPERVISED_USER_CIRCLE_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f60e}");
+pub const ICON_SUPERVISED_USER_CIRCLE_OFF: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f60e}");
 pub const ICON_SUPERVISOR_ACCOUNT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8d3}");
 pub const ICON_SUPPORT: crate::MaterialIcon = crate::MaterialIcon::new("\u{ef73}");
 pub const ICON_SUPPORT_AGENT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f0e2}");
@@ -3727,7 +3778,8 @@ pub const ICON_SWITCH_ACCESS: crate::MaterialIcon = crate::MaterialIcon::new("\u
 pub const ICON_SWITCH_ACCESS_2: crate::MaterialIcon = crate::MaterialIcon::new("\u{f506}");
 pub const ICON_SWITCH_ACCESS_3: crate::MaterialIcon = crate::MaterialIcon::new("\u{f34d}");
 pub const ICON_SWITCH_ACCESS_SHORTCUT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7e1}");
-pub const ICON_SWITCH_ACCESS_SHORTCUT_ADD: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7e2}");
+pub const ICON_SWITCH_ACCESS_SHORTCUT_ADD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e7e2}");
 pub const ICON_SWITCH_ACCOUNT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9ed}");
 pub const ICON_SWITCH_CAMERA: crate::MaterialIcon = crate::MaterialIcon::new("\u{e41e}");
 pub const ICON_SWITCH_LEFT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1d1}");
@@ -3751,8 +3803,10 @@ pub const ICON_SYNC_SAVED_LOCALLY: crate::MaterialIcon = crate::MaterialIcon::ne
 pub const ICON_SYNC_SAVED_LOCALLY_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{f264}");
 pub const ICON_SYRINGE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e133}");
 pub const ICON_SYSTEM_SECURITY_UPDATE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2cd}");
-pub const ICON_SYSTEM_SECURITY_UPDATE_GOOD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f073}");
-pub const ICON_SYSTEM_SECURITY_UPDATE_WARNING: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2d3}");
+pub const ICON_SYSTEM_SECURITY_UPDATE_GOOD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f073}");
+pub const ICON_SYSTEM_SECURITY_UPDATE_WARNING: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f2d3}");
 pub const ICON_SYSTEM_UPDATE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f2cd}");
 pub const ICON_SYSTEM_UPDATE_ALT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8d7}");
 pub const ICON_TAB: crate::MaterialIcon = crate::MaterialIcon::new("\u{e8d8}");
@@ -3827,13 +3881,18 @@ pub const ICON_TEXT_ROTATION_ANGLEUP: crate::MaterialIcon = crate::MaterialIcon:
 pub const ICON_TEXT_ROTATION_DOWN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e93e}");
 pub const ICON_TEXT_ROTATION_NONE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e93f}");
 pub const ICON_TEXT_SELECT_END: crate::MaterialIcon = crate::MaterialIcon::new("\u{f73e}");
-pub const ICON_TEXT_SELECT_JUMP_TO_BEGINNING: crate::MaterialIcon = crate::MaterialIcon::new("\u{f73d}");
+pub const ICON_TEXT_SELECT_JUMP_TO_BEGINNING: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f73d}");
 pub const ICON_TEXT_SELECT_JUMP_TO_END: crate::MaterialIcon = crate::MaterialIcon::new("\u{f73c}");
-pub const ICON_TEXT_SELECT_MOVE_BACK_CHARACTER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f73b}");
-pub const ICON_TEXT_SELECT_MOVE_BACK_WORD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f73a}");
+pub const ICON_TEXT_SELECT_MOVE_BACK_CHARACTER: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f73b}");
+pub const ICON_TEXT_SELECT_MOVE_BACK_WORD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f73a}");
 pub const ICON_TEXT_SELECT_MOVE_DOWN: crate::MaterialIcon = crate::MaterialIcon::new("\u{f739}");
-pub const ICON_TEXT_SELECT_MOVE_FORWARD_CHARACTER: crate::MaterialIcon = crate::MaterialIcon::new("\u{f738}");
-pub const ICON_TEXT_SELECT_MOVE_FORWARD_WORD: crate::MaterialIcon = crate::MaterialIcon::new("\u{f737}");
+pub const ICON_TEXT_SELECT_MOVE_FORWARD_CHARACTER: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f738}");
+pub const ICON_TEXT_SELECT_MOVE_FORWARD_WORD: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{f737}");
 pub const ICON_TEXT_SELECT_MOVE_UP: crate::MaterialIcon = crate::MaterialIcon::new("\u{f736}");
 pub const ICON_TEXT_SELECT_START: crate::MaterialIcon = crate::MaterialIcon::new("\u{f735}");
 pub const ICON_TEXT_SNIPPET: crate::MaterialIcon = crate::MaterialIcon::new("\u{f1c6}");
@@ -3919,7 +3978,8 @@ pub const ICON_TOOLS_INSTALLATION_KIT: crate::MaterialIcon = crate::MaterialIcon
 pub const ICON_TOOLS_LADDER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e2cb}");
 pub const ICON_TOOLS_LEVEL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e77b}");
 pub const ICON_TOOLS_PHILLIPS: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8cc}");
-pub const ICON_TOOLS_PLIERS_WIRE_STRIPPER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e2aa}");
+pub const ICON_TOOLS_PLIERS_WIRE_STRIPPER: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e2aa}");
 pub const ICON_TOOLS_POWER_DRILL: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1e9}");
 pub const ICON_TOOLS_WRENCH: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8cd}");
 pub const ICON_TOOLTIP: crate::MaterialIcon = crate::MaterialIcon::new("\u{e9f8}");
@@ -3952,7 +4012,8 @@ pub const ICON_TRAIL_LENGTH_SHORT: crate::MaterialIcon = crate::MaterialIcon::ne
 pub const ICON_TRAIN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e570}");
 pub const ICON_TRAM: crate::MaterialIcon = crate::MaterialIcon::new("\u{e571}");
 pub const ICON_TRANSCRIBE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f8ec}");
-pub const ICON_TRANSFER_WITHIN_A_STATION: crate::MaterialIcon = crate::MaterialIcon::new("\u{e572}");
+pub const ICON_TRANSFER_WITHIN_A_STATION: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e572}");
 pub const ICON_TRANSFORM: crate::MaterialIcon = crate::MaterialIcon::new("\u{e428}");
 pub const ICON_TRANSGENDER: crate::MaterialIcon = crate::MaterialIcon::new("\u{e58d}");
 pub const ICON_TRANSIT_ENTEREXIT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e579}");
@@ -3999,7 +4060,8 @@ pub const ICON_TV_GUIDE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1dc
 pub const ICON_TV_NEXT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f3eb}");
 pub const ICON_TV_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e647}");
 pub const ICON_TV_OPTIONS_EDIT_CHANNELS: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1dd}");
-pub const ICON_TV_OPTIONS_INPUT_SETTINGS: crate::MaterialIcon = crate::MaterialIcon::new("\u{e1de}");
+pub const ICON_TV_OPTIONS_INPUT_SETTINGS: crate::MaterialIcon =
+    crate::MaterialIcon::new("\u{e1de}");
 pub const ICON_TV_REMOTE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5d9}");
 pub const ICON_TV_SIGNIN: crate::MaterialIcon = crate::MaterialIcon::new("\u{e71b}");
 pub const ICON_TV_WITH_ASSISTANT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e785}");
@@ -4271,12 +4333,10 @@ pub const ICON_WORK: crate::MaterialIcon = crate::MaterialIcon::new("\u{e943}");
 pub const ICON_WORK_ALERT: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5f7}");
 pub const ICON_WORK_HISTORY: crate::MaterialIcon = crate::MaterialIcon::new("\u{ec09}");
 pub const ICON_WORK_OFF: crate::MaterialIcon = crate::MaterialIcon::new("\u{e942}");
-pub const ICON_WORK_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{e943}");
 pub const ICON_WORK_UPDATE: crate::MaterialIcon = crate::MaterialIcon::new("\u{f5f8}");
 pub const ICON_WORKFLOW: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea04}");
 pub const ICON_WORKSPACE_PREMIUM: crate::MaterialIcon = crate::MaterialIcon::new("\u{e7af}");
 pub const ICON_WORKSPACES: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea0f}");
-pub const ICON_WORKSPACES_OUTLINE: crate::MaterialIcon = crate::MaterialIcon::new("\u{ea0f}");
 pub const ICON_WOUNDS_INJURIES: crate::MaterialIcon = crate::MaterialIcon::new("\u{e13f}");
 pub const ICON_WRAP_TEXT: crate::MaterialIcon = crate::MaterialIcon::new("\u{e25b}");
 pub const ICON_WRIST: crate::MaterialIcon = crate::MaterialIcon::new("\u{f69c}");

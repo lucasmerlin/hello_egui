@@ -190,7 +190,7 @@ impl<'a> Item<'a> {
 
             child.scope_builder(
                 UiBuilder::new()
-                    .id(unique_id)
+                    .scope_id(unique_id)
                     .max_rect(Rect::from_min_size(position, rect.size())),
                 |ui| {
                     drag_body(
@@ -231,7 +231,7 @@ impl<'a> Item<'a> {
             let mut child = ui.new_child(UiBuilder::new().max_rect(ui.max_rect()));
             let response = child.scope_builder(
                 UiBuilder::new()
-                    .id(unique_id)
+                    .scope_id(unique_id)
                     .max_rect(Rect::from_min_size(position, size)),
                 |ui| {
                     drag_body(
@@ -278,7 +278,7 @@ impl<'a> Item<'a> {
         body: impl FnOnce(&mut Ui, Handle, ItemState),
     ) -> InnerResponse<Rect> {
         let transform = ui.ctx().layer_transform_to_global(ui.layer_id());
-        egui::Area::new(Id::new("draggable_item"))
+        egui::Area::new(Id::unique("draggable_item"))
             .interactable(false)
             .fixed_pos(pos)
             .order(Order::Tooltip)
@@ -288,7 +288,7 @@ impl<'a> Item<'a> {
                     ui.ctx().set_transform_layer(ui.layer_id(), transform);
                 }
 
-                ui.scope_builder(UiBuilder::new().layout(layout).id(unique_id), |ui| {
+                ui.scope_builder(UiBuilder::new().layout(layout).scope_id(unique_id), |ui| {
                     if let Some(size) = size.or(dnd_state.detection_state.dragged_item_size()) {
                         ui.set_max_size(size);
                     }

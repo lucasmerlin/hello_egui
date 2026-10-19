@@ -22,9 +22,9 @@ fn open(example: &Example, harness: &mut Harness) {
         .get_by_role_and_label(Role::Button, example.name)
         .click();
 
-    // TODO: Remove once run runs until no more redraws are needed
+    // Step instead of run: images load in the background and their fade-in keeps repainting.
     for _ in 0..30 {
-        harness.run();
+        harness.step();
     }
 }
 

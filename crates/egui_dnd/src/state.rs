@@ -1,7 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, SystemTime};
 
-use egui::{AsId, CursorIcon, Id, Pos2, Rect, Sense, Ui, Vec2};
+use egui::{CursorIcon, Id, Pos2, Rect, Sense, Ui, Vec2};
 
 #[cfg(target_arch = "wasm32")]
 use web_time::{Duration, SystemTime};
@@ -34,13 +34,14 @@ impl DragAxis {
 
 /// Item that can be reordered using drag and drop
 pub trait DragDropItem {
-    /// Unique id for the item, to allow egui to keep track of its dragged state between frames
+    /// Globally unique id for the item, so egui can keep track of its dragged state
+    /// between frames. It is also passed to [`egui::Context::set_dragged_id`].
     fn id(&self) -> Id;
 }
 
-impl<T: AsId> DragDropItem for T {
+impl<T: core::hash::Hash + core::fmt::Debug> DragDropItem for T {
     fn id(&self) -> Id {
-        Id::new(self)
+        Id::unique(self)
     }
 }
 

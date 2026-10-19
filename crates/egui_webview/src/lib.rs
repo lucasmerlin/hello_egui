@@ -70,16 +70,15 @@ pub struct WebViewResponse {
 impl EguiWebView {
     pub fn new(
         ctx: &Context,
-        id: impl Into<Id>,
+        id: Id,
         window: &impl HasWindowHandle,
         build: impl FnOnce(wry::WebViewBuilder) -> wry::WebViewBuilder,
     ) -> Self {
         let (tx, inbox) = UiInbox::channel();
-        let id = id.into();
         ctx.memory_mut(|mem| {
             mem.data
                 .get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                    Id::new(WEBVIEW_ID),
+                    Id::unique(WEBVIEW_ID),
                     || unreachable!(),
                 )
                 .clone()
@@ -125,7 +124,7 @@ impl EguiWebView {
 
         ctx.data_mut(|data| {
             let state = data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                Id::new(WEBVIEW_ID),
+                Id::unique(WEBVIEW_ID),
                 || unreachable!(),
             );
             state.views.insert(id, Arc::downgrade(&web_view));
@@ -257,7 +256,7 @@ impl EguiWebView {
         if should_display || self.current_image.is_none() {
             ui.ctx().memory_mut(|mem| {
                 let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-                    Id::new(WEBVIEW_ID),
+                    Id::unique(WEBVIEW_ID),
                     || unreachable!(),
                 );
                 state.rendered_this_frame.insert(self.id);
@@ -314,13 +313,13 @@ pub fn init_webview(ctx: &Context) {
     ctx.memory_mut(|mem| {
         if mem
             .data
-            .get_temp::<GlobalWebViewState>(Id::new(WEBVIEW_ID))
+            .get_temp::<GlobalWebViewState>(Id::unique(WEBVIEW_ID))
             .is_some()
         {
             return;
         }
         mem.data.insert_temp(
-            Id::new(WEBVIEW_ID),
+            Id::unique(WEBVIEW_ID),
             GlobalWebViewState {
                 rendered_this_frame: HashSet::new(),
                 views: HashMap::new(),
@@ -332,7 +331,7 @@ pub fn init_webview(ctx: &Context) {
 pub fn webview_end_frame(ctx: &Context) {
     ctx.memory_mut(|mem| {
         let state = mem.data.get_temp_mut_or_insert_with::<GlobalWebViewState>(
-            Id::new(WEBVIEW_ID),
+            Id::unique(WEBVIEW_ID),
             || unreachable!(),
         );
         state.views.retain(|id, view| {

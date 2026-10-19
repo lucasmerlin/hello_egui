@@ -108,7 +108,7 @@ pub fn main() -> eframe::Result<()> {
 
                     windows.push(WebBrowser::new(
                         ui.ctx(),
-                        Id::new(format!("Window {count}")),
+                        Id::unique(("Window", count)),
                         url,
                         frame,
                     ));

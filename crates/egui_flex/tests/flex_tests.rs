@@ -210,8 +210,10 @@ fn nested() {
                         flex.add(
                             FlexItem::new().grow(0.0),
                             TextEdit::singleline(&mut String::new()).desired_width(100.0),
-                        );
-                        flex.add(FlexItem::new(), DragValue::new(&mut 0.0));
+                        )
+                        .accessible_name("Text");
+                        flex.add(FlexItem::new(), DragValue::new(&mut 0.0))
+                            .accessible_name("Value");
                         flex.add(FlexItem::new(), Checkbox::new(&mut false, "Checkbox"));
                     },
                 );
@@ -361,7 +363,8 @@ pub fn chat() {
                             flex.add(
                                 item().grow(1.0).basis(0.0),
                                 TextEdit::singleline(&mut String::new()),
-                            );
+                            )
+                            .accessible_name("Message");
                             flex.add(item(), Button::new("Send"));
                         });
                     },
@@ -392,7 +395,7 @@ fn truncate_shrink() {
                 let frame = Frame::group(flex.ui().style());
                 flex.add_flex(item().frame(frame), Flex::horizontal(), |flex| {
                     flex.add(
-                        item().shrink().grow(1.0).content_id(Id::new(text)),
+                        item().shrink().grow(1.0).content_id(Id::unique(text)),
                         Button::new(text).truncate(),
                     );
                     flex.add(item(), Button::new("World!").wrap());

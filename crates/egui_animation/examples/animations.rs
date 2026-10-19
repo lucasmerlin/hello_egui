@@ -1,6 +1,6 @@
 use eframe::emath::Align;
 use eframe::{egui, NativeOptions};
-use egui::{CentralPanel, ComboBox, Layout, ScrollArea, Vec2};
+use egui::{CentralPanel, ComboBox, Id, Layout, ScrollArea, Vec2};
 use egui_animation::{animate_ui_translation, Collapse};
 use hello_egui_utils::measure_text;
 use rand::seq::SliceRandom;
@@ -52,7 +52,9 @@ pub fn main() -> eframe::Result<()> {
     let mut text = text_de;
 
     let mut words: Vec<_> = text.split("").collect();
-    let mut ids: Vec<_> = (0..words.len()).collect();
+    let mut ids: Vec<Id> = (0..words.len())
+        .map(|i| Id::unique(("animations_example_word", i)))
+        .collect();
 
     let mut visible = true;
 
@@ -87,7 +89,13 @@ pub fn main() -> eframe::Result<()> {
                     }
                 }
 
-                let x = egui_animation::animate_eased(ui.ctx(), "test", target, 1.0, easing);
+                let x = egui_animation::animate_eased(
+                    ui.ctx(),
+                    ui.make_persistent_id("test"),
+                    target,
+                    1.0,
+                    easing,
+                );
 
                 ui.horizontal(|ui| {
                     ui.add_space(x);
@@ -152,7 +160,7 @@ pub fn main() -> eframe::Result<()> {
                                             let size = measure_text(ui, **text);
                                             animate_ui_translation(
                                                 ui,
-                                                id,
+                                                *id,
                                                 simple_easing::cubic_out,
                                                 size,
                                                 false,
@@ -175,7 +183,7 @@ pub fn main() -> eframe::Result<()> {
                     visible = !visible;
                 }
 
-                Collapse::vertical("collapse", visible).ui(ui, |ui| {
+                Collapse::vertical(ui.make_persistent_id("collapse"), visible).ui(ui, |ui| {
                     ui.group(|ui| {
                         ScrollArea::vertical()
                             .max_height(100.0)
@@ -183,9 +191,10 @@ pub fn main() -> eframe::Result<()> {
                             .show(ui, |ui| {
                                 ui.add_space(50.0);
 
+                                let haaa_id = ui.make_persistent_id("haaa");
                                 animate_ui_translation(
                                     ui,
-                                    "haaa",
+                                    haaa_id,
                                     simple_easing::cubic_in_out,
                                     Vec2::new(200.0, 10.0),
                                     true,

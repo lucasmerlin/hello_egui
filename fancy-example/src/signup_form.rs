@@ -170,19 +170,23 @@ Errors will show up after editing a field or after trying to submit.
             ",
                 );
 
+                // The strip names its cells by index, so each row needs its own id salt.
                 let horizontal_fields =
                     |ui: &mut Ui,
+                     id_salt: &str,
                      form: &mut Form<ValidatorReport>,
                      a: &mut dyn FnMut(&mut Ui, &mut Form<ValidatorReport>),
                      b: &mut dyn FnMut(&mut Ui, &mut Form<ValidatorReport>)| {
                         if max_width > 300.0 {
-                            ui.horizontal(|ui| {
-                                ui.set_max_width(max_width);
-                                let builder = egui_extras::StripBuilder::new(ui)
-                                    .sizes(Size::relative(0.5), 2);
-                                builder.horizontal(|mut strip| {
-                                    strip.cell(|ui| a(ui, form));
-                                    strip.cell(|ui| b(ui, form));
+                            ui.push_id(id_salt, |ui| {
+                                ui.horizontal(|ui| {
+                                    ui.set_max_width(max_width);
+                                    let builder = egui_extras::StripBuilder::new(ui)
+                                        .sizes(Size::relative(0.5), 2);
+                                    builder.horizontal(|mut strip| {
+                                        strip.cell(|ui| a(ui, form));
+                                        strip.cell(|ui| b(ui, form));
+                                    });
                                 });
                             });
                         } else {
@@ -193,6 +197,7 @@ Errors will show up after editing a field or after trying to submit.
 
                 horizontal_fields(
                     ui,
+                    "name",
                     form_ref,
                     &mut |ui, form_ref| {
                         FormField::new(form_ref, field_path!("first_name"))
@@ -212,6 +217,7 @@ Errors will show up after editing a field or after trying to submit.
 
                 horizontal_fields(
                     ui,
+                    "password",
                     form_ref,
                     &mut |ui, form_ref| {
                         FormField::new(form_ref, field_path!("password"))

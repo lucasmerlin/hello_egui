@@ -24,7 +24,7 @@ impl<'a, 'h> ThumbhashImage<'a, 'h> {
     /// [`Image::fit_to_exact_size`] to make sure the image is the size you want.
     pub fn new(image: Image<'a>, thumbhash: &'h [u8]) -> Self {
         Self {
-            id: Id::new(thumbhash),
+            id: Id::unique(thumbhash),
             image,
             thumbhash,
             fade: true,

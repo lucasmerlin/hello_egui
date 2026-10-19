@@ -460,7 +460,7 @@ impl<State: 'static, H: History + Default> EguiRouter<State, H> {
 
     #[allow(clippy::too_many_lines)]
     fn handle_swipe_gesture(&mut self, ui: &mut Ui, _state: &mut State) {
-        let gesture_id = Id::new("router_swipe_back_gesture");
+        let gesture_id = Id::unique("router_swipe_back_gesture");
 
         // Get or create gesture state
         let last_state = ui.data_mut(|data| {
