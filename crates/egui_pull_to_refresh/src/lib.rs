@@ -129,7 +129,7 @@ impl PullToRefresh {
     ) -> PullToRefreshResponse<ScrollAreaOutput<T>> {
         let scroll_output = content(ui);
         let content_rect = scroll_output.inner_rect;
-        let can_refresh = scroll_output.state.offset.y == 0.0 && self.can_refresh;
+        let can_refresh = scroll_output.state.clamped_offset().y == 0.0 && self.can_refresh;
         // This is the id used in the Sense of the scroll area
         // I hope this id is stable across egui patches...
         let allow_dragged_id = scroll_output.id.with("area");

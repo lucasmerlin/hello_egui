@@ -84,10 +84,10 @@ egui_thumbhash = { path = "./crates/egui_thumbhash", version = "0.12.0" }
 egui_material_icons = { path = "./crates/egui_material_icons", version = "0.8.0" }
 hello_egui = { path = ".", version = "0.13.0" }
 
-egui = { version = "0.36.0", default-features = false }
-egui_kittest = { version = "0.36.0" }
-eframe = { version = "0.36.0", default-features = false }
-egui_extras = { version = "0.36.0", default-features = false }
+egui = { version = "0.37.0", default-features = false }
+egui_kittest = { version = "0.37.0" }
+eframe = { version = "0.37.0", default-features = false }
+egui_extras = { version = "0.37.0", default-features = false }
 rand = "0.10.1"
 simple-easing = "1"
 serde_json = "1"
@@ -131,21 +131,3 @@ doc_markdown = { level = "allow", priority = 21 }
 #egui_extras = { path = "../egui/crates/egui_extras" }
 #egui_kittest = { path = "../egui/crates/egui_kittest" }
 #winit = { path = "../winit" }
-
-
-# Track the latest egui `main` branch.
-ecolor = { git = "https://github.com/emilk/egui", branch = "main" }
-eframe = { git = "https://github.com/emilk/egui", branch = "main" }
-egui = { git = "https://github.com/emilk/egui", branch = "main" }
-egui-wgpu = { git = "https://github.com/emilk/egui", branch = "main" }
-egui-winit = { git = "https://github.com/emilk/egui", branch = "main" }
-egui_extras = { git = "https://github.com/emilk/egui", branch = "main" }
-egui_glow = { git = "https://github.com/emilk/egui", branch = "main" }
-egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
-emath = { git = "https://github.com/emilk/egui", branch = "main" }
-epaint = { git = "https://github.com/emilk/egui", branch = "main" }
-
-# https://github.com/lampsitter/egui_commonmark/pull/107
-egui_commonmark = { git = "https://github.com/emilk/egui_commonmark", branch = "emilk/egui-main" }
-egui_commonmark_backend = { git = "https://github.com/emilk/egui_commonmark", branch = "emilk/egui-main" }
-
