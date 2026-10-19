@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0
+
+- update Material Symbols font ([#109](https://github.com/lucasmerlin/hello_egui/pull/109))
+- Drop icons _OUTLINE suffixes since they were confusing and did not work as expected ([#111](https://github.com/lucasmerlin/hello_egui/pull/111))
+
 ## 0.8.0
 
 - Update egui to 0.36

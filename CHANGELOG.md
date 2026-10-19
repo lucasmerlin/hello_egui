@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.1
+
+- Temporarily disable semver check for egui_router to unblock release
+- Update egui to 0.37.0 ([#108](https://github.com/lucasmerlin/hello_egui/pull/108))
+
 ## 0.13.0
 
 - Fix release-plz config for unpublished crates, update release PR description

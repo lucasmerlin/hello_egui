@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.1
+
+- Fix egui_animation broken in scroll areas ([#110](https://github.com/lucasmerlin/hello_egui/pull/110))
+- Update egui to 0.37.0 ([#108](https://github.com/lucasmerlin/hello_egui/pull/108))
+
 ## 0.13.0
 
 - Update egui to 0.36
