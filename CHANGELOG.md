@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.0
+
+- Update egui to 0.37 ([#108](https://github.com/lucasmerlin/hello_egui/pull/108))
+- egui_animation: Fix animations broken in scroll areas ([#110](https://github.com/lucasmerlin/hello_egui/pull/110))
+- egui_material_icons: Update the Material Symbols font ([#109](https://github.com/lucasmerlin/hello_egui/pull/109))
+- egui_material_icons: Remove the `_OUTLINE` icon suffixes, which were confusing and did not work as expected ([#111](https://github.com/lucasmerlin/hello_egui/pull/111))
+- egui_router: Add a `tokio` feature, required to use the `async` feature on native
+
 ## 0.13.0
 
 - Fix release-plz config for unpublished crates, update release PR description
