@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.1
+## 0.9.0
 
 - Update egui to 0.37.0 ([#108](https://github.com/lucasmerlin/hello_egui/pull/108))
 

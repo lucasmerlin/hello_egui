@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.1
+## 0.10.0
 
 - Fix egui_router failing release plz
 - Update egui to 0.37.0 ([#108](https://github.com/lucasmerlin/hello_egui/pull/108))

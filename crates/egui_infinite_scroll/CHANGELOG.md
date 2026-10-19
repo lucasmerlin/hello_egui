@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.12.1
+## 0.13.0
 
-- update Cargo.toml dependencies
+- Update egui to 0.37
 
 ## 0.12.0
 
